@@ -494,6 +494,16 @@ async def manifest(request: Request):
     return FileResponse(os.path.join(WEB_DIR, "manifest.json"))
 
 
+@mcp.custom_route("/vendor/{path:path}", methods=["GET"])
+async def vendor_static(request: Request):
+    rel = request.path_params.get("path", "")
+    target = os.path.normpath(os.path.join(WEB_DIR, "vendor", rel))
+    vendor_root = os.path.abspath(os.path.join(WEB_DIR, "vendor"))
+    if target.startswith(vendor_root) and os.path.isfile(target):
+        return FileResponse(target)
+    return PlainTextResponse("Not Found", status_code=404)
+
+
 @mcp.custom_route("/", methods=["GET"])
 async def index(request: Request):
     idx = os.path.join(WEB_DIR, "index.html")

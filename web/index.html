@@ -4,22 +4,28 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
 <meta name="theme-color" content="#030712"/>
-<title>Hearth Universal — Alexa+ Ambient Operations Engine (MCP 2025-11-25)</title>
+<title>Hearth Universal — Beyond-Human 4D Ambient Holodeck (Alexa+ MCP 2025-11-25)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='35%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%2300f0ff'/><stop offset='60%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23030712'/></radialGradient></defs><circle cx='50' cy='50' r='46' fill='url(%23g)'/><circle cx='50' cy='50' r='20' fill='%23030712'/><circle cx='50' cy='50' r='10' fill='%2300f0ff'/></svg>"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Three.js 3D WebGL Engine & OrbitControls (Local Vendor with Cloud CDN Fallback) -->
+<script src="/vendor/three.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'"></script>
+<script src="/vendor/OrbitControls.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'"></script>
+
 <style>
 :root {
-  --bg-space: #030712;
-  --bg-surface: rgba(12, 18, 34, 0.75);
-  --bg-card: rgba(18, 26, 48, 0.85);
-  --bg-card-hover: rgba(26, 37, 68, 0.9);
-  --bg-chip: rgba(22, 33, 62, 0.6);
+  --bg-space: #02050e;
+  --bg-surface: rgba(10, 16, 32, 0.78);
+  --bg-card: rgba(15, 23, 44, 0.88);
+  --bg-card-hover: rgba(22, 33, 62, 0.95);
+  --bg-chip: rgba(20, 30, 58, 0.65);
   --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(0, 240, 255, 0.45);
-  --border-hover: rgba(99, 102, 241, 0.35);
+  --border-active: rgba(0, 240, 255, 0.5);
+  --border-glow: rgba(0, 240, 255, 0.35);
+  --border-hover: rgba(99, 102, 241, 0.4);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
@@ -30,28 +36,29 @@
   --emerald-glow: #10b981;
   --amber-warning: #f59e0b;
   --crimson-alert: #ef4444;
-  --radius-xl: 20px;
-  --radius-lg: 16px;
-  --radius-md: 12px;
-  --radius-sm: 8px;
+  --radius-2xl: 24px;
+  --radius-xl: 18px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --radius-sm: 6px;
   --radius-pill: 9999px;
-  --glow-cyan: 0 0 35px rgba(0, 240, 255, 0.25);
+  --glow-cyan: 0 0 35px rgba(0, 240, 255, 0.28);
   --glow-indigo: 0 0 40px rgba(99, 102, 241, 0.3);
-  --glow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --glow-card: 0 10px 40px rgba(0, 0, 0, 0.55);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
 body {
   background: var(--bg-space);
   background-image: 
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(0, 240, 255, 0.12), transparent 70%),
-    radial-gradient(circle 600px at 85% 85%, rgba(99, 102, 241, 0.08), transparent 80%),
-    radial-gradient(circle 450px at 15% 75%, rgba(139, 92, 246, 0.07), transparent 75%);
+    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(0, 240, 255, 0.14), transparent 75%),
+    radial-gradient(circle 800px at 90% 85%, rgba(99, 102, 241, 0.09), transparent 80%),
+    radial-gradient(circle 600px at 10% 75%, rgba(139, 92, 246, 0.08), transparent 75%);
   color: var(--text-primary);
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   min-height: 100vh;
-  padding: 16px 20px 40px 20px;
+  padding: 14px 18px 40px 18px;
   overflow-x: hidden;
 }
 
@@ -59,9 +66,13 @@ code, pre, .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Outer Universe Container */
+.font-scifi {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Master Outer Container */
 .viewport-wrap {
-  max-width: 1440px;
+  max-width: 1560px;
   margin: 0 auto;
 }
 
@@ -73,7 +84,6 @@ code, pre, .font-mono {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   box-shadow: var(--glow-card);
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
   position: relative;
   overflow: hidden;
 }
@@ -82,7 +92,7 @@ code, pre, .font-mono {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
   pointer-events: none;
 }
 
@@ -91,41 +101,40 @@ header.ambient-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 22px;
-  margin-bottom: 16px;
+  padding: 12px 20px;
+  margin-bottom: 14px;
   border-radius: var(--radius-xl);
 }
 
 .brand-unit {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
 }
 
-/* Interactive Canvas Orb Holder */
-.orb-canvas-container {
-  width: 54px;
-  height: 54px;
+.orb-mini-container {
+  width: 44px;
+  height: 44px;
   position: relative;
   cursor: pointer;
   flex-shrink: 0;
 }
 
-#orbCanvas {
-  width: 54px;
-  height: 54px;
+#orbMiniCanvas {
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  filter: drop-shadow(0 0 16px rgba(0, 240, 255, 0.45));
+  filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.5));
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.orb-canvas-container:hover #orbCanvas {
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 24px rgba(0, 240, 255, 0.7));
+.orb-mini-container:hover #orbMiniCanvas {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.8));
 }
 
 .brand-meta h1 {
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.03em;
   display: flex;
@@ -137,7 +146,7 @@ header.ambient-navbar {
 }
 
 .brand-meta .tagline {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
   font-weight: 500;
 }
@@ -145,23 +154,21 @@ header.ambient-navbar {
 .header-telemetry {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-/* Status Badges */
 .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 5px 12px;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   background: rgba(18, 26, 48, 0.7);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  transition: all 0.2s ease;
 }
 
 .status-pill.live-green {
@@ -172,8 +179,8 @@ header.ambient-navbar {
 
 .status-pill.live-green::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #34d399;
   box-shadow: 0 0 10px #34d399;
@@ -192,38 +199,315 @@ header.ambient-navbar {
 }
 
 .btn-ambient {
-  background: rgba(22, 33, 62, 0.55);
+  background: rgba(20, 30, 58, 0.6);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 7px 14px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
   user-select: none;
 }
 
 .btn-ambient:hover {
-  background: rgba(30, 45, 84, 0.75);
+  background: rgba(30, 45, 84, 0.85);
   border-color: var(--alexa-cyan);
   box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
   transform: translateY(-1px);
 }
 
-.btn-ambient:active { transform: translateY(0); }
+/* ==========================================================================
+   CENTERPIECE: 3D HOLO-NEXUS STAGE (WebGL / Three.js 4D Viewport)
+   ========================================================================== */
+.holo-stage-card {
+  margin-bottom: 16px;
+  background: rgba(6, 10, 22, 0.9);
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 0 50px rgba(0, 240, 255, 0.12), inset 0 0 30px rgba(0, 0, 0, 0.8);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+/* Cyber Corner Brackets */
+.holo-stage-card::before {
+  content: "┌";
+  position: absolute;
+  top: 6px; left: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--alexa-cyan);
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 10;
+  text-shadow: 0 0 10px var(--alexa-cyan);
+}
+
+.holo-stage-card::after {
+  content: "┘";
+  position: absolute;
+  bottom: 6px; right: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--alexa-cyan);
+  pointer-events: none;
+  opacity: 0.85;
+  z-index: 10;
+  text-shadow: 0 0 10px var(--alexa-cyan);
+}
+
+/* Top HUD Controls Bar */
+.holo-hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 18px;
+  background: rgba(8, 14, 30, 0.85);
+  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+  z-index: 15;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.holo-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.holo-radar-beacon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--alexa-cyan);
+  box-shadow: 0 0 12px var(--alexa-cyan);
+  animation: radarBlink 1.4s infinite ease-in-out;
+}
+
+@keyframes radarBlink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.4); }
+}
+
+.holo-title-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 3D Mode Switcher Cluster */
+.holo-mode-cluster {
+  display: flex;
+  background: rgba(12, 18, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  gap: 3px;
+}
+
+.btn-holo-mode {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.btn-holo-mode:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-holo-mode.active-mode {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(99, 102, 241, 0.35) 100%);
+  color: #ffffff;
+  border: 1px solid var(--alexa-cyan);
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
+}
+
+/* 3D Viewport Action Tools */
+.holo-tools-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-holo-tool {
+  background: rgba(18, 26, 48, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  user-select: none;
+}
+
+.btn-holo-tool:hover {
+  color: #ffffff;
+  border-color: var(--alexa-cyan);
+  background: rgba(0, 240, 255, 0.12);
+}
+
+.btn-holo-tool.active-tool {
+  color: var(--alexa-cyan);
+  border-color: var(--alexa-cyan);
+  background: rgba(0, 240, 255, 0.18);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
+}
+
+/* 3D Canvas Main Viewport */
+.holo-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  background: radial-gradient(circle at 50% 50%, rgba(10, 18, 38, 0.7) 0%, rgba(3, 5, 12, 0.98) 100%);
+  overflow: hidden;
+  cursor: grab;
+}
+
+.holo-canvas-wrapper:active {
+  cursor: grabbing;
+}
+
+#holoCanvas3D {
+  width: 100%;
+  height: 100%;
+  display: block;
+  outline: none;
+}
+
+/* Scanline Overlay FX */
+.holo-scanlines-fx {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+  opacity: 0.45;
+  z-index: 5;
+}
+
+/* Floating 3D Object Raycast Tooltip HUD */
+.holo-object-hud {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  background: rgba(6, 12, 28, 0.92);
+  border: 1px solid var(--alexa-cyan);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 12px;
+  color: #ffffff;
+  pointer-events: none;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.25);
+  z-index: 12;
+  transition: opacity 0.2s, transform 0.2s;
+  max-width: 280px;
+}
+
+.holo-hud-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--alexa-cyan);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.holo-hud-body {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+/* Bottom HUD Telemetry Strip */
+.holo-hud-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 18px;
+  background: rgba(6, 10, 22, 0.95);
+  border-top: 1px solid rgba(0, 240, 255, 0.15);
+  z-index: 15;
+  font-size: 11px;
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.holo-telemetry-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.holo-audio-spectrum-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#audioSpectrumCanvas {
+  width: 140px;
+  height: 20px;
+  background: rgba(5, 9, 20, 0.8);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 4px;
+}
+
+/* Fullscreen Stage Extension */
+.holo-stage-card.stage-fullscreen {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 9999;
+  margin: 0;
+  border-radius: 0;
+}
+.holo-stage-card.stage-fullscreen .holo-canvas-wrapper {
+  height: calc(100vh - 80px);
+}
 
 /* Master Grid Layout */
 .master-grid {
   display: grid;
-  grid-template-columns: 1.18fr 1fr;
-  gap: 20px;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 16px;
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1100px) {
   .master-grid { grid-template-columns: 1fr; }
 }
 
@@ -231,12 +515,12 @@ header.ambient-navbar {
 .stage-panel {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 120px);
-  min-height: 720px;
+  height: calc(100vh - 580px);
+  min-height: 600px;
 }
 
 .panel-header-bar {
-  padding: 16px 22px;
+  padding: 14px 20px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
@@ -245,30 +529,30 @@ header.ambient-navbar {
 }
 
 .panel-title-text {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 /* Chat Stream */
 .chat-viewport {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   scroll-behavior: smooth;
 }
 
 .chat-bubble {
   max-width: 88%;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-radius: var(--radius-lg);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.6;
   position: relative;
   word-break: break-word;
@@ -302,30 +586,29 @@ header.ambient-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  font-size: 12px;
+  margin-bottom: 6px;
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
-.bubble-content p { margin-bottom: 10px; }
+.bubble-content p { margin-bottom: 8px; }
 .bubble-content p:last-child { margin-bottom: 0; }
 .bubble-content strong { color: #ffffff; font-weight: 700; }
-.bubble-content ul { margin: 8px 0 8px 20px; }
-.bubble-content li { margin-bottom: 4px; }
+.bubble-content ul { margin: 6px 0 6px 18px; }
+.bubble-content li { margin-bottom: 3px; }
 
 .btn-audio-speak {
   background: transparent;
   border: none;
   color: var(--alexa-cyan);
   cursor: pointer;
-  padding: 3px 8px;
-  font-size: 12px;
+  padding: 2px 6px;
+  font-size: 11.5px;
   font-weight: 600;
   border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  transition: all 0.2s;
+  gap: 4px;
 }
 
 .btn-audio-speak:hover {
@@ -336,11 +619,11 @@ header.ambient-navbar {
    Outerverse Visual Node Graph (DAG Visualizer)
    ========================================================================== */
 .dag-canvas-card {
-  margin: 0 20px 14px 20px;
+  margin: 0 18px 12px 18px;
   background: rgba(5, 9, 20, 0.85);
   border: 1px solid rgba(0, 240, 255, 0.25);
   border-radius: var(--radius-lg);
-  padding: 14px 18px;
+  padding: 12px 16px;
   box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.05);
   position: relative;
   overflow: hidden;
@@ -369,7 +652,7 @@ header.ambient-navbar {
 }
 
 .dag-title-tag {
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--alexa-cyan);
   display: flex;
@@ -383,8 +666,8 @@ header.ambient-navbar {
   align-items: center;
   gap: 8px;
   overflow-x: auto;
-  padding: 12px 4px 6px 4px;
-  margin-top: 10px;
+  padding: 10px 4px 4px 4px;
+  margin-top: 8px;
 }
 
 .dag-node {
@@ -392,8 +675,8 @@ header.ambient-navbar {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 8px 12px;
-  min-width: 140px;
-  font-size: 12px;
+  min-width: 135px;
+  font-size: 11.5px;
   position: relative;
   transition: all 0.25s;
   cursor: pointer;
@@ -432,24 +715,24 @@ header.ambient-navbar {
 
 .node-subtext {
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 10.5px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 130px;
+  max-width: 125px;
 }
 
 .node-arrow {
   color: var(--text-tertiary);
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
 }
 
 /* Prompt Chips */
 .prompt-chips-row {
   display: flex;
-  gap: 8px;
-  padding: 10px 20px;
+  gap: 7px;
+  padding: 8px 18px;
   overflow-x: auto;
   white-space: nowrap;
   background: rgba(6, 11, 24, 0.5);
@@ -459,12 +742,12 @@ header.ambient-navbar {
 .prompt-chips-row::-webkit-scrollbar { display: none; }
 
 .prompt-pill {
-  padding: 7px 14px;
+  padding: 6px 12px;
   background: var(--bg-chip);
   border: 1px solid var(--border-subtle);
   color: #cbd5e1;
   border-radius: var(--radius-pill);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -482,19 +765,19 @@ header.ambient-navbar {
   transform: translateY(-1px);
 }
 
-/* Input Studio */
+/* Input Dock */
 .input-dock {
-  padding: 14px 20px;
+  padding: 12px 18px;
   background: rgba(8, 14, 28, 0.7);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .input-bar-primary {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
@@ -503,9 +786,9 @@ header.ambient-navbar {
   background: rgba(5, 9, 20, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #ffffff;
-  padding: 13px 18px;
+  padding: 11px 16px;
   border-radius: var(--radius-lg);
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 500;
   outline: none;
   transition: all 0.25s ease;
@@ -522,9 +805,9 @@ header.ambient-navbar {
   color: #ffffff;
   border: none;
   border-radius: var(--radius-lg);
-  padding: 0 22px;
-  height: 48px;
-  font-size: 14px;
+  padding: 0 20px;
+  height: 44px;
+  font-size: 13.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -541,13 +824,13 @@ header.ambient-navbar {
 }
 
 .btn-mic-quantum {
-  width: 48px;
-  height: 48px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
   background: var(--bg-card);
   color: var(--alexa-cyan);
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -578,7 +861,7 @@ header.ambient-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
@@ -586,17 +869,15 @@ header.ambient-navbar {
   background: rgba(5, 9, 20, 0.8);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
-  padding: 6px 12px;
+  padding: 5px 10px;
   border-radius: var(--radius-md);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   outline: none;
   cursor: pointer;
 }
 
-/* ==========================================================================
-   Multi-Modal Digital Twin & Control Studio (Right Panel)
-   ========================================================================== */
+/* Right Panel: Tabs Navigation & Stages */
 .control-tabs-nav {
   display: flex;
   border-bottom: 1px solid var(--border-subtle);
@@ -608,21 +889,21 @@ header.ambient-navbar {
 
 .control-tab-btn {
   flex: 1;
-  min-width: 120px;
-  padding: 15px 12px;
+  min-width: 110px;
+  padding: 12px 10px;
   text-align: center;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-secondary);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 7px;
   white-space: nowrap;
 }
 
@@ -638,9 +919,8 @@ header.ambient-navbar {
 }
 
 .tab-stage-content {
-  padding: 22px;
-  height: calc(100vh - 200px);
-  min-height: 640px;
+  padding: 18px;
+  flex: 1;
   overflow-y: auto;
 }
 
@@ -649,21 +929,21 @@ header.ambient-navbar {
   background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
   border: 1px solid rgba(0, 240, 255, 0.25);
   border-radius: var(--radius-lg);
-  padding: 14px 18px;
-  margin-bottom: 16px;
-  font-size: 13px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
   color: #cbd5e1;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .contract-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
-  margin-bottom: 16px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
   position: relative;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
@@ -679,17 +959,17 @@ header.ambient-navbar {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .contract-title {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
 }
 
 .contract-id-badge {
-  font-size: 11px;
+  font-size: 10.5px;
   color: var(--text-tertiary);
   margin-top: 2px;
 }
@@ -698,18 +978,18 @@ header.ambient-navbar {
   background: rgba(5, 9, 20, 0.9);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 12.5px;
+  padding: 9px 12px;
+  font-size: 12px;
   color: #e2e8f0;
-  margin: 10px 0;
+  margin: 8px 0;
   font-family: 'JetBrains Mono', monospace;
   line-height: 1.5;
 }
 
 .contract-reasoning {
-  font-size: 13px;
+  font-size: 12.5px;
   color: var(--text-secondary);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .contract-action-bar {
@@ -723,8 +1003,8 @@ header.ambient-navbar {
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 9px 18px;
-  font-size: 13px;
+  padding: 8px 16px;
+  font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   display: inline-flex;
@@ -745,8 +1025,8 @@ header.ambient-navbar {
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.4);
   border-radius: var(--radius-md);
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 7px 14px;
+  font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -759,16 +1039,16 @@ header.ambient-navbar {
 
 /* Smart Home Twin Section */
 .twin-section {
-  margin-bottom: 22px;
+  margin-bottom: 18px;
 }
 
 .twin-section-label {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-secondary);
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -776,9 +1056,9 @@ header.ambient-navbar {
 
 .preset-scenes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
-  gap: 10px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .btn-scene-card {
@@ -786,8 +1066,8 @@ header.ambient-navbar {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   color: var(--text-primary);
-  padding: 12px 8px;
-  font-size: 12px;
+  padding: 10px 6px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
@@ -795,7 +1075,7 @@ header.ambient-navbar {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
 }
 
 .btn-scene-card:hover {
@@ -814,7 +1094,7 @@ header.ambient-navbar {
 .rooms-matrix-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 12px;
 }
 
 @media (max-width: 640px) {
@@ -825,7 +1105,7 @@ header.ambient-navbar {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  padding: 14px;
   transition: all 0.2s;
   position: relative;
 }
@@ -838,18 +1118,17 @@ header.ambient-navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .room-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* Custom Quantum Sliders */
 .quantum-range-slider {
   width: 100%;
   accent-color: var(--alexa-cyan);
@@ -860,29 +1139,28 @@ header.ambient-navbar {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* Radial Climate Controls */
 .climate-stepper-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .temp-big-display {
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
   color: var(--alexa-cyan);
   letter-spacing: -0.02em;
 }
 
 .btn-temp-step {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid var(--border-subtle);
-  background: rgba(22, 33, 62, 0.7);
+  background: rgba(20, 30, 58, 0.7);
   color: #ffffff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -896,12 +1174,11 @@ header.ambient-navbar {
   background: rgba(0, 240, 255, 0.2);
 }
 
-/* Live Energy Sparkline Grid */
 .energy-telemetry-cluster {
   background: rgba(5, 9, 20, 0.85);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-around;
   align-items: center;
@@ -909,21 +1186,21 @@ header.ambient-navbar {
 }
 
 .energy-metric-value {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   margin-top: 2px;
 }
 
-/* Commerce & Subscriptions Rows */
+/* Commerce Items */
 .commerce-item-tile {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 11px 14px;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  margin-bottom: 10px;
+  margin-bottom: 9px;
   transition: all 0.2s;
 }
 
@@ -932,9 +1209,8 @@ header.ambient-navbar {
   transform: translateX(2px);
 }
 
-/* Progress Fill Bar for Consumables */
 .pantry-progress-track {
-  width: 100px;
+  width: 90px;
   height: 6px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.1);
@@ -948,7 +1224,7 @@ header.ambient-navbar {
   transition: width 0.4s ease;
 }
 
-/* Fullscreen Merkle Ledger Dialog Modal */
+/* Merkle Dialog */
 dialog#auditModalDialog {
   margin: auto;
   border: 1px solid rgba(0, 240, 255, 0.3);
@@ -957,7 +1233,7 @@ dialog#auditModalDialog {
   color: var(--text-primary);
   max-width: 900px;
   width: 92%;
-  padding: 28px;
+  padding: 26px;
   box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 240, 255, 0.15);
   backdrop-filter: blur(32px);
 }
@@ -971,20 +1247,20 @@ dialog::backdrop {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 16px;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
 .merkle-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: 12px;
   font-family: 'JetBrains Mono', monospace;
 }
 
 .merkle-table th, .merkle-table td {
-  padding: 10px 14px;
+  padding: 9px 12px;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -1006,8 +1282,8 @@ dialog::backdrop {
   <!-- Top Ambient Navigation Bar -->
   <header class="glass-panel ambient-navbar">
     <div class="brand-unit">
-      <div class="orb-canvas-container" id="orbContainer" title="Click to trigger acoustic pulse">
-        <canvas id="orbCanvas" width="108" height="108"></canvas>
+      <div class="orb-mini-container" id="orbMiniContainer" title="Click to trigger acoustic pulse">
+        <canvas id="orbMiniCanvas" width="88" height="88"></canvas>
       </div>
       <div class="brand-meta">
         <h1>Hearth Universal</h1>
@@ -1024,7 +1300,79 @@ dialog::backdrop {
     </div>
   </header>
 
-  <!-- Master Split Screen Layout -->
+  <!-- ==========================================================================
+       CENTERPIECE 3D HOLO-NEXUS STAGE (WebGL / Three.js 4D Viewport)
+       ========================================================================== -->
+  <section class="holo-stage-card" id="holoStageCard">
+    <!-- Top HUD Bar -->
+    <div class="holo-hud-top">
+      <div class="holo-title-group">
+        <div class="holo-radar-beacon"></div>
+        <div class="holo-title-text">
+          <span>HODN-4D</span>
+          <span style="color: var(--text-tertiary); font-weight: 400;">//</span>
+          <span id="active3DModeLabel">3D SMART HOLODECK</span>
+        </div>
+      </div>
+
+      <!-- 3D Mode Selector Buttons -->
+      <div class="holo-mode-cluster">
+        <button class="btn-holo-mode active-mode" data-mode="holodeck">🏢 3D Holodeck</button>
+        <button class="btn-holo-mode" data-mode="neural">🔮 Neural Core</button>
+        <button class="btn-holo-mode" data-mode="dag">⚡ 3D ReAct DAG</button>
+        <button class="btn-holo-mode" data-mode="merkle">⛓️ Chronos Helix</button>
+      </div>
+
+      <!-- Viewport Action Tools -->
+      <div class="holo-tools-group">
+        <button class="btn-holo-tool active-tool" id="btnAutoSpin" title="Toggle Auto-Spin Orbit">🔄 Spin</button>
+        <button class="btn-holo-tool" id="btnCamAngle" title="Cycle Camera Angle (ISO/TOP/FRONT)">📐 Cam</button>
+        <button class="btn-holo-tool" id="btnColorTheme" title="Cycle Cyber Color Theme">🎨 Palette</button>
+        <button class="btn-holo-tool" id="btnWireframe" title="Toggle Wireframe Mesh">🔬 Wire</button>
+        <button class="btn-holo-tool" id="btnStageFullscreen" title="Expand to Fullscreen Viewport">⛶ Maximize</button>
+      </div>
+    </div>
+
+    <!-- 3D WebGL Canvas Main Stage -->
+    <div class="holo-canvas-wrapper" id="holoCanvasWrapper">
+      <canvas id="holoCanvas3D"></canvas>
+      <div class="holo-scanlines-fx"></div>
+
+      <!-- Floating 3D Object Raycast Tooltip HUD -->
+      <div class="holo-object-hud" id="holoTooltipHUD" style="display: none;">
+        <div class="holo-hud-title" id="hudMeshName">LIVING ROOM PENDANT</div>
+        <div class="holo-hud-body" id="hudMeshDetails">Click to toggle light or inspect telemetry.</div>
+      </div>
+    </div>
+
+    <!-- Bottom HUD Telemetry Strip -->
+    <div class="holo-hud-bottom">
+      <div class="holo-telemetry-item">
+        <span style="color: var(--alexa-cyan); font-weight: 700;">FPS:</span>
+        <span id="hudFpsVal" class="font-mono">60</span>
+      </div>
+      <div class="holo-telemetry-item">
+        <span style="color: var(--alexa-cyan); font-weight: 700;">MESHES:</span>
+        <span id="hudMeshCountVal" class="font-mono">38</span>
+      </div>
+      <div class="holo-telemetry-item">
+        <span style="color: var(--alexa-cyan); font-weight: 700;">RENDERER:</span>
+        <span class="font-mono">WebGL Three.js r128</span>
+      </div>
+      <div class="holo-audio-spectrum-wrap">
+        <span style="color: var(--alexa-cyan); font-weight: 700;">AUDIO FFT:</span>
+        <canvas id="audioSpectrumCanvas" width="140" height="20"></canvas>
+      </div>
+      <div class="holo-telemetry-item">
+        <span style="color: #34d399; font-weight: 700;">RAYCASTER:</span>
+        <span class="font-mono" id="hudRaycastTarget">SURFACE ACTIVE</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       Master Split Screen Tactical Dashboard
+       ========================================================================== -->
   <main class="master-grid">
     <!-- Left Panel: Alexa+ Conversational Stage & Autonomous DAG Canvas -->
     <section class="glass-panel stage-panel">
@@ -1043,8 +1391,8 @@ dialog::backdrop {
             <span>Online</span>
           </div>
           <div class="bubble-content">
-            <p>Welcome to <strong>Hearth Universal</strong>, your ambient household operations agent for Amazon Alexa+.</p>
-            <p>I operate on an uncompromising <strong>Propose-Never-Execute</strong> safety contract: I continuously audit subscriptions, track pantry consumables, and coordinate smart home routines—but I stage all consequential changes in your <strong>Approval Tray</strong> with transparent cost deltas.</p>
+            <p>Welcome to <strong>Hearth Universal</strong>, your ambient household operations engine for Amazon Alexa+.</p>
+            <p>I operate on an uncompromising <strong>Propose-Never-Execute</strong> safety contract: I continuously audit subscriptions, track pantry consumables, and coordinate smart home routines—staging all consequential changes in your <strong>Approval Tray</strong> with transparent cost deltas.</p>
           </div>
         </div>
       </div>
@@ -1053,7 +1401,7 @@ dialog::backdrop {
       <div class="dag-canvas-card" id="dagCard" style="display: none;">
         <div class="dag-top-row" id="dagToggleHeader">
           <span class="dag-title-tag">⚡ Live Autonomous Execution DAG</span>
-          <span id="dagChevronIcon" style="color: var(--alexa-cyan); font-size: 13px;">▼</span>
+          <span id="dagChevronIcon" style="color: var(--alexa-cyan); font-size: 12px;">▼</span>
         </div>
         <div class="dag-node-flow" id="dagNodeFlow"></div>
       </div>
@@ -1115,7 +1463,7 @@ dialog::backdrop {
           <span><strong>Glass-Box Approval Gate:</strong> The agent drafts proposals. Consequential changes (finances, cancellations, smart door unlocks) execute <em>only</em> upon your explicit tap.</span>
         </div>
         <div id="contractsList">
-          <div style="text-align: center; color: var(--text-tertiary); padding: 50px 0;">
+          <div style="text-align: center; color: var(--text-tertiary); padding: 40px 0;">
             No pending action proposals. Ask Alexa+ to <i>"Save me $437 on renewals"</i> or <i>"Reorder coffee"</i> to generate action drafts.
           </div>
         </div>
@@ -1183,7 +1531,7 @@ dialog::backdrop {
                 <span class="room-title">🚪 Entryway Perimeter</span>
                 <span class="status-pill live-green" id="lockStatusPill">LOCKED</span>
               </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;" id="lockEventDetail">
+              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;" id="lockEventDetail">
                 Auto-lock engaged (Security: Armed Home)
               </div>
               <button class="btn-ambient" style="width: 100%; justify-content: center;" onclick="togglePerimeterLock()">
@@ -1210,15 +1558,15 @@ dialog::backdrop {
           <div class="twin-section-label">⚡ Real-Time Electrical Telemetry</div>
           <div class="energy-telemetry-cluster">
             <div>
-              <div style="font-size: 12px; color: var(--text-secondary);">Active Load</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Active Load</div>
               <div class="energy-metric-value" style="color: var(--alexa-cyan);" id="loadKwMetric">1.45 kW</div>
             </div>
             <div>
-              <div style="font-size: 12px; color: var(--text-secondary);">Solar Generation</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Solar Generation</div>
               <div class="energy-metric-value" style="color: #34d399;" id="solarKwMetric">0.85 kW</div>
             </div>
             <div>
-              <div style="font-size: 12px; color: var(--text-secondary);">Eco Sustainability</div>
+              <div style="font-size: 11px; color: var(--text-secondary);">Eco Sustainability</div>
               <div class="energy-metric-value" style="color: var(--alexa-violet);">94 / 100</div>
             </div>
           </div>
@@ -1247,9 +1595,9 @@ dialog::backdrop {
       <div class="tab-stage-content" id="vaultStage" style="display: none;">
         <div class="twin-section">
           <div class="twin-section-label">🧠 Persistent SQLite Household Facts</div>
-          <div style="display: flex; gap: 8px; margin-bottom: 14px;">
-            <input type="text" id="addFactKeyInput" placeholder="Key (e.g. pet_name)" class="text-input-field" style="padding: 8px 12px; font-size: 13px;"/>
-            <input type="text" id="addFactValInput" placeholder="Value (e.g. Luna the Golden Retriever)" class="text-input-field" style="padding: 8px 12px; font-size: 13px;"/>
+          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+            <input type="text" id="addFactKeyInput" placeholder="Key (e.g. pet_name)" class="text-input-field" style="padding: 7px 10px; font-size: 12px;"/>
+            <input type="text" id="addFactValInput" placeholder="Value (e.g. Luna the Golden Retriever)" class="text-input-field" style="padding: 7px 10px; font-size: 12px;"/>
             <button class="btn-ambient" onclick="persistFactAction()">+ Remember</button>
           </div>
           <div id="factsListing"></div>
@@ -1273,7 +1621,7 @@ dialog::backdrop {
     </div>
     <button class="btn-ambient" onclick="$('auditModalDialog').close()">✕ Close</button>
   </div>
-  <div style="margin-bottom: 14px; font-size: 13px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+  <div style="margin-bottom: 12px; font-size: 12.5px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
     <span>Every AI proposal, human approval, and Sentinel decision is mathematically hash-chained in <code>state/audit.jsonl</code>.</span>
     <span class="status-pill live-green" id="modalVerifyPill">Integrity: 100% VALID</span>
   </div>
