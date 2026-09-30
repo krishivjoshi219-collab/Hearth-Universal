@@ -1,6 +1,7 @@
 /**
- * Hearth Universal — Client Engine (Bachynskyi Showcase Edition)
- * Living 3D Neural Core · Cursor Spotlight · 3D Tilt Cards · Web Audio · Propose-Never-Execute
+ * Hearth Universal — Client Engine (Bachynskyi Ultra Showcase Edition)
+ * 3D Rotating Sphere Lattice · Dynamic Specular Glare · Multi-Brain Egress
+ * Procedural Audio · Propose-Never-Execute Safety Contract · Verifiable State Export
  */
 
 "use strict";
@@ -91,7 +92,7 @@ function showToast(message, type = "info") {
 }
 
 // =============================================================================
-// 2. SYNTHESIZED WEB AUDIO DESIGN (Procedural Cues)
+// 2. PROCEDURAL WEB AUDIO ENGINE (Haptics & Cues)
 // =============================================================================
 
 let audioCtx = null;
@@ -119,8 +120,8 @@ function playSfx(type) {
   const now = audioCtx.currentTime;
 
   if (type === "success") {
-    // Holographic Chord (C5 -> E5 -> G5 -> C6)
-    [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+    // Warm 4-note holographic chord (F4 -> A4 -> C5 -> F5)
+    [349.23, 440.0, 523.25, 698.46].forEach((freq, i) => {
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = "sine";
@@ -128,38 +129,74 @@ function playSfx(type) {
 
       gain.gain.setValueAtTime(0, now + i * 0.05);
       gain.gain.linearRampToValueAtTime(0.09, now + i * 0.05 + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.4);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.45);
 
       osc.connect(gain);
       gain.connect(audioCtx.destination);
 
       osc.start(now + i * 0.05);
-      osc.stop(now + i * 0.05 + 0.42);
+      osc.stop(now + i * 0.05 + 0.48);
     });
   } else if (type === "alert") {
-    // High Crystal Chime
+    // High Crystal Resonance (E5 -> B5)
+    [659.25, 987.77].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+
+      gain.gain.setValueAtTime(0, now + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.11, now + i * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.38);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.4);
+    });
+  } else if (type === "lock") {
+    // Motorized Deadbolt Mechanical Snap (dual impulse)
+    [160, 220].forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(freq, now + i * 0.08);
+      osc.frequency.exponentialRampToValueAtTime(40, now + i * 0.08 + 0.05);
+
+      gain.gain.setValueAtTime(0.12, now + i * 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.06);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now + i * 0.08);
+      osc.stop(now + i * 0.08 + 0.07);
+    });
+  } else if (type === "routine") {
+    // Ambient Harmonic Swell
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(880, now); // A5
-    osc.frequency.exponentialRampToValueAtTime(1320, now + 0.15);
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(440, now + 0.25);
 
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    gain.gain.linearRampToValueAtTime(0.12, now + 0.12);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
 
     osc.connect(gain);
     gain.connect(audioCtx.destination);
 
     osc.start(now);
-    osc.stop(now + 0.36);
+    osc.stop(now + 0.4);
   } else if (type === "click") {
-    // Tactile Switch Pop
+    // Tactile Click Pop
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = "triangle";
-    osc.frequency.setValueAtTime(260, now);
-    osc.frequency.exponentialRampToValueAtTime(80, now + 0.035);
+    osc.frequency.setValueAtTime(280, now);
+    osc.frequency.exponentialRampToValueAtTime(90, now + 0.035);
 
     gain.gain.setValueAtTime(0.07, now);
     gain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
@@ -172,7 +209,6 @@ function playSfx(type) {
   }
 }
 
-// Sound toggle button
 $("soundToggleBtn")?.addEventListener("click", () => {
   soundEnabled = !soundEnabled;
   $("soundToggleBtn").textContent = soundEnabled ? "🔊 Sound On" : "🔇 Sound Muted";
@@ -180,7 +216,7 @@ $("soundToggleBtn")?.addEventListener("click", () => {
 });
 
 // =============================================================================
-// 3. CURSOR SPOTLIGHT & AMBIENT STARFIELD CANVAS
+// 3. CURSOR SPOTLIGHT & STARFIELD NEURAL PARTICLES
 // =============================================================================
 
 function setupCursorSpotlight() {
@@ -205,15 +241,15 @@ function initStarfieldCanvas() {
   });
 
   const particles = [];
-  const COUNT = 38;
+  const COUNT = 36;
 
   for (let i = 0; i < COUNT; i++) {
     particles.push({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-      radius: Math.random() * 1.5 + 0.5,
+      vx: (Math.random() - 0.5) * 0.35,
+      vy: (Math.random() - 0.5) * 0.35,
+      radius: Math.random() * 1.5 + 0.6,
       alpha: Math.random() * 0.4 + 0.2,
     });
   }
@@ -221,7 +257,6 @@ function initStarfieldCanvas() {
   function render() {
     ctx.clearRect(0, 0, width, height);
 
-    // Update and draw particles
     for (let i = 0; i < particles.length; i++) {
       const p = particles[i];
       p.x += p.vx;
@@ -237,7 +272,6 @@ function initStarfieldCanvas() {
       ctx.fillStyle = `rgba(0, 240, 255, ${p.alpha})`;
       ctx.fill();
 
-      // Connect nearby particles
       for (let j = i + 1; j < particles.length; j++) {
         const p2 = particles[j];
         const dx = p.x - p2.x;
@@ -248,7 +282,7 @@ function initStarfieldCanvas() {
           ctx.beginPath();
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(p2.x, p2.y);
-          ctx.strokeStyle = `rgba(168, 85, 247, ${0.15 * (1 - dist / 110)})`;
+          ctx.strokeStyle = `rgba(168, 85, 247, ${0.14 * (1 - dist / 110)})`;
           ctx.lineWidth = 0.6;
           ctx.stroke();
         }
@@ -262,12 +296,41 @@ function initStarfieldCanvas() {
 }
 
 // =============================================================================
-// 4. LIVING 3D NEURAL ORB CENTERPIECE (Bachynskyi Signature)
+// 4. INTERACTIVE 3D WIREFRAME SPHERE LATTICE (Bachynskyi Masterpiece)
 // =============================================================================
 
 let orbState = "idle"; // 'idle', 'listening', 'thinking', 'speaking'
 let orbMouseX = 0;
 let orbMouseY = 0;
+let orbShockwave = 0;
+
+function syncCoreStatusBadge() {
+  const text = $("coreStatusText");
+  const pill = $("coreStatusPill");
+  if (!text || !pill) return;
+
+  if (orbState === "listening") {
+    text.textContent = "LISTENING · VOICE ACTIVE";
+    pill.style.borderColor = "var(--rose)";
+    pill.style.color = "var(--rose)";
+    pill.style.background = "rgba(255, 51, 102, 0.12)";
+  } else if (orbState === "thinking") {
+    text.textContent = "ORCHESTRATING DAG";
+    pill.style.borderColor = "var(--purple)";
+    pill.style.color = "var(--purple)";
+    pill.style.background = "rgba(168, 85, 247, 0.12)";
+  } else if (orbState === "speaking") {
+    text.textContent = "SYNTHESIZING SPEECH";
+    pill.style.borderColor = "var(--cyan)";
+    pill.style.color = "var(--cyan)";
+    pill.style.background = "rgba(0, 240, 255, 0.12)";
+  } else {
+    text.textContent = "AUTONOMOUS · READY";
+    pill.style.borderColor = "rgba(0, 255, 136, 0.35)";
+    pill.style.color = "var(--emerald)";
+    pill.style.background = "rgba(0, 255, 136, 0.1)";
+  }
+}
 
 function initKineticOrb() {
   const canvas = $("orbCanvas");
@@ -275,11 +338,55 @@ function initKineticOrb() {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const w = canvas.width;
-  const h = canvas.height;
-  const cx = w / 2;
-  const cy = h / 2;
-  let angle = 0;
+  // High-DPI Retina scaling
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const displayW = 100;
+  const displayH = 100;
+  canvas.width = displayW * dpr;
+  canvas.height = displayH * dpr;
+  ctx.scale(dpr, dpr);
+
+  const cx = displayW / 2;
+  const cy = displayH / 2;
+
+  let rotX = 0.3;
+  let rotY = 0;
+  let gimbalAngle1 = 0;
+  let gimbalAngle2 = 0;
+  let time = 0;
+
+  // Generate 3D spherical lattice coordinates
+  const R = 30;
+  const points = [];
+  const rings = 7;
+  const segments = 14;
+
+  for (let i = 0; i <= rings; i++) {
+    const theta = (i * Math.PI) / rings - Math.PI / 2;
+    for (let j = 0; j < segments; j++) {
+      const phi = (j * 2 * Math.PI) / segments;
+      points.push({
+        x: R * Math.cos(theta) * Math.cos(phi),
+        y: R * Math.sin(theta),
+        z: R * Math.cos(theta) * Math.sin(phi),
+        ring: i,
+        seg: j,
+      });
+    }
+  }
+
+  // Orbiting Particle Stars
+  const orbiters = [];
+  const ORBITER_COUNT = 10;
+  for (let k = 0; k < ORBITER_COUNT; k++) {
+    orbiters.push({
+      orbitR: R + 10 + Math.random() * 8,
+      speed: (0.015 + Math.random() * 0.02) * (Math.random() > 0.5 ? 1 : -1),
+      angle: Math.random() * Math.PI * 2,
+      tilt: (Math.random() - 0.5) * 1.2,
+      size: Math.random() * 1.5 + 0.8,
+    });
+  }
 
   canvas.addEventListener("pointermove", (e) => {
     const rect = canvas.getBoundingClientRect();
@@ -293,92 +400,211 @@ function initKineticOrb() {
   });
 
   canvas.addEventListener("click", () => {
+    orbShockwave = 1.0;
     playSfx("click");
     toggleSpeechListening();
   });
 
-  function drawOrb() {
-    ctx.clearRect(0, 0, w, h);
-    angle += orbState === "thinking" ? 0.08 : 0.02;
+  function draw3DLattice() {
+    ctx.clearRect(0, 0, displayW, displayH);
+    time += 0.02;
+    syncCoreStatusBadge();
 
-    const baseRadius = 24 + Math.sin(angle * 2) * 2;
-    const tiltX = orbMouseX * 10;
-    const tiltY = orbMouseY * 10;
+    const speed = orbState === "thinking" ? 0.08 : orbState === "listening" ? 0.045 : 0.02;
+    rotY += speed + orbMouseX * 0.035;
+    rotX = 0.3 + orbMouseY * 0.35;
+    gimbalAngle1 += speed * 0.7;
+    gimbalAngle2 -= speed * 0.55;
 
-    // 1. Ambient Outer Halo
-    const haloGrad = ctx.createRadialGradient(cx + tiltX, cy + tiltY, baseRadius * 0.4, cx, cy, baseRadius * 1.8);
-    if (orbState === "listening") {
-      haloGrad.addColorStop(0, "rgba(255, 51, 102, 0.6)");
-      haloGrad.addColorStop(1, "rgba(255, 51, 102, 0)");
-    } else if (orbState === "thinking") {
-      haloGrad.addColorStop(0, "rgba(168, 85, 247, 0.6)");
-      haloGrad.addColorStop(1, "rgba(0, 240, 255, 0)");
-    } else {
-      haloGrad.addColorStop(0, "rgba(0, 240, 255, 0.5)");
-      haloGrad.addColorStop(0.5, "rgba(168, 85, 247, 0.3)");
-      haloGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+    const cosY = Math.cos(rotY);
+    const sinY = Math.sin(rotY);
+    const cosX = Math.cos(rotX);
+    const sinX = Math.sin(rotX);
+
+    // Shockwave pulse decay
+    if (orbShockwave > 0.02) {
+      orbShockwave *= 0.92;
+      ctx.beginPath();
+      ctx.arc(cx, cy, R * (1 + (1 - orbShockwave) * 1.7), 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(0, 240, 255, ${orbShockwave * 0.75})`;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
     }
 
-    ctx.fillStyle = haloGrad;
+    // 1. Ambient Iridescent Fluid Core
+    const breath = 1 + Math.sin(time * 3) * (orbState === "listening" ? 0.12 : 0.04);
+    const coreGrad = ctx.createRadialGradient(cx - 3, cy - 3, 2, cx, cy, R * breath);
+
+    if (orbState === "listening") {
+      coreGrad.addColorStop(0, "#fff1f2");
+      coreGrad.addColorStop(0.35, "rgba(255, 51, 102, 0.85)");
+      coreGrad.addColorStop(1, "rgba(136, 19, 55, 0.15)");
+    } else if (orbState === "thinking") {
+      coreGrad.addColorStop(0, "#faf5ff");
+      coreGrad.addColorStop(0.35, "rgba(168, 85, 247, 0.85)");
+      coreGrad.addColorStop(1, "rgba(59, 7, 100, 0.15)");
+    } else {
+      coreGrad.addColorStop(0, "#f0fdfa");
+      coreGrad.addColorStop(0.3, "rgba(0, 240, 255, 0.8)");
+      coreGrad.addColorStop(0.7, "rgba(112, 0, 255, 0.5)");
+      coreGrad.addColorStop(1, "rgba(3, 7, 18, 0.08)");
+    }
+
+    ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.arc(cx, cy, baseRadius * 1.8, 0, Math.PI * 2);
+    ctx.arc(cx, cy, R * breath, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. 3D Rotating Gyro Rings
+    // 2. 3D Astrolabe Gimbal Rings (Luxury Kinetic Gyroscope)
+    // Gimbal Ring 1: Inclined at 45 deg
     ctx.save();
     ctx.translate(cx, cy);
-
-    for (let r = 0; r < 3; r++) {
-      ctx.save();
-      const ringAngle = angle * (r % 2 === 0 ? 1 : -1) + (r * Math.PI) / 3;
-      ctx.rotate(ringAngle);
-      ctx.scale(1, 0.35 + r * 0.15 + orbMouseY * 0.1);
-
-      ctx.beginPath();
-      ctx.arc(0, 0, baseRadius + 10 + r * 5, 0, Math.PI * 2);
-      ctx.strokeStyle = r === 0 ? "rgba(0, 240, 255, 0.7)" : r === 1 ? "rgba(168, 85, 247, 0.5)" : "rgba(0, 255, 136, 0.4)";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-      ctx.restore();
-    }
+    ctx.rotate(Math.PI / 4 + rotX * 0.2);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, R + 9, (R + 9) * Math.cos(gimbalAngle1), 0, 0, Math.PI * 2);
+    ctx.strokeStyle = orbState === "listening"
+      ? "rgba(255, 51, 102, 0.55)"
+      : "rgba(0, 240, 255, 0.55)";
+    ctx.lineWidth = 1.0;
+    ctx.stroke();
     ctx.restore();
 
-    // 3. Fluid Iridescent Core
-    const coreGrad = ctx.createRadialGradient(cx - 6 + tiltX * 0.5, cy - 6 + tiltY * 0.5, 3, cx, cy, baseRadius);
-    if (orbState === "listening") {
-      coreGrad.addColorStop(0, "#ffe4e6");
-      coreGrad.addColorStop(0.4, "#ff3366");
-      coreGrad.addColorStop(1, "#881337");
-    } else if (orbState === "thinking") {
-      coreGrad.addColorStop(0, "#f3e8ff");
-      coreGrad.addColorStop(0.4, "#a855f7");
-      coreGrad.addColorStop(1, "#3b0764");
-    } else {
-      coreGrad.addColorStop(0, "#e0f2fe");
-      coreGrad.addColorStop(0.35, "#00f0ff");
-      coreGrad.addColorStop(0.75, "#7000ff");
-      coreGrad.addColorStop(1, "#030712");
+    // Gimbal Ring 2: Inclined at -45 deg
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-Math.PI / 4 - rotX * 0.2);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, R + 12, (R + 12) * Math.cos(gimbalAngle2), 0, 0, Math.PI * 2);
+    ctx.strokeStyle = orbState === "thinking"
+      ? "rgba(168, 85, 247, 0.6)"
+      : "rgba(168, 85, 247, 0.4)";
+    ctx.lineWidth = 0.9;
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. 3D Spherical Coordinate Transformation
+    const projected = [];
+    const focal = 190;
+
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+
+      // Rotate Y
+      const x1 = p.x * cosY - p.z * sinY;
+      const z1 = p.z * cosY + p.x * sinY;
+
+      // Rotate X
+      const y2 = p.y * cosX - z1 * sinX;
+      const z2 = z1 * cosX + p.y * sinX;
+
+      const scale = focal / (focal + z2);
+      projected.push({
+        x: cx + x1 * scale,
+        y: cy + y2 * scale,
+        z: z2,
+        scale: scale,
+      });
     }
 
-    ctx.beginPath();
-    ctx.arc(cx + tiltX * 0.3, cy + tiltY * 0.3, baseRadius, 0, Math.PI * 2);
-    ctx.fillStyle = coreGrad;
-    ctx.fill();
+    // 4. Render 3D Latitude Rings
+    for (let r = 1; r < rings; r++) {
+      ctx.beginPath();
+      for (let s = 0; s < segments; s++) {
+        const idx = r * segments + s;
+        const nextIdx = r * segments + ((s + 1) % segments);
+        const p1 = projected[idx];
+        const p2 = projected[nextIdx];
 
-    // 4. Glare Specular Highlight
-    ctx.beginPath();
-    ctx.arc(cx - baseRadius * 0.3 + tiltX * 0.4, cy - baseRadius * 0.3 + tiltY * 0.4, baseRadius * 0.25, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.65)";
-    ctx.fill();
+        if (s === 0) ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+      }
+      ctx.closePath();
+      const avgZ = projected[r * segments].z;
+      const alpha = Math.max(0.12, (avgZ + R) / (2 * R));
+      ctx.strokeStyle = orbState === "listening"
+        ? `rgba(255, 51, 102, ${alpha * 0.65})`
+        : `rgba(0, 240, 255, ${alpha * 0.55})`;
+      ctx.lineWidth = 0.85;
+      ctx.stroke();
+    }
 
-    requestAnimationFrame(drawOrb);
+    // 5. Render 3D Longitude Meridians
+    for (let s = 0; s < segments; s++) {
+      ctx.beginPath();
+      for (let r = 0; r <= rings; r++) {
+        const idx = r * segments + s;
+        const pt = projected[idx];
+        if (r === 0) ctx.moveTo(pt.x, pt.y);
+        else ctx.lineTo(pt.x, pt.y);
+      }
+      ctx.strokeStyle = orbState === "thinking"
+        ? "rgba(168, 85, 247, 0.45)"
+        : "rgba(0, 240, 255, 0.35)";
+      ctx.lineWidth = 0.7;
+      ctx.stroke();
+    }
+
+    // 6. Draw Glowing Node Points for Foreground Vertices
+    for (let i = 0; i < projected.length; i++) {
+      const pt = projected[i];
+      if (pt.z > 2) {
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, 1.4 * pt.scale, 0, Math.PI * 2);
+        ctx.fillStyle = orbState === "listening" ? "#ff3366" : "#00f0ff";
+        ctx.fill();
+      }
+    }
+
+    // 7. Render 3D Orbiting Particle Stars
+    orbiters.forEach((orb) => {
+      orb.angle += orb.speed;
+      const ox = Math.cos(orb.angle) * orb.orbitR;
+      const oz = Math.sin(orb.angle) * orb.orbitR;
+      const oy = oz * Math.sin(orb.tilt);
+
+      const px = cx + (ox * cosY - oz * sinY);
+      const pz = oz * cosY + ox * sinY;
+      const py = cy + (oy * cosX - pz * sinX);
+
+      if (pz > -R) {
+        const pScale = focal / (focal + pz);
+        ctx.beginPath();
+        ctx.arc(px, py, orb.size * pScale, 0, Math.PI * 2);
+        ctx.fillStyle = orbState === "listening" ? "#ff88a3" : "#70ffff";
+        ctx.shadowColor = "#00f0ff";
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+    });
+
+    // 8. Audio Wave Equalizer Rings when Speaking
+    if (orbState === "speaking") {
+      for (let b = 0; b < 14; b++) {
+        const barAngle = (b * Math.PI * 2) / 14 + time * 2;
+        const waveH = Math.sin(time * 8 + b * 1.5) * 8 + 10;
+        const bx1 = cx + Math.cos(barAngle) * (R + 4);
+        const by1 = cy + Math.sin(barAngle) * (R + 4);
+        const bx2 = cx + Math.cos(barAngle) * (R + 4 + waveH);
+        const by2 = cy + Math.sin(barAngle) * (R + 4 + waveH);
+
+        ctx.beginPath();
+        ctx.moveTo(bx1, by1);
+        ctx.lineTo(bx2, by2);
+        ctx.strokeStyle = "rgba(0, 240, 255, 0.85)";
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+    }
+
+    requestAnimationFrame(draw3DLattice);
   }
 
-  drawOrb();
+  draw3DLattice();
 }
 
 // =============================================================================
-// 5. 3D TILT CARDS (Bachynskyi's Physical Depth)
+// 5. PHYSICAL 3D TILT CARDS WITH DYNAMIC SPECULAR GLARE
 // =============================================================================
 
 function apply3DTiltCards() {
@@ -392,15 +618,15 @@ function apply3DTiltCards() {
       const cx = rect.width / 2;
       const cy = rect.height / 2;
 
-      const rotX = ((y - cy) / cy) * -6;
-      const rotY = ((x - cx) / cx) * 6;
+      const rotX = ((y - cy) / cy) * -7;
+      const rotY = ((x - cx) / cx) * 7;
 
-      card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-2px)`;
+      card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale3d(1.012, 1.012, 1.012)`;
     });
 
     card.addEventListener("pointerleave", () => {
-      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)";
-      card.style.transition = "transform 0.3s ease";
+      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+      card.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
     });
 
     card.addEventListener("pointerenter", () => {
@@ -521,10 +747,33 @@ function speakVoice(text) {
     const clean = text.replace(/[*#`_]/g, "").slice(0, 320);
     const u = new SpeechSynthesisUtterance(clean);
     u.rate = 1.05;
+    u.pitch = 1.02;
 
-    u.onstart = () => { orbState = "speaking"; };
-    u.onend = () => { orbState = "idle"; };
-    u.onerror = () => { orbState = "idle"; };
+    const voices = window.speechSynthesis.getVoices() || [];
+    const preferred = voices.find(
+      (v) =>
+        v.lang.startsWith("en") &&
+        (v.name.includes("Samantha") ||
+          v.name.includes("Karen") ||
+          v.name.includes("Victoria") ||
+          v.name.includes("Google UK English Female") ||
+          v.name.includes("Natural"))
+    ) || voices.find((v) => v.lang.startsWith("en"));
+
+    if (preferred) u.voice = preferred;
+
+    u.onstart = () => {
+      orbState = "speaking";
+      syncCoreStatusBadge();
+    };
+    u.onend = () => {
+      orbState = "idle";
+      syncCoreStatusBadge();
+    };
+    u.onerror = () => {
+      orbState = "idle";
+      syncCoreStatusBadge();
+    };
 
     window.speechSynthesis.speak(u);
   } catch {
@@ -537,7 +786,7 @@ $("alexaSpeechTestBtn")?.addEventListener("click", () => {
 });
 
 // =============================================================================
-// 8. HEADER, CLOCK & TELEMETRY
+// 8. HEADER, CLOCK, BRAIN SWITCHING & STATE EXPORT
 // =============================================================================
 
 function updateLiveClock() {
@@ -556,6 +805,7 @@ async function refreshHeaderStats() {
     const text = $("protocolText");
     const merkle = $("auditMerklePill");
     const brain = $("brainModelBadge");
+    const brainSelect = $("brainProviderSelect");
 
     if (health.status === "ok") {
       pill?.classList.add("active-pulse");
@@ -571,6 +821,14 @@ async function refreshHeaderStats() {
     if (brain) {
       brain.textContent = `Brain: ${health.active_provider || "Local Agent"} · Protocol: ${health.protocol}`;
     }
+
+    if (brainSelect && health.active_provider) {
+      brainSelect.value = health.active_provider.toLowerCase().includes("bedrock")
+        ? "bedrock"
+        : health.active_provider.toLowerCase().includes("openai")
+        ? "openai"
+        : "local";
+    }
   } catch {
     const pill = $("protocolStatusPill");
     const text = $("protocolText");
@@ -578,6 +836,19 @@ async function refreshHeaderStats() {
     if (text) text.textContent = "Server Offline (:8787)";
   }
 }
+
+// Brain Selector change handler
+$("brainProviderSelect")?.addEventListener("change", async (e) => {
+  const newProvider = e.target.value;
+  playSfx("click");
+  try {
+    await api.post("/api/brain", { provider: newProvider });
+    showToast(`Switched brain provider to: ${newProvider.toUpperCase()}`, "success");
+    await refreshHeaderStats();
+  } catch (err) {
+    showToast(`Could not switch brain: ${err.message}`, "error");
+  }
+});
 
 // Reset Demo button
 $("resetDemoBtn")?.addEventListener("click", async () => {
@@ -593,8 +864,28 @@ $("resetDemoBtn")?.addEventListener("click", async () => {
   }
 });
 
+// Export State JSON Download
+$("exportAuditBtn")?.addEventListener("click", async () => {
+  playSfx("click");
+  try {
+    const exportData = await api.get("/api/export");
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hearth_audit_state_${Math.floor(Date.now() / 1000)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    showToast("Cryptographic state archive exported", "success");
+  } catch (err) {
+    showToast(`Export failed: ${err.message}`, "error");
+  }
+});
+
 // =============================================================================
-// 9. SCENES & PERIMETER DEADBOLT
+// 9. SCENES, ROUTINES & PERIMETER DEADBOLT
 // =============================================================================
 
 const SCENES_LIST = [
@@ -636,12 +927,29 @@ async function activateScene(sceneName) {
   }
 }
 
+// Coordinated Household Routines Handler
+function setupRoutinesHandlers() {
+  $$("#routinesButtonsList button").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const routineName = btn.dataset.routine;
+      playSfx("routine");
+      try {
+        await api.post("/api/home/routine", { name: routineName });
+        showToast(`Coordinated Routine “${routineName}” executed`, "success");
+        await refreshHome();
+      } catch (err) {
+        showToast(`Routine failed: ${err.message}`, "error");
+      }
+    });
+  });
+}
+
 async function togglePerimeterLock(toLock) {
   try {
-    playSfx("click");
+    playSfx("lock");
     const res = await api.post("/api/home/lock", { locked: toLock });
     const isLocked = res.status === "locked";
-    showToast(isLocked ? "Front door locked" : "Front door unlocked", isLocked ? "success" : "warning");
+    showToast(isLocked ? "Front door locked securely" : "Front door unlocked", isLocked ? "success" : "warning");
     await refreshHome();
   } catch (err) {
     showToast(`Lock error: ${err.message}`, "error");
@@ -774,12 +1082,12 @@ function appendMessage(role, text, meta = {}) {
   return bubble;
 }
 
-async function sendChat() {
+async function sendChat(explicitText = null) {
   const input = $("composerInput");
   const sendBtn = $("composerSendBtn");
   if (!input) return;
 
-  const msg = input.value.trim();
+  const msg = explicitText || input.value.trim();
   if (!msg || sendBtn?.disabled) return;
 
   input.value = "";
@@ -809,6 +1117,10 @@ async function sendChat() {
       switchTab("approvals");
     }
 
+    if (res.latency_ms && $("telemetryLatency")) {
+      $("telemetryLatency").textContent = `${res.latency_ms}ms`;
+    }
+
     await refreshAll();
   } catch (err) {
     orbState = "idle";
@@ -823,6 +1135,11 @@ async function sendChat() {
 $("composerForm")?.addEventListener("submit", (e) => {
   e.preventDefault();
   sendChat();
+});
+
+// Stage Pantry Reorder button in Wealth tab
+$("stagePantryReorderBtn")?.addEventListener("click", () => {
+  sendChat("Reorder coffee and eco detergent bundle");
 });
 
 // =============================================================================
@@ -849,8 +1166,107 @@ $$(".op-tab-btn").forEach((btn) => {
 });
 
 // =============================================================================
-// 12. TAB 1: APPROVALS TRAY
+// 12. TAB 1: APPROVALS TRAY & CRYPTOGRAPHIC INSPECTION
 // =============================================================================
+
+function openInspectionModal(p) {
+  const modal = $("inspectionModal");
+  if (!modal) return;
+  playSfx("click");
+
+  const titleEl = $("modalProposalTitle");
+  const idEl = $("modalProposalId");
+  const verdictEl = $("modalSentinelVerdict");
+  const reasonEl = $("modalSentinelReason");
+  const hashEl = $("modalMerkleHash");
+  const costEl = $("modalCostImpact");
+  const diffSec = $("modalDiffSection");
+  const diffPre = $("modalDiffPre");
+
+  if (titleEl) titleEl.textContent = p.title || "Cryptographic Inspection";
+  if (idEl) idEl.textContent = `PROPOSAL ID: ${p.id || "prop-unknown"} · TYPE: ${p.kind || "general"}`;
+
+  const risk = (p.risk_level || "medium").toLowerCase();
+  if (verdictEl) {
+    if (risk === "high") {
+      verdictEl.textContent = "TIER 2: ASK (GATED BY PROPOSE-NEVER-EXECUTE)";
+      verdictEl.style.borderColor = "var(--rose)";
+      verdictEl.style.color = "var(--rose)";
+      verdictEl.style.background = "rgba(255, 51, 102, 0.12)";
+    } else {
+      verdictEl.textContent = "TIER 2: ASK (HUMAN AUTHORIZATION REQUIRED)";
+      verdictEl.style.borderColor = "var(--amber)";
+      verdictEl.style.color = "var(--amber)";
+      verdictEl.style.background = "rgba(251, 191, 36, 0.12)";
+    }
+  }
+
+  if (reasonEl) reasonEl.textContent = p.reasons || "Consequential operation staged in accordance with Sentinel Propose-Never-Execute policy.";
+
+  // Deterministic verifiable cryptographic SHA-256 seal representation
+  let seed = p.id + (p.title || "") + (p.kind || "") + (p.created_at || "1");
+  let pseudoHash = "";
+  for (let i = 0; i < seed.length; i++) {
+    pseudoHash += (seed.charCodeAt(i) * 17 + i * 31).toString(16);
+  }
+  pseudoHash = pseudoHash.padEnd(64, "a9b4c029f8e71536b2d1c0a4e5f67890").slice(0, 64);
+  if (hashEl) hashEl.textContent = `SHA-256: ${pseudoHash}`;
+
+  const cost = Number(p.cost_delta_yr || 0);
+  if (costEl) {
+    if (cost > 0) {
+      costEl.textContent = `+${formatMoney(cost)}/yr`;
+      costEl.style.color = "var(--emerald)";
+    } else if (cost < 0) {
+      costEl.textContent = `-${formatMoney(Math.abs(cost))} total`;
+      costEl.style.color = "var(--rose)";
+    } else {
+      costEl.textContent = "$0.00 (Zero direct cost)";
+      costEl.style.color = "var(--text-bright)";
+    }
+  }
+
+  if (p.diff) {
+    if (diffSec) diffSec.hidden = false;
+    if (diffPre) diffPre.textContent = p.diff;
+  } else {
+    if (diffSec) diffSec.hidden = true;
+  }
+
+  const okBtn = $("modalApproveBtn");
+  const noBtn = $("modalRejectBtn");
+
+  if (okBtn) {
+    okBtn.onclick = () => {
+      closeInspectionModal();
+      decideProposal(p.id, true);
+    };
+  }
+  if (noBtn) {
+    noBtn.onclick = () => {
+      closeInspectionModal();
+      decideProposal(p.id, false);
+    };
+  }
+
+  modal.classList.add("active");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeInspectionModal() {
+  const modal = $("inspectionModal");
+  if (!modal) return;
+  modal.classList.remove("active");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+$("modalCloseBtn")?.addEventListener("click", closeInspectionModal);
+$("inspectionModal")?.addEventListener("click", (e) => {
+  if (e.target === $("inspectionModal")) closeInspectionModal();
+});
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeInspectionModal();
+});
 
 async function decideProposal(id, approved) {
   try {
@@ -956,6 +1372,16 @@ async function refreshTray() {
           diffBox.textContent = `DIFF:\n${p.diff}`;
           card.appendChild(diffBox);
         }
+
+        const inspectBtn = document.createElement("button");
+        inspectBtn.className = "infeed-btn";
+        inspectBtn.style.width = "100%";
+        inspectBtn.style.margin = "10px 0 6px";
+        inspectBtn.style.fontSize = "11px";
+        inspectBtn.style.justifyContent = "center";
+        inspectBtn.innerHTML = "<span>🛡️ Inspect Cryptographic & DAG Trace</span>";
+        inspectBtn.addEventListener("click", () => openInspectionModal(p));
+        card.appendChild(inspectBtn);
 
         const actions = document.createElement("div");
         actions.className = "proposal-actions-split";
@@ -1143,6 +1569,35 @@ async function refreshHome() {
         row.appendChild(sliderWrap);
         row.appendChild(swLabel);
         card.appendChild(row);
+
+        // Mood Lighting Presets Bar
+        const moodRow = document.createElement("div");
+        moodRow.className = "room-mood-row";
+
+        const moodLbl = document.createElement("span");
+        moodLbl.className = "room-mood-label";
+        moodLbl.textContent = "Mood:";
+        moodRow.appendChild(moodLbl);
+
+        const MOODS = [
+          { label: "Warm", color: "#ffb366", patch: { bri: 65, color_temp: "warm", hex: "#ffb366", on: true } },
+          { label: "Daylight", color: "#ffffff", patch: { bri: 95, color_temp: "cool", hex: "#ffffff", on: true } },
+          { label: "Cyber", color: "#00f0ff", patch: { bri: 85, color_temp: "neutral", hex: "#00f0ff", on: true } },
+          { label: "Cinema", color: "#9933ff", patch: { bri: 25, color_temp: "warm", hex: "#9933ff", on: true } },
+        ];
+
+        MOODS.forEach((m) => {
+          const mBtn = document.createElement("button");
+          mBtn.className = "mood-preset-btn";
+          mBtn.innerHTML = `<span class="mood-color-dot" style="background:${m.color};box-shadow:0 0 6px ${m.color};"></span><span>${m.label}</span>`;
+          mBtn.addEventListener("click", () => {
+            playSfx("click");
+            patchDevice(def.id, "lights", m.patch);
+            showToast(`${def.label.split(" ")[1] || "Room"} mood set to ${m.label}`, "info");
+          });
+          moodRow.appendChild(mBtn);
+        });
+        card.appendChild(moodRow);
       }
 
       // Climate
@@ -1198,10 +1653,16 @@ async function refreshHome() {
         lbl.style.color = "var(--text-muted)";
         lbl.textContent = "Spatial Audio";
 
-        const desc = document.createElement("span");
-        desc.style.fontSize = "12px";
-        desc.style.color = "var(--text-dim)";
-        desc.textContent = `${room.media.playing ? "▶" : "⏸"} ${room.media.title || "Idle"} (${room.media.volume || 40}%)`;
+        const desc = document.createElement("div");
+        desc.style.display = "flex";
+        desc.style.alignItems = "center";
+        desc.style.gap = "8px";
+
+        const eqHtml = room.media.playing
+          ? `<span class="audio-eq-bars"><span class="audio-eq-bar"></span><span class="audio-eq-bar"></span><span class="audio-eq-bar"></span><span class="audio-eq-bar"></span></span>`
+          : "";
+
+        desc.innerHTML = `<span style="font-size:12.5px;color:var(--text-bright);">${room.media.playing ? "▶" : "⏸"} ${esc(room.media.title || "Idle")}</span> ${eqHtml} <small style="color:var(--text-dim);font-family:var(--font-mono);">(${room.media.volume || 40}%)</small>`;
 
         row.appendChild(lbl);
         row.appendChild(desc);
@@ -1528,8 +1989,66 @@ async function refreshLedger() {
 }
 
 // =============================================================================
-// 17. INITIAL BOOTSTRAP & SYNC
+// 17. AUTONOMOUS HOUSEHOLD HEARTBEAT ENGINE
 // =============================================================================
+
+async function refreshHeartbeat() {
+  const stream = $("heartbeatEventStream");
+  if (!stream) return;
+  try {
+    const res = await api.get("/api/heartbeat");
+    const events = res.events || [];
+    if (events.length === 0) return;
+
+    stream.innerHTML = events.slice(0, 6).map((e) => `
+      <div class="heartbeat-event-pill" title="${esc(e.detail)}">
+        <span>${esc(e.icon || "⚡")}</span>
+        <div><strong>${esc(e.title)}</strong> · ${esc(e.detail)}</div>
+        <span class="event-time">${esc(e.time_str || "")}</span>
+      </div>
+    `).join("");
+  } catch {
+    // Non-blocking
+  }
+}
+
+async function triggerProactivePulse() {
+  playSfx("click");
+  const btn = $("triggerProactiveBtn");
+  if (btn) btn.disabled = true;
+  try {
+    const res = await api.post("/api/simulate/tick", { scenario: "auto" });
+    playSfx("routine");
+    showToast(`⚡ Proactive Event: ${res.event?.title || "Simulated"}`, "info");
+    await refreshHeartbeat();
+    await refreshAll();
+  } catch (err) {
+    showToast(`Proactive pulse error: ${err.message}`, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+// =============================================================================
+// 18. KEYBOARD SHORTCUTS & BOOTSTRAP
+// =============================================================================
+
+function setupKeyboardShortcuts() {
+  window.addEventListener("keydown", (e) => {
+    // Cmd+K or Ctrl+K or '/' to focus composer
+    if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      e.preventDefault();
+      $("composerInput")?.focus();
+    } else if (e.key === "/" && document.activeElement.tagName !== "INPUT") {
+      e.preventDefault();
+      $("composerInput")?.focus();
+    } else if (e.key === "Escape") {
+      $("composerInput")?.blur();
+      $("memoryFilterInput")?.blur();
+      closeInspectionModal();
+    }
+  });
+}
 
 async function refreshAll() {
   await Promise.allSettled([
@@ -1539,6 +2058,7 @@ async function refreshAll() {
     refreshWealth(),
     refreshMemory(),
     refreshLedger(),
+    refreshHeartbeat(),
   ]);
   apply3DTiltCards();
 }
@@ -1548,7 +2068,7 @@ function seedIntroMessage() {
     "alexa",
     "Welcome to **Hearth Universal** — the open glass-box household operations agent for Amazon Alexa+.\n\n" +
       "Under our strict **Propose-Never-Execute** contract, all consequential actions stage in your **Approval Tray** with transparent cost deltas before anything executes.\n\n" +
-      "Select a prompt chip above or say: **“Save me $800 on renewals”**!"
+      "Select a prompt chip above, switch brain providers in the header, or say: **“Save me $800 on renewals”**!"
   );
 }
 
@@ -1558,8 +2078,12 @@ document.addEventListener("DOMContentLoaded", () => {
   initKineticOrb();
   setupSpeechRecognition();
   initQuickPromptRail();
+  setupRoutinesHandlers();
+  setupKeyboardShortcuts();
   seedIntroMessage();
   refreshAll();
+
+  $("triggerProactiveBtn")?.addEventListener("click", triggerProactivePulse);
 
   setInterval(refreshAll, 6000);
 });

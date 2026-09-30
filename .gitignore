@@ -9,8 +9,7 @@ dist/
 build/
 state/*.db
 state/*.jsonl
-state/proposals.json
-state/home.json
+state/*.json
 state/*.lock
 state/*.tmp
 .vault.env

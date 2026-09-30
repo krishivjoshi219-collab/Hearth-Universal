@@ -45,34 +45,40 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 
 2. **Smart Home Digital Twin & Ambient Actuation**:
    - Maintains a live multi-room digital twin (Living Room, Bedroom, Kitchen, Entryway).
+   - Features 1-tap **Mood Lighting Presets** (Warm 2700K, Daylight 5000K, Cyber Cyan, Cinema Violet) and animated live audio equalizer bars.
    - Coordinates multi-device scenes (`evening-calm`, `movie-night`, `away`, `wake`, `energy-saver`) adjusting dimmable warm/cool lighting, HVAC thermostat setpoints, and smart locks.
    - Displays real-time energy telemetry (current draw, solar generation, and eco-score).
 
-3. **Household Commerce & Consumable Replenishment**:
-   - Tracks consumable pantry levels (Coffee 15%, Laundry Pods 10%, Air Filters 20%).
-   - Discovers active Subscribe & Save bundle deals that save $7.50 on essential replenishment.
-   - Stages checkout cards in the approval tray with transparent pricing diffs.
+3. **Amazon Alexa Smart Home v3 Directive Compliance**:
+   - Native **Alexa Smart Home API v3 Adapter** (`/api/alexa/directive`) responding to `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, and `Alexa.LockController`.
+   - Locks engage autonomously (Tier-1), while physical unlocks are fail-closed and return `AUTHORIZATION_REQUIRED` with a staged approval card in the user's tray.
 
-4. **Multi-Tool ReAct / DAG Orchestrator with Live Visualizer**:
+4. **Living Autonomous Household Heartbeat Stream**:
+   - Continuous background telemetry engine (`/api/heartbeat`, `/api/simulate/tick`) simulating proactive household intelligence (solar generation surge, peak tariff mitigation, pantry threshold scans).
+
+5. **Multi-Tool ReAct / DAG Orchestrator with Live Visualizer**:
    - Decomposes high-level natural language requests into parallel dependency graphs (`memory_query` -> `inbox_scan` -> `sentinel_judge` -> `actions_propose`).
    - Renders animated execution steps directly inside the simulated Alexa+ interface.
 
-5. **Multi-Brain Egress & Sentinel Safety Matrix**:
+6. **Multi-Brain Egress & Sentinel Safety Matrix**:
    - Enforces a 3-tier security gate: Tier-1 (Safe read-only), Tier-2 (Consequential actions routed to human tray), and Tier-3 (Hard-blocked destructive commands like `rm -rf /` or credential exfiltration).
    - Swappable brain backends: **Amazon Bedrock (Claude 3.5 Sonnet / Amazon Nova)**, OpenAI, or local Ollama, with an intelligent zero-config offline engine so anyone can test in seconds.
 
-6. **Cryptographic SHA-256 Audit Ledger**:
-   - Immutably records every AI proposal, human approval, and Sentinel block in an append-only hash chain (`audit.jsonl`), verifiable with 1 click in the UI.
+7. **Cryptographic SHA-256 Audit Ledger & Glass-Box Inspection Modal**:
+   - Immutably records every AI proposal, human approval, and Sentinel block in an append-only hash chain (`audit.jsonl`).
+   - 1-tap **Cryptographic Inspection Modal** lets users verify the SHA-256 Merkle chain, DAG dependency trace, and rollback vectors before approving.
 
 ---
 
 ## ⚙️ How We Built It
 
-- **MCP Server Core (`mcp>=1.29.1`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 15 tools, 4 resources, and 3 prompt templates.
+- **MCP Server Core (`mcp>=1.29.1`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 16 tools, 4 resources, and 3 prompt templates.
+- **Amazon Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Built standard directive handler for Discover, PowerController, ThermostatController, and LockController.
+- **Autonomous Heartbeat Engine (`src/hearth/heartbeat.py`)**: Engineered background rolling event stream and proactive simulation triggers.
 - **Agent Skill (`skill/SKILL.md`)**: Engineered a standardized skill specification for Alexa+ orchestrators detailing tool contracts and safety guardrails.
 - **Amazon Bedrock Integration (`src/hearth/brains.py`)**: Wired the standardized AWS Bedrock Converse API (`client.converse()`) for Claude 3.5 Sonnet and Amazon Nova.
-- **Frontend / Simulated Alexa+ Experience (`web/`)**: Built a zero-build, responsive ambient Echo Show dashboard featuring the glowing Alexa+ acoustic orb, two-way Web Speech Synthesis & Recognition, live DAG flow rendering, and digital twin controls.
-- **Persistence & Cryptography**: SQLite for persistent facts and goals; SHA-256 Merkle chain for tamper-evident auditing.
+- **Frontend / Simulated Alexa+ Experience (`web/`)**: Built a zero-build, responsive kinetic 3D astrolabe interface (inspired by Andrii Bachynskyi), two-way Web Speech Synthesis & Recognition, procedural Web Audio SFX, and digital twin controls.
+- **Persistence & Cryptography**: SQLite for persistent facts and goals; SHA-256 Merkle chain for tamper-evident auditing. 37 automated tests passing with 100% success rate.
 
 ---
 

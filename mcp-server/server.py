@@ -41,7 +41,7 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
 
-from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains
+from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains, alexa, heartbeat
 
 # Simple per-IP token bucket for the expensive chat endpoint (product abuse guard).
 _RATE_BUCKETS: dict[str, list] = {}
@@ -452,6 +452,18 @@ async def api_home_device(request: Request):
     return JSONResponse(res)
 
 
+@mcp.custom_route("/api/home/routine", methods=["POST"])
+async def api_home_routine(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    routine_name = str(body.get("name", "morning-kickstart"))
+    res = home_mock.routine(routine_name)
+    audit.append("human", "home_routine", {"routine": routine_name})
+    return JSONResponse(res)
+
+
 @mcp.custom_route("/api/renewals", methods=["GET"])
 async def api_renewals(request: Request):
     return JSONResponse(proposals.scan_renewals())
@@ -511,6 +523,75 @@ async def api_reset(request: Request):
     proposals.clear_proposals()
     audit.append("human", "system_reset", {"action": "clean_state_reset"})
     return JSONResponse({"ok": True, "message": "State reset cleanly"})
+
+
+@mcp.custom_route("/api/brain", methods=["GET", "POST"])
+async def api_brain(request: Request):
+    if request.method == "GET":
+        return JSONResponse({
+            "active_provider": brains._get_active_provider(),
+            "model": os.environ.get("HEARTH_MODEL", "hearth-agentic-v1"),
+            "providers": [
+                {"id": "local", "name": "Local Agent (Zero-Config Offline)", "active": brains._get_active_provider() == "local"},
+                {"id": "bedrock", "name": "Amazon Bedrock (Claude 3.5 Sonnet / Nova)", "active": brains._get_active_provider() == "bedrock"},
+                {"id": "openai", "name": "OpenAI / Ollama Gateway", "active": brains._get_active_provider() == "openai"}
+            ]
+        })
+    try:
+        body = await request.json()
+        provider = str(body.get("provider", "local")).lower()
+        if provider in ("local", "bedrock", "openai", "ollama"):
+            os.environ["HEARTH_BRAIN_PROVIDER"] = provider
+            audit.append("human", "brain_switch", {"provider": provider})
+            return JSONResponse({"ok": True, "active_provider": provider})
+        return JSONResponse({"ok": False, "error": "Unknown provider"}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+
+
+@mcp.custom_route("/api/export", methods=["GET"])
+async def api_export(request: Request):
+    import time as _t
+    return JSONResponse({
+        "protocol": PROTOCOL,
+        "timestamp": _t.time(),
+        "memory": memory.query(),
+        "goals": memory.list_goals(),
+        "home": home_mock.get_state(),
+        "proposals": proposals.list_proposals(),
+        "heartbeat": heartbeat.get_events(),
+        "audit_integrity": audit.verify()
+    })
+
+
+@mcp.custom_route("/api/alexa/directive", methods=["POST"])
+async def api_alexa_directive(request: Request):
+    """Amazon Alexa Smart Home Skills API v3 directive endpoint."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"error": "Invalid JSON"}, status_code=400)
+    res = alexa.handle_directive(body)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/heartbeat", methods=["GET"])
+async def api_heartbeat(request: Request):
+    """Retrieve rolling autonomous household heartbeat events."""
+    limit = max(1, min(50, int(request.query_params.get("limit", "15"))))
+    return JSONResponse({"events": heartbeat.get_events(limit)})
+
+
+@mcp.custom_route("/api/simulate/tick", methods=["POST"])
+async def api_simulate_tick(request: Request):
+    """Trigger a proactive household simulation event."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    scenario = str(body.get("scenario", "auto")).lower()
+    res = heartbeat.tick_proactive(scenario)
+    return JSONResponse(res)
 
 
 @mcp.custom_route("/favicon.ico", methods=["GET"])

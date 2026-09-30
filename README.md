@@ -5,10 +5,10 @@
 [![MCP Spec](https://img.shields.io/badge/MCP%20Spec-2025--11--25-blue)](https://modelcontextprotocol.io)
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP-00d2ff)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests: 14 Passed](https://img.shields.io/badge/Tests-14%20Passed-emerald)](tests/)
+[![Tests: 37 Passed](https://img.shields.io/badge/Tests-37%20Passed-emerald)](tests/)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)](pyproject.toml)
 
-> **Hearth Universal** is an open-source, proactive personal agent for Alexa+ that orchestrates household finances, automated replenishment, and smart home digital twins under an uncompromising **propose-never-execute** safety contract. It works out-of-the-box with an intelligent zero-config offline engine, and natively supports **Amazon Bedrock (Claude 3.5 Sonnet / Amazon Nova)**, OpenAI, or local Ollama.
+> **Hearth Universal** is an open-source, proactive personal agent for Alexa+ that orchestrates household finances, automated replenishment, and smart home digital twins under an uncompromising **propose-never-execute** safety contract. It features a native **Amazon Alexa Smart Home v3 Directive Adapter**, an autonomous **Household Heartbeat engine**, a luxury **3D Kinetic Astrolabe spatial interface**, and works out-of-the-box with zero-config local intelligence, with live support for **Amazon Bedrock (Claude 3.5 Sonnet / Amazon Nova)**, OpenAI, or local Ollama.
 
 ---
 
@@ -16,13 +16,14 @@
 
 - **Primary Track: Alexa+ ($25,000 Prize)**
   - Self-hosted MCP server implementing **MCP Spec version 2025-11-25** over Streamable HTTP (`/mcp`).
+  - Native **Amazon Alexa Smart Home Skills API v3 Directive Adapter** (`/api/alexa/directive`) for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, and `Alexa.LockController`.
   - Drop-in **Agent Skill package** (`skill/SKILL.md`) with 16 tools, 4 resources, and 3 prompt templates.
   - Multi-modal simulated Alexa+ experience featuring voice recognition, Alexa speech synthesis, interactive ReAct/DAG visualizer, and rich action cards.
 - **Mini Challenge: AWS Builder ($5,000 Prize)**
   - Full **Amazon Bedrock Converse API** integration (`src/hearth/brains.py`) supporting Claude 3.5 Sonnet and Amazon Nova.
   - Dockerized runtime for AWS AgentCore / ECS / App Runner (`infra/Dockerfile`).
 - **Mini Challenge: Open Source ($5,000 Prize)**
-  - Clean, permissive MIT open-source repository with comprehensive documentation, unit tests, and security guardrails.
+  - Clean, permissive MIT open-source repository with comprehensive documentation, 37 automated unit & smoke tests, and Sentinel security guardrails.
 
 ---
 

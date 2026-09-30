@@ -248,3 +248,72 @@ def test_forget_unknown_fact_honest():
 def test_goals_advance_rejects_bad_id():
     out = planner.TOOLS["goals_advance"]["handler"]({"id": "abc"})
     assert out.get("ok") is False
+
+
+def test_alexa_discovery_directive():
+    from hearth import alexa
+    res = alexa.handle_directive({
+        "directive": {
+            "header": {"namespace": "Alexa.Discovery", "name": "Discover", "correlationToken": "tok-123"},
+            "payload": {}
+        }
+    })
+    endpoints = res["event"]["payload"]["endpoints"]
+    ids = {e["endpointId"] for e in endpoints}
+    assert "living_room_lights" in ids
+    assert "front_door_lock" in ids
+    assert "home_thermostat" in ids
+
+
+def test_alexa_power_controller_directive():
+    from hearth import alexa, home_mock
+    res = alexa.handle_directive({
+        "directive": {
+            "header": {"namespace": "Alexa.PowerController", "name": "TurnOn", "correlationToken": "tok-pow"},
+            "endpoint": {"endpointId": "living_room_lights"},
+            "payload": {}
+        }
+    })
+    assert res["event"]["header"]["name"] == "Response"
+    st = home_mock.get_state()
+    assert st["living_room"]["lights"]["on"] is True
+
+
+def test_alexa_lock_controller_lock_and_unlock_gated():
+    from hearth import alexa, proposals
+    # 1. Lock -> Safe autonomous execution
+    res_lock = alexa.handle_directive({
+        "directive": {
+            "header": {"namespace": "Alexa.LockController", "name": "Lock", "correlationToken": "tok-lock"},
+            "endpoint": {"endpointId": "front_door_lock"},
+            "payload": {}
+        }
+    })
+    assert res_lock["event"]["header"]["name"] == "Response"
+    assert res_lock["context"]["properties"][0]["value"] == "LOCKED"
+
+    # 2. Unlock -> Sentinel Tier-2 Gated (Authorization Required, proposal drafted)
+    res_unlock = alexa.handle_directive({
+        "directive": {
+            "header": {"namespace": "Alexa.LockController", "name": "Unlock", "correlationToken": "tok-unlock"},
+            "endpoint": {"endpointId": "front_door_lock"},
+            "payload": {}
+        }
+    })
+    assert res_unlock["event"]["header"]["name"] == "ErrorResponse"
+    assert res_unlock["event"]["payload"]["type"] == "AUTHORIZATION_REQUIRED"
+    # Verify proposal exists in tray
+    pending = proposals.list_proposals("pending")
+    assert any("Unlock Front Door (Alexa Directive)" in p["title"] for p in pending)
+
+
+def test_heartbeat_and_proactive_tick():
+    from hearth import heartbeat
+    events = heartbeat.get_events()
+    assert isinstance(events, list)
+    assert len(events) > 0
+
+    tick_res = heartbeat.tick_proactive("energy_peak")
+    assert tick_res["ok"] is True
+    assert tick_res["event"]["type"] == "energy"
+
