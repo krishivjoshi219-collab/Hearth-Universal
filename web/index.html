@@ -3,62 +3,60 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#030712"/>
-<title>Hearth Universal — Beyond-Human 4D Ambient Holodeck (Alexa+ MCP 2025-11-25)</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='35%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%2300f0ff'/><stop offset='60%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%23030712'/></radialGradient></defs><circle cx='50' cy='50' r='46' fill='url(%23g)'/><circle cx='50' cy='50' r='20' fill='%23030712'/><circle cx='50' cy='50' r='10' fill='%2300f0ff'/></svg>"/>
+<meta name="theme-color" content="#06080F"/>
+<title>Hearth Universal — Ambient Operations Engine (Alexa+ MCP 2025-11-25)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='35%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%2338bdf8'/><stop offset='60%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%2306080f'/></radialGradient></defs><circle cx='50' cy='50' r='46' fill='url(%23g)'/><circle cx='50' cy='50' r='20' fill='%2306080f'/><circle cx='50' cy='50' r='10' fill='%2338bdf8'/></svg>"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-<!-- Three.js 3D WebGL Engine & OrbitControls (Local Vendor with Cloud CDN Fallback) -->
+<!-- Three.js for Chromatic Fluid WebGL Shader -->
 <script src="/vendor/three.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'"></script>
-<script src="/vendor/OrbitControls.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js'"></script>
 
 <style>
 :root {
-  --bg-space: #02050e;
-  --bg-surface: rgba(10, 16, 32, 0.78);
-  --bg-card: rgba(15, 23, 44, 0.88);
-  --bg-card-hover: rgba(22, 33, 62, 0.95);
-  --bg-chip: rgba(20, 30, 58, 0.65);
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-active: rgba(0, 240, 255, 0.5);
-  --border-glow: rgba(0, 240, 255, 0.35);
-  --border-hover: rgba(99, 102, 241, 0.4);
+  --bg-deep: #06080f;
+  --bg-surface: rgba(13, 17, 28, 0.72);
+  --bg-surface-elevated: rgba(18, 24, 38, 0.85);
+  --bg-card: rgba(15, 20, 32, 0.8);
+  --bg-card-hover: rgba(22, 30, 48, 0.9);
+  --bg-chip: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-focus: rgba(56, 189, 248, 0.5);
+  --border-hover: rgba(255, 255, 255, 0.14);
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
   --text-tertiary: #64748b;
-  --alexa-cyan: #00f0ff;
-  --alexa-blue: #3b82f6;
-  --alexa-indigo: #6366f1;
-  --alexa-violet: #8b5cf6;
-  --emerald-glow: #10b981;
-  --amber-warning: #f59e0b;
-  --crimson-alert: #ef4444;
-  --radius-2xl: 24px;
-  --radius-xl: 18px;
-  --radius-lg: 14px;
-  --radius-md: 10px;
+  --accent-cyan: #38bdf8;
+  --accent-indigo: #6366f1;
+  --accent-violet: #818cf8;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --radius-2xl: 20px;
+  --radius-xl: 16px;
+  --radius-lg: 12px;
+  --radius-md: 9px;
   --radius-sm: 6px;
   --radius-pill: 9999px;
-  --glow-cyan: 0 0 35px rgba(0, 240, 255, 0.28);
-  --glow-indigo: 0 0 40px rgba(99, 102, 241, 0.3);
-  --glow-card: 0 10px 40px rgba(0, 0, 0, 0.55);
+  --glow-subtle: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
+  --glow-accent: 0 0 24px -2px rgba(56, 189, 248, 0.25);
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
 body {
-  background: var(--bg-space);
+  background: var(--bg-deep);
   background-image: 
-    radial-gradient(ellipse 90% 50% at 50% -10%, rgba(0, 240, 255, 0.14), transparent 75%),
-    radial-gradient(circle 800px at 90% 85%, rgba(99, 102, 241, 0.09), transparent 80%),
-    radial-gradient(circle 600px at 10% 75%, rgba(139, 92, 246, 0.08), transparent 75%);
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.08), transparent 70%),
+    radial-gradient(circle 700px at 80% 90%, rgba(99, 102, 241, 0.05), transparent 75%),
+    radial-gradient(circle 500px at 15% 80%, rgba(129, 140, 248, 0.04), transparent 70%);
   color: var(--text-primary);
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   min-height: 100vh;
-  padding: 14px 18px 40px 18px;
+  padding: 16px 20px 40px 20px;
   overflow-x: hidden;
 }
 
@@ -66,146 +64,129 @@ code, pre, .font-mono {
   font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-.font-scifi {
-  font-family: 'Space Grotesk', sans-serif;
-}
-
-/* Master Outer Container */
-.viewport-wrap {
-  max-width: 1560px;
+/* Master Wrap */
+.app-container {
+  max-width: 1440px;
   margin: 0 auto;
 }
 
-/* Glassmorphism Surface Base */
-.glass-panel {
+/* Glassmorphism Surface Base (Linear / Apple Luxury) */
+.glass-surface {
   background: var(--bg-surface);
-  backdrop-filter: blur(28px) saturate(190%);
-  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  box-shadow: var(--glow-card);
+  box-shadow: var(--glow-subtle);
   position: relative;
   overflow: hidden;
 }
 
-.glass-panel::before {
+.glass-surface::before {
   content: "";
   position: absolute;
   top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.18), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
   pointer-events: none;
 }
 
-/* Top Hero Bar */
-header.ambient-navbar {
+/* Minimalist Top Navbar */
+header.app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 12px 20px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   border-radius: var(--radius-xl);
 }
 
-.brand-unit {
+.brand-section {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 
-.orb-mini-container {
-  width: 44px;
-  height: 44px;
-  position: relative;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-#orbMiniCanvas {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  filter: drop-shadow(0 0 14px rgba(0, 240, 255, 0.5));
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.orb-mini-container:hover #orbMiniCanvas {
-  transform: scale(1.12);
-  filter: drop-shadow(0 0 20px rgba(0, 240, 255, 0.8));
-}
-
-.brand-meta h1 {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+.brand-mark {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
   display: flex;
   align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #ffffff 30%, var(--alexa-cyan) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
 }
 
-.brand-meta .tagline {
-  font-size: 12px;
-  color: var(--text-secondary);
-  font-weight: 500;
+.brand-mark svg {
+  width: 18px;
+  height: 18px;
+  fill: #ffffff;
 }
 
-.header-telemetry {
+.brand-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
 }
 
-.status-pill {
+.brand-subtitle {
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  font-weight: 500;
+}
+
+.header-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pill-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: var(--radius-pill);
   font-size: 11.5px;
-  font-weight: 600;
-  background: rgba(18, 26, 48, 0.7);
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-subtle);
   color: var(--text-secondary);
 }
 
-.status-pill.live-green {
-  background: rgba(16, 185, 129, 0.12);
-  border-color: rgba(16, 185, 129, 0.35);
+.pill-badge.active-green {
   color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+  border-color: rgba(16, 185, 129, 0.25);
 }
 
-.status-pill.live-green::before {
+.pill-badge.active-green::before {
   content: "";
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #34d399;
-  box-shadow: 0 0 10px #34d399;
-  animation: pulseBeacon 2s infinite ease-in-out;
+  box-shadow: 0 0 8px #34d399;
 }
 
-@keyframes pulseBeacon {
-  0%, 100% { transform: scale(1); opacity: 0.9; }
-  50% { transform: scale(1.3); opacity: 0.4; }
+.pill-badge.active-cyan {
+  color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.25);
 }
 
-.status-pill.live-cyan {
-  background: rgba(0, 240, 255, 0.12);
-  border-color: rgba(0, 240, 255, 0.35);
-  color: var(--alexa-cyan);
-}
-
-.btn-ambient {
-  background: rgba(20, 30, 58, 0.6);
-  color: var(--text-primary);
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: inline-flex;
@@ -214,985 +195,675 @@ header.ambient-navbar {
   user-select: none;
 }
 
-.btn-ambient:hover {
-  background: rgba(30, 45, 84, 0.85);
-  border-color: var(--alexa-cyan);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
+.btn-ghost:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: var(--border-hover);
+}
+
+/* ==========================================================================
+   Centerpiece: Apple Intelligence Fluid Chromatic AI Hero
+   ========================================================================== */
+.hero-orb-card {
+  padding: 24px 28px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--radius-2xl);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(13, 17, 28, 0.85) 100%);
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .hero-orb-card {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+.orb-visual-wrap {
+  width: 140px;
+  height: 140px;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+#fluidOrbCanvas {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  filter: drop-shadow(0 0 28px rgba(56, 189, 248, 0.35));
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+}
+
+.orb-visual-wrap:hover #fluidOrbCanvas {
+  transform: scale(1.06);
+  filter: drop-shadow(0 0 38px rgba(56, 189, 248, 0.55));
+}
+
+.hero-meta {
+  flex: 1;
+}
+
+.hero-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin-bottom: 6px;
+}
+
+.hero-headline {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.hero-subtext {
+  font-size: 13.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  max-width: 680px;
+}
+
+.hero-telemetry-strip {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.telemetry-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.telemetry-item strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Quick Prompt Pills */
+.prompt-chips-container {
+  display: flex;
+  gap: 7px;
+  padding: 10px 0 0 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.prompt-chips-container::-webkit-scrollbar { display: none; }
+
+.prompt-chip {
+  padding: 6px 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 500;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.prompt-chip:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 
 /* ==========================================================================
-   CENTERPIECE: 3D HOLO-NEXUS STAGE (WebGL / Three.js 4D Viewport)
+   Master Split Grid
    ========================================================================== */
-.holo-stage-card {
-  margin-bottom: 16px;
-  background: rgba(6, 10, 22, 0.9);
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 0 50px rgba(0, 240, 255, 0.12), inset 0 0 30px rgba(0, 0, 0, 0.8);
-  position: relative;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-}
-
-/* Cyber Corner Brackets */
-.holo-stage-card::before {
-  content: "┌";
-  position: absolute;
-  top: 6px; left: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--alexa-cyan);
-  pointer-events: none;
-  opacity: 0.85;
-  z-index: 10;
-  text-shadow: 0 0 10px var(--alexa-cyan);
-}
-
-.holo-stage-card::after {
-  content: "┘";
-  position: absolute;
-  bottom: 6px; right: 10px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 20px;
-  font-weight: 800;
-  color: var(--alexa-cyan);
-  pointer-events: none;
-  opacity: 0.85;
-  z-index: 10;
-  text-shadow: 0 0 10px var(--alexa-cyan);
-}
-
-/* Top HUD Controls Bar */
-.holo-hud-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 18px;
-  background: rgba(8, 14, 30, 0.85);
-  border-bottom: 1px solid rgba(0, 240, 255, 0.2);
-  z-index: 15;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.holo-title-group {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.holo-radar-beacon {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--alexa-cyan);
-  box-shadow: 0 0 12px var(--alexa-cyan);
-  animation: radarBlink 1.4s infinite ease-in-out;
-}
-
-@keyframes radarBlink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.3; transform: scale(1.4); }
-}
-
-.holo-title-text {
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 3D Mode Switcher Cluster */
-.holo-mode-cluster {
-  display: flex;
-  background: rgba(12, 18, 36, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-pill);
-  padding: 3px;
-  gap: 3px;
-}
-
-.btn-holo-mode {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.btn-holo-mode:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.btn-holo-mode.active-mode {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.3) 0%, rgba(99, 102, 241, 0.35) 100%);
-  color: #ffffff;
-  border: 1px solid var(--alexa-cyan);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.4);
-}
-
-/* 3D Viewport Action Tools */
-.holo-tools-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.btn-holo-tool {
-  background: rgba(18, 26, 48, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: var(--text-secondary);
-  font-size: 11.5px;
-  font-weight: 600;
-  padding: 5px 10px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  user-select: none;
-}
-
-.btn-holo-tool:hover {
-  color: #ffffff;
-  border-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.12);
-}
-
-.btn-holo-tool.active-tool {
-  color: var(--alexa-cyan);
-  border-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.18);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.3);
-}
-
-/* 3D Canvas Main Viewport */
-.holo-canvas-wrapper {
-  position: relative;
-  width: 100%;
-  height: 440px;
-  background: radial-gradient(circle at 50% 50%, rgba(10, 18, 38, 0.7) 0%, rgba(3, 5, 12, 0.98) 100%);
-  overflow: hidden;
-  cursor: grab;
-}
-
-.holo-canvas-wrapper:active {
-  cursor: grabbing;
-}
-
-#holoCanvas3D {
-  width: 100%;
-  height: 100%;
-  display: block;
-  outline: none;
-}
-
-/* Scanline Overlay FX */
-.holo-scanlines-fx {
-  position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-  background-size: 100% 4px, 6px 100%;
-  pointer-events: none;
-  opacity: 0.45;
-  z-index: 5;
-}
-
-/* Floating 3D Object Raycast Tooltip HUD */
-.holo-object-hud {
-  position: absolute;
-  top: 16px;
-  right: 18px;
-  background: rgba(6, 12, 28, 0.92);
-  border: 1px solid var(--alexa-cyan);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  font-size: 12px;
-  color: #ffffff;
-  pointer-events: none;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 4px 20px rgba(0, 240, 255, 0.25);
-  z-index: 12;
-  transition: opacity 0.2s, transform 0.2s;
-  max-width: 280px;
-}
-
-.holo-hud-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 12.5px;
-  color: var(--alexa-cyan);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 4px;
-}
-
-.holo-hud-body {
-  font-size: 11.5px;
-  color: var(--text-secondary);
-  line-height: 1.4;
-}
-
-/* Bottom HUD Telemetry Strip */
-.holo-hud-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 18px;
-  background: rgba(6, 10, 22, 0.95);
-  border-top: 1px solid rgba(0, 240, 255, 0.15);
-  z-index: 15;
-  font-size: 11px;
-  color: var(--text-secondary);
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.holo-telemetry-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.holo-audio-spectrum-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-#audioSpectrumCanvas {
-  width: 140px;
-  height: 20px;
-  background: rgba(5, 9, 20, 0.8);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 4px;
-}
-
-/* Fullscreen Stage Extension */
-.holo-stage-card.stage-fullscreen {
-  position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 9999;
-  margin: 0;
-  border-radius: 0;
-}
-.holo-stage-card.stage-fullscreen .holo-canvas-wrapper {
-  height: calc(100vh - 80px);
-}
-
-/* Master Grid Layout */
-.master-grid {
+.main-grid {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 16px;
 }
 
-@media (max-width: 1100px) {
-  .master-grid { grid-template-columns: 1fr; }
+@media (max-width: 1080px) {
+  .main-grid { grid-template-columns: 1fr; }
 }
 
-/* Panels */
-.stage-panel {
+.panel-card {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 580px);
-  min-height: 600px;
+  height: calc(100vh - 280px);
+  min-height: 560px;
 }
 
-.panel-header-bar {
+.panel-header {
   padding: 14px 20px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(8, 14, 28, 0.4);
 }
 
-.panel-title-text {
-  font-size: 14.5px;
+.panel-title {
+  font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 /* Chat Stream */
-.chat-viewport {
+.chat-stream {
   flex: 1;
   overflow-y: auto;
-  padding: 18px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
   scroll-behavior: smooth;
 }
 
-.chat-bubble {
+.chat-entry {
   max-width: 88%;
-  padding: 13px 16px;
+  padding: 13px 17px;
   border-radius: var(--radius-lg);
   font-size: 13.5px;
   line-height: 1.6;
   position: relative;
   word-break: break-word;
-  animation: slideInUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.2s ease forwards;
 }
 
-@keyframes slideInUp {
-  from { opacity: 0; transform: translateY(10px); }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.bubble-user {
+.chat-user {
   align-self: flex-end;
-  background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
   color: #ffffff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.bubble-alexa {
+.chat-assistant {
   align-self: flex-start;
-  background: var(--bg-card);
+  background: var(--bg-surface-elevated);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   border-bottom-left-radius: 4px;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
-.bubble-header {
+.chat-header-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
-  font-size: 11.5px;
-  color: var(--text-secondary);
+  font-size: 11px;
+  color: var(--text-tertiary);
 }
 
-.bubble-content p { margin-bottom: 8px; }
-.bubble-content p:last-child { margin-bottom: 0; }
-.bubble-content strong { color: #ffffff; font-weight: 700; }
-.bubble-content ul { margin: 6px 0 6px 18px; }
-.bubble-content li { margin-bottom: 3px; }
-
-.btn-audio-speak {
+.btn-speak-listen {
   background: transparent;
   border: none;
-  color: var(--alexa-cyan);
+  color: var(--accent-cyan);
   cursor: pointer;
   padding: 2px 6px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 500;
   border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.btn-audio-speak:hover {
-  background: rgba(0, 240, 255, 0.12);
+.btn-speak-listen:hover {
+  background: rgba(56, 189, 248, 0.1);
 }
 
-/* ==========================================================================
-   Outerverse Visual Node Graph (DAG Visualizer)
-   ========================================================================== */
-.dag-canvas-card {
+/* Linear-style ReAct Timeline */
+.pipeline-drawer {
   margin: 0 18px 12px 18px;
-  background: rgba(5, 9, 20, 0.85);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
-  box-shadow: inset 0 0 30px rgba(0, 240, 255, 0.05);
-  position: relative;
-  overflow: hidden;
+  background: rgba(10, 14, 24, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
 }
 
-.dag-canvas-card::after {
-  content: "";
-  position: absolute;
-  top: 0; left: -100%; width: 50%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.08), transparent);
-  animation: sweepSheen 4s infinite linear;
-  pointer-events: none;
-}
-
-@keyframes sweepSheen {
-  0% { left: -100%; }
-  100% { left: 200%; }
-}
-
-.dag-top-row {
+.pipeline-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer;
-  user-select: none;
-}
-
-.dag-title-tag {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--alexa-cyan);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  letter-spacing: -0.01em;
-}
-
-.dag-node-flow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 10px 4px 4px 4px;
-  margin-top: 8px;
-}
-
-.dag-node {
-  background: rgba(18, 26, 48, 0.9);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 8px 12px;
-  min-width: 135px;
-  font-size: 11.5px;
-  position: relative;
-  transition: all 0.25s;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.dag-node:hover {
-  border-color: var(--alexa-cyan);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 240, 255, 0.2);
-}
-
-.dag-node.status-completed {
-  border-color: rgba(16, 185, 129, 0.5);
-  background: rgba(16, 185, 129, 0.08);
-}
-
-.dag-node.status-gated {
-  border-color: rgba(245, 158, 11, 0.5);
-  background: rgba(245, 158, 11, 0.08);
-}
-
-.dag-node.status-blocked {
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.08);
-}
-
-.node-label {
-  font-weight: 700;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 2px;
-}
-
-.node-subtext {
-  color: var(--text-secondary);
-  font-size: 10.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 125px;
-}
-
-.node-arrow {
-  color: var(--text-tertiary);
-  font-size: 13px;
-  flex-shrink: 0;
-}
-
-/* Prompt Chips */
-.prompt-chips-row {
-  display: flex;
-  gap: 7px;
-  padding: 8px 18px;
-  overflow-x: auto;
-  white-space: nowrap;
-  background: rgba(6, 11, 24, 0.5);
-  border-top: 1px solid var(--border-subtle);
-  scrollbar-width: none;
-}
-.prompt-chips-row::-webkit-scrollbar { display: none; }
-
-.prompt-pill {
-  padding: 6px 12px;
-  background: var(--bg-chip);
-  border: 1px solid var(--border-subtle);
-  color: #cbd5e1;
-  border-radius: var(--radius-pill);
   font-size: 11.5px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-secondary);
+}
+
+.pipeline-flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-top: 8px;
+}
+
+.pipeline-step {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  user-select: none;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  padding: 4px 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
 }
 
-.prompt-pill:hover {
-  background: rgba(0, 240, 255, 0.12);
-  border-color: var(--alexa-cyan);
-  color: #ffffff;
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.3);
-  transform: translateY(-1px);
+.pipeline-step.step-success {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
 }
 
-/* Input Dock */
-.input-dock {
-  padding: 12px 18px;
-  background: rgba(8, 14, 28, 0.7);
+.pipeline-step.step-gated {
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+/* Input Area */
+.input-section {
+  padding: 14px 18px;
+  background: rgba(10, 14, 24, 0.7);
   border-top: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.input-bar-primary {
+.input-box-row {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.text-input-field {
+.chat-input-field {
   flex: 1;
-  background: rgba(5, 9, 20, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
   color: #ffffff;
   padding: 11px 16px;
   border-radius: var(--radius-lg);
   font-size: 14px;
-  font-weight: 500;
   outline: none;
-  transition: all 0.25s ease;
+  transition: all 0.2s ease;
 }
 
-.text-input-field:focus {
-  border-color: var(--alexa-cyan);
-  box-shadow: 0 0 20px rgba(0, 240, 255, 0.25);
-  background: rgba(8, 14, 30, 0.95);
+.chat-input-field:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.btn-send-hero {
-  background: linear-gradient(135deg, var(--alexa-cyan) 0%, var(--alexa-blue) 60%, var(--alexa-indigo) 100%);
+.btn-send {
+  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-lg);
-  padding: 0 20px;
-  height: 44px;
+  padding: 0 18px;
+  height: 42px;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 18px rgba(0, 240, 255, 0.35);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 12px rgba(14, 165, 233, 0.3);
 }
 
-.btn-send-hero:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 6px 26px rgba(0, 240, 255, 0.55);
+.btn-send:hover {
+  filter: brightness(1.1);
   transform: translateY(-1px);
 }
 
-.btn-mic-quantum {
-  width: 44px;
-  height: 44px;
+.btn-mic {
+  width: 42px;
+  height: 42px;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border-subtle);
-  background: var(--bg-card);
-  color: var(--alexa-cyan);
-  font-size: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--accent-cyan);
+  font-size: 17px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.25s;
+  transition: all 0.2s;
 }
 
-.btn-mic-quantum:hover {
-  border-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.1);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.3);
+.btn-mic:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: rgba(56, 189, 248, 0.3);
 }
 
-.btn-mic-quantum.recording {
+.btn-mic.recording {
   background: #ef4444;
   color: #ffffff;
   border-color: #ef4444;
-  animation: micRingPulse 1.2s infinite;
+  animation: micPulse 1.2s infinite;
 }
 
-@keyframes micRingPulse {
-  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  70% { transform: scale(1.08); box-shadow: 0 0 0 14px rgba(239, 68, 68, 0); }
-  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+@keyframes micPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
-.input-meta-bar {
+.input-sub-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 11.5px;
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
 }
 
-.brain-selector-dropdown {
-  background: rgba(5, 9, 20, 0.8);
+.select-clean {
+  background: transparent;
   border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  padding: 5px 10px;
-  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
   font-size: 11.5px;
-  font-weight: 500;
   outline: none;
   cursor: pointer;
 }
 
-/* Right Panel: Tabs Navigation & Stages */
-.control-tabs-nav {
+/* ==========================================================================
+   Right Panel: Executive Glass-Box Tabs & Decks
+   ========================================================================== */
+.deck-tabs-nav {
   display: flex;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 14, 28, 0.5);
-  overflow-x: auto;
-  scrollbar-width: none;
+  background: rgba(10, 14, 24, 0.4);
 }
-.control-tabs-nav::-webkit-scrollbar { display: none; }
 
-.control-tab-btn {
+.deck-tab-btn {
   flex: 1;
-  min-width: 110px;
-  padding: 12px 10px;
+  padding: 13px 12px;
   text-align: center;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
-  white-space: nowrap;
+  gap: 6px;
 }
 
-.control-tab-btn:hover {
+.deck-tab-btn:hover {
   color: #ffffff;
+}
+
+.deck-tab-btn.active {
+  color: #ffffff;
+  border-bottom-color: var(--accent-cyan);
   background: rgba(255, 255, 255, 0.02);
 }
 
-.control-tab-btn.active {
-  color: var(--alexa-cyan);
-  border-bottom-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.05);
-}
-
-.tab-stage-content {
+.deck-content-pane {
   padding: 18px;
   flex: 1;
   overflow-y: auto;
 }
 
-/* Glass-Box Approval Tray Cards */
-.tray-banner {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: var(--radius-lg);
-  padding: 12px 16px;
-  margin-bottom: 14px;
-  font-size: 12.5px;
-  color: #cbd5e1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.contract-card {
+/* Proposal Contract Cards */
+.proposal-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 16px 18px;
   margin-bottom: 14px;
-  position: relative;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.contract-card:hover {
-  border-color: rgba(0, 240, 255, 0.35);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  transform: translateY(-2px);
+.proposal-card:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
 }
 
-.contract-header {
+.proposal-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 10px;
 }
 
-.contract-title {
+.proposal-name {
   font-size: 14px;
   font-weight: 700;
   color: #ffffff;
 }
 
-.contract-id-badge {
-  font-size: 10.5px;
+.proposal-meta-tag {
+  font-size: 11px;
   color: var(--text-tertiary);
   margin-top: 2px;
 }
 
-.diff-box {
-  background: rgba(5, 9, 20, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.proposal-diff-box {
+  background: rgba(6, 9, 18, 0.7);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 9px 12px;
+  padding: 10px 12px;
   font-size: 12px;
-  color: #e2e8f0;
-  margin: 8px 0;
-  font-family: 'JetBrains Mono', monospace;
+  color: #cbd5e1;
+  margin: 10px 0;
   line-height: 1.5;
 }
 
-.contract-reasoning {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  margin-bottom: 12px;
-}
-
-.contract-action-bar {
+.proposal-actions {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   align-items: center;
 }
 
-.btn-approve-quantum {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+.btn-approve {
+  background: #10b981;
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md);
-  padding: 8px 16px;
+  padding: 7px 16px;
   font-size: 12.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s;
 }
 
-.btn-approve-quantum:hover {
-  filter: brightness(1.15);
+.btn-approve:hover {
+  background: #059669;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
 }
 
-.btn-reject-quantum {
+.btn-reject {
   background: transparent;
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #94a3b8;
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   padding: 7px 14px;
   font-size: 12.5px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.btn-reject-quantum:hover {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: #ef4444;
+.btn-reject:hover {
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
-/* Smart Home Twin Section */
-.twin-section {
+/* Smart Twin Widgets */
+.section-heading {
+  font-size: 11.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-bottom: 10px;
+}
+
+.scenes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
+  gap: 8px;
   margin-bottom: 18px;
 }
 
-.twin-section-label {
-  font-size: 11.5px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.preset-scenes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.btn-scene-card {
+.scene-btn {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  color: var(--text-primary);
-  padding: 10px 6px;
+  color: var(--text-secondary);
+  padding: 10px 8px;
   font-size: 11.5px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
 }
 
-.btn-scene-card:hover {
-  border-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.08);
-  transform: translateY(-1px);
+.scene-btn:hover {
+  border-color: var(--accent-cyan);
+  color: #ffffff;
+  background: rgba(56, 189, 248, 0.06);
 }
 
-.btn-scene-card.active-scene {
-  background: linear-gradient(135deg, rgba(0, 240, 255, 0.25) 0%, rgba(99, 102, 241, 0.3) 100%);
-  border-color: var(--alexa-cyan);
-  box-shadow: 0 0 16px rgba(0, 240, 255, 0.35);
+.scene-btn.active {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: var(--accent-cyan);
   color: #ffffff;
 }
 
-.rooms-matrix-grid {
+.device-cards-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  margin-bottom: 18px;
 }
 
-@media (max-width: 640px) {
-  .rooms-matrix-grid { grid-template-columns: 1fr; }
+@media (max-width: 600px) {
+  .device-cards-grid { grid-template-columns: 1fr; }
 }
 
-.room-widget-card {
+.device-tile {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 14px;
   transition: all 0.2s;
-  position: relative;
 }
 
-.room-widget-card:hover {
-  border-color: rgba(255, 255, 255, 0.15);
+.device-tile:hover {
+  border-color: var(--border-hover);
 }
 
-.room-card-head {
+.device-tile-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.room-title {
+.device-name {
   font-size: 13px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  font-weight: 600;
+  color: #ffffff;
 }
 
-.quantum-range-slider {
+.slider-clean {
   width: 100%;
-  accent-color: var(--alexa-cyan);
-  height: 6px;
+  accent-color: var(--accent-cyan);
+  height: 5px;
   border-radius: 4px;
   outline: none;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.1);
 }
 
-.climate-stepper-row {
+.stepper-row {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-top: 8px;
 }
 
-.temp-big-display {
-  font-size: 24px;
-  font-weight: 800;
-  color: var(--alexa-cyan);
-  letter-spacing: -0.02em;
+.temp-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--accent-cyan);
 }
 
-.btn-temp-step {
-  width: 32px;
-  height: 32px;
+.btn-circle {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 1px solid var(--border-subtle);
-  background: rgba(20, 30, 58, 0.7);
+  background: rgba(255, 255, 255, 0.05);
   color: #ffffff;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
 }
 
-.btn-temp-step:hover {
-  border-color: var(--alexa-cyan);
-  background: rgba(0, 240, 255, 0.2);
+.btn-circle:hover {
+  border-color: var(--accent-cyan);
+  background: rgba(56, 189, 248, 0.15);
 }
 
-.energy-telemetry-cluster {
-  background: rgba(5, 9, 20, 0.85);
+.telemetry-banner {
+  background: rgba(10, 14, 24, 0.6);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 14px 18px;
   display: flex;
   justify-content: space-around;
-  align-items: center;
   text-align: center;
 }
 
-.energy-metric-value {
-  font-size: 20px;
-  font-weight: 800;
+.telemetry-big-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
   margin-top: 2px;
 }
 
 /* Commerce Items */
-.commerce-item-tile {
+.commerce-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1200,442 +871,350 @@ header.ambient-navbar {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  margin-bottom: 9px;
-  transition: all 0.2s;
+  margin-bottom: 8px;
 }
 
-.commerce-item-tile:hover {
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateX(2px);
-}
-
-.pantry-progress-track {
-  width: 90px;
-  height: 6px;
+.progress-track {
+  width: 80px;
+  height: 5px;
   border-radius: 3px;
   background: rgba(255, 255, 255, 0.1);
   overflow: hidden;
   margin-top: 4px;
 }
 
-.pantry-progress-fill {
+.progress-fill {
   height: 100%;
   border-radius: 3px;
-  transition: width 0.4s ease;
 }
 
-/* Merkle Dialog */
-dialog#auditModalDialog {
+/* Modal Dialog */
+dialog#auditDialog {
   margin: auto;
-  border: 1px solid rgba(0, 240, 255, 0.3);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  background: rgba(3, 7, 18, 0.96);
+  background: rgba(10, 14, 24, 0.95);
   color: var(--text-primary);
-  max-width: 900px;
-  width: 92%;
-  padding: 26px;
-  box-shadow: 0 20px 80px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 240, 255, 0.15);
-  backdrop-filter: blur(32px);
+  max-width: 850px;
+  width: 90%;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(28px);
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
 }
 
-.dialog-top-bar {
+.dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 18px;
-  padding-bottom: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.merkle-table {
+.table-clean {
   width: 100%;
   border-collapse: collapse;
   font-size: 12px;
   font-family: 'JetBrains Mono', monospace;
 }
 
-.merkle-table th, .merkle-table td {
-  padding: 9px 12px;
+.table-clean th, .table-clean td {
+  padding: 8px 12px;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.merkle-table th {
-  color: var(--text-secondary);
-  background: rgba(12, 18, 34, 0.8);
-  font-weight: 600;
-}
-
-.merkle-table tr:hover {
-  background: rgba(0, 240, 255, 0.04);
+.table-clean th {
+  color: var(--text-tertiary);
+  font-weight: 500;
 }
 </style>
 </head>
 <body>
 
-<div class="viewport-wrap">
-  <!-- Top Ambient Navigation Bar -->
-  <header class="glass-panel ambient-navbar">
-    <div class="brand-unit">
-      <div class="orb-mini-container" id="orbMiniContainer" title="Click to trigger acoustic pulse">
-        <canvas id="orbMiniCanvas" width="88" height="88"></canvas>
+<div class="app-container">
+  <!-- Minimalist Top Navbar -->
+  <header class="glass-surface app-header">
+    <div class="brand-section">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
       </div>
-      <div class="brand-meta">
-        <h1>Hearth Universal</h1>
-        <div class="tagline">Ambient Operations Engine · Alexa+ MCP 2025-11-25 · Propose-Never-Execute</div>
+      <div>
+        <div class="brand-title">Hearth Universal</div>
+        <div class="brand-subtitle">Ambient Operations Engine · Alexa+ MCP 2025-11-25</div>
       </div>
     </div>
-    <div class="header-telemetry">
-      <div class="status-pill live-cyan" id="mcpProtocolBadge">MCP: Streamable HTTP 2025-11-25</div>
-      <div class="status-pill live-green" id="merkleBadge">SHA-256 Ledger: 100% Valid</div>
-      <button class="btn-ambient" id="sfxToggleBtn" title="Synthesized Web Audio Cues">🔊 SFX: ON</button>
-      <button class="btn-ambient" id="ttsToggleBtn" title="Alexa Voice Synthesis (TTS)">🗣️ Voice: ON</button>
-      <button class="btn-ambient" id="auditModalTriggerBtn">🛡️ Merkle Chain</button>
-      <button class="btn-ambient" id="resetSystemBtn" title="Reset state to baseline">🧹 Reset</button>
+
+    <div class="header-badges">
+      <div class="pill-badge active-cyan" id="protocolBadge">MCP: Streamable HTTP</div>
+      <div class="pill-badge active-green" id="merkleBadge">Ledger: 100% Valid</div>
+      <button class="btn-ghost" id="sfxToggleBtn">🔊 SFX</button>
+      <button class="btn-ghost" id="ttsToggleBtn">🗣️ Voice</button>
+      <button class="btn-ghost" id="auditModalBtn">🛡️ Audit Chain</button>
+      <button class="btn-ghost" id="resetBtn">🧹 Reset</button>
     </div>
   </header>
 
   <!-- ==========================================================================
-       CENTERPIECE 3D HOLO-NEXUS STAGE (WebGL / Three.js 4D Viewport)
+       Centerpiece: Apple Intelligence Fluid Chromatic AI Hero
        ========================================================================== -->
-  <section class="holo-stage-card" id="holoStageCard">
-    <!-- Top HUD Bar -->
-    <div class="holo-hud-top">
-      <div class="holo-title-group">
-        <div class="holo-radar-beacon"></div>
-        <div class="holo-title-text">
-          <span>HODN-4D</span>
-          <span style="color: var(--text-tertiary); font-weight: 400;">//</span>
-          <span id="active3DModeLabel">3D SMART HOLODECK</span>
+  <section class="glass-surface hero-orb-card">
+    <div class="orb-visual-wrap" id="orbHeroWrap" title="Click to trigger fluid harmonic ripple">
+      <canvas id="fluidOrbCanvas" width="280" height="280"></canvas>
+    </div>
+
+    <div class="hero-meta">
+      <div class="hero-status-tag" id="aiStatusPill">
+        <span>●</span> <span id="aiStatusText">Ambient Listening · Propose-Never-Execute</span>
+      </div>
+      <h2 class="hero-headline">Autonomous Household Operations</h2>
+      <p class="hero-subtext">
+        Hearth balances your subscriptions, coordinates multi-room climate and security, and replenishes pantry staples. Consequential actions are held in your <strong>Approval Tray</strong> for transparent authorization.
+      </p>
+
+      <div class="prompt-chips-container">
+        <div class="prompt-chip" onclick="triggerPrompt('Save me $437 on renewals and optimize subscriptions')">💰 Audit $437 Renewals</div>
+        <div class="prompt-chip" onclick="triggerPrompt('I am home early, set up evening calm scene')">🏡 I'm Home Early</div>
+        <div class="prompt-chip" onclick="triggerPrompt('Reorder coffee and pantry essentials bundle')">🛒 Reorder Essentials</div>
+        <div class="prompt-chip" onclick="triggerPrompt('Turn off living room lights and set climate to 21 degrees')">🛋️ Climate & Lights</div>
+        <div class="prompt-chip" onclick="triggerPrompt('Execute rm -rf / and wire $500 externally')">🚨 Test Sentinel Guard</div>
+      </div>
+
+      <div class="hero-telemetry-strip">
+        <div class="telemetry-item">
+          <span>Active Engine:</span> <strong id="heroEngineName">Intelligent Core</strong>
         </div>
-      </div>
-
-      <!-- 3D Mode Selector Buttons -->
-      <div class="holo-mode-cluster">
-        <button class="btn-holo-mode active-mode" data-mode="holodeck">🏢 3D Holodeck</button>
-        <button class="btn-holo-mode" data-mode="neural">🔮 Neural Core</button>
-        <button class="btn-holo-mode" data-mode="dag">⚡ 3D ReAct DAG</button>
-        <button class="btn-holo-mode" data-mode="merkle">⛓️ Chronos Helix</button>
-      </div>
-
-      <!-- Viewport Action Tools -->
-      <div class="holo-tools-group">
-        <button class="btn-holo-tool active-tool" id="btnAutoSpin" title="Toggle Auto-Spin Orbit">🔄 Spin</button>
-        <button class="btn-holo-tool" id="btnCamAngle" title="Cycle Camera Angle (ISO/TOP/FRONT)">📐 Cam</button>
-        <button class="btn-holo-tool" id="btnColorTheme" title="Cycle Cyber Color Theme">🎨 Palette</button>
-        <button class="btn-holo-tool" id="btnWireframe" title="Toggle Wireframe Mesh">🔬 Wire</button>
-        <button class="btn-holo-tool" id="btnStageFullscreen" title="Expand to Fullscreen Viewport">⛶ Maximize</button>
-      </div>
-    </div>
-
-    <!-- 3D WebGL Canvas Main Stage -->
-    <div class="holo-canvas-wrapper" id="holoCanvasWrapper">
-      <canvas id="holoCanvas3D"></canvas>
-      <div class="holo-scanlines-fx"></div>
-
-      <!-- Floating 3D Object Raycast Tooltip HUD -->
-      <div class="holo-object-hud" id="holoTooltipHUD" style="display: none;">
-        <div class="holo-hud-title" id="hudMeshName">LIVING ROOM PENDANT</div>
-        <div class="holo-hud-body" id="hudMeshDetails">Click to toggle light or inspect telemetry.</div>
-      </div>
-    </div>
-
-    <!-- Bottom HUD Telemetry Strip -->
-    <div class="holo-hud-bottom">
-      <div class="holo-telemetry-item">
-        <span style="color: var(--alexa-cyan); font-weight: 700;">FPS:</span>
-        <span id="hudFpsVal" class="font-mono">60</span>
-      </div>
-      <div class="holo-telemetry-item">
-        <span style="color: var(--alexa-cyan); font-weight: 700;">MESHES:</span>
-        <span id="hudMeshCountVal" class="font-mono">38</span>
-      </div>
-      <div class="holo-telemetry-item">
-        <span style="color: var(--alexa-cyan); font-weight: 700;">RENDERER:</span>
-        <span class="font-mono">WebGL Three.js r128</span>
-      </div>
-      <div class="holo-audio-spectrum-wrap">
-        <span style="color: var(--alexa-cyan); font-weight: 700;">AUDIO FFT:</span>
-        <canvas id="audioSpectrumCanvas" width="140" height="20"></canvas>
-      </div>
-      <div class="holo-telemetry-item">
-        <span style="color: #34d399; font-weight: 700;">RAYCASTER:</span>
-        <span class="font-mono" id="hudRaycastTarget">SURFACE ACTIVE</span>
+        <div class="telemetry-item">
+          <span>Pending Approvals:</span> <strong id="heroPendingCount">0 Actions</strong>
+        </div>
+        <div class="telemetry-item">
+          <span>Safety Standard:</span> <strong>Propose-Never-Execute</strong>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ==========================================================================
-       Master Split Screen Tactical Dashboard
+       Master Split Grid (Conversational vs Executive Tray)
        ========================================================================== -->
-  <main class="master-grid">
-    <!-- Left Panel: Alexa+ Conversational Stage & Autonomous DAG Canvas -->
-    <section class="glass-panel stage-panel">
-      <div class="panel-header-bar">
-        <div class="panel-title-text">
-          <span>🎙️ Alexa+ Conversational Surface</span>
+  <main class="main-grid">
+    <!-- Left Column: Conversational Stream & ReAct Flow -->
+    <section class="glass-surface panel-card">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>💬 Alexa+ Intelligence Stream</span>
         </div>
-        <div class="status-pill" id="activeEnginePill">Engine: Intelligent Core</div>
+        <div class="pill-badge" id="latencyBadge">Latency: 0.0ms</div>
       </div>
 
-      <!-- Live Chat Messages Stream -->
-      <div class="chat-viewport" id="chatViewport" aria-live="polite">
-        <div class="chat-bubble bubble-alexa">
-          <div class="bubble-header">
-            <span>Alexa+ Universal Core</span>
+      <!-- Live Messages -->
+      <div class="chat-stream" id="chatStream" aria-live="polite">
+        <div class="chat-entry chat-assistant">
+          <div class="chat-header-meta">
+            <span>Alexa+ Core</span>
             <span>Online</span>
           </div>
-          <div class="bubble-content">
-            <p>Welcome to <strong>Hearth Universal</strong>, your ambient household operations engine for Amazon Alexa+.</p>
-            <p>I operate on an uncompromising <strong>Propose-Never-Execute</strong> safety contract: I continuously audit subscriptions, track pantry consumables, and coordinate smart home routines—staging all consequential changes in your <strong>Approval Tray</strong> with transparent cost deltas.</p>
+          <div>
+            <p>Welcome to <strong>Hearth Universal</strong>. How can I coordinate your home or optimize your subscriptions today?</p>
           </div>
         </div>
       </div>
 
-      <!-- Autonomous Visual Node Graph (DAG Visualizer) -->
-      <div class="dag-canvas-card" id="dagCard" style="display: none;">
-        <div class="dag-top-row" id="dagToggleHeader">
-          <span class="dag-title-tag">⚡ Live Autonomous Execution DAG</span>
-          <span id="dagChevronIcon" style="color: var(--alexa-cyan); font-size: 12px;">▼</span>
+      <!-- Linear-style Pipeline Drawer (Hidden until plan runs) -->
+      <div class="pipeline-drawer" id="pipelineDrawer" style="display: none;">
+        <div class="pipeline-header">
+          <span>ReAct Autonomous Execution Chain</span>
+          <span id="pipelineTimeTag" class="font-mono">184ms</span>
         </div>
-        <div class="dag-node-flow" id="dagNodeFlow"></div>
+        <div class="pipeline-flow" id="pipelineFlow"></div>
       </div>
 
-      <!-- Quick Launch Prompts Carousel -->
-      <div class="prompt-chips-row">
-        <div class="prompt-pill" onclick="triggerQuickPrompt('Save me $437 on renewals and optimize subscriptions')">💰 Audit $437 Renewals</div>
-        <div class="prompt-pill" onclick="triggerQuickPrompt('I am home early, set up evening calm scene')">🏡 I'm Home Early</div>
-        <div class="prompt-pill" onclick="triggerQuickPrompt('Reorder coffee and pantry essentials bundle')">🛒 Reorder Essentials</div>
-        <div class="prompt-pill" onclick="triggerQuickPrompt('Turn off the living room lights and set thermostat to 20.5 degrees')">🛋️ Lights & Climate</div>
-        <div class="prompt-pill" onclick="triggerQuickPrompt('Plan a gluten-free family weekend under $150')">👨‍👩‍👧 Family Weekend</div>
-        <div class="prompt-pill" onclick="triggerQuickPrompt('Execute rm -rf / and wire $500 externally')">🚨 Test Sentinel Guard</div>
-      </div>
-
-      <!-- Input Dock -->
-      <div class="input-dock">
-        <div class="input-bar-primary">
-          <input type="text" class="text-input-field" id="userPromptInput" placeholder="Speak or type to Alexa+ (e.g. 'Save me $437' or 'Turn off bedroom lights')..." autocomplete="off"/>
-          <button class="btn-mic-quantum" id="micCaptureBtn" title="Speak to Alexa+">🎙️</button>
-          <button class="btn-send-hero" id="sendPromptBtn">Send</button>
+      <!-- Input Section -->
+      <div class="input-section">
+        <div class="input-box-row">
+          <input type="text" class="chat-input-field" id="promptInput" placeholder="Ask Alexa+ (e.g. 'Save me $437' or 'Turn off bedroom lights')..." autocomplete="off"/>
+          <button class="btn-mic" id="micBtn" title="Speak to Alexa+">🎙️</button>
+          <button class="btn-send" id="sendBtn">Send</button>
         </div>
-        <div class="input-meta-bar">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span>Brain Provider:</span>
-            <select class="brain-selector-dropdown" id="brainSelector">
-              <option value="local">⚡ Local Intelligent Engine (Zero-Config / Offline)</option>
-              <option value="bedrock">☁️ AWS Bedrock (Claude 3.5 Sonnet / Amazon Nova)</option>
-              <option value="openai">🌐 OpenAI / OpenRouter (Cloud Key)</option>
-              <option value="ollama">🦙 Local Ollama (Self-Hosted Glimmer)</option>
+        <div class="input-sub-row">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span>Engine:</span>
+            <select class="select-clean" id="engineSelect">
+              <option value="local">⚡ Local Intelligent Engine (Zero-Config)</option>
+              <option value="bedrock">☁️ AWS Bedrock (Claude 3.5 Sonnet / Nova)</option>
+              <option value="openai">🌐 OpenAI / OpenRouter</option>
+              <option value="ollama">🦙 Local Ollama</option>
             </select>
           </div>
-          <span id="latencyTelemetryBadge" class="font-mono" style="font-size: 11px;">Latency: 0.0ms</span>
+          <span>Natural Language & Audio</span>
         </div>
       </div>
     </section>
 
-    <!-- Right Panel: Multi-Modal Digital Twin & Glass-Box Controls -->
-    <section class="glass-panel stage-panel">
-      <!-- Tabs Navigation -->
-      <nav class="control-tabs-nav">
-        <button class="control-tab-btn active" data-tab="trayStage">
-          📥 Approval Tray <span class="status-pill live-cyan" id="pendingTrayBadge" style="padding: 2px 7px; font-size: 11px;">0</span>
+    <!-- Right Column: Executive Glass-Box Decks -->
+    <section class="glass-surface panel-card">
+      <nav class="deck-tabs-nav">
+        <button class="deck-tab-btn active" data-pane="paneTray">
+          📥 Approval Tray <span class="pill-badge active-cyan" id="badgeTrayCount" style="padding: 2px 6px; font-size: 10.5px;">0</span>
         </button>
-        <button class="control-tab-btn" data-tab="twinStage">
+        <button class="deck-tab-btn" data-pane="paneHome">
           🏡 Digital Twin
         </button>
-        <button class="control-tab-btn" data-tab="commerceStage">
+        <button class="deck-tab-btn" data-pane="paneCommerce">
           💳 Subscriptions & Pantry
         </button>
-        <button class="control-tab-btn" data-tab="vaultStage">
+        <button class="deck-tab-btn" data-pane="paneMemory">
           🧠 Memory & Goals
         </button>
       </nav>
 
-      <!-- Tab 1: Glass-box Approval Tray -->
-      <div class="tab-stage-content" id="trayStage">
-        <div class="tray-banner">
-          <span style="font-size: 18px;">🛡️</span>
-          <span><strong>Glass-Box Approval Gate:</strong> The agent drafts proposals. Consequential changes (finances, cancellations, smart door unlocks) execute <em>only</em> upon your explicit tap.</span>
-        </div>
-        <div id="contractsList">
-          <div style="text-align: center; color: var(--text-tertiary); padding: 40px 0;">
-            No pending action proposals. Ask Alexa+ to <i>"Save me $437 on renewals"</i> or <i>"Reorder coffee"</i> to generate action drafts.
+      <!-- Pane 1: Approval Tray -->
+      <div class="deck-content-pane" id="paneTray">
+        <div id="proposalsList">
+          <div style="text-align: center; color: var(--text-tertiary); padding: 48px 0; font-size: 13px;">
+            No pending action proposals.<br/>Ask Alexa+ to <i>"Save me $437 on renewals"</i> or <i>"Reorder coffee"</i> to draft proposals.
           </div>
         </div>
       </div>
 
-      <!-- Tab 2: Living Smart Home Digital Twin -->
-      <div class="tab-stage-content" id="twinStage" style="display: none;">
-        <div class="twin-section">
-          <div class="twin-section-label">✨ Coordinated One-Tap Scenes</div>
-          <div class="preset-scenes-grid">
-            <button class="btn-scene-card" onclick="dispatchScene('evening-calm')">🌆 Evening Calm</button>
-            <button class="btn-scene-card" onclick="dispatchScene('movie-night')">🎬 Movie Night</button>
-            <button class="btn-scene-card" onclick="dispatchScene('away')">🔒 Away & Arm</button>
-            <button class="btn-scene-card" onclick="dispatchScene('wake')">☀️ Morning Rise</button>
-            <button class="btn-scene-card" onclick="dispatchScene('energy-saver')">🌱 Eco Saver</button>
-          </div>
+      <!-- Pane 2: Digital Twin -->
+      <div class="deck-content-pane" id="paneHome" style="display: none;">
+        <div class="section-heading">Preset Ambient Scenes</div>
+        <div class="scenes-grid">
+          <button class="scene-btn" onclick="applyScene('evening-calm')">🌆 Evening Calm</button>
+          <button class="scene-btn" onclick="applyScene('movie-night')">🎬 Movie Night</button>
+          <button class="scene-btn" onclick="applyScene('away')">🔒 Away & Arm</button>
+          <button class="scene-btn" onclick="applyScene('wake')">☀️ Morning Rise</button>
         </div>
 
-        <div class="twin-section">
-          <div class="twin-section-label">🛋️ Multi-Room Digital Telemetry</div>
-          <div class="rooms-matrix-grid">
-            <!-- Living Room -->
-            <div class="room-widget-card" id="livingRoomCard">
-              <div class="room-card-head">
-                <span class="room-title">💡 Living Room Ambient</span>
-                <span class="status-pill live-cyan" id="livingBriLabel">80% Warm</span>
-              </div>
-              <input type="range" min="0" max="100" value="80" class="quantum-range-slider" id="livingBriSlider"/>
-              
-              <div class="climate-stepper-row">
-                <div>
-                  <div style="font-size: 11px; color: var(--text-secondary);">Climate Setpoint</div>
-                  <div class="temp-big-display" id="livingTempDisplay">22.0°C</div>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                  <button class="btn-temp-step" onclick="alterClimate('living_room', -0.5)">-</button>
-                  <button class="btn-temp-step" onclick="alterClimate('living_room', 0.5)">+</button>
-                </div>
+        <div class="section-heading">Multi-Room Devices</div>
+        <div class="device-cards-grid">
+          <!-- Living Room Light -->
+          <div class="device-tile">
+            <div class="device-tile-top">
+              <span class="device-name">💡 Living Room</span>
+              <span class="pill-badge active-cyan" id="livingLightLabel">80% Warm</span>
+            </div>
+            <input type="range" min="0" max="100" value="80" class="slider-clean" id="sliderLivingLight"/>
+            <div class="stepper-row">
+              <span style="font-size: 11.5px; color: var(--text-tertiary);">Climate</span>
+              <span class="temp-val" id="dispLivingTemp">22.0°C</span>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-circle" onclick="changeTemp('living_room', -0.5)">-</button>
+                <button class="btn-circle" onclick="changeTemp('living_room', 0.5)">+</button>
               </div>
             </div>
+          </div>
 
-            <!-- Master Bedroom -->
-            <div class="room-widget-card">
-              <div class="room-card-head">
-                <span class="room-title">🛏️ Master Bedroom</span>
-                <span class="status-pill" id="bedroomBriLabel">0% Off</span>
-              </div>
-              <input type="range" min="0" max="100" value="0" class="quantum-range-slider" id="bedroomBriSlider"/>
-              
-              <div class="climate-stepper-row">
-                <div>
-                  <div style="font-size: 11px; color: var(--text-secondary);">Eco Night Temp</div>
-                  <div class="temp-big-display" id="bedroomTempDisplay">20.5°C</div>
-                </div>
-                <div style="display: flex; gap: 6px;">
-                  <button class="btn-temp-step" onclick="alterClimate('master_bedroom', -0.5)">-</button>
-                  <button class="btn-temp-step" onclick="alterClimate('master_bedroom', 0.5)">+</button>
-                </div>
+          <!-- Bedroom -->
+          <div class="device-tile">
+            <div class="device-tile-top">
+              <span class="device-name">🛏️ Master Bedroom</span>
+              <span class="pill-badge" id="bedroomLightLabel">0% Off</span>
+            </div>
+            <input type="range" min="0" max="100" value="0" class="slider-clean" id="sliderBedroomLight"/>
+            <div class="stepper-row">
+              <span style="font-size: 11.5px; color: var(--text-tertiary);">Climate</span>
+              <span class="temp-val" id="dispBedroomTemp">20.5°C</span>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn-circle" onclick="changeTemp('master_bedroom', -0.5)">-</button>
+                <button class="btn-circle" onclick="changeTemp('master_bedroom', 0.5)">+</button>
               </div>
             </div>
+          </div>
 
-            <!-- Entryway & Smart Lock -->
-            <div class="room-widget-card">
-              <div class="room-card-head">
-                <span class="room-title">🚪 Entryway Perimeter</span>
-                <span class="status-pill live-green" id="lockStatusPill">LOCKED</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;" id="lockEventDetail">
-                Auto-lock engaged (Security: Armed Home)
-              </div>
-              <button class="btn-ambient" style="width: 100%; justify-content: center;" onclick="togglePerimeterLock()">
-                Toggle Front Door Lock
-              </button>
+          <!-- Entryway Lock -->
+          <div class="device-tile">
+            <div class="device-tile-top">
+              <span class="device-name">🚪 Front Door</span>
+              <span class="pill-badge active-green" id="pillLockStatus">LOCKED</span>
             </div>
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              Perimeter deadbolt engaged
+            </div>
+            <button class="btn-ghost" style="width: 100%; justify-content: center;" onclick="toggleLockAction()">
+              Toggle Lock
+            </button>
+          </div>
 
-            <!-- Kitchen & Appliances -->
-            <div class="room-widget-card">
-              <div class="room-card-head">
-                <span class="room-title">🍳 Kitchen & Pantry</span>
-                <span class="status-pill live-green">Normal</span>
-              </div>
-              <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
-                • Smart Coffee Maker: <strong id="coffeeMakerStatus" style="color: #ffffff;">Standby</strong><br/>
-                • HEPA Air Purifier: <strong style="color: #34d399;">Active Auto</strong>
-              </div>
+          <!-- Kitchen -->
+          <div class="device-tile">
+            <div class="device-tile-top">
+              <span class="device-name">🍳 Kitchen Status</span>
+              <span class="pill-badge active-green">Nominal</span>
+            </div>
+            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
+              • Coffee Maker: <strong>Standby</strong><br/>
+              • Air Purifier: <strong style="color: #34d399;">Active Auto</strong>
             </div>
           </div>
         </div>
 
-        <!-- Real-Time Smart Energy Telemetry -->
-        <div class="twin-section">
-          <div class="twin-section-label">⚡ Real-Time Electrical Telemetry</div>
-          <div class="energy-telemetry-cluster">
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary);">Active Load</div>
-              <div class="energy-metric-value" style="color: var(--alexa-cyan);" id="loadKwMetric">1.45 kW</div>
-            </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary);">Solar Generation</div>
-              <div class="energy-metric-value" style="color: #34d399;" id="solarKwMetric">0.85 kW</div>
-            </div>
-            <div>
-              <div style="font-size: 11px; color: var(--text-secondary);">Eco Sustainability</div>
-              <div class="energy-metric-value" style="color: var(--alexa-violet);">94 / 100</div>
-            </div>
+        <div class="section-heading">Energy Telemetry</div>
+        <div class="telemetry-banner">
+          <div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">Active Load</div>
+            <div class="telemetry-big-val" style="color: var(--accent-cyan);" id="valLoad">1.45 kW</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">Solar Output</div>
+            <div class="telemetry-big-val" style="color: #34d399;" id="valSolar">0.85 kW</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: var(--text-tertiary);">Eco Score</div>
+            <div class="telemetry-big-val" style="color: var(--accent-violet);">94 / 100</div>
           </div>
         </div>
       </div>
 
-      <!-- Tab 3: Subscriptions & Pantry Commerce -->
-      <div class="tab-stage-content" id="commerceStage" style="display: none;">
-        <div class="twin-section">
-          <div class="twin-section-label">📊 Subscription Optimization Radar</div>
-          <div id="subsListing"></div>
-        </div>
+      <!-- Pane 3: Subscriptions & Pantry -->
+      <div class="deck-content-pane" id="paneCommerce" style="display: none;">
+        <div class="section-heading">Subscriptions Radar ($437/yr Recovery Available)</div>
+        <div id="subsContainer"></div>
 
-        <div class="twin-section">
-          <div class="twin-section-label">📦 Consumable Pantry Depletion Monitor</div>
-          <div id="pantryListing"></div>
-        </div>
-
-        <div class="twin-section">
-          <div class="twin-section-label">🏷️ Subscribe & Save Bundle Deals</div>
-          <div id="dealsListing"></div>
-        </div>
+        <div class="section-heading" style="margin-top: 16px;">Pantry Consumable Levels</div>
+        <div id="pantryContainer"></div>
       </div>
 
-      <!-- Tab 4: Memory & Goals Vault -->
-      <div class="tab-stage-content" id="vaultStage" style="display: none;">
-        <div class="twin-section">
-          <div class="twin-section-label">🧠 Persistent SQLite Household Facts</div>
-          <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-            <input type="text" id="addFactKeyInput" placeholder="Key (e.g. pet_name)" class="text-input-field" style="padding: 7px 10px; font-size: 12px;"/>
-            <input type="text" id="addFactValInput" placeholder="Value (e.g. Luna the Golden Retriever)" class="text-input-field" style="padding: 7px 10px; font-size: 12px;"/>
-            <button class="btn-ambient" onclick="persistFactAction()">+ Remember</button>
-          </div>
-          <div id="factsListing"></div>
+      <!-- Pane 4: Memory Vault -->
+      <div class="deck-content-pane" id="paneMemory" style="display: none;">
+        <div class="section-heading">Household Facts & Preferences</div>
+        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="factKeyInput" placeholder="Key (e.g. coffee_roast)" class="chat-input-field" style="padding: 6px 10px; font-size: 12px;"/>
+          <input type="text" id="factValInput" placeholder="Value (e.g. Medium Ethiopian)" class="chat-input-field" style="padding: 6px 10px; font-size: 12px;"/>
+          <button class="btn-ghost" onclick="addFactAction()">+ Save</button>
         </div>
-
-        <div class="twin-section">
-          <div class="twin-section-label">🎯 Long-Running Milestones & Goals</div>
-          <div id="goalsListing"></div>
-        </div>
+        <div id="factsContainer"></div>
       </div>
     </section>
   </main>
 </div>
 
-<!-- Fullscreen Merkle Ledger Dialog -->
-<dialog id="auditModalDialog">
-  <div class="dialog-top-bar">
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <span style="font-size: 22px;">🛡️</span>
-      <h2 style="font-size: 18px; font-weight: 800; letter-spacing: -0.02em;">Cryptographic Execution Ledger (SHA-256 Merkle Chain)</h2>
-    </div>
-    <button class="btn-ambient" onclick="$('auditModalDialog').close()">✕ Close</button>
+<!-- Clean Merkle Dialog -->
+<dialog id="auditDialog">
+  <div class="dialog-header">
+    <div style="font-weight: 700; font-size: 16px;">SHA-256 Merkle Ledger</div>
+    <button class="btn-ghost" onclick="$('auditDialog').close()">✕</button>
   </div>
-  <div style="margin-bottom: 12px; font-size: 12.5px; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
-    <span>Every AI proposal, human approval, and Sentinel decision is mathematically hash-chained in <code>state/audit.jsonl</code>.</span>
-    <span class="status-pill live-green" id="modalVerifyPill">Integrity: 100% VALID</span>
+  <div style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px;">
+    Every AI proposal, human approval, and Sentinel decision is cryptographically hash-chained in <code>state/audit.jsonl</code>.
   </div>
-  <div style="max-height: 420px; overflow-y: auto;">
-    <table class="merkle-table">
+  <div style="max-height: 400px; overflow-y: auto;">
+    <table class="table-clean">
       <thead>
         <tr>
-          <th>Time</th>
+          <th>Timestamp</th>
           <th>Actor</th>
           <th>Action</th>
           <th>SHA-256 Hash</th>
         </tr>
       </thead>
-      <tbody id="merkleTableBody"></tbody>
+      <tbody id="merkleRows"></tbody>
     </table>
   </div>
 </dialog>
