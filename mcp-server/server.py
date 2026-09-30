@@ -349,14 +349,20 @@ async def api_proposals(request: Request):
 
 
 @mcp.custom_route("/api/decide", methods=["POST"])
+@mcp.custom_route("/api/proposals/{pid}/decide", methods=["POST"])
 async def api_decide(request: Request):
     try:
         body = await request.json()
     except Exception:
         return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
         
-    pid = str(body.get("id", ""))
-    approved = bool(body.get("approved", False))
+    pid = str(request.path_params.get("pid") or body.get("id") or body.get("proposal_id", ""))
+    decision_val = body.get("decision")
+    if decision_val is not None:
+        approved = str(decision_val).lower() in ("approve", "approved", "true", "yes")
+    else:
+        approved = bool(body.get("approved", False))
+        
     if not pid:
         return JSONResponse({"ok": False, "error": "Proposal ID is required"}, status_code=400)
         
@@ -395,6 +401,7 @@ async def api_memory(request: Request):
 
 
 @mcp.custom_route("/api/home", methods=["GET"])
+@mcp.custom_route("/api/telemetry", methods=["GET"])
 async def api_home(request: Request):
     return JSONResponse(home_mock.get_state())
 
@@ -412,6 +419,7 @@ async def api_home_scene(request: Request):
 
 
 @mcp.custom_route("/api/home/lock", methods=["POST"])
+@mcp.custom_route("/api/devices/front_door_lock", methods=["POST"])
 async def api_home_lock(request: Request):
     try:
         body = await request.json()
@@ -424,6 +432,7 @@ async def api_home_lock(request: Request):
 
 
 @mcp.custom_route("/api/home/device", methods=["POST"])
+@mcp.custom_route("/api/devices", methods=["POST"])
 async def api_home_device(request: Request):
     try:
         body = await request.json()
