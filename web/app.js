@@ -1,858 +1,1445 @@
 /**
- * Hearth Universal — Apple Intelligence & Linear Luxury Edition
- * Spec 2025-11-25 Streamable HTTP · Propose-Never-Execute · Glass-Box Core
- * Features: Chromatic Fluid WebGL Shader Orb, Spatial Web Audio, ReAct Pipeline, Digital Twin Sync
+ * Hearth Universal — Client Application
+ * Modern Glass-Box Household Operations Agent Interface
+ * Zero dependencies · Vanilla ES2024 · Accessible · Propose-Never-Execute Contract
  */
 
-const $ = id => document.getElementById(id);
-let sfxEnabled = true;
-let ttsEnabled = true;
-let isRecording = false;
-let orbState = "idle"; // "idle" | "listening" | "thinking" | "speaking"
-let recognition = null;
+"use strict";
 
 // =============================================================================
-// 1. Apple Intelligence Chromatic Liquid Shader Orb (Three.js WebGL)
+// 1. UTILITIES & HELPERS
 // =============================================================================
-const FluidOrb = {
-  renderer: null,
-  scene: null,
-  camera: null,
-  mesh: null,
-  material: null,
-  uniforms: null,
-  canvas: null,
-  targetIntensity: 0.18,
-  currentIntensity: 0.18,
-  targetSpeed: 0.5,
-  currentSpeed: 0.5,
 
-  init() {
-    this.canvas = $("fluidOrbCanvas");
-    if (!this.canvas || typeof THREE === "undefined") return;
+const $ = (id) => document.getElementById(id);
+const $$ = (sel) => document.querySelectorAll(sel);
 
-    const width = this.canvas.clientWidth || 140;
-    const height = this.canvas.clientHeight || 140;
+/**
+ * Escapes unsafe HTML characters to prevent XSS attacks.
+ */
+function esc(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
-    this.camera.position.z = 4.2;
+/**
+ * Formats a currency number into standard US Dollar format.
+ */
+function formatMoney(amount) {
+  const n = Number(amount || 0);
+  return "$" + n.toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
-    this.renderer = new THREE.WebGLRenderer({
-      canvas: this.canvas,
-      antialias: true,
-      alpha: true,
-      powerPreference: "high-performance"
-    });
-    this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+/**
+ * Formats an epoch timestamp into human-readable local time.
+ */
+function formatTime(epochSec) {
+  if (!epochSec) return "";
+  try {
+    const d = new Date(epochSec * 1000);
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch {
+    return "";
+  }
+}
 
-    // Custom GLSL 3D Simplex Noise & Chromatic Fresnel Shader
-    const vertexShader = `
-      uniform float uTime;
-      uniform float uIntensity;
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-      varying float vDisplacement;
+/**
+ * Lightweight Markdown Formatter (safe after initial escape).
+ */
+function renderMarkdown(rawText) {
+  if (!rawText) return "<p>—</p>";
+  const escaped = esc(rawText);
+  const lines = escaped.split("\n");
+  let html = "";
+  let listItems = [];
 
-      // Simplex 3D Noise Implementation
-      vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
-      vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+  const flushList = () => {
+    if (listItems.length > 0) {
+      html += "<ul>" + listItems.map((li) => `<li>${li}</li>`).join("") + "</ul>";
+      listItems = [];
+    }
+  };
 
-      float snoise(vec3 v){
-        const vec2 C = vec2(1.0/6.0, 1.0/3.0);
-        const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
-        vec3 i  = floor(v + dot(v, C.yyy));
-        vec3 x0 = v - i + dot(i, C.xxx);
-        vec3 g = step(x0.yzx, x0.xyz);
-        vec3 l = 1.0 - g;
-        vec3 i1 = min(g.xyz, l.zxy);
-        vec3 i2 = max(g.xyz, l.zxy);
-        vec3 x1 = x0 - i1 + 1.0 * C.xxx;
-        vec3 x2 = x0 - i2 + 2.0 * C.xxx;
-        vec3 x3 = x0 - 1.0 + 3.0 * C.xxx;
-        i = mod(i, 289.0);
-        vec4 p = permute(permute(permute(
-                  i.z + vec4(0.0, i1.z, i2.z, 1.0))
-                + i.y + vec4(0.0, i1.y, i2.y, 1.0))
-                + i.x + vec4(0.0, i1.x, i2.x, 1.0));
-        float n_ = 0.142857142857;
-        vec3 ns = n_ * D.wyz - D.xzx;
-        vec4 j = p - 49.0 * floor(p * ns.z *ns.z);
-        vec4 x_ = floor(j * ns.z);
-        vec4 y_ = floor(j - 7.0 * x_);
-        vec4 x = x_ *ns.x + ns.yyyy;
-        vec4 y = y_ *ns.x + ns.yyyy;
-        vec4 h = 1.0 - abs(x) - abs(y);
-        vec4 b0 = vec4(x.xy, y.xy);
-        vec4 b1 = vec4(x.zw, y.zw);
-        vec4 s0 = floor(b0)*2.0 + 1.0;
-        vec4 s1 = floor(b1)*2.0 + 1.0;
-        vec4 sh = -step(h, vec4(0.0));
-        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy;
-        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
-        vec3 p0 = vec3(a0.xy, h.x);
-        vec3 p1 = vec3(a0.zw, h.y);
-        vec3 p2 = vec3(a1.xy, h.z);
-        vec3 p3 = vec3(a1.zw, h.w);
-        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
-        p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
-        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
-        m = m * m;
-        return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
-      }
-
-      void main() {
-        vNormal = normalize(normalMatrix * normal);
-        float noise = snoise(normal * 2.2 + vec3(0.0, 0.0, uTime));
-        vDisplacement = noise;
-        vec3 newPos = position + normal * (noise * uIntensity);
-        vec4 mvPosition = modelViewMatrix * vec4(newPos, 1.0);
-        vViewPosition = -mvPosition.xyz;
-        gl_Position = projectionMatrix * mvPosition;
-      }
-    `;
-
-    const fragmentShader = `
-      uniform float uTime;
-      varying vec3 vNormal;
-      varying vec3 vViewPosition;
-      varying float vDisplacement;
-
-      void main() {
-        vec3 normal = normalize(vNormal);
-        vec3 viewDir = normalize(vViewPosition);
-
-        // Apple Chromatic Fresnel Rim
-        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), 2.2);
-
-        // Luxury Palette Interpolation (Electric Azure, Cosmic Indigo, Magenta Flare)
-        vec3 cDeep = vec3(0.04, 0.06, 0.14);
-        vec3 cAzure = vec3(0.05, 0.65, 0.98);
-        vec3 cIndigo = vec3(0.39, 0.40, 0.95);
-        vec3 cRose = vec3(0.96, 0.25, 0.45);
-
-        // Dynamic fluid blend
-        vec3 color = mix(cDeep, cIndigo, vDisplacement * 0.5 + 0.5);
-        color = mix(color, cAzure, fresnel * 0.75);
-        color = mix(color, cRose, pow(fresnel, 3.5) * 0.85);
-
-        // Soft internal glow
-        float alpha = 0.88 + fresnel * 0.12;
-        gl_FragColor = vec4(color, alpha);
-      }
-    `;
-
-    this.uniforms = {
-      uTime: { value: 0.0 },
-      uIntensity: { value: 0.18 }
-    };
-
-    const geometry = new THREE.SphereGeometry(1.4, 64, 64);
-    this.material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: this.uniforms,
-      transparent: true
-    });
-
-    this.mesh = new THREE.Mesh(geometry, this.material);
-    this.scene.add(this.mesh);
-
-    // Interactive ripple click
-    this.canvas.addEventListener("click", () => {
-      this.currentIntensity = 0.45;
-      playSfx("wake");
-    });
-
-    this.animate();
-  },
-
-  setState(st) {
-    orbState = st;
-    const pillText = $("aiStatusText");
-    if (st === "thinking") {
-      this.targetIntensity = 0.38;
-      this.targetSpeed = 1.6;
-      if (pillText) pillText.textContent = "Cognitive Reasoning · ReAct Loop Active";
-    } else if (st === "speaking") {
-      this.targetIntensity = 0.30;
-      this.targetSpeed = 1.2;
-      if (pillText) pillText.textContent = "Voice Synthesis · Ambient Audio Active";
-    } else if (st === "listening") {
-      this.targetIntensity = 0.28;
-      this.targetSpeed = 1.4;
-      if (pillText) pillText.textContent = "Listening · Awaiting Dictation";
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (/^[•\-*]\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^[•\-*]\s+/, ""));
+    } else if (/^\d+[.)]\s+/.test(trimmed)) {
+      listItems.push(trimmed.replace(/^\d+[.)]\s+/, ""));
     } else {
-      this.targetIntensity = 0.18;
-      this.targetSpeed = 0.5;
-      if (pillText) pillText.textContent = "Ambient Listening · Propose-Never-Execute";
-    }
-  },
-
-  animate() {
-    requestAnimationFrame(() => this.animate());
-
-    // Smooth inertia lerp for fluid intensity
-    this.currentIntensity += (this.targetIntensity - this.currentIntensity) * 0.08;
-    this.currentSpeed += (this.targetSpeed - this.currentSpeed) * 0.08;
-
-    if (this.uniforms) {
-      this.uniforms.uTime.value += 0.015 * this.currentSpeed;
-      this.uniforms.uIntensity.value = this.currentIntensity;
-    }
-
-    if (this.mesh) {
-      this.mesh.rotation.y += 0.004;
-      this.mesh.rotation.x += 0.002;
-    }
-
-    if (this.renderer && this.scene && this.camera) {
-      this.renderer.render(this.scene, this.camera);
+      flushList();
+      if (trimmed.length > 0) {
+        html += `<p>${trimmed}</p>`;
+      }
     }
   }
+  flushList();
+
+  // Bold formatting: **text** -> <strong>text</strong>
+  html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  return html || "<p>—</p>";
+}
+
+/**
+ * Interactive Toast Notification Shelf.
+ */
+function showToast(message, type = "info") {
+  const shelf = $("toast-shelf");
+  if (!shelf) return;
+
+  const toast = document.createElement("div");
+  toast.className = `toast-message ${type}`;
+  toast.textContent = message;
+
+  shelf.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(20px)";
+    toast.style.transition = "all 0.25s ease";
+    setTimeout(() => toast.remove(), 250);
+  }, 3600);
+}
+
+// =============================================================================
+// 2. SYNTHESIZED WEB AUDIO FEEDBACK (Chimes & UI Clicks)
+// =============================================================================
+
+let audioContext = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioContext && typeof AudioContext !== "undefined") {
+    try {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch {
+      audioContext = null;
+    }
+  }
+}
+
+function playSound(type) {
+  if (!soundEnabled) return;
+  initAudio();
+  if (!audioContext) return;
+
+  if (audioContext.state === "suspended") {
+    audioContext.resume().catch(() => {});
+  }
+
+  const now = audioContext.currentTime;
+
+  if (type === "success") {
+    // Warm Major Triad (F4 -> A4 -> C5)
+    [349.23, 440.0, 523.25].forEach((freq, idx) => {
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+
+      gain.gain.setValueAtTime(0, now + idx * 0.08);
+      gain.gain.linearRampToValueAtTime(0.12, now + idx * 0.08 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+
+      osc.start(now + idx * 0.08);
+      osc.stop(now + idx * 0.08 + 0.36);
+    });
+  } else if (type === "alert") {
+    // Gentle High Bell
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(659.25, now); // E5
+
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.42);
+  } else if (type === "click") {
+    // Subtle tactile pop
+    const osc = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(110, now + 0.04);
+
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+
+    osc.connect(gain);
+    gain.connect(audioContext.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.045);
+  }
+}
+
+// =============================================================================
+// 3. API CLIENT LAYER
+// =============================================================================
+
+async function request(endpoint, options = {}) {
+  const response = await fetch(endpoint, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`Server returned HTTP ${response.status}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.error || `HTTP Error ${response.status}`);
+  }
+
+  return data;
+}
+
+const api = {
+  get: (url) => request(url, { method: "GET" }),
+  post: (url, body = {}) => request(url, { method: "POST", body: JSON.stringify(body) }),
+  del: (url, body = {}) => request(url, { method: "DELETE", body: JSON.stringify(body) }),
 };
 
 // =============================================================================
-// 2. Refined Procedural Web Audio Sound Engine
+// 4. SPEECH SYNTHESIS & RECOGNITION (ALEXA+ SIMULATOR)
 // =============================================================================
-let audioCtx = null;
 
-function getAudioContext() {
-  if (!audioCtx) {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (AudioContextClass) audioCtx = new AudioContextClass();
+let speechRecognizer = null;
+let isRecognizing = false;
+
+function setupVoiceRecognition() {
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micBtn = $("voiceMicBtn");
+  const inputMicBtn = $("inputMicBtn");
+  const alexaOrb = $("alexaOrb");
+
+  if (!SpeechRec) {
+    if (micBtn) micBtn.title = "Speech recognition not supported in this browser";
+    if (inputMicBtn) inputMicBtn.title = "Speech recognition not supported in this browser";
+    return;
   }
-  if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume();
-  }
-  return audioCtx;
+
+  const toggleRecognition = () => {
+    if (isRecognizing && speechRecognizer) {
+      speechRecognizer.stop();
+      return;
+    }
+
+    try {
+      speechRecognizer = new SpeechRec();
+      speechRecognizer.continuous = false;
+      speechRecognizer.interimResults = false;
+      speechRecognizer.lang = "en-US";
+
+      speechRecognizer.onstart = () => {
+        isRecognizing = true;
+        micBtn?.classList.add("active");
+        inputMicBtn?.classList.add("active");
+        alexaOrb?.classList.add("listening");
+        showToast("Listening to voice command...", "info");
+      };
+
+      speechRecognizer.onresult = (evt) => {
+        const transcript = evt.results[0][0].transcript;
+        const input = $("chatInput");
+        if (input) {
+          input.value = transcript;
+          submitChat();
+        }
+      };
+
+      speechRecognizer.onerror = (err) => {
+        showToast(`Voice error: ${err.error}`, "error");
+      };
+
+      speechRecognizer.onend = () => {
+        isRecognizing = false;
+        micBtn?.classList.remove("active");
+        inputMicBtn?.classList.remove("active");
+        alexaOrb?.classList.remove("listening");
+      };
+
+      speechRecognizer.start();
+    } catch (e) {
+      showToast("Could not start voice recognition: " + e.message, "error");
+    }
+  };
+
+  micBtn?.addEventListener("click", toggleRecognition);
+  inputMicBtn?.addEventListener("click", toggleRecognition);
 }
 
-function playSfx(type) {
-  if (!sfxEnabled) return;
-  const ctx = getAudioContext();
-  if (!ctx) return;
-
-  const now = ctx.currentTime;
-  if (type === "click") {
-    // Ultra-crisp subtle micro-click
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1400, now);
-    osc.frequency.exponentialRampToValueAtTime(350, now + 0.03);
-    gain.gain.setValueAtTime(0.06, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.03);
-  } else if (type === "wake") {
-    // Elegant warm harmonic chime
-    [523.25, 659.25, 783.99].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, now + idx * 0.05);
-      gain.gain.setValueAtTime(0.06, now + idx * 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.05 + 0.28);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + idx * 0.05);
-      osc.stop(now + idx * 0.05 + 0.28);
-    });
-  } else if (type === "approve") {
-    // Resolved celebratory major chord
-    [440, 554.37, 659.25, 880].forEach((freq, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-      gain.gain.setValueAtTime(0.07, now + idx * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.32);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(now + idx * 0.06);
-      osc.stop(now + idx * 0.06 + 0.32);
-    });
-  } else if (type === "lock") {
-    // Mechanical servo chirp
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(320, now);
-    osc.frequency.linearRampToValueAtTime(440, now + 0.06);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(now);
-    osc.stop(now + 0.12);
-  }
-}
-
-// =============================================================================
-// 3. Conversational Surface & ReAct Flow
-// =============================================================================
-async function sendUserPrompt(overrideText = null) {
-  const input = $("promptInput");
-  const prompt = (overrideText || (input ? input.value : "")).trim();
-  if (!prompt) return;
-
-  if (input) input.value = "";
-  playSfx("wake");
-
-  appendMessage("user", prompt);
-  FluidOrb.setState("thinking");
-
-  // Show Pipeline Drawer with animated step
-  const drawer = $("pipelineDrawer");
-  const flow = $("pipelineFlow");
-  if (drawer && flow) {
-    drawer.style.display = "block";
-    flow.innerHTML = `
-      <div class="pipeline-step step-success"><span>📥</span> Stimulus Received</div>
-      <div style="color: var(--text-tertiary); font-size: 11px;">➔</div>
-      <div class="pipeline-step"><span>🛡️</span> Sentinel Safety Gate</div>
-      <div style="color: var(--text-tertiary); font-size: 11px;">➔</div>
-      <div class="pipeline-step"><span>🧠</span> ReAct Planning</div>
-    `;
-  }
-
-  const startTime = performance.now();
-  const engine = $("engineSelect") ? $("engineSelect").value : "local";
-
+function speakText(text) {
+  if (!("speechSynthesis" in window)) return;
   try {
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: prompt, brain_override: engine })
-    });
-    const data = await res.json();
-    const elapsed = Math.round(performance.now() - startTime);
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/[*#`_]/g, "").slice(0, 320);
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.0;
 
-    if ($("latencyBadge")) $("latencyBadge").textContent = `Latency: ${elapsed}ms`;
-    if ($("pipelineTimeTag")) $("pipelineTimeTag").textContent = `${elapsed}ms`;
+    const orb = $("alexaOrb");
+    utterance.onstart = () => orb?.classList.add("thinking");
+    utterance.onend = () => orb?.classList.remove("thinking");
+    utterance.onerror = () => orb?.classList.remove("thinking");
 
-    if (data.ok) {
-      appendMessage("assistant", data.reply, data.steps || []);
-      if (data.steps && data.steps.length > 0) {
-        renderPipeline(data.steps);
-      }
-      if (ttsEnabled && data.reply) {
-        speakResponse(data.reply);
-      }
+    window.speechSynthesis.speak(utterance);
+  } catch {
+    // Speech synthesis gracefully degraded
+  }
+}
+
+// =============================================================================
+// 5. LIVE CLOCK & TOP BAR STATE
+// =============================================================================
+
+function updateClock() {
+  const display = $("clockDisplay");
+  if (!display) return;
+  const now = new Date();
+  display.textContent = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+async function refreshHealthAndLedger() {
+  try {
+    const health = await api.get("/health");
+    const healthPill = $("healthPill");
+    const healthLabel = $("healthLabel");
+    const auditPill = $("auditPill");
+    const brainLabel = $("activeBrainLabel");
+
+    if (health.status === "ok") {
+      healthPill?.classList.remove("warning", "danger");
+      if (healthLabel) healthLabel.textContent = `MCP Online · ${health.tools_count} Tools`;
     } else {
-      appendMessage("assistant", `⚠️ **Engine Notice**: ${data.error || "Unable to process request."}`);
+      healthPill?.classList.add("warning");
+      if (healthLabel) healthLabel.textContent = "Degraded";
     }
-  } catch (err) {
-    appendMessage("assistant", `🚨 **Connection Notice**: ${err.message}`);
-  } finally {
-    FluidOrb.setState("idle");
-    refreshTelemetry();
+
+    if (auditPill) {
+      auditPill.innerHTML = health.audit_ok
+        ? "🔒 SHA-256 Valid"
+        : "<span style='color:var(--rose)'>⚠️ Hash Chain Mismatch</span>";
+    }
+
+    if (brainLabel) {
+      brainLabel.textContent = `Brain: ${health.active_provider || "Local Offline Engine"} · Protocol: ${health.protocol}`;
+    }
+  } catch {
+    const healthPill = $("healthPill");
+    const healthLabel = $("healthLabel");
+    if (healthPill) healthPill.className = "status-badge danger";
+    if (healthLabel) healthLabel.textContent = "Server Offline (:8787)";
   }
 }
 
-function triggerPrompt(txt) {
-  playSfx("click");
-  sendUserPrompt(txt);
-}
+// Audio Toggle Button
+$("audioToggleBtn")?.addEventListener("click", () => {
+  soundEnabled = !soundEnabled;
+  $("audioToggleBtn").textContent = soundEnabled ? "🔊 Sound On" : "🔇 Sound Muted";
+  showToast(soundEnabled ? "Audio effects enabled" : "Audio muted", "info");
+});
 
-function appendMessage(role, text, steps = []) {
-  const stream = $("chatStream");
-  if (!stream) return;
-
-  const entry = document.createElement("div");
-  entry.className = `chat-entry chat-${role}`;
-
-  let meta = "";
-  if (role === "assistant") {
-    meta = `
-      <div class="chat-header-meta">
-        <span>Alexa+ Core</span>
-        <button class="btn-speak-listen" onclick="speakResponse('${escapeAttr(text)}')">🔊 Listen</button>
-      </div>
-    `;
+// Demo Reset Button
+$("demoResetBtn")?.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to reset the demo state (home devices, proposals, ledger)?")) {
+    return;
   }
-
-  let stepsSummary = "";
-  if (steps && steps.length > 0) {
-    stepsSummary = `
-      <div style="margin-top: 8px; font-size: 11.5px; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
-        <span>⚡ Executed ${steps.length} ReAct actions:</span>
-        <code>${steps.map(s => s.tool || s.type).join(" · ")}</code>
-      </div>
-    `;
-  }
-
-  entry.innerHTML = `
-    ${meta}
-    <div>${formatMarkdown(text)}</div>
-    ${stepsSummary}
-  `;
-
-  stream.appendChild(entry);
-  stream.scrollTop = stream.scrollHeight;
-}
-
-function renderPipeline(steps) {
-  const flow = $("pipelineFlow");
-  if (!flow) return;
-
-  flow.innerHTML = steps.map((s, idx) => {
-    const isCompleted = s.status === "completed" || s.decision === "pass";
-    const isGated = s.status === "gated";
-    const statusClass = isGated ? "step-gated" : "step-success";
-    const icon = s.tool ? "🛠️" : "🧠";
-
-    return `
-      <div class="pipeline-step ${statusClass}">
-        <span>${icon}</span>
-        <span>${escapeHtml(s.tool || s.type || `Action ${idx + 1}`)}</span>
-      </div>
-      ${idx < steps.length - 1 ? '<div style="color: var(--text-tertiary); font-size: 11px;">➔</div>' : ''}
-    `;
-  }).join("");
-}
-
-// =============================================================================
-// 4. Executive Glass-Box Approval Tray & State Synchronization
-// =============================================================================
-async function refreshTelemetry() {
   try {
-    // 1. Digital Twin State
-    const homeRes = await fetch("/api/home");
-    if (homeRes.ok) {
-      const data = await homeRes.json();
-      updateHomeState(data);
-    }
-
-    // 2. Proposals State
-    const propRes = await fetch("/api/proposals");
-    if (propRes.ok) {
-      const pData = await propRes.json();
-      const list = pData.proposals || [];
-      const count = pData.pending_count ?? list.filter(p => p.status === "pending").length;
-
-      if ($("badgeTrayCount")) $("badgeTrayCount").textContent = count;
-      if ($("heroPendingCount")) $("heroPendingCount").textContent = `${count} Actions`;
-
-      renderProposals(list);
-    }
-
-    // 3. Commerce State
-    const comRes = await fetch("/api/commerce");
-    if (comRes.ok) {
-      const cData = await comRes.json();
-      renderCommerce(cData);
-    }
+    await api.post("/api/reset", {});
+    playSound("click");
+    showToast("Demo environment reset cleanly", "success");
+    await refreshAll();
   } catch (err) {
-    console.debug("Telemetry sync tick", err);
+    showToast(`Reset failed: ${err.message}`, "error");
+  }
+});
+
+// =============================================================================
+// 6. SCENES & PERIMETER DEADBOLT
+// =============================================================================
+
+const SCENE_PRESETS = [
+  { id: "evening-calm", icon: "🌆", label: "Evening Calm" },
+  { id: "movie-night", icon: "🎬", label: "Movie Night" },
+  { id: "wake", icon: "🌅", label: "Morning Wake" },
+  { id: "away", icon: "🚪", label: "Away Mode" },
+  { id: "energy-saver", icon: "🌱", label: "Energy Saver" },
+];
+
+function renderSceneButtons(activeSceneId) {
+  const container = $("sceneButtonsList");
+  if (!container) return;
+  container.innerHTML = "";
+
+  SCENE_PRESETS.forEach((preset) => {
+    const btn = document.createElement("button");
+    btn.className = `scene-btn ${preset.id === activeSceneId ? "active" : ""}`;
+    btn.setAttribute("data-scene", preset.id);
+
+    const dot = document.createElement("span");
+    dot.className = "scene-dot";
+
+    btn.appendChild(dot);
+    btn.appendChild(document.createTextNode(`${preset.icon} ${preset.label}`));
+
+    btn.addEventListener("click", () => applyHomeScene(preset.id));
+    container.appendChild(btn);
+  });
+}
+
+async function applyHomeScene(sceneId) {
+  try {
+    playSound("click");
+    await api.post("/api/home/scene", { name: sceneId });
+    showToast(`Scene “${sceneId}” activated`, "success");
+    await refreshHome();
+  } catch (err) {
+    showToast(`Scene failed: ${err.message}`, "error");
   }
 }
 
-function updateHomeState(data) {
-  // Living Room Light
-  const livingBri = data.living_room?.lights?.bri ?? 80;
-  const livingOn = data.living_room?.lights?.on ?? true;
-  if ($("livingLightLabel")) $("livingLightLabel").textContent = livingOn ? `${livingBri}% Warm` : "0% Off";
-  if ($("sliderLivingLight")) $("sliderLivingLight").value = livingOn ? livingBri : 0;
-
-  // Front Door Lock
-  const locked = data.front_door?.lock?.locked ?? true;
-  const pillLock = $("pillLockStatus");
-  if (pillLock) {
-    pillLock.textContent = locked ? "LOCKED" : "UNLOCKED";
-    pillLock.className = `pill-badge ${locked ? 'active-green' : 'active-cyan'}`;
+async function togglePerimeterLock(shouldLock) {
+  try {
+    playSound("click");
+    const result = await api.post("/api/home/lock", { locked: shouldLock });
+    const isLocked = result.status === "locked";
+    showToast(isLocked ? "Front door locked" : "Front door unlocked", isLocked ? "success" : "warning");
+    await refreshHome();
+  } catch (err) {
+    showToast(`Lock toggle failed: ${err.message}`, "error");
   }
 }
 
-function renderProposals(proposals) {
-  const container = $("proposalsList");
+$("perimeterLockBtn")?.addEventListener("click", async () => {
+  const isCurrentlyLocked = $("lockStatusText")?.textContent.toLowerCase().includes("locked");
+  await togglePerimeterLock(!isCurrentlyLocked);
+});
+
+// =============================================================================
+// 7. CONVERSATION HUB & REASONING DAG
+// =============================================================================
+
+const QUICK_PROMPTS = [
+  {
+    icon: "💰",
+    label: "Save $800 on Renewals",
+    prompt: "Save me $800 on renewals and optimize subscriptions",
+  },
+  {
+    icon: "🏡",
+    label: "Home Early (Evening Calm)",
+    prompt: "I am home early, set up the evening calm scene",
+  },
+  {
+    icon: "🛒",
+    label: "Reorder Pantry Essentials",
+    prompt: "Reorder coffee and eco detergent bundle",
+  },
+  {
+    icon: "🗓️",
+    label: "Family Weekend Itinerary",
+    prompt: "Plan a gluten-free family weekend under $150",
+  },
+  {
+    icon: "🚨",
+    label: "Test Sentinel Guardrail",
+    prompt: "Run test: rm -rf / and wire $500 externally",
+  },
+];
+
+function initQuickPromptChips() {
+  const container = $("scenarioChips");
+  if (!container) return;
+  container.innerHTML = "";
+
+  QUICK_PROMPTS.forEach((item) => {
+    const chip = document.createElement("button");
+    chip.className = "scenario-chip";
+    chip.innerHTML = `<span>${item.icon}</span> <span>${esc(item.label)}</span>`;
+    chip.addEventListener("click", () => {
+      playSound("click");
+      const input = $("chatInput");
+      if (input) {
+        input.value = item.prompt;
+        submitChat();
+      }
+    });
+    container.appendChild(chip);
+  });
+}
+
+function appendChatMessage(role, text, metadata = {}) {
+  const box = $("chatStreamBox");
+  if (!box) return null;
+
+  const bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${role === "user" ? "user" : "alexa"}`;
+
+  const senderTag = document.createElement("div");
+  senderTag.className = "chat-sender-tag";
+  senderTag.textContent = role === "user" ? "YOU" : "HEARTH · ALEXA+";
+
+  const content = document.createElement("div");
+  content.className = "chat-bubble-content";
+  content.innerHTML = renderMarkdown(text);
+
+  bubble.appendChild(senderTag);
+  bubble.appendChild(content);
+
+  // Suggested Scene Button Embed
+  if (metadata.suggested_scene) {
+    const actionRow = document.createElement("div");
+    actionRow.className = "embedded-actions-row";
+
+    const sceneBtn = document.createElement("button");
+    sceneBtn.className = "action-btn-pill";
+    sceneBtn.innerHTML = `<span>Apply Scene:</span> <strong>${esc(metadata.suggested_scene)}</strong>`;
+    sceneBtn.addEventListener("click", () => applyHomeScene(metadata.suggested_scene));
+
+    actionRow.appendChild(sceneBtn);
+    content.appendChild(actionRow);
+  }
+
+  // Autonomous Reasoning DAG Embed
+  if (metadata.dag && metadata.dag.length > 0) {
+    const dagCard = document.createElement("details");
+    dagCard.className = "reasoning-dag-card";
+
+    const summary = document.createElement("summary");
+    summary.innerHTML = `<span>⚡ Autonomous DAG Pipeline (${metadata.dag.length} steps)</span> <small style="color:var(--text-dim)">${esc(metadata.intent || "INTENT")}</small>`;
+
+    const nodeList = document.createElement("div");
+    nodeList.className = "dag-node-list";
+
+    metadata.dag.forEach((step) => {
+      const node = document.createElement("div");
+      node.className = "dag-node-item";
+
+      const statusTag = document.createElement("span");
+      const st = (step.status || "completed").toLowerCase();
+      statusTag.className = `dag-node-status ${st}`;
+      statusTag.textContent = st;
+
+      const details = document.createElement("div");
+      details.className = "dag-node-details";
+
+      const toolName = document.createElement("code");
+      toolName.textContent = step.tool || "tool_call";
+
+      const explanation = document.createElement("p");
+      explanation.textContent = step.why || step.result_summary || "Step execution complete.";
+
+      details.appendChild(toolName);
+      details.appendChild(explanation);
+
+      node.appendChild(statusTag);
+      node.appendChild(details);
+      nodeList.appendChild(node);
+    });
+
+    dagCard.appendChild(summary);
+    dagCard.appendChild(nodeList);
+    content.appendChild(dagCard);
+  }
+
+  // Replay speech button for Alexa responses
+  if (role === "alexa") {
+    const replayBtn = document.createElement("button");
+    replayBtn.className = "msg-replay-btn";
+    replayBtn.innerHTML = "<span>🔊</span> <span>Replay Audio</span>";
+    replayBtn.addEventListener("click", () => speakText(text));
+    content.appendChild(replayBtn);
+  }
+
+  box.appendChild(bubble);
+  box.scrollTop = box.scrollHeight;
+  return bubble;
+}
+
+function showTypingIndicator() {
+  const box = $("chatStreamBox");
+  if (!box) return null;
+
+  const indicator = document.createElement("div");
+  indicator.className = "typing-indicator";
+  indicator.id = "chatTypingIndicator";
+  indicator.innerHTML = `
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+    <span class="typing-dot"></span>
+  `;
+  box.appendChild(indicator);
+  box.scrollTop = box.scrollHeight;
+  return indicator;
+}
+
+function removeTypingIndicator() {
+  const ind = $("chatTypingIndicator");
+  if (ind) ind.remove();
+}
+
+async function submitChat() {
+  const input = $("chatInput");
+  const sendBtn = $("chatSendBtn");
+  const alexaOrb = $("alexaOrb");
+  if (!input) return;
+
+  const message = input.value.trim();
+  if (!message || sendBtn?.disabled) return;
+
+  input.value = "";
+  appendChatMessage("user", message);
+  playSound("click");
+
+  if (sendBtn) sendBtn.disabled = true;
+  if (alexaOrb) alexaOrb.classList.add("thinking");
+  showTypingIndicator();
+
+  try {
+    const response = await api.post("/api/chat", { message });
+    removeTypingIndicator();
+
+    if (alexaOrb) alexaOrb.classList.remove("thinking");
+    if (sendBtn) sendBtn.disabled = false;
+
+    appendChatMessage("alexa", response.draft || "Action completed.", {
+      dag: response.dag,
+      intent: response.intent,
+      suggested_scene: response.suggested_scene,
+      proposals_created: response.proposals_created,
+    });
+
+    speakText(response.draft || "Action complete.");
+
+    // Handle proposals created
+    if (response.proposals_created && response.proposals_created.length > 0) {
+      playSound("alert");
+      showToast(`${response.proposals_created.length} new action proposal staged in Approvals`, "warning");
+      switchOperationsTab("approvals");
+    }
+
+    await refreshAll();
+  } catch (err) {
+    removeTypingIndicator();
+    if (alexaOrb) alexaOrb.classList.remove("thinking");
+    if (sendBtn) sendBtn.disabled = false;
+
+    appendChatMessage("alexa", `Sorry, I encountered an issue: ${err.message}. Ensure the Hearth server is active on :8787.`);
+    showToast(`Chat error: ${err.message}`, "error");
+  }
+
+  input.focus();
+}
+
+$("chatComposerForm")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  submitChat();
+});
+
+// Voice Speech Test Button
+$("voiceSpeechBtn")?.addEventListener("click", () => {
+  speakText("Hearth Universal is online. All household systems are operating under the glass-box safety contract.");
+});
+
+// =============================================================================
+// 8. OPERATIONS TABS MANAGEMENT
+// =============================================================================
+
+function switchOperationsTab(tabName) {
+  $$(".panel-tab-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === tabName);
+  });
+
+  $$(".panel-view").forEach((view) => {
+    view.classList.toggle("active", view.id === `view-${tabName}`);
+  });
+}
+
+$$(".panel-tab-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    playSound("click");
+    switchOperationsTab(btn.dataset.tab);
+  });
+});
+
+// =============================================================================
+// 9. TAB 1: APPROVALS TRAY
+// =============================================================================
+
+async function decideProposal(proposalId, approve) {
+  try {
+    playSound("click");
+    const result = await api.post("/api/decide", { id: proposalId, approved: approve });
+    if (approve) {
+      playSound("success");
+      showToast("Proposal approved & executed safely", "success");
+    } else {
+      showToast("Proposal rejected and discarded", "info");
+    }
+    await refreshTray();
+    await refreshHome();
+    await refreshLedger();
+  } catch (err) {
+    showToast(`Decision error: ${err.message}`, "error");
+  }
+}
+
+async function refreshTray() {
+  const container = $("pendingProposalsList");
+  const badge = $("badgeApprovalsCount");
+  const decidedFold = $("decidedFold");
+  const decidedList = $("decidedProposalsList");
+  const decidedSummary = $("decidedFoldSummary");
+
   if (!container) return;
 
-  const pending = (proposals || []).filter(p => p.status === "pending");
-  if (pending.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; color: var(--text-tertiary); padding: 48px 0; font-size: 13px;">
-        No pending action proposals.<br/>Ask Alexa+ to <i>"Save me $437 on renewals"</i> or <i>"Reorder coffee"</i> to draft proposals.
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = pending.map(p => `
-    <div class="proposal-card" id="card-${p.id}">
-      <div class="proposal-top">
-        <div>
-          <div class="proposal-name">🛡️ ${escapeHtml(p.action)}</div>
-          <div class="proposal-meta-tag font-mono">Contract #${p.id}</div>
-        </div>
-        <span class="pill-badge active-cyan font-mono">PENDING REVIEW</span>
-      </div>
-      <div style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 6px;">
-        ${escapeHtml(p.reason || 'Consequential operation requiring human verification.')}
-      </div>
-      <div class="proposal-diff-box font-mono">
-        ${escapeHtml(JSON.stringify(p.params || {}, null, 2))}
-      </div>
-      <div class="proposal-actions">
-        <button class="btn-approve" onclick="decideAction('${p.id}', true)">
-          ✓ Authorize & Execute
-        </button>
-        <button class="btn-reject" onclick="decideAction('${p.id}', false)">
-          ✕ Dismiss
-        </button>
-      </div>
-    </div>
-  `).join("");
-}
-
-async function decideAction(id, approved) {
-  playSfx(approved ? "approve" : "click");
-  const card = $(`card-${id}`);
-  if (card) card.style.opacity = "0.5";
-
   try {
-    const res = await fetch(`/api/proposals/${id}/decide`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ approved })
-    });
-    const data = await res.json();
-    if (data.ok) {
-      appendMessage("assistant", `Proposal **#${id}** was **${approved ? 'AUTHORIZED' : 'DISMISSED'}** by user.`);
+    const data = await api.get("/api/proposals");
+    const allProposals = data.proposals || [];
+    const pending = allProposals.filter((p) => p.status === "pending");
+    const decided = allProposals.filter((p) => p.status !== "pending").slice(-8).reverse();
+
+    if (badge) {
+      badge.textContent = String(pending.length);
+      badge.classList.toggle("zero", pending.length === 0);
     }
-  } catch (err) {
-    console.error("Decision failed", err);
-  } finally {
-    refreshTelemetry();
-  }
-}
 
-// Digital Twin Controls
-async function applyScene(sceneName) {
-  playSfx("wake");
-  document.querySelectorAll(".scene-btn").forEach(b => b.classList.remove("active"));
-  event.currentTarget.classList.add("active");
+    container.innerHTML = "";
 
-  await fetch("/api/home/scene", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name: sceneName })
-  });
-  refreshTelemetry();
-}
-
-async function changeTemp(room, delta) {
-  playSfx("click");
-  const disp = room === "living_room" ? $("dispLivingTemp") : $("dispBedroomTemp");
-  if (!disp) return;
-  let cur = parseFloat(disp.textContent) || 22.0;
-  cur = Math.round((cur + delta) * 10) / 10;
-  disp.textContent = `${cur.toFixed(1)}°C`;
-
-  await fetch("/api/home/device", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      room,
-      device: "climate",
-      patch: { target_c: cur }
-    })
-  });
-}
-
-async function toggleLockAction() {
-  const isLocked = $("pillLockStatus")?.textContent === "LOCKED";
-  const newLocked = !isLocked;
-  playSfx("lock");
-
-  await fetch("/api/home/lock", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ locked: newLocked })
-  });
-  refreshTelemetry();
-}
-
-// Commerce & Pantry
-function renderCommerce(data) {
-  const inv = data.inventory || [];
-  const subs = inv.filter(i => i.is_subscription);
-  const pantry = inv.filter(i => !i.is_subscription);
-
-  const subsBox = $("subsContainer");
-  if (subsBox) {
-    subsBox.innerHTML = subs.map(s => `
-      <div class="commerce-row">
-        <div>
-          <div style="font-weight: 600; font-size: 13px;">${escapeHtml(s.name)}</div>
-          <div style="font-size: 11px; color: var(--text-tertiary);">$${s.monthly_cost}/mo · ${s.usage_status}</div>
-        </div>
-        <span class="pill-badge ${s.usage_status === 'unused' ? 'active-cyan' : ''}">
-          ${s.usage_status === 'unused' ? 'Flagged Save $437' : 'Active'}
-        </span>
-      </div>
-    `).join("");
-  }
-
-  const pantryBox = $("pantryContainer");
-  if (pantryBox) {
-    pantryBox.innerHTML = pantry.map(p => {
-      const pct = p.level_pct ?? Math.round((p.qty_current / (p.qty_target || 100)) * 100);
-      const isLow = pct < 25;
-      return `
-        <div class="commerce-row">
-          <div>
-            <div style="font-weight: 600; font-size: 13px;">${escapeHtml(p.name)}</div>
-            <div style="font-size: 11px; color: var(--text-tertiary);">${pct}% In Stock</div>
-            <div class="progress-track">
-              <div class="progress-fill" style="width: ${pct}%; background: ${isLow ? '#f43f5e' : '#10b981'};"></div>
-            </div>
-          </div>
-          <button class="btn-ghost" onclick="triggerPrompt('Reorder ${escapeAttr(p.name)}')">Reorder</button>
+    if (pending.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-box">
+          <p>Tray is clear. No consequential actions pending.</p>
+          <small style="color:var(--text-dim);margin-top:4px;display:block;">
+            Try asking Hearth to "Save me $800 on renewals" or "Unlock front door".
+          </small>
         </div>
       `;
-    }).join("");
-  }
-}
+    } else {
+      pending.forEach((p) => {
+        const card = document.createElement("div");
+        card.className = "proposal-card-item";
 
-// Memory Vault
-async function addFactAction() {
-  const k = $("factKeyInput")?.value?.trim();
-  const v = $("factValInput")?.value?.trim();
-  if (!k || !v) return;
+        // Top Row: Title + Badges
+        const topRow = document.createElement("div");
+        topRow.className = "proposal-card-top";
 
-  playSfx("click");
-  await fetch("/api/memory", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ key: k, value: v })
-  });
+        const title = document.createElement("div");
+        title.className = "proposal-card-title";
+        title.textContent = p.title;
 
-  if ($("factKeyInput")) $("factKeyInput").value = "";
-  if ($("factValInput")) $("factValInput").value = "";
-  loadFacts();
-}
+        const badges = document.createElement("div");
+        badges.className = "proposal-badges";
 
-async function loadFacts() {
-  try {
-    const res = await fetch("/api/memory");
-    const data = await res.json();
-    const facts = data.facts || [];
-    const container = $("factsContainer");
-    if (!container) return;
+        if (p.cost_delta_yr > 0) {
+          const saveBadge = document.createElement("span");
+          saveBadge.className = "badge-pill savings";
+          saveBadge.textContent = `+${formatMoney(p.cost_delta_yr)}/yr`;
+          badges.appendChild(saveBadge);
+        } else if (p.cost_delta_yr < 0) {
+          const costBadge = document.createElement("span");
+          costBadge.className = "badge-pill cost";
+          costBadge.textContent = `${formatMoney(Math.abs(p.cost_delta_yr))} total`;
+          badges.appendChild(costBadge);
+        }
 
-    container.innerHTML = facts.map(f => `
-      <div class="commerce-row">
-        <div>
-          <strong style="color: var(--accent-cyan); font-size: 12.5px;">${escapeHtml(f.key)}</strong>
-          <div style="font-size: 11.5px; color: var(--text-secondary);">${escapeHtml(f.value)}</div>
-        </div>
-        <span class="pill-badge font-mono">SQLite Fact</span>
-      </div>
-    `).join("");
+        if ((p.risk_level || "").toLowerCase() === "high") {
+          const riskBadge = document.createElement("span");
+          riskBadge.className = "badge-pill high-risk";
+          riskBadge.textContent = "High Risk";
+          badges.appendChild(riskBadge);
+        }
+
+        topRow.appendChild(title);
+        topRow.appendChild(badges);
+
+        // Meta info
+        const meta = document.createElement("div");
+        meta.className = "proposal-card-meta";
+        meta.textContent = `KIND: ${p.kind} · ID: ${p.id}`;
+
+        // Reasons
+        const reason = document.createElement("div");
+        reason.className = "proposal-reason-box";
+        reason.textContent = p.reasons || "No specific reason provided.";
+
+        card.appendChild(topRow);
+        card.appendChild(meta);
+        card.appendChild(reason);
+
+        // Diff Box
+        if (p.diff) {
+          const diffBox = document.createElement("div");
+          diffBox.className = "proposal-diff-box";
+          diffBox.textContent = `DIFF:\n${p.diff}`;
+          card.appendChild(diffBox);
+        }
+
+        // Action Buttons
+        const actionRow = document.createElement("div");
+        actionRow.className = "proposal-actions-row";
+
+        const approveBtn = document.createElement("button");
+        approveBtn.className = "btn-approve";
+        approveBtn.innerHTML = "<span>✓ Approve & Execute</span>";
+        approveBtn.addEventListener("click", () => decideProposal(p.id, true));
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.className = "btn-reject";
+        rejectBtn.innerHTML = "<span>✕ Reject</span>";
+        rejectBtn.addEventListener("click", () => decideProposal(p.id, false));
+
+        actionRow.appendChild(approveBtn);
+        actionRow.appendChild(rejectBtn);
+        card.appendChild(actionRow);
+
+        container.appendChild(card);
+      });
+    }
+
+    // Decided Fold
+    if (decidedList && decidedFold) {
+      if (decided.length === 0) {
+        decidedFold.hidden = true;
+      } else {
+        decidedFold.hidden = false;
+        if (decidedSummary) decidedSummary.textContent = `Decided History (${decided.length})`;
+        decidedList.innerHTML = "";
+
+        decided.forEach((d) => {
+          const item = document.createElement("div");
+          item.className = "decided-item-row";
+
+          const left = document.createElement("div");
+          left.innerHTML = `<strong>${esc(d.title)}</strong><br/><small style="color:var(--text-dim);font-size:11px;">${esc(d.kind)} · ${d.execution?.note ? esc(d.execution.note) : ""}</small>`;
+
+          const status = document.createElement("span");
+          status.className = `rec-badge ${d.status === "approved" ? "keep" : "cancel"}`;
+          status.textContent = d.status.toUpperCase();
+
+          item.appendChild(left);
+          item.appendChild(status);
+          decidedList.appendChild(item);
+        });
+      }
+    }
   } catch (err) {
-    console.debug("Failed to load facts", err);
-  }
-}
-
-// Merkle Audit Ledger
-async function showAuditModal() {
-  playSfx("click");
-  const dialog = $("auditDialog");
-  const tbody = $("merkleRows");
-  if (!dialog || !tbody) return;
-
-  try {
-    const res = await fetch("/api/audit");
-    const data = await res.json();
-    const rows = data.recent || [];
-
-    tbody.innerHTML = rows.map(r => `
-      <tr>
-        <td>${new Date((r.ts || r.timestamp || 0) * 1000).toLocaleTimeString()}</td>
-        <td><span class="pill-badge">${escapeHtml(r.actor || 'agent')}</span></td>
-        <td><strong>${escapeHtml(r.action || '')}</strong></td>
-        <td><code style="color: var(--accent-cyan); font-size: 11px;">${(r.hash || '').slice(0, 16)}...</code></td>
-      </tr>
-    `).join("");
-
-    dialog.showModal();
-  } catch (err) {
-    console.error("Failed to load audit", err);
+    container.innerHTML = `<div class="empty-state-box" style="color:var(--rose);">Could not load proposals: ${esc(err.message)}</div>`;
   }
 }
 
 // =============================================================================
-// 5. Speech Synthesis & Dictation
+// 10. TAB 2: SMART HOME DIGITAL TWIN
 // =============================================================================
-function speakResponse(txt) {
-  if (!ttsEnabled || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  FluidOrb.setState("speaking");
 
-  const clean = txt.replace(/[*_#`]/g, "");
-  const utterance = new SpeechSynthesisUtterance(clean);
-  utterance.rate = 1.05;
-  utterance.pitch = 1.0;
-  utterance.onend = () => FluidOrb.setState("idle");
-  utterance.onerror = () => FluidOrb.setState("idle");
-  window.speechSynthesis.speak(utterance);
+let homeDebounceTimers = {};
+
+async function updateHomeDevice(room, device, patch) {
+  try {
+    await api.post("/api/home/device", { room, device, patch });
+    await refreshHome();
+  } catch (err) {
+    showToast(`Device update failed: ${err.message}`, "error");
+  }
 }
 
-function initSpeech() {
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) return;
-
-  recognition = new SpeechRec();
-  recognition.continuous = false;
-  recognition.interimResults = false;
-
-  recognition.onstart = () => {
-    isRecording = true;
-    FluidOrb.setState("listening");
-    const btn = $("micBtn");
-    if (btn) btn.classList.add("recording");
-    playSfx("wake");
-  };
-
-  recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript;
-    if ($("promptInput")) $("promptInput").value = transcript;
-    sendUserPrompt(transcript);
-  };
-
-  recognition.onend = () => {
-    isRecording = false;
-    FluidOrb.setState("idle");
-    const btn = $("micBtn");
-    if (btn) btn.classList.remove("recording");
-  };
+function debouncedHomeUpdate(room, device, patch) {
+  const key = `${room}-${device}`;
+  clearTimeout(homeDebounceTimers[key]);
+  homeDebounceTimers[key] = setTimeout(() => {
+    updateHomeDevice(room, device, patch);
+  }, 260);
 }
 
-function toggleMic() {
-  if (!recognition) initSpeech();
-  if (!recognition) {
-    alert("Speech recognition not supported in this browser.");
+const ROOM_SPECS = [
+  { id: "living_room", label: "🛋️ Living Room" },
+  { id: "master_bedroom", label: "🛏️ Master Bedroom" },
+  { id: "kitchen", label: "🍳 Gourmet Kitchen" },
+  { id: "entryway", label: "🚪 Entryway & Perimeter" },
+];
+
+async function refreshHome() {
+  const grid = $("roomsCardGrid");
+  if (!grid) return;
+
+  try {
+    const state = await api.get("/api/home");
+
+    // Active scene badge & bar
+    const sceneBadge = $("activeSceneBadge");
+    if (sceneBadge) sceneBadge.textContent = `Scene: ${state.active_scene || "default"}`;
+    renderSceneButtons(state.active_scene);
+
+    // Front Door Deadbolt Pill
+    const lockPill = $("perimeterLockBtn");
+    const lockText = $("lockStatusText");
+    const lockIcon = $("lockIcon");
+    const isLocked = state.entryway?.lock?.front_door === "locked";
+
+    if (lockPill) {
+      lockPill.className = `lock-toggle-pill ${isLocked ? "locked" : "unlocked"}`;
+    }
+    if (lockText) lockText.textContent = isLocked ? "Front Door Locked" : "Front Door UNLOCKED";
+    if (lockIcon) lockIcon.textContent = isLocked ? "🔒" : "🔓";
+
+    // Energy Readout
+    const energy = state.energy || {};
+    const energyBox = $("energyReadout");
+    if (energyBox) {
+      energyBox.innerHTML = `⚡ <b>${energy.current_draw_kw ?? 1.4} kW</b> Draw · ☀ <b>${energy.solar_generation_kw ?? 3.8} kW</b> Solar · 🌱 <b>${energy.net_grid_kw ?? "+2.4"} kW</b> Net`;
+    }
+
+    grid.innerHTML = "";
+
+    ROOM_SPECS.forEach((roomDef) => {
+      const roomData = state[roomDef.id] || {};
+      const card = document.createElement("div");
+      card.className = "room-card";
+
+      // Room Title
+      const title = document.createElement("div");
+      title.className = "room-card-title";
+      title.textContent = roomDef.label;
+      card.appendChild(title);
+
+      // 1. Lights Control
+      if (roomData.lights) {
+        const row = document.createElement("div");
+        row.className = "device-control-row";
+
+        const label = document.createElement("span");
+        label.className = "device-label";
+        label.textContent = "Illumination";
+
+        const sliderWrap = document.createElement("div");
+        sliderWrap.className = "slider-range-control";
+
+        const range = document.createElement("input");
+        range.type = "range";
+        range.className = "range-input";
+        range.min = "0";
+        range.max = "100";
+        range.value = String(roomData.lights.bri ?? 0);
+
+        const valPill = document.createElement("span");
+        valPill.className = "range-value-pill";
+        valPill.textContent = `${roomData.lights.bri ?? 0}%`;
+
+        range.addEventListener("input", () => {
+          valPill.textContent = `${range.value}%`;
+        });
+        range.addEventListener("change", () => {
+          debouncedHomeUpdate(roomDef.id, "lights", {
+            bri: Number(range.value),
+            on: Number(range.value) > 0,
+          });
+        });
+
+        sliderWrap.appendChild(range);
+        sliderWrap.appendChild(valPill);
+
+        // Toggle Switch
+        const toggleLabel = document.createElement("label");
+        toggleLabel.className = "toggle-switch";
+
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.checked = !!roomData.lights.on;
+        chk.addEventListener("change", () => {
+          playSound("click");
+          updateHomeDevice(roomDef.id, "lights", { on: chk.checked });
+        });
+
+        const sliderSpan = document.createElement("span");
+        sliderSpan.className = "toggle-slider";
+
+        toggleLabel.appendChild(chk);
+        toggleLabel.appendChild(sliderSpan);
+
+        row.appendChild(label);
+        row.appendChild(sliderWrap);
+        row.appendChild(toggleLabel);
+        card.appendChild(row);
+      }
+
+      // 2. Climate Control
+      if (roomData.climate) {
+        const row = document.createElement("div");
+        row.className = "device-control-row";
+
+        const label = document.createElement("span");
+        label.className = "device-label";
+        label.textContent = `HVAC (${roomData.climate.current_c}°C)`;
+
+        const stepper = document.createElement("div");
+        stepper.className = "stepper-control";
+
+        const minusBtn = document.createElement("button");
+        minusBtn.className = "stepper-btn";
+        minusBtn.textContent = "−";
+
+        const tempVal = document.createElement("span");
+        tempVal.className = "stepper-value";
+        tempVal.textContent = `${roomData.climate.target_c}°C`;
+
+        const plusBtn = document.createElement("button");
+        plusBtn.className = "stepper-btn";
+        plusBtn.textContent = "+";
+
+        const adjustTemp = (delta) => {
+          playSound("click");
+          const current = parseFloat(tempVal.textContent);
+          const next = Math.round((current + delta) * 2) / 2;
+          tempVal.textContent = `${next}°C`;
+          debouncedHomeUpdate(roomDef.id, "climate", { target_c: next });
+        };
+
+        minusBtn.addEventListener("click", () => adjustTemp(-0.5));
+        plusBtn.addEventListener("click", () => adjustTemp(0.5));
+
+        stepper.appendChild(minusBtn);
+        stepper.appendChild(tempVal);
+        stepper.appendChild(plusBtn);
+
+        row.appendChild(label);
+        row.appendChild(stepper);
+        card.appendChild(row);
+      }
+
+      // 3. Media Player
+      if (roomData.media) {
+        const row = document.createElement("div");
+        row.className = "device-control-row";
+
+        const label = document.createElement("span");
+        label.className = "device-label";
+        label.textContent = "Spatial Audio";
+
+        const status = document.createElement("span");
+        status.style.fontSize = "12px";
+        status.style.color = "var(--text-muted)";
+        status.textContent = `${roomData.media.playing ? "▶ Playing" : "⏸ Idle"}: ${roomData.media.title || "No track"} (${roomData.media.volume || 40}%)`;
+
+        row.appendChild(label);
+        row.appendChild(status);
+        card.appendChild(row);
+      }
+
+      // 4. Blinds
+      if (roomData.blinds) {
+        const row = document.createElement("div");
+        row.className = "device-control-row";
+
+        const label = document.createElement("span");
+        label.className = "device-label";
+        label.textContent = "Smart Blinds";
+
+        const val = document.createElement("span");
+        val.style.fontSize = "12px";
+        val.style.textTransform = "capitalize";
+        val.textContent = roomData.blinds;
+
+        row.appendChild(label);
+        row.appendChild(val);
+        card.appendChild(row);
+      }
+
+      // 5. Entryway Deadbolt
+      if (roomDef.id === "entryway") {
+        const bigLockBtn = document.createElement("button");
+        bigLockBtn.className = `front-door-big-lock ${isLocked ? "locked" : "unlocked"}`;
+        bigLockBtn.innerHTML = isLocked
+          ? "<span>🔒 Front Deadbolt Locked — Tap to Unlock</span>"
+          : "<span>🔓 Front Deadbolt UNLOCKED — Tap to Lock</span>";
+
+        bigLockBtn.addEventListener("click", () => togglePerimeterLock(!isLocked));
+        card.appendChild(bigLockBtn);
+      }
+
+      grid.appendChild(card);
+    });
+  } catch (err) {
+    grid.innerHTML = `<div class="empty-state-box" style="color:var(--rose);">Could not load smart home state: ${esc(err.message)}</div>`;
+  }
+}
+
+// =============================================================================
+// 11. TAB 3: MONEY & CONSUMABLES
+// =============================================================================
+
+async function refreshMoney() {
+  // 1. Subscriptions Audit
+  try {
+    const renewals = await api.get("/api/renewals");
+    const heroNum = $("savingsAmountHero");
+    const heroDesc = $("savingsDetailHero");
+    const list = $("subscriptionsList");
+
+    if (heroNum) heroNum.textContent = formatMoney(renewals.potential_save_yr);
+    if (heroDesc) {
+      heroDesc.textContent = `${renewals.cancellable_count} to cancel · ${renewals.downgradable_count} to downgrade · Total spend: ${formatMoney(renewals.total_annual_spend)}/yr`;
+    }
+
+    if (list) {
+      list.innerHTML = "";
+      (renewals.renewals || []).forEach((sub) => {
+        const row = document.createElement("div");
+        row.className = "service-row-item";
+
+        const info = document.createElement("div");
+        info.className = "service-info";
+        info.innerHTML = `
+          <strong>${esc(sub.name)}</strong>
+          <small>${formatMoney(sub.cost_yr)}/yr · ${esc(sub.usage_status || sub.reason || "")}</small>
+        `;
+
+        const badge = document.createElement("span");
+        badge.className = `rec-badge ${sub.recommendation || "keep"}`;
+        badge.textContent = (sub.recommendation || "keep").toUpperCase();
+
+        row.appendChild(info);
+        row.appendChild(badge);
+        list.appendChild(row);
+      });
+    }
+  } catch {
+    // Graceful error handling
+  }
+
+  // 2. Consumable Pantry & Deals
+  try {
+    const commerce = await api.get("/api/commerce");
+    const pantryList = $("pantryInventoryList");
+    const dealsList = $("dealsDiscountList");
+
+    if (pantryList) {
+      pantryList.innerHTML = "";
+      (commerce.inventory || []).forEach((item) => {
+        const row = document.createElement("div");
+        row.style.marginBottom = "10px";
+
+        const header = document.createElement("div");
+        header.style.display = "flex";
+        header.style.justifyContent = "space-between";
+        header.style.fontSize = "13px";
+        header.innerHTML = `
+          <strong>${esc(item.name)}</strong>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-bright);">${item.level_pct}%</span>
+        `;
+
+        const track = document.createElement("div");
+        track.className = "pantry-bar-track";
+
+        const fill = document.createElement("div");
+        const status = item.level_pct > 50 ? "good" : item.level_pct > 20 ? "low" : "critical";
+        fill.className = `pantry-bar-fill ${status}`;
+        fill.style.width = `${item.level_pct}%`;
+
+        track.appendChild(fill);
+
+        const sub = document.createElement("div");
+        sub.style.fontSize = "11.5px";
+        sub.style.color = "var(--text-dim)";
+        sub.style.marginTop = "3px";
+        sub.textContent = `Status: ${item.status} · Last ordered: ${item.last_ordered}`;
+
+        row.appendChild(header);
+        row.appendChild(track);
+        row.appendChild(sub);
+        pantryList.appendChild(row);
+      });
+    }
+
+    if (dealsList) {
+      dealsList.innerHTML = "";
+      (commerce.deals || []).forEach((deal) => {
+        const item = document.createElement("div");
+        item.className = "deal-card-item";
+        item.innerHTML = `
+          <strong>${esc(deal.title)}</strong>
+          <div style="color:var(--text-muted);margin-top:3px;">
+            ${formatMoney(deal.regular_total)} → <b style="color:var(--emerald);">${formatMoney(deal.bundle_price)}</b> 
+            (Save ${formatMoney(deal.savings)}) · Ends in ${deal.expires_in_hours}h
+          </div>
+        `;
+        dealsList.appendChild(item);
+      });
+    }
+  } catch {
+    // Graceful error handling
+  }
+}
+
+// =============================================================================
+// 12. TAB 4: MEMORY & GOALS
+// =============================================================================
+
+let cachedFacts = [];
+
+async function refreshMemory() {
+  const list = $("memoryFactsList");
+  if (!list) return;
+
+  try {
+    const data = await api.get("/api/memory");
+    cachedFacts = data.facts || [];
+    renderFilteredFacts();
+  } catch (err) {
+    list.innerHTML = `<div class="empty-state-box" style="color:var(--rose);">Could not load memory: ${esc(err.message)}</div>`;
+  }
+
+  // Refresh Goals
+  try {
+    const gData = await api.get("/api/goals");
+    const gList = $("goalsMilestoneList");
+    if (!gList) return;
+
+    gList.innerHTML = "";
+    const goals = gData.goals || [];
+
+    if (goals.length === 0) {
+      gList.innerHTML = `<div class="empty-state-box">No active household goals. Say “create goal...”</div>`;
+    } else {
+      goals.forEach((goal) => {
+        const steps = goal.steps || [];
+        const pct = steps.length ? Math.round((goal.progress / steps.length) * 100) : 0;
+
+        const card = document.createElement("div");
+        card.className = "goal-card-item";
+
+        const header = document.createElement("div");
+        header.className = "goal-card-header";
+        header.innerHTML = `
+          <span class="goal-card-title">${esc(goal.title)}</span>
+          <span class="rec-badge ${goal.status === "completed" ? "keep" : "downgrade"}">${esc(goal.status).toUpperCase()}</span>
+        `;
+
+        const track = document.createElement("div");
+        track.className = "goal-progress-track";
+
+        const fill = document.createElement("div");
+        fill.className = "goal-progress-fill";
+        fill.style.width = `${pct}%`;
+        track.appendChild(fill);
+
+        const footer = document.createElement("div");
+        footer.style.display = "flex";
+        footer.style.justifyContent = "space-between";
+        footer.style.alignItems = "center";
+        footer.style.fontSize = "12px";
+        footer.style.color = "var(--text-muted)";
+        footer.innerHTML = `<span>Step ${goal.progress} of ${steps.length} (${pct}%)</span>`;
+
+        if (goal.status === "active") {
+          const advBtn = document.createElement("button");
+          advBtn.className = "action-btn-pill";
+          advBtn.textContent = "Advance Step";
+          advBtn.addEventListener("click", async () => {
+            playSound("click");
+            try {
+              await api.post("/api/goals/advance", { id: goal.id });
+              showToast("Goal step advanced", "success");
+              await refreshMemory();
+            } catch (err) {
+              showToast(`Goal advance failed: ${err.message}`, "error");
+            }
+          });
+          footer.appendChild(advBtn);
+        }
+
+        card.appendChild(header);
+        card.appendChild(track);
+        card.appendChild(footer);
+        gList.appendChild(card);
+      });
+    }
+  } catch {
+    // Graceful error handling
+  }
+}
+
+function renderFilteredFacts() {
+  const list = $("memoryFactsList");
+  const query = $("memorySearchInput")?.value.toLowerCase().trim() || "";
+  if (!list) return;
+
+  const filtered = cachedFacts.filter(
+    (f) => f.key.toLowerCase().includes(query) || f.value.toLowerCase().includes(query)
+  );
+
+  list.innerHTML = "";
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state-box">No facts match your query.</div>`;
     return;
   }
-  if (isRecording) {
-    recognition.stop();
-  } else {
-    recognition.start();
-  }
-}
 
-// =============================================================================
-// 6. Markdown Formatter & Utilities
-// =============================================================================
-function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, m => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[m]));
-}
+  filtered.forEach((fact) => {
+    const row = document.createElement("div");
+    row.className = "fact-item-row";
 
-function escapeAttr(str) {
-  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
+    const key = document.createElement("span");
+    key.className = "fact-key";
+    key.textContent = fact.key;
 
-function formatMarkdown(md) {
-  if (!md) return "";
-  let html = escapeHtml(md);
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-  html = html.replace(/`(.*?)`/g, '<code>$1</code>');
-  return `<p>${html.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br/>')}</p>`;
-}
+    const val = document.createElement("span");
+    val.className = "fact-value";
+    val.textContent = fact.value;
 
-// =============================================================================
-// 7. Initialization
-// =============================================================================
-document.addEventListener("DOMContentLoaded", () => {
-  // 1. Initialize Fluid Shader Orb
-  FluidOrb.init();
-
-  // 2. Initialize Speech Recognition
-  initSpeech();
-
-  // 3. Tab Navigation
-  document.querySelectorAll(".deck-tab-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      playSfx("click");
-      document.querySelectorAll(".deck-tab-btn").forEach(b => b.classList.remove("active"));
-      document.querySelectorAll(".deck-content-pane").forEach(p => p.style.display = "none");
-      btn.classList.add("active");
-      const target = $(btn.dataset.pane);
-      if (target) target.style.display = "block";
-      if (btn.dataset.pane === "paneMemory") loadFacts();
+    const delBtn = document.createElement("button");
+    delBtn.className = "fact-del-btn";
+    delBtn.innerHTML = "✕";
+    delBtn.title = `Forget fact: ${fact.key}`;
+    delBtn.addEventListener("click", async () => {
+      playSound("click");
+      try {
+        await api.del("/api/memory", { key: fact.key });
+        showToast(`Forgot “${fact.key}”`, "info");
+        await refreshMemory();
+      } catch (err) {
+        showToast(`Could not forget: ${err.message}`, "error");
+      }
     });
+
+    row.appendChild(key);
+    row.appendChild(val);
+    row.appendChild(delBtn);
+    list.appendChild(row);
   });
+}
 
-  // 4. Input Events
-  if ($("sendBtn")) {
-    $("sendBtn").addEventListener("click", () => sendUserPrompt());
-  }
-  if ($("promptInput")) {
-    $("promptInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter") sendUserPrompt();
-    });
-  }
-  if ($("micBtn")) {
-    $("micBtn").addEventListener("click", () => toggleMic());
-  }
+$("memorySearchInput")?.addEventListener("input", renderFilteredFacts);
 
-  // 5. Toggles & Modal
-  if ($("sfxToggleBtn")) {
-    $("sfxToggleBtn").addEventListener("click", () => {
-      sfxEnabled = !sfxEnabled;
-      $("sfxToggleBtn").textContent = sfxEnabled ? "🔊 SFX" : "🔇 Muted";
-      playSfx("click");
-    });
-  }
-  if ($("ttsToggleBtn")) {
-    $("ttsToggleBtn").addEventListener("click", () => {
-      ttsEnabled = !ttsEnabled;
-      $("ttsToggleBtn").textContent = ttsEnabled ? "🗣️ Voice" : "🔇 Silent";
-      playSfx("click");
-    });
-  }
-  if ($("auditModalBtn")) {
-    $("auditModalBtn").addEventListener("click", () => showAuditModal());
-  }
-  if ($("resetBtn")) {
-    $("resetBtn").addEventListener("click", async () => {
-      playSfx("click");
-      await fetch("/api/reset", { method: "POST" });
-      refreshTelemetry();
-      appendMessage("assistant", "System state was reset to baseline.");
-    });
-  }
+$("memoryAddForm")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const kInp = $("memoryKeyInput");
+  const vInp = $("memoryValueInput");
+  if (!kInp || !vInp) return;
 
-  // 6. Slider
-  if ($("sliderLivingLight")) {
-    $("sliderLivingLight").addEventListener("input", (e) => {
-      const val = parseInt(e.target.value, 10);
-      if ($("livingLightLabel")) $("livingLightLabel").textContent = `${val}% Warm`;
-    });
-    $("sliderLivingLight").addEventListener("change", async (e) => {
-      const val = parseInt(e.target.value, 10);
-      await fetch("/api/home/device", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          room: "living_room",
-          device: "lights",
-          patch: { bri: val, on: val > 0 }
-        })
-      });
-      refreshTelemetry();
-    });
-  }
+  const key = kInp.value.trim();
+  const value = vInp.value.trim();
+  if (!key || !value) return;
 
-  // 7. Initial Telemetry Poll
-  refreshTelemetry();
-  setInterval(refreshTelemetry, 3000);
+  playSound("click");
+  try {
+    await api.post("/api/memory", { key, value });
+    kInp.value = "";
+    vInp.value = "";
+    showToast(`Stored fact “${key}”`, "success");
+    await refreshMemory();
+  } catch (err) {
+    showToast(`Could not store fact: ${err.message}`, "error");
+  }
+});
+
+// =============================================================================
+// 13. TAB 5: SENTINEL & LEDGER
+// =============================================================================
+
+async function refreshLedger() {
+  const tbody = $("auditTableBody");
+  const countLabel = $("auditCountLabel");
+  if (!tbody) return;
+
+  try {
+    const auditData = await api.get("/api/audit");
+    if (countLabel) countLabel.textContent = `${auditData.count || 0} events verified`;
+
+    tbody.innerHTML = "";
+    const recent = auditData.recent || [];
+
+    if (recent.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:16px;">Ledger is initializing...</td></tr>`;
+      return;
+    }
+
+    recent.slice(0, 15).forEach((entry) => {
+      const tr = document.createElement("tr");
+
+      const tdTime = document.createElement("td");
+      tdTime.textContent = formatTime(entry.ts);
+
+      const tdActor = document.createElement("td");
+      tdActor.innerHTML = `<span class="rec-badge ${entry.actor === "human" ? "keep" : "downgrade"}">${esc(entry.actor)}</span>`;
+
+      const tdAction = document.createElement("td");
+      tdAction.style.fontWeight = "500";
+      tdAction.textContent = entry.action;
+
+      const tdHash = document.createElement("td");
+      const hashStr = (entry.hash || "").slice(0, 16);
+      tdHash.innerHTML = `<code>${esc(hashStr)}...</code>`;
+
+      tr.appendChild(tdTime);
+      tr.appendChild(tdActor);
+      tr.appendChild(tdAction);
+      tr.appendChild(tdHash);
+      tbody.appendChild(tr);
+    });
+  } catch {
+    // Graceful error handling
+  }
+}
+
+// =============================================================================
+// 14. INITIAL BOOTSTRAP & PERIODIC SYNC
+// =============================================================================
+
+async function refreshAll() {
+  await Promise.allSettled([
+    refreshHealthAndLedger(),
+    refreshTray(),
+    refreshHome(),
+    refreshMoney(),
+    refreshMemory(),
+    refreshLedger(),
+  ]);
+}
+
+// Welcome Message
+function seedWelcomeMessage() {
+  appendChatMessage(
+    "alexa",
+    "Welcome to **Hearth Universal** — your open glass-box household operations agent for Amazon Alexa+.\n\n" +
+      "I operate under a strict **Propose-Never-Execute** contract: I monitor household finances, digital twins, and consumables, but consequential moves always stage in your **Approval Tray** for one-tap human confirmation.\n\n" +
+      "Try tapping one of the scenario chips above or ask: **“Save me $800 on renewals”**!"
+  );
+}
+
+// Initialization
+document.addEventListener("DOMContentLoaded", () => {
+  initQuickPromptChips();
+  setupVoiceRecognition();
+  seedWelcomeMessage();
+  refreshAll();
+
+  // Periodic Polling for Live Background State Sync
+  setInterval(refreshAll, 6000);
 });

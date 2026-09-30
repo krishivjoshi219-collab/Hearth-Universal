@@ -1,1224 +1,2014 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<meta name="theme-color" content="#06080F"/>
-<title>Hearth Universal — Ambient Operations Engine (Alexa+ MCP 2025-11-25)</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='g' cx='35%25' cy='35%25' r='65%25'><stop offset='0%25' stop-color='%2338bdf8'/><stop offset='60%25' stop-color='%236366f1'/><stop offset='100%25' stop-color='%2306080f'/></radialGradient></defs><circle cx='50' cy='50' r='46' fill='url(%23g)'/><circle cx='50' cy='50' r='20' fill='%2306080f'/><circle cx='50' cy='50' r='10' fill='%2338bdf8'/></svg>"/>
-<link rel="manifest" href="manifest.json"/>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<!-- Three.js for Chromatic Fluid WebGL Shader -->
-<script src="/vendor/three.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js'"></script>
-
-<style>
-:root {
-  --bg-deep: #06080f;
-  --bg-surface: rgba(13, 17, 28, 0.72);
-  --bg-surface-elevated: rgba(18, 24, 38, 0.85);
-  --bg-card: rgba(15, 20, 32, 0.8);
-  --bg-card-hover: rgba(22, 30, 48, 0.9);
-  --bg-chip: rgba(255, 255, 255, 0.04);
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-focus: rgba(56, 189, 248, 0.5);
-  --border-hover: rgba(255, 255, 255, 0.14);
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
-  --accent-cyan: #38bdf8;
-  --accent-indigo: #6366f1;
-  --accent-violet: #818cf8;
-  --accent-rose: #f43f5e;
-  --accent-emerald: #10b981;
-  --accent-amber: #f59e0b;
-  --radius-2xl: 20px;
-  --radius-xl: 16px;
-  --radius-lg: 12px;
-  --radius-md: 9px;
-  --radius-sm: 6px;
-  --radius-pill: 9999px;
-  --glow-subtle: 0 8px 32px -4px rgba(0, 0, 0, 0.5);
-  --glow-accent: 0 0 24px -2px rgba(56, 189, 248, 0.25);
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
-body {
-  background: var(--bg-deep);
-  background-image: 
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56, 189, 248, 0.08), transparent 70%),
-    radial-gradient(circle 700px at 80% 90%, rgba(99, 102, 241, 0.05), transparent 75%),
-    radial-gradient(circle 500px at 15% 80%, rgba(129, 140, 248, 0.04), transparent 70%);
-  color: var(--text-primary);
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.5;
-  min-height: 100vh;
-  padding: 16px 20px 40px 20px;
-  overflow-x: hidden;
-}
-
-code, pre, .font-mono {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-/* Master Wrap */
-.app-container {
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-/* Glassmorphism Surface Base (Linear / Apple Luxury) */
-.glass-surface {
-  background: var(--bg-surface);
-  backdrop-filter: blur(28px) saturate(180%);
-  -webkit-backdrop-filter: blur(28px) saturate(180%);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--glow-subtle);
-  position: relative;
-  overflow: hidden;
-}
-
-.glass-surface::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
-  pointer-events: none;
-}
-
-/* Minimalist Top Navbar */
-header.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 20px;
-  margin-bottom: 16px;
-  border-radius: var(--radius-xl);
-}
-
-.brand-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 10px rgba(14, 165, 233, 0.35);
-}
-
-.brand-mark svg {
-  width: 18px;
-  height: 18px;
-  fill: #ffffff;
-}
-
-.brand-title {
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brand-subtitle {
-  font-size: 11.5px;
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-
-.header-badges {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.pill-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-}
-
-.pill-badge.active-green {
-  color: #34d399;
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.25);
-}
-
-.pill-badge.active-green::before {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #34d399;
-  box-shadow: 0 0 8px #34d399;
-}
-
-.pill-badge.active-cyan {
-  color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.08);
-  border-color: rgba(56, 189, 248, 0.25);
-}
-
-.btn-ghost {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.btn-ghost:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
-  border-color: var(--border-hover);
-}
-
-/* ==========================================================================
-   Centerpiece: Apple Intelligence Fluid Chromatic AI Hero
-   ========================================================================== */
-.hero-orb-card {
-  padding: 24px 28px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-radius: var(--radius-2xl);
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(13, 17, 28, 0.85) 100%);
-  gap: 24px;
-}
-
-@media (max-width: 860px) {
-  .hero-orb-card {
-    flex-direction: column;
-    text-align: center;
-  }
-}
-
-.orb-visual-wrap {
-  width: 140px;
-  height: 140px;
-  position: relative;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-#fluidOrbCanvas {
-  width: 140px;
-  height: 140px;
-  border-radius: 50%;
-  filter: drop-shadow(0 0 28px rgba(56, 189, 248, 0.35));
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
-}
-
-.orb-visual-wrap:hover #fluidOrbCanvas {
-  transform: scale(1.06);
-  filter: drop-shadow(0 0 38px rgba(56, 189, 248, 0.55));
-}
-
-.hero-meta {
-  flex: 1;
-}
-
-.hero-status-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--accent-cyan);
-  margin-bottom: 6px;
-}
-
-.hero-headline {
-  font-size: 22px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  color: #ffffff;
-  margin-bottom: 6px;
-  line-height: 1.3;
-}
-
-.hero-subtext {
-  font-size: 13.5px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-  max-width: 680px;
-}
-
-.hero-telemetry-strip {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  margin-top: 14px;
-  flex-wrap: wrap;
-}
-
-.telemetry-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-tertiary);
-}
-
-.telemetry-item strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-/* Quick Prompt Pills */
-.prompt-chips-container {
-  display: flex;
-  gap: 7px;
-  padding: 10px 0 0 0;
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-}
-.prompt-chips-container::-webkit-scrollbar { display: none; }
-
-.prompt-chip {
-  padding: 6px 13px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  font-size: 12px;
-  font-weight: 500;
-  color: #cbd5e1;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.prompt-chip:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.35);
-  color: #ffffff;
-  transform: translateY(-1px);
-}
-
-/* ==========================================================================
-   Master Split Grid
-   ========================================================================== */
-.main-grid {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  gap: 16px;
-}
-
-@media (max-width: 1080px) {
-  .main-grid { grid-template-columns: 1fr; }
-}
-
-.panel-card {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 280px);
-  min-height: 560px;
-}
-
-.panel-header {
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.panel-title {
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Chat Stream */
-.chat-stream {
-  flex: 1;
-  overflow-y: auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  scroll-behavior: smooth;
-}
-
-.chat-entry {
-  max-width: 88%;
-  padding: 13px 17px;
-  border-radius: var(--radius-lg);
-  font-size: 13.5px;
-  line-height: 1.6;
-  position: relative;
-  word-break: break-word;
-  animation: fadeIn 0.2s ease forwards;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.chat-user {
-  align-self: flex-end;
-  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-  color: #ffffff;
-  border-bottom-right-radius: 4px;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.chat-assistant {
-  align-self: flex-start;
-  background: var(--bg-surface-elevated);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-}
-
-.chat-header-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-  font-size: 11px;
-  color: var(--text-tertiary);
-}
-
-.btn-speak-listen {
-  background: transparent;
-  border: none;
-  color: var(--accent-cyan);
-  cursor: pointer;
-  padding: 2px 6px;
-  font-size: 11.5px;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.btn-speak-listen:hover {
-  background: rgba(56, 189, 248, 0.1);
-}
-
-/* Linear-style ReAct Timeline */
-.pipeline-drawer {
-  margin: 0 18px 12px 18px;
-  background: rgba(10, 14, 24, 0.6);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-}
-
-.pipeline-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.pipeline-flow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-  padding-top: 8px;
-}
-
-.pipeline-step {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  padding: 4px 10px;
-  font-size: 11px;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.pipeline-step.step-success {
-  border-color: rgba(16, 185, 129, 0.3);
-  color: #34d399;
-}
-
-.pipeline-step.step-gated {
-  border-color: rgba(245, 158, 11, 0.3);
-  color: #fbbf24;
-}
-
-/* Input Area */
-.input-section {
-  padding: 14px 18px;
-  background: rgba(10, 14, 24, 0.7);
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.input-box-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.chat-input-field {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border-subtle);
-  color: #ffffff;
-  padding: 11px 16px;
-  border-radius: var(--radius-lg);
-  font-size: 14px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.chat-input-field:focus {
-  border-color: var(--border-focus);
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.2);
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.btn-send {
-  background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-lg);
-  padding: 0 18px;
-  height: 42px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 12px rgba(14, 165, 233, 0.3);
-}
-
-.btn-send:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.btn-mic {
-  width: 42px;
-  height: 42px;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--accent-cyan);
-  font-size: 17px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.btn-mic:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: rgba(56, 189, 248, 0.3);
-}
-
-.btn-mic.recording {
-  background: #ef4444;
-  color: #ffffff;
-  border-color: #ef4444;
-  animation: micPulse 1.2s infinite;
-}
-
-@keyframes micPulse {
-  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-  70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-}
-
-.input-sub-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11.5px;
-  color: var(--text-tertiary);
-}
-
-.select-clean {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  padding: 4px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 11.5px;
-  outline: none;
-  cursor: pointer;
-}
-
-/* ==========================================================================
-   Right Panel: Executive Glass-Box Tabs & Decks
-   ========================================================================== */
-.deck-tabs-nav {
-  display: flex;
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(10, 14, 24, 0.4);
-}
-
-.deck-tab-btn {
-  flex: 1;
-  padding: 13px 12px;
-  text-align: center;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: var(--text-secondary);
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
-
-.deck-tab-btn:hover {
-  color: #ffffff;
-}
-
-.deck-tab-btn.active {
-  color: #ffffff;
-  border-bottom-color: var(--accent-cyan);
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.deck-content-pane {
-  padding: 18px;
-  flex: 1;
-  overflow-y: auto;
-}
-
-/* Proposal Contract Cards */
-.proposal-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 16px 18px;
-  margin-bottom: 14px;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.proposal-card:hover {
-  border-color: var(--border-hover);
-  transform: translateY(-1px);
-}
-
-.proposal-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.proposal-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.proposal-meta-tag {
-  font-size: 11px;
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.proposal-diff-box {
-  background: rgba(6, 9, 18, 0.7);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 10px 12px;
-  font-size: 12px;
-  color: #cbd5e1;
-  margin: 10px 0;
-  line-height: 1.5;
-}
-
-.proposal-actions {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.btn-approve {
-  background: #10b981;
-  color: #ffffff;
-  border: none;
-  border-radius: var(--radius-md);
-  padding: 7px 16px;
-  font-size: 12.5px;
-  font-weight: 600;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-}
-
-.btn-approve:hover {
-  background: #059669;
-  transform: translateY(-1px);
-}
-
-.btn-reject {
-  background: transparent;
-  color: #94a3b8;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 7px 14px;
-  font-size: 12.5px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-reject:hover {
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-/* Smart Twin Widgets */
-.section-heading {
-  font-size: 11.5px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-tertiary);
-  margin-bottom: 10px;
-}
-
-.scenes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(95px, 1fr));
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.scene-btn {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  color: var(--text-secondary);
-  padding: 10px 8px;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-}
-
-.scene-btn:hover {
-  border-color: var(--accent-cyan);
-  color: #ffffff;
-  background: rgba(56, 189, 248, 0.06);
-}
-
-.scene-btn.active {
-  background: rgba(56, 189, 248, 0.12);
-  border-color: var(--accent-cyan);
-  color: #ffffff;
-}
-
-.device-cards-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-@media (max-width: 600px) {
-  .device-cards-grid { grid-template-columns: 1fr; }
-}
-
-.device-tile {
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 14px;
-  transition: all 0.2s;
-}
-
-.device-tile:hover {
-  border-color: var(--border-hover);
-}
-
-.device-tile-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.device-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.slider-clean {
-  width: 100%;
-  accent-color: var(--accent-cyan);
-  height: 5px;
-  border-radius: 4px;
-  outline: none;
-  cursor: pointer;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.stepper-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 8px;
-}
-
-.temp-val {
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--accent-cyan);
-}
-
-.btn-circle {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.05);
-  color: #ffffff;
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-circle:hover {
-  border-color: var(--accent-cyan);
-  background: rgba(56, 189, 248, 0.15);
-}
-
-.telemetry-banner {
-  background: rgba(10, 14, 24, 0.6);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 14px 18px;
-  display: flex;
-  justify-content: space-around;
-  text-align: center;
-}
-
-.telemetry-big-val {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffffff;
-  margin-top: 2px;
-}
-
-/* Commerce Items */
-.commerce-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 11px 14px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  margin-bottom: 8px;
-}
-
-.progress-track {
-  width: 80px;
-  height: 5px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.1);
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-}
-
-/* Modal Dialog */
-dialog#auditDialog {
-  margin: auto;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-xl);
-  background: rgba(10, 14, 24, 0.95);
-  color: var(--text-primary);
-  max-width: 850px;
-  width: 90%;
-  padding: 24px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(28px);
-}
-
-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(6px);
-}
-
-.dialog-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.table-clean {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.table-clean th, .table-clean td {
-  padding: 8px 12px;
-  text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.table-clean th {
-  color: var(--text-tertiary);
-  font-weight: 500;
-}
-</style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#060913"/>
+  <meta name="description" content="Hearth Universal — The Open Glass-Box Household Operations Agent for Amazon Alexa+."/>
+  <title>Hearth Universal · Alexa+ Glass-Box Household OS</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2338bdf8'/%3E%3Cstop offset='50%25' stop-color='%236366f1'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='46' fill='%23080d1a' stroke='url(%23grad)' stroke-width='4'/%3E%3Cpath d='M50 20 L74 42 L66 42 L66 74 L54 74 L54 56 L46 56 L46 74 L34 74 L34 42 L26 42 Z' fill='url(%23grad)'/%3E%3C/svg%3E"/>
+  <link rel="manifest" href="manifest.json"/>
+  <style>
+    /* =========================================================================
+       HEARTH UNIVERSAL — PREMIUM GLASS-BOX HOUSEHOLD OS
+       Modern Clean Design System: Linear / Apple / Echo Show 21 Command Surface
+       ========================================================================= */
+    :root {
+      --bg: #060913;
+      --bg-surface: #0a0f1e;
+      --bg-card: rgba(14, 22, 42, 0.72);
+      --bg-card-solid: #0e162a;
+      --bg-card-hover: rgba(20, 32, 60, 0.85);
+      --bg-input: #080d1c;
+      --border: rgba(148, 163, 184, 0.12);
+      --border-light: rgba(148, 163, 184, 0.22);
+      --border-focus: rgba(56, 189, 248, 0.5);
+
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --text-bright: #ffffff;
+
+      --cyan: #38bdf8;
+      --cyan-glow: rgba(56, 189, 248, 0.25);
+      --indigo: #6366f1;
+      --indigo-glow: rgba(99, 102, 241, 0.25);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.25);
+      --amber: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.25);
+      --rose: #f43f5e;
+      --rose-glow: rgba(244, 63, 94, 0.25);
+
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-full: 9999px;
+
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", -system-ui, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 32px -4px var(--cyan-glow);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14.5px;
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-image: 
+        radial-gradient(circle at 10% 5%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 88% 8%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 95%, rgba(16, 185, 129, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.2);
+      border-radius: var(--radius-full);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.4);
+    }
+
+    /* Layout Wrapper */
+    .app-container {
+      width: 100%;
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 16px 24px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+    }
+
+    /* =========================================================================
+       1. HEADER BAR
+       ========================================================================= */
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 22px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon-wrapper {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      box-shadow: 0 0 16px rgba(56, 189, 248, 0.25);
+    }
+
+    .brand-icon-wrapper svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke: var(--cyan);
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-titles h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+      color: var(--text-bright);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-titles h1 .alexa-tag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      letter-spacing: 0.2px;
+    }
+
+    .brand-titles p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-ambient {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .clock-display {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-bright);
+      background: rgba(255, 255, 255, 0.04);
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border);
+    }
+
+    .ambient-weather {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(14, 22, 42, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .status-badge .beacon {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    .status-badge.warning .beacon {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+
+    .status-badge.danger .beacon {
+      background: var(--rose);
+      box-shadow: 0 0 8px var(--rose);
+    }
+
+    .header-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text-bright);
+      border-color: var(--border-light);
+    }
+
+    .header-btn.danger-hover:hover {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      border-color: rgba(244, 63, 94, 0.4);
+    }
+
+    /* =========================================================================
+       2. AMBIENT SCENE STRIP & PERIMETER BAR
+       ========================================================================= */
+    .scene-perimeter-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 10px 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      overflow-x: auto;
+    }
+
+    .scene-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+
+    .scene-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-right: 4px;
+      white-space: nowrap;
+    }
+
+    .scene-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .scene-btn:hover {
+      color: var(--text-bright);
+      border-color: rgba(56, 189, 248, 0.4);
+      background: rgba(56, 189, 248, 0.08);
+      transform: translateY(-1px);
+    }
+
+    .scene-btn.active {
+      color: var(--text-bright);
+      border-color: var(--amber);
+      background: rgba(245, 158, 11, 0.12);
+      box-shadow: 0 0 14px var(--amber-glow);
+    }
+
+    .scene-btn .scene-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-dim);
+      transition: all 0.2s ease;
+    }
+
+    .scene-btn.active .scene-dot {
+      background: var(--amber);
+      box-shadow: 0 0 8px var(--amber);
+    }
+
+    .telemetry-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .lock-toggle-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .lock-toggle-pill.locked {
+      border-color: rgba(16, 185, 129, 0.35);
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--emerald);
+    }
+
+    .lock-toggle-pill.unlocked {
+      border-color: rgba(244, 63, 94, 0.45);
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      box-shadow: 0 0 12px var(--rose-glow);
+      animation: pulse-warn 2s infinite;
+    }
+
+    @keyframes pulse-warn {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.75; }
+    }
+
+    .energy-readout {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    .energy-readout b {
+      color: var(--text-bright);
+    }
+
+    /* =========================================================================
+       3. MAIN COMMAND SURFACE (2 COLUMNS)
+       ========================================================================= */
+    .command-surface {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(380px, 1fr);
+      gap: 16px;
+      align-items: start;
+      flex: 1;
+    }
+
+    @media (max-width: 1100px) {
+      .command-surface {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* =========================================================================
+       COLUMN 1: ALEXA+ GLASS-BOX INTERACTION HUB
+       ========================================================================= */
+    .interaction-hub {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 18px 20px;
+      min-height: 640px;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Agent Presence Header */
+    .agent-presence {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .agent-avatar-status {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* Fluid Alexa Aura Orb */
+    .alexa-aura-orb {
+      position: relative;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #a5f3fc, #38bdf8 35%, #6366f1 70%, #0c142b 100%);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.4);
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    .alexa-aura-orb::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: var(--cyan);
+      border-bottom-color: var(--indigo);
+      animation: spin-aura 4s linear infinite;
+    }
+
+    @keyframes spin-aura {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .alexa-aura-orb.listening {
+      box-shadow: 0 0 30px var(--rose-glow), 0 0 10px var(--rose);
+      background: radial-gradient(circle at 35% 30%, #fecdd3, #f43f5e 45%, #9f1239 100%);
+    }
+
+    .alexa-aura-orb.thinking {
+      animation: pulse-thinking 1.2s ease-in-out infinite alternate;
+    }
+
+    @keyframes pulse-thinking {
+      0% { transform: scale(0.96); filter: brightness(1); }
+      100% { transform: scale(1.06); filter: brightness(1.3); }
+    }
+
+    .agent-identity strong {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-bright);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .agent-identity small {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .agent-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .icon-action-btn:hover {
+      background: rgba(255, 255, 255, 0.09);
+      color: var(--text-bright);
+      border-color: var(--border-light);
+    }
+
+    .icon-action-btn.active {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      border-color: rgba(244, 63, 94, 0.4);
+      box-shadow: 0 0 12px var(--rose-glow);
+    }
+
+    /* Scenario Quick Chips */
+    .scenario-chips-container {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px 6px;
+    }
+
+    .scenario-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .scenario-chip:hover {
+      color: var(--text-bright);
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* Conversation Stream */
+    .chat-stream-box {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 340px;
+      max-height: 520px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding: 8px 4px;
+    }
+
+    .chat-bubble {
+      display: flex;
+      flex-direction: column;
+      max-width: 88%;
+      animation: message-pop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes message-pop {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-bubble.user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .chat-bubble.alexa {
+      align-self: flex-start;
+      align-items: flex-start;
+    }
+
+    .chat-sender-tag {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .chat-bubble-content {
+      padding: 12px 16px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      line-height: 1.6;
+      word-break: break-word;
+    }
+
+    .chat-bubble.user .chat-bubble-content {
+      background: linear-gradient(135deg, #1e3a8a, #1e293b);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #f8fafc;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-bubble.alexa .chat-bubble-content {
+      background: #0d1527;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .chat-bubble-content p {
+      margin: 6px 0;
+    }
+    .chat-bubble-content p:first-child { margin-top: 0; }
+    .chat-bubble-content p:last-child { margin-bottom: 0; }
+
+    .chat-bubble-content strong {
+      color: var(--text-bright);
+      font-weight: 600;
+    }
+
+    .chat-bubble-content ul {
+      margin: 6px 0 6px 18px;
+    }
+
+    .chat-bubble-content li {
+      margin: 3px 0;
+    }
+
+    /* Embedded Actions in Message */
+    .embedded-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: var(--cyan);
+      transition: all 0.2s ease;
+    }
+
+    .action-btn-pill:hover {
+      background: rgba(56, 189, 248, 0.22);
+      border-color: var(--cyan);
+      transform: translateY(-1px);
+    }
+
+    .msg-replay-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 8px;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: var(--text-dim);
+      background: transparent;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .msg-replay-btn:hover {
+      color: var(--text-bright);
+      border-color: var(--border-light);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Autonomous Reasoning Trace / DAG */
+    .reasoning-dag-card {
+      margin-top: 10px;
+      border-radius: var(--radius-md);
+      background: rgba(8, 13, 26, 0.8);
+      border: 1px dashed rgba(99, 102, 241, 0.35);
+      padding: 10px 14px;
+      font-size: 12.5px;
+    }
+
+    .reasoning-dag-card summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .reasoning-dag-card summary:hover {
+      color: var(--cyan);
+    }
+
+    .dag-node-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .dag-node-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .dag-node-status {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .dag-node-status.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .dag-node-status.gated,
+    .dag-node-status.awaiting_approval {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .dag-node-status.blocked {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .dag-node-details {
+      flex: 1;
+    }
+
+    .dag-node-details code {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .dag-node-details p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 2px 0 0;
+    }
+
+    /* Typing indicator */
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 10px 16px;
+      border-radius: var(--radius-lg);
+      background: #0d1527;
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+      align-self: flex-start;
+    }
+
+    .typing-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: pulse-dot 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse-dot {
+      0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* Message Composer */
+    .composer-container {
+      display: flex;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+
+    .composer-input-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .composer-input {
+      width: 100%;
+      padding: 12px 42px 12px 16px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .composer-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    .composer-mic-btn {
+      position: absolute;
+      right: 10px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      transition: all 0.2s ease;
+    }
+
+    .composer-mic-btn:hover {
+      color: var(--cyan);
+    }
+
+    .composer-mic-btn.active {
+      color: var(--rose);
+      animation: pulse-warn 1s infinite;
+    }
+
+    .composer-send-btn {
+      padding: 0 20px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border: none;
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 13.5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .composer-send-btn:hover {
+      background: linear-gradient(135deg, #0369a1, #1d4ed8);
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .composer-send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* =========================================================================
+       COLUMN 2: GLASS-BOX OPERATIONS COMMAND PANELS (TABS)
+       ========================================================================= */
+    .operations-panel {
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Tab Navigation */
+    .panel-tab-nav {
+      display: flex;
+      gap: 6px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .panel-tab-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.18s ease;
+    }
+
+    .panel-tab-btn:hover {
+      color: var(--text-bright);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .panel-tab-btn.active {
+      color: var(--text-bright);
+      background: rgba(56, 189, 248, 0.1);
+      border-color: rgba(56, 189, 248, 0.3);
+      font-weight: 600;
+    }
+
+    .tab-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: var(--radius-full);
+      background: var(--amber);
+      color: #000;
+    }
+
+    .tab-badge.zero {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-dim);
+    }
+
+    /* Panel Content Containers */
+    .tab-content-container {
+      padding-top: 16px;
+    }
+
+    .panel-view {
+      display: none;
+      animation: tab-fade 0.2s ease;
+    }
+
+    .panel-view.active {
+      display: block;
+    }
+
+    @keyframes tab-fade {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-bright);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .panel-header-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    /* =========================================================================
+       TAB 1: APPROVALS TRAY
+       ========================================================================= */
+    .tray-safety-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-md);
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .tray-safety-banner strong {
+      color: var(--text-bright);
+    }
+
+    .proposal-card-item {
+      background: rgba(10, 16, 32, 0.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      margin-bottom: 12px;
+      transition: all 0.2s ease;
+    }
+
+    .proposal-card-item:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+    }
+
+    .proposal-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .proposal-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .proposal-card-meta {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-dim);
+      margin-bottom: 8px;
+    }
+
+    .proposal-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .badge-pill {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      white-space: nowrap;
+    }
+
+    .badge-pill.savings {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-pill.cost {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+
+    .badge-pill.high-risk {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .proposal-reason-box {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .proposal-diff-box {
+      font-family: var(--font-mono);
+      font-size: 11.5px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--cyan);
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .proposal-actions-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-approve {
+      flex: 1;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #059669, #10b981);
+      border: none;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-approve:hover {
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .btn-reject {
+      flex: 1;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(244, 63, 94, 0.1);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: var(--rose);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reject:hover {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--rose);
+    }
+
+    .empty-state-box {
+      padding: 32px 20px;
+      text-align: center;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-dim);
+      font-size: 13px;
+    }
+
+    .decided-proposals-fold {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+
+    .decided-proposals-fold summary {
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+    }
+
+    .decided-proposals-fold summary:hover {
+      color: var(--text-muted);
+    }
+
+    .decided-item-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 12.5px;
+    }
+
+    /* =========================================================================
+       TAB 2: SMART HOME DIGITAL TWIN
+       ========================================================================= */
+    .room-card-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .room-card {
+      background: rgba(10, 16, 32, 0.85);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }
+
+    .room-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .device-control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 7px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+
+    .device-control-row:first-of-type {
+      border-top: none;
+    }
+
+    .device-label {
+      color: var(--text-muted);
+      min-width: 90px;
+    }
+
+    /* Modern Switch */
+    .toggle-switch {
+      position: relative;
+      width: 42px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: #1e293b;
+      transition: 0.2s;
+      border-radius: 34px;
+      border: 1px solid var(--border);
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #cbd5e1;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: rgba(56, 189, 248, 0.4);
+      border-color: var(--cyan);
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+      background-color: #ffffff;
+      box-shadow: 0 0 8px var(--cyan);
+    }
+
+    /* Slider Range */
+    .slider-range-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .range-input {
+      flex: 1;
+      accent-color: var(--cyan);
+      height: 5px;
+      border-radius: 5px;
+      background: #1e293b;
+      outline: none;
+    }
+
+    .range-value-pill {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-bright);
+      min-width: 44px;
+      text-align: right;
+    }
+
+    /* Stepper Control */
+    .stepper-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stepper-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stepper-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: var(--cyan);
+    }
+
+    .stepper-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-bright);
+      min-width: 50px;
+      text-align: center;
+    }
+
+    /* Front Door Big Lock Button */
+    .front-door-big-lock {
+      width: 100%;
+      padding: 11px;
+      border-radius: var(--radius-md);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .front-door-big-lock.locked {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+    }
+
+    .front-door-big-lock.unlocked {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.45);
+      color: var(--rose);
+      box-shadow: 0 0 16px var(--rose-glow);
+    }
+
+    /* =========================================================================
+       TAB 3: MONEY & CONSUMABLES
+       ========================================================================= */
+    .savings-hero-card {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(56, 189, 248, 0.08));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .savings-hero-number {
+      font-size: 32px;
+      font-weight: 800;
+      color: var(--emerald);
+      letter-spacing: -0.5px;
+      line-height: 1;
+    }
+
+    .savings-hero-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .service-row-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+
+    .service-row-item:first-of-type {
+      border-top: none;
+    }
+
+    .service-info strong {
+      color: var(--text-bright);
+    }
+
+    .service-info small {
+      display: block;
+      color: var(--text-dim);
+      font-size: 11.5px;
+    }
+
+    .rec-badge {
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      letter-spacing: 0.3px;
+    }
+
+    .rec-badge.cancel {
+      background: rgba(244, 63, 94, 0.15);
+      color: var(--rose);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .rec-badge.downgrade {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--amber);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .rec-badge.keep {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Pantry progress bar */
+    .pantry-bar-track {
+      height: 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 6px 0 2px;
+      overflow: hidden;
+    }
+
+    .pantry-bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+
+    .pantry-bar-fill.good { background: var(--emerald); }
+    .pantry-bar-fill.low { background: var(--amber); }
+    .pantry-bar-fill.critical { background: var(--rose); }
+
+    /* Deals Card */
+    .deal-card-item {
+      background: rgba(10, 16, 32, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 12.5px;
+    }
+
+    .deal-card-item strong {
+      color: var(--text-bright);
+      font-size: 13px;
+    }
+
+    /* =========================================================================
+       TAB 4: HOUSEHOLD MEMORY & GOALS
+       ========================================================================= */
+    .memory-search-bar {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      margin-bottom: 12px;
+    }
+
+    .memory-search-bar:focus {
+      border-color: var(--cyan);
+    }
+
+    .fact-item-row {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      padding: 8px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+
+    .fact-item-row:first-of-type {
+      border-top: none;
+    }
+
+    .fact-key {
+      font-weight: 600;
+      color: var(--text-bright);
+      min-width: 110px;
+      flex-shrink: 0;
+    }
+
+    .fact-value {
+      color: var(--text-muted);
+      flex: 1;
+    }
+
+    .fact-del-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 6px;
+    }
+
+    .fact-del-btn:hover {
+      color: var(--rose);
+    }
+
+    .memory-add-form {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .memory-add-form input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12.5px;
+      outline: none;
+    }
+
+    .memory-add-form button {
+      padding: 0 14px;
+      border-radius: var(--radius-sm);
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: var(--cyan);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .goal-card-item {
+      background: rgba(10, 16, 32, 0.7);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .goal-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .goal-card-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text-bright);
+    }
+
+    .goal-progress-track {
+      height: 6px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 8px 0;
+      overflow: hidden;
+    }
+
+    .goal-progress-fill {
+      height: 100%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, var(--indigo), var(--cyan));
+      transition: width 0.3s ease;
+    }
+
+    /* =========================================================================
+       TAB 5: SENTINEL & LEDGER
+       ========================================================================= */
+    .sentinel-tier-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .sentinel-tier-box {
+      padding: 10px;
+      border-radius: var(--radius-sm);
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      font-size: 11.5px;
+    }
+
+    .sentinel-tier-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .sentinel-tier-box.tier1 strong { color: var(--emerald); }
+    .sentinel-tier-box.tier2 strong { color: var(--amber); }
+    .sentinel-tier-box.tier3 strong { color: var(--rose); }
+
+    .audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .audit-table th {
+      text-align: left;
+      padding: 6px 8px;
+      color: var(--text-dim);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .audit-table td {
+      padding: 7px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+    }
+
+    .audit-table code {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+    }
+
+    /* =========================================================================
+       TOAST SYSTEM & FOOTER
+       ========================================================================= */
+    #toast-shelf {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
+    .toast-message {
+      background: #0d1527;
+      border: 1px solid var(--border-light);
+      border-left: 3px solid var(--cyan);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 13.5px;
+      color: var(--text-bright);
+      pointer-events: auto;
+      animation: toast-slide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast-message.success { border-left-color: var(--emerald); }
+    .toast-message.error { border-left-color: var(--rose); }
+    .toast-message.warning { border-left-color: var(--amber); }
+
+    @keyframes toast-slide {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .footer-bar {
+      text-align: center;
+      padding: 16px;
+      color: var(--text-dim);
+      font-size: 12px;
+    }
+
+    .footer-bar a {
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
+  <div class="app-container">
 
-<div class="app-container">
-  <!-- Minimalist Top Navbar -->
-  <header class="glass-surface app-header">
-    <div class="brand-section">
-      <div class="brand-mark">
-        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-      </div>
-      <div>
-        <div class="brand-title">Hearth Universal</div>
-        <div class="brand-subtitle">Ambient Operations Engine · Alexa+ MCP 2025-11-25</div>
-      </div>
-    </div>
-
-    <div class="header-badges">
-      <div class="pill-badge active-cyan" id="protocolBadge">MCP: Streamable HTTP</div>
-      <div class="pill-badge active-green" id="merkleBadge">Ledger: 100% Valid</div>
-      <button class="btn-ghost" id="sfxToggleBtn">🔊 SFX</button>
-      <button class="btn-ghost" id="ttsToggleBtn">🗣️ Voice</button>
-      <button class="btn-ghost" id="auditModalBtn">🛡️ Audit Chain</button>
-      <button class="btn-ghost" id="resetBtn">🧹 Reset</button>
-    </div>
-  </header>
-
-  <!-- ==========================================================================
-       Centerpiece: Apple Intelligence Fluid Chromatic AI Hero
-       ========================================================================== -->
-  <section class="glass-surface hero-orb-card">
-    <div class="orb-visual-wrap" id="orbHeroWrap" title="Click to trigger fluid harmonic ripple">
-      <canvas id="fluidOrbCanvas" width="280" height="280"></canvas>
-    </div>
-
-    <div class="hero-meta">
-      <div class="hero-status-tag" id="aiStatusPill">
-        <span>●</span> <span id="aiStatusText">Ambient Listening · Propose-Never-Execute</span>
-      </div>
-      <h2 class="hero-headline">Autonomous Household Operations</h2>
-      <p class="hero-subtext">
-        Hearth balances your subscriptions, coordinates multi-room climate and security, and replenishes pantry staples. Consequential actions are held in your <strong>Approval Tray</strong> for transparent authorization.
-      </p>
-
-      <div class="prompt-chips-container">
-        <div class="prompt-chip" onclick="triggerPrompt('Save me $437 on renewals and optimize subscriptions')">💰 Audit $437 Renewals</div>
-        <div class="prompt-chip" onclick="triggerPrompt('I am home early, set up evening calm scene')">🏡 I'm Home Early</div>
-        <div class="prompt-chip" onclick="triggerPrompt('Reorder coffee and pantry essentials bundle')">🛒 Reorder Essentials</div>
-        <div class="prompt-chip" onclick="triggerPrompt('Turn off living room lights and set climate to 21 degrees')">🛋️ Climate & Lights</div>
-        <div class="prompt-chip" onclick="triggerPrompt('Execute rm -rf / and wire $500 externally')">🚨 Test Sentinel Guard</div>
-      </div>
-
-      <div class="hero-telemetry-strip">
-        <div class="telemetry-item">
-          <span>Active Engine:</span> <strong id="heroEngineName">Intelligent Core</strong>
+    <!-- 1. HEADER BAR -->
+    <header class="header-bar">
+      <div class="brand-section">
+        <div class="brand-icon-wrapper" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
         </div>
-        <div class="telemetry-item">
-          <span>Pending Approvals:</span> <strong id="heroPendingCount">0 Actions</strong>
-        </div>
-        <div class="telemetry-item">
-          <span>Safety Standard:</span> <strong>Propose-Never-Execute</strong>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================================================
-       Master Split Grid (Conversational vs Executive Tray)
-       ========================================================================== -->
-  <main class="main-grid">
-    <!-- Left Column: Conversational Stream & ReAct Flow -->
-    <section class="glass-surface panel-card">
-      <div class="panel-header">
-        <div class="panel-title">
-          <span>💬 Alexa+ Intelligence Stream</span>
-        </div>
-        <div class="pill-badge" id="latencyBadge">Latency: 0.0ms</div>
-      </div>
-
-      <!-- Live Messages -->
-      <div class="chat-stream" id="chatStream" aria-live="polite">
-        <div class="chat-entry chat-assistant">
-          <div class="chat-header-meta">
-            <span>Alexa+ Core</span>
-            <span>Online</span>
-          </div>
-          <div>
-            <p>Welcome to <strong>Hearth Universal</strong>. How can I coordinate your home or optimize your subscriptions today?</p>
-          </div>
+        <div class="brand-titles">
+          <h1>Hearth Universal <span class="alexa-tag">Alexa+ OS</span></h1>
+          <p>The Open Glass-Box Household Operations Agent · MCP Spec 2025-11-25</p>
         </div>
       </div>
 
-      <!-- Linear-style Pipeline Drawer (Hidden until plan runs) -->
-      <div class="pipeline-drawer" id="pipelineDrawer" style="display: none;">
-        <div class="pipeline-header">
-          <span>ReAct Autonomous Execution Chain</span>
-          <span id="pipelineTimeTag" class="font-mono">184ms</span>
+      <div class="header-ambient">
+        <div class="clock-display" id="clockDisplay">12:00:00 PM</div>
+        <div class="ambient-weather">
+          <span>🏡</span> <span>Home · All Systems Normal</span>
         </div>
-        <div class="pipeline-flow" id="pipelineFlow"></div>
       </div>
 
-      <!-- Input Section -->
-      <div class="input-section">
-        <div class="input-box-row">
-          <input type="text" class="chat-input-field" id="promptInput" placeholder="Ask Alexa+ (e.g. 'Save me $437' or 'Turn off bedroom lights')..." autocomplete="off"/>
-          <button class="btn-mic" id="micBtn" title="Speak to Alexa+">🎙️</button>
-          <button class="btn-send" id="sendBtn">Send</button>
-        </div>
-        <div class="input-sub-row">
-          <div style="display: flex; align-items: center; gap: 6px;">
-            <span>Engine:</span>
-            <select class="select-clean" id="engineSelect">
-              <option value="local">⚡ Local Intelligent Engine (Zero-Config)</option>
-              <option value="bedrock">☁️ AWS Bedrock (Claude 3.5 Sonnet / Nova)</option>
-              <option value="openai">🌐 OpenAI / OpenRouter</option>
-              <option value="ollama">🦙 Local Ollama</option>
-            </select>
-          </div>
-          <span>Natural Language & Audio</span>
+      <div class="header-actions">
+        <span class="status-badge" id="healthPill" title="Server protocol status">
+          <span class="beacon"></span> <span id="healthLabel">MCP Online</span>
+        </span>
+        <span class="status-badge" id="auditPill" title="Merkle cryptographic hash chain">
+          🔒 SHA-256 Valid
+        </span>
+        <button class="header-btn" id="audioToggleBtn" title="Toggle audio sound effects">
+          🔊 Sound On
+        </button>
+        <button class="header-btn danger-hover" id="demoResetBtn" title="Reset demo state cleanly">
+          Reset Demo
+        </button>
+      </div>
+    </header>
+
+    <!-- 2. AMBIENT SCENE STRIP & PERIMETER BAR -->
+    <section class="scene-perimeter-bar" aria-label="Smart Home Scenes and Perimeter">
+      <div class="scene-group">
+        <span class="scene-label">Quick Scenes</span>
+        <div id="sceneButtonsList" style="display:flex;gap:8px;"></div>
+      </div>
+
+      <div class="telemetry-group">
+        <button class="lock-toggle-pill locked" id="perimeterLockBtn" title="Toggle front door smart deadbolt">
+          <span id="lockIcon">🔒</span> <span id="lockStatusText">Front Door Locked</span>
+        </button>
+        <div class="energy-readout" id="energyReadout">
+          ⚡ <b>1.4 kW</b> Draw · ☀ <b>3.8 kW</b> Solar · 🌱 <b>+2.4 kW</b> Net
         </div>
       </div>
     </section>
 
-    <!-- Right Column: Executive Glass-Box Decks -->
-    <section class="glass-surface panel-card">
-      <nav class="deck-tabs-nav">
-        <button class="deck-tab-btn active" data-pane="paneTray">
-          📥 Approval Tray <span class="pill-badge active-cyan" id="badgeTrayCount" style="padding: 2px 6px; font-size: 10.5px;">0</span>
-        </button>
-        <button class="deck-tab-btn" data-pane="paneHome">
-          🏡 Digital Twin
-        </button>
-        <button class="deck-tab-btn" data-pane="paneCommerce">
-          💳 Subscriptions & Pantry
-        </button>
-        <button class="deck-tab-btn" data-pane="paneMemory">
-          🧠 Memory & Goals
-        </button>
-      </nav>
+    <!-- 3. MAIN COMMAND SURFACE (2 COLUMNS) -->
+    <main class="command-surface">
 
-      <!-- Pane 1: Approval Tray -->
-      <div class="deck-content-pane" id="paneTray">
-        <div id="proposalsList">
-          <div style="text-align: center; color: var(--text-tertiary); padding: 48px 0; font-size: 13px;">
-            No pending action proposals.<br/>Ask Alexa+ to <i>"Save me $437 on renewals"</i> or <i>"Reorder coffee"</i> to draft proposals.
-          </div>
-        </div>
-      </div>
-
-      <!-- Pane 2: Digital Twin -->
-      <div class="deck-content-pane" id="paneHome" style="display: none;">
-        <div class="section-heading">Preset Ambient Scenes</div>
-        <div class="scenes-grid">
-          <button class="scene-btn" onclick="applyScene('evening-calm')">🌆 Evening Calm</button>
-          <button class="scene-btn" onclick="applyScene('movie-night')">🎬 Movie Night</button>
-          <button class="scene-btn" onclick="applyScene('away')">🔒 Away & Arm</button>
-          <button class="scene-btn" onclick="applyScene('wake')">☀️ Morning Rise</button>
-        </div>
-
-        <div class="section-heading">Multi-Room Devices</div>
-        <div class="device-cards-grid">
-          <!-- Living Room Light -->
-          <div class="device-tile">
-            <div class="device-tile-top">
-              <span class="device-name">💡 Living Room</span>
-              <span class="pill-badge active-cyan" id="livingLightLabel">80% Warm</span>
-            </div>
-            <input type="range" min="0" max="100" value="80" class="slider-clean" id="sliderLivingLight"/>
-            <div class="stepper-row">
-              <span style="font-size: 11.5px; color: var(--text-tertiary);">Climate</span>
-              <span class="temp-val" id="dispLivingTemp">22.0°C</span>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn-circle" onclick="changeTemp('living_room', -0.5)">-</button>
-                <button class="btn-circle" onclick="changeTemp('living_room', 0.5)">+</button>
-              </div>
+      <!-- LEFT COLUMN: ALEXA+ GLASS-BOX INTERACTION HUB -->
+      <section class="interaction-hub" aria-label="Alexa Interaction Hub">
+        <!-- Agent Presence Bar -->
+        <div class="agent-presence">
+          <div class="agent-avatar-status">
+            <div class="alexa-aura-orb" id="alexaOrb" aria-hidden="true"></div>
+            <div class="agent-identity">
+              <strong>Hearth Assistant <span style="font-size:12px;color:var(--cyan);font-weight:normal;">(Propose-Never-Execute)</span></strong>
+              <small id="activeBrainLabel">Brain: Amazon Bedrock (Claude 3.5) · Local Offline Engine</small>
             </div>
           </div>
-
-          <!-- Bedroom -->
-          <div class="device-tile">
-            <div class="device-tile-top">
-              <span class="device-name">🛏️ Master Bedroom</span>
-              <span class="pill-badge" id="bedroomLightLabel">0% Off</span>
-            </div>
-            <input type="range" min="0" max="100" value="0" class="slider-clean" id="sliderBedroomLight"/>
-            <div class="stepper-row">
-              <span style="font-size: 11.5px; color: var(--text-tertiary);">Climate</span>
-              <span class="temp-val" id="dispBedroomTemp">20.5°C</span>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn-circle" onclick="changeTemp('master_bedroom', -0.5)">-</button>
-                <button class="btn-circle" onclick="changeTemp('master_bedroom', 0.5)">+</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Entryway Lock -->
-          <div class="device-tile">
-            <div class="device-tile-top">
-              <span class="device-name">🚪 Front Door</span>
-              <span class="pill-badge active-green" id="pillLockStatus">LOCKED</span>
-            </div>
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
-              Perimeter deadbolt engaged
-            </div>
-            <button class="btn-ghost" style="width: 100%; justify-content: center;" onclick="toggleLockAction()">
-              Toggle Lock
+          <div class="agent-controls">
+            <button class="icon-action-btn" id="voiceMicBtn" title="Voice Input (Speech Recognition)">
+              🎙️
+            </button>
+            <button class="icon-action-btn" id="voiceSpeechBtn" title="Test Alexa Speech Synthesis">
+              🔊
             </button>
           </div>
+        </div>
 
-          <!-- Kitchen -->
-          <div class="device-tile">
-            <div class="device-tile-top">
-              <span class="device-name">🍳 Kitchen Status</span>
-              <span class="pill-badge active-green">Nominal</span>
+        <!-- Quick Scenario Chips -->
+        <div class="scenario-chips-container" id="scenarioChips"></div>
+
+        <!-- Conversation Stream -->
+        <div class="chat-stream-box" id="chatStreamBox" aria-live="polite"></div>
+
+        <!-- Floating Composer Bar -->
+        <form class="composer-container" id="chatComposerForm" autocomplete="off">
+          <div class="composer-input-wrapper">
+            <input 
+              type="text" 
+              class="composer-input" 
+              id="chatInput" 
+              placeholder="Ask Hearth: “Save me $800”, “I'm home early”, “Reorder pantry”, or voice command…" 
+              aria-label="Message Hearth Assistant"
+            />
+            <button type="button" class="composer-mic-btn" id="inputMicBtn" title="Dictate message">
+              🎙️
+            </button>
+          </div>
+          <button type="submit" class="composer-send-btn" id="chatSendBtn">
+            <span>Send</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
+      </section>
+
+      <!-- RIGHT COLUMN: GLASS-BOX OPERATIONS COMMAND PANELS (TABS) -->
+      <aside class="operations-panel" aria-label="Operations Center">
+        <!-- Tab Navigation -->
+        <nav class="panel-tab-nav" role="tablist">
+          <button class="panel-tab-btn active" data-tab="approvals" role="tab" id="tab-approvals">
+            📥 Approvals <span class="tab-badge zero" id="badgeApprovalsCount">0</span>
+          </button>
+          <button class="panel-tab-btn" data-tab="home" role="tab" id="tab-home">
+            🏠 Smart Home
+          </button>
+          <button class="panel-tab-btn" data-tab="money" role="tab" id="tab-money">
+            💳 Money & Pantry
+          </button>
+          <button class="panel-tab-btn" data-tab="memory" role="tab" id="tab-memory">
+            🧠 Memory & Goals
+          </button>
+          <button class="panel-tab-btn" data-tab="sentinel" role="tab" id="tab-sentinel">
+            🛡️ Sentinel & Ledger
+          </button>
+        </nav>
+
+        <div class="tab-content-container">
+
+          <!-- TAB 1: APPROVALS TRAY -->
+          <div class="panel-view active" id="view-approvals" role="tabpanel">
+            <div class="panel-header-title">
+              <span>Glass-Box Approval Tray</span>
+              <span style="font-size:12px;color:var(--emerald);font-weight:600;">100% Gated</span>
             </div>
-            <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.6;">
-              • Coffee Maker: <strong>Standby</strong><br/>
-              • Air Purifier: <strong style="color: #34d399;">Active Auto</strong>
+            <p class="panel-header-desc">
+              Consequential moves require human confirmation. Decisions are single-use with cryptographic execution receipts.
+            </p>
+
+            <div class="tray-safety-banner">
+              <span>🛡️</span>
+              <div>
+                <strong>Propose-Never-Execute Safety Contract</strong>: Hearth drafts transparent proposals with projected cost deltas and diffs. Nothing executes until you tap Approve.
+              </div>
+            </div>
+
+            <div id="pendingProposalsList"></div>
+
+            <details class="decided-proposals-fold" id="decidedFold" hidden>
+              <summary id="decidedFoldSummary">Decided History (0)</summary>
+              <div id="decidedProposalsList" style="margin-top:8px;"></div>
+            </details>
+          </div>
+
+          <!-- TAB 2: SMART HOME DIGITAL TWIN -->
+          <div class="panel-view" id="view-home" role="tabpanel">
+            <div class="panel-header-title">
+              <span>Virtual Smart Home Twin</span>
+              <span style="font-size:12px;color:var(--cyan);font-family:var(--font-mono);" id="activeSceneBadge">Scene: Default</span>
+            </div>
+            <p class="panel-header-desc">
+              Multi-room telemetry. Lighting & climate apply instantly; entry deadbolt unlocking is fail-closed and safety-gated.
+            </p>
+            <div class="room-card-grid" id="roomsCardGrid"></div>
+          </div>
+
+          <!-- TAB 3: MONEY & CONSUMABLES -->
+          <div class="panel-view" id="view-money" role="tabpanel">
+            <div class="panel-header-title">
+              <span>Subscriptions & Consumables</span>
+              <span style="font-size:12px;color:var(--emerald);font-weight:600;">Automated ROI Audit</span>
+            </div>
+            <p class="panel-header-desc">
+              Scans recurring services for dormancy and tracks consumable pantry levels.
+            </p>
+
+            <div class="savings-hero-card">
+              <div>
+                <div class="savings-hero-number" id="savingsAmountHero">$803.76</div>
+                <div class="savings-hero-label" id="savingsDetailHero">Annual recoverable waste identified</div>
+              </div>
+              <div style="text-align:right;">
+                <span class="badge-pill savings">Audit Complete</span>
+              </div>
+            </div>
+
+            <h3 style="font-size:14px;color:var(--text-bright);margin:14px 0 8px;">Active Household Subscriptions</h3>
+            <div id="subscriptionsList"></div>
+
+            <h3 style="font-size:14px;color:var(--text-bright);margin:18px 0 8px;">Consumable Pantry Telemetry</h3>
+            <div id="pantryInventoryList"></div>
+
+            <h3 style="font-size:14px;color:var(--text-bright);margin:18px 0 8px;">Subscribe & Save Bundle Deals</h3>
+            <div id="dealsDiscountList"></div>
+          </div>
+
+          <!-- TAB 4: HOUSEHOLD MEMORY & GOALS -->
+          <div class="panel-view" id="view-memory" role="tabpanel">
+            <div class="panel-header-title">
+              <span>Household SQLite Memory</span>
+              <span style="font-size:12px;color:var(--text-dim);">Vault Redacted</span>
+            </div>
+            <p class="panel-header-desc">
+              Persistent facts, preferences, and dietary requirements. Search, add, or forget anytime.
+            </p>
+
+            <input type="text" class="memory-search-bar" id="memorySearchInput" placeholder="Filter facts (e.g. dietary, budget, bedtime)..."/>
+            <div id="memoryFactsList"></div>
+
+            <form class="memory-add-form" id="memoryAddForm" autocomplete="off">
+              <input type="text" id="memoryKeyInput" placeholder="Fact key (e.g. quiet_hours)" required/>
+              <input type="text" id="memoryValueInput" placeholder="Value (e.g. 10 PM to 7 AM)" required/>
+              <button type="submit">Remember</button>
+            </form>
+
+            <h3 style="font-size:14px;color:var(--text-bright);margin:20px 0 8px;">Active Long-Running Goals</h3>
+            <div id="goalsMilestoneList"></div>
+          </div>
+
+          <!-- TAB 5: SENTINEL & LEDGER -->
+          <div class="panel-view" id="view-sentinel" role="tabpanel">
+            <div class="panel-header-title">
+              <span>Sentinel Safety & Cryptographic Ledger</span>
+              <span style="font-size:12px;color:var(--emerald);font-weight:600;">SHA-256 Merkle Chain</span>
+            </div>
+            <p class="panel-header-desc">
+              Multi-tier policy enforcement and tamper-evident append-only cryptographic ledger.
+            </p>
+
+            <div class="sentinel-tier-grid">
+              <div class="sentinel-tier-box tier1">
+                <strong>Tier 1: Allow</strong>
+                Reads, scenes, comfort, thermostats, locking doors.
+              </div>
+              <div class="sentinel-tier-box tier2">
+                <strong>Tier 2: Ask</strong>
+                Unlocking entryways, subscription cancellation, money.
+              </div>
+              <div class="sentinel-tier-box tier3">
+                <strong>Tier 3: Deny</strong>
+                Shell execution (rm -rf), vault secrets, unverified wires.
+              </div>
+            </div>
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <h3 style="font-size:14px;color:var(--text-bright);margin:0;">Recent Immutable Audit Log</h3>
+              <span id="auditCountLabel" style="font-size:11.5px;color:var(--text-dim);font-family:var(--font-mono);">0 entries</span>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="audit-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Actor</th>
+                    <th>Action</th>
+                    <th>SHA-256 Hash</th>
+                  </tr>
+                </thead>
+                <tbody id="auditTableBody"></tbody>
+              </table>
             </div>
           </div>
+
         </div>
+      </aside>
+    </main>
 
-        <div class="section-heading">Energy Telemetry</div>
-        <div class="telemetry-banner">
-          <div>
-            <div style="font-size: 11px; color: var(--text-tertiary);">Active Load</div>
-            <div class="telemetry-big-val" style="color: var(--accent-cyan);" id="valLoad">1.45 kW</div>
-          </div>
-          <div>
-            <div style="font-size: 11px; color: var(--text-tertiary);">Solar Output</div>
-            <div class="telemetry-big-val" style="color: #34d399;" id="valSolar">0.85 kW</div>
-          </div>
-          <div>
-            <div style="font-size: 11px; color: var(--text-tertiary);">Eco Score</div>
-            <div class="telemetry-big-val" style="color: var(--accent-violet);">94 / 100</div>
-          </div>
-        </div>
-      </div>
+    <!-- FOOTER -->
+    <footer class="footer-bar">
+      Hearth Universal · Spec 2025-11-25 Streamable HTTP on <code>/mcp</code> · Propose-Never-Execute Contract · MIT Open Source
+    </footer>
 
-      <!-- Pane 3: Subscriptions & Pantry -->
-      <div class="deck-content-pane" id="paneCommerce" style="display: none;">
-        <div class="section-heading">Subscriptions Radar ($437/yr Recovery Available)</div>
-        <div id="subsContainer"></div>
-
-        <div class="section-heading" style="margin-top: 16px;">Pantry Consumable Levels</div>
-        <div id="pantryContainer"></div>
-      </div>
-
-      <!-- Pane 4: Memory Vault -->
-      <div class="deck-content-pane" id="paneMemory" style="display: none;">
-        <div class="section-heading">Household Facts & Preferences</div>
-        <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-          <input type="text" id="factKeyInput" placeholder="Key (e.g. coffee_roast)" class="chat-input-field" style="padding: 6px 10px; font-size: 12px;"/>
-          <input type="text" id="factValInput" placeholder="Value (e.g. Medium Ethiopian)" class="chat-input-field" style="padding: 6px 10px; font-size: 12px;"/>
-          <button class="btn-ghost" onclick="addFactAction()">+ Save</button>
-        </div>
-        <div id="factsContainer"></div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<!-- Clean Merkle Dialog -->
-<dialog id="auditDialog">
-  <div class="dialog-header">
-    <div style="font-weight: 700; font-size: 16px;">SHA-256 Merkle Ledger</div>
-    <button class="btn-ghost" onclick="$('auditDialog').close()">✕</button>
   </div>
-  <div style="font-size: 12.5px; color: var(--text-secondary); margin-bottom: 14px;">
-    Every AI proposal, human approval, and Sentinel decision is cryptographically hash-chained in <code>state/audit.jsonl</code>.
-  </div>
-  <div style="max-height: 400px; overflow-y: auto;">
-    <table class="table-clean">
-      <thead>
-        <tr>
-          <th>Timestamp</th>
-          <th>Actor</th>
-          <th>Action</th>
-          <th>SHA-256 Hash</th>
-        </tr>
-      </thead>
-      <tbody id="merkleRows"></tbody>
-    </table>
-  </div>
-</dialog>
 
-<script src="app.js"></script>
+  <!-- FLOATING TOAST SHELF -->
+  <div id="toast-shelf" aria-live="polite"></div>
+
+  <!-- APP SCRIPT -->
+  <script src="app.js"></script>
 </body>
 </html>

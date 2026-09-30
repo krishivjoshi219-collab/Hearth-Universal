@@ -388,7 +388,13 @@ async def api_memory(request: Request):
     key = str(body.get("key", "")).strip()
     val = str(body.get("value", "")).strip()
     owner = str(body.get("owner", "household")).strip()
-    
+
+    if request.method == "DELETE":
+        if not key:
+            return JSONResponse({"ok": False, "error": "Key is required"}, status_code=400)
+        audit.append("human", "memory_delete", {"key": key})
+        return JSONResponse(memory.delete(key))
+
     if not key or not val:
         return JSONResponse({"ok": False, "error": "Key and value are required"}, status_code=400)
         
@@ -460,6 +466,26 @@ async def api_commerce(request: Request):
     })
 
 
+@mcp.custom_route("/api/goals", methods=["GET"])
+async def api_goals(request: Request):
+    return JSONResponse({"goals": memory.list_goals()})
+
+
+@mcp.custom_route("/api/goals/advance", methods=["POST"])
+async def api_goals_advance(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    try:
+        gid = int(body.get("id", 0))
+    except (TypeError, ValueError):
+        return JSONResponse({"ok": False, "error": "Numeric goal id required"}, status_code=400)
+    out = memory.advance_goal(gid)
+    audit.append("human", "goals_advance", {"id": gid, "out": out})
+    return JSONResponse(out)
+
+
 @mcp.custom_route("/api/audit", methods=["GET"])
 async def api_audit(request: Request):
     is_valid = audit.verify()
@@ -495,7 +521,7 @@ async def favicon(request: Request):
 
 @mcp.custom_route("/app.js", methods=["GET"])
 async def app_js(request: Request):
-    return FileResponse(os.path.join(WEB_DIR, "app.js"))
+    return FileResponse(os.path.join(WEB_DIR, "app.js"), headers={"Cache-Control": "no-store"})
 
 
 @mcp.custom_route("/manifest.json", methods=["GET"])
@@ -517,7 +543,7 @@ async def vendor_static(request: Request):
 async def index(request: Request):
     idx = os.path.join(WEB_DIR, "index.html")
     if os.path.exists(idx):
-        return FileResponse(idx)
+        return FileResponse(idx, headers={"Cache-Control": "no-store"})
     return PlainTextResponse("Hearth Universal MCP 2025-11-25 at /mcp.")
 
 

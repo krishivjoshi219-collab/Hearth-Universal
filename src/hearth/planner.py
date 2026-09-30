@@ -658,11 +658,14 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             else:
                 grounded_synthesis = f"✓ Goal **#{adv_res['id']}** advanced to **Step {adv_res['progress']} of {adv_res['of']}** ({adv_res['status'].upper()}). Next milestone: *{adv_res.get('current_step')}*."
         elif "create" in low:
+            m_t = re.search(r"create\s+(?:a\s+new\s+)?goal\s*(?:to\s+|:\s*|\-\s*)?(.+)", goal, re.IGNORECASE)
+            title = (m_t.group(1).strip().rstrip(".") if m_t else "") or "Establish Home Solar & Battery Storage"
             created = call_tool("goals_create", {
-                "title": "Establish Home Solar & Battery Storage",
-                "steps": ["Calculate daily kWh baseline", "Request net-metering quote", "Audit smart inverter telemetry"]
-            }, "Create new milestone goal")
-            grounded_synthesis = f"✓ Created new household goal: **{created['title']}** with 3 milestones."
+                "title": title,
+                "steps": ["Define the first milestone", "Make steady progress", "Review and complete"]
+            }, f"Create goal '{title}'")
+            steps = created.get("steps", []) if isinstance(created, dict) else []
+            grounded_synthesis = f"✓ Created new household goal: **{created.get('title', title)}** with {len(steps)} milestones."
         else:
             goals_res = call_tool("goals_list", {}, "Fetch all household goals from SQLite")
             goals = goals_res.get("goals", [])
