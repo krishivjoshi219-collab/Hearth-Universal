@@ -74,7 +74,7 @@ No external API keys, credit cards, or physical devices required. The project in
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/krishivjoshi219-collab/hearth-universal.git
+git clone https://github.com/krishivjoshi219-collab/Hearth-Universal.git
 cd hearth-universal
 
 # 2. Install dependencies
@@ -125,6 +125,13 @@ export HEARTH_BASE_URL=http://localhost:11434/v1
 export HEARTH_MODEL=llama3
 ```
 
+### ⚙️ Product operations (no code changes needed)
+```bash
+cp config.example.yaml config.yaml  # file-based brain/port config (env vars still win)
+HEARTH_SCHEDULER=1 python mcp-server/server.py  # background thread advances active goals hourly
+```
+State is crash-safe (file locks + atomic writes) and survives restarts (`state/`); chat history is capped at 500 turns; `/api/chat` is rate-limited (30/min/IP, `HEARTH_CHAT_RPM`); proposals are single-use with execution receipts.
+
 ---
 
 ## 🌟 Key Capabilities & Differentiators
@@ -133,7 +140,7 @@ export HEARTH_MODEL=llama3
 | :--- | :--- | :--- |
 | **Safety Model** | Blindly runs actions or refuses | **Propose-Never-Execute**: Proactive drafts, transparent cost delta, 1-tap human approval tray. |
 | **Smart Home** | Text response only | **Full Digital Twin**: Multi-room lighting, HVAC thermostat, smart lock, ambient audio, and energy telemetry. |
-| **Subscription Hygiene** | Lists advice in chat | **Automated ROI Audit**: Scans 5 active services, detects dormancy, calculates **$437/yr** savings, and drafts cancellations. |
+| **Subscription Hygiene** | Lists advice in chat | **Automated ROI Audit**: Scans 5 active services, detects dormancy, calculates **$803.76/yr** savings, and drafts cancellations. |
 | **Commerce & Replenishment** | "Go buy coffee" | **Pantry Consumable Telemetry**: Tracks bean/laundry levels, locates bundle deals, and stages checkout cards. |
 | **Multi-Tool Reasoning** | Single turn Q&A | **Autonomous DAG Orchestrator**: Multi-step parallel dependency graph with live visualizer. |
 | **Security & Auditing** | None | **Cryptographic SHA-256 Ledger**: Immutable append-only audit trail verifying every agent and human action. |
@@ -163,9 +170,20 @@ export HEARTH_MODEL=llama3
 ## 🔒 Sentinel Safety & Security Matrix
 
 Sentinel enforces a strict 3-tier policy engine:
-- **Tier 1 (Autonomous / Allow)**: Read-only queries, sensor readings, and deal discovery.
-- **Tier 2 (Consequential / Ask)**: Moving money, cancelling services, ordering items, or unlocking physical doors. Routed exclusively to the Human Approval Tray.
+- **Tier 1 (Autonomous / Allow)**: Reads, lighting, climate, scenes, engaging locks, goals. Executes immediately — comfort should never wait for approval.
+- **Tier 2 (Consequential / Ask)**: Moving money, cancelling services, ordering items, or UNLOCKING physical doors. Fail-closed: direct calls return `approval_required` and stage a tray proposal; approval executes once (replay refused, execution receipt stored).
 - **Tier 3 (Dangerous / Deny)**: Shell code execution (`rm -rf /`, `mkfs`), raw credential access (`{{vault:...}}`), and unapproved wire transfers are hard-blocked and logged to the cryptographic ledger.
+
+### ✅ Claim map (what's real vs simulated — verify it yourself)
+| Claim | Status | Proof |
+|---|---|---|
+| MCP 2025-11-25 Streamable HTTP, stateless | Real | `curl .../mcp initialize` → `protocolVersion`, or `pytest tests/test_mcp_http.py` (live server, 4 checks) |
+| Unlock gating over bare MCP | Real, fail-closed | smoke test asserts `approval_required`, door stays locked |
+| Approval executes + single-use | Real | `test_decide_single_use`; receipts in `state/proposals.json` |
+| Home persists across restart | Real | kill + restart server, scene/lock intact (`state/home.json`) |
+| Bedrock/OpenAI/Ollama brains | Real code path, needs your key/creds | `src/hearth/brains.py`; without creds the local offline engine answers |
+| Subscriptions, pantry, home devices | Fixture data (sandbox has no bank/Hue APIs) | `src/hearth/commerce.py`, `home_mock.py` — stated openly, numbers computed not hardcoded |
+| Alexa+ on-device rendering | Simulated web UI | visual twin of the MCP loop for judges without devices |
 
 ---
 

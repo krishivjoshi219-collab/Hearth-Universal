@@ -36,6 +36,20 @@ CREATE TABLE IF NOT EXISTS chat_history (
 );
 """
 
+# Product guardrails: bound stored sizes and history length.
+KEY_MAX = 128
+VALUE_MAX = 8000
+GOAL_TITLE_MAX = 200
+GOAL_STEPS_MAX = 20
+CHAT_HISTORY_MAX = 500
+
+
+def _cap(text: str, maximum: int) -> tuple[str, bool]:
+    if len(text) <= maximum:
+        return text, False
+    return text[:maximum], True
+
+
 DEFAULT_FACTS = [
     ("dietary_preference", "Gluten-free dinners on weekdays; kid loves oatmeal and berries", "household"),
     ("budget_entertainment_limit", "$200/month across streaming, games, and dining out", "household"),
@@ -48,8 +62,20 @@ DEFAULT_FACTS = [
 def _db() -> sqlite3.Connection:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     db_path = STATE_DIR / "memory.db"
-    con = sqlite3.connect(db_path)
-    con.executescript(SCHEMA)
+    try:
+        con = sqlite3.connect(db_path, timeout=30)
+        con.execute("PRAGMA journal_mode=WAL")
+        con.executescript(SCHEMA)
+    except sqlite3.DatabaseError:
+        # Corrupt database: quarantine it and start fresh instead of
+        # failing every request until someone SSHes in.
+        try:
+            os.replace(db_path, STATE_DIR / f"memory.corrupt.{int(time.time())}.db")
+        except Exception:
+            pass
+        con = sqlite3.connect(db_path, timeout=30)
+        con.execute("PRAGMA journal_mode=WAL")
+        con.executescript(SCHEMA)
     
     # Auto-migrate older schemas
     try:
@@ -87,20 +113,29 @@ def _db() -> sqlite3.Connection:
 
 
 def remember(key: str, value: str, owner: str = "household") -> dict:
-    """Store or update a household fact."""
+    """Store or update a household fact (length-capped)."""
+    key, k_trunc = _cap(str(key), KEY_MAX)
+    value, v_trunc = _cap(str(value), VALUE_MAX)
     con = _db()
     now = int(time.time())
     con.execute("INSERT OR REPLACE INTO facts(key, value, owner, updated_at) VALUES(?, ?, ?, ?)", (key, value, owner, now))
     con.commit()
     con.close()
-    return {"ok": True, "key": key, "value": value, "owner": owner}
+    out = {"ok": True, "key": key, "value": value, "owner": owner}
+    if k_trunc or v_trunc:
+        out["truncated"] = True
+    return out
 
 
 def query(q: str = "") -> list[dict]:
-    """Query stored household facts."""
+    """Query stored household facts (% and _ treated literally, not as wildcards)."""
     con = _db()
     if q:
-        rows = con.execute("SELECT key, value, owner FROM facts WHERE key LIKE ? OR value LIKE ?", (f"%{q}%", f"%{q}%")).fetchall()
+        q_esc = q.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        like = f"%{q_esc}%"
+        rows = con.execute(
+            "SELECT key, value, owner FROM facts WHERE key LIKE ? ESCAPE '\\' OR value LIKE ? ESCAPE '\\'",
+            (like, like)).fetchall()
     else:
         rows = con.execute("SELECT key, value, owner FROM facts ORDER BY updated_at DESC").fetchall()
     con.close()
@@ -118,7 +153,9 @@ def delete(key: str) -> dict:
 
 
 def create_goal(title: str, steps: list[str]) -> dict:
-    """Create a multi-step household goal."""
+    """Create a multi-step household goal (title/steps capped)."""
+    title, _ = _cap(str(title), GOAL_TITLE_MAX)
+    steps = [s for s in steps][:GOAL_STEPS_MAX] or ["step 1"]
     con = _db()
     now = int(time.time())
     cur = con.execute("INSERT INTO goals(title, steps, status, progress, created_at) VALUES(?, ?, 'active', 0, ?)", (title, json.dumps(steps), now))
@@ -178,9 +215,13 @@ def list_goals() -> list[dict]:
 
 
 def chat_history_append(role: str, content: str, model: str = "") -> None:
-    """Record a chat turn for multi-turn conversational context."""
+    """Record a chat turn; prune beyond CHAT_HISTORY_MAX to bound growth."""
     con = _db()
     con.execute("INSERT INTO chat_history(role, content, model, ts) VALUES(?, ?, ?, ?)", (role, content, model, int(time.time())))
+    con.execute(
+        "DELETE FROM chat_history WHERE id NOT IN (SELECT id FROM chat_history ORDER BY id DESC LIMIT ?)",
+        (CHAT_HISTORY_MAX,),
+    )
     con.commit()
     con.close()
 

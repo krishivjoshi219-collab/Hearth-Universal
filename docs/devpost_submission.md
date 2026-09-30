@@ -20,7 +20,7 @@ An open-source, proactive personal operations agent for Amazon Alexa+ built on M
 ---
 
 ### Links & Video
-- **GitHub Repository URL**: `https://github.com/krishivjoshi219-collab/hearth-universal`  
+- **GitHub Repository URL**: `https://github.com/krishivjoshi219-collab/Hearth-Universal`  
   *(Make sure repo is Public with MIT License, OR if private, add the 6 Amazon judges as collaborators: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar`)*
 - **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(See `docs/demo_video_script.md` for the exact 2:45 storyboard)*
 
@@ -38,10 +38,10 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 
 ## 🛠️ What Hearth Universal Does
 
-1. **Autonomous Subscription & Financial Hygiene (Saves $437/yr)**:
+1. **Autonomous Subscription & Financial Hygiene (Saves $803.76/yr)**:
    - Scans 5 active household subscriptions and analyzes usage telemetry.
    - Detects dormant services (e.g. StreamBox 4K unused for 68 days) and low-utilization gym plans.
-   - Calculates **$437/yr in actionable annual savings** and stages 1-tap cancellation/downgrade cards in the user's **Approval Tray**. Nothing moves money until tapped.
+   - Calculates **$803.76/yr in actionable annual savings** and stages 1-tap cancellation/downgrade cards in the user's **Approval Tray**. Nothing moves money until tapped.
 
 2. **Smart Home Digital Twin & Ambient Actuation**:
    - Maintains a live multi-room digital twin (Living Room, Bedroom, Kitchen, Entryway).

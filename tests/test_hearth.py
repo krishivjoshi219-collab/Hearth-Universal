@@ -152,3 +152,99 @@ def test_planner_reorder_pantry():
     res = planner.plan("reorder coffee and laundry pods")
     assert res["intent"] == "HOUSEHOLD_COMMERCE"
     assert len(res["proposals_created"]) > 0
+
+
+def test_sentinel_two_tiers():
+    assert sentinel.judge("home_set_scene", {"name": "movie-night"}).decision == "allow"
+    assert sentinel.judge("home_update_device", {"room": "living_room", "device": "lights", "patch": {}}).decision == "allow"
+    assert sentinel.judge("home_toggle_lock", {"locked": True}).decision == "allow"
+    assert sentinel.judge("home_toggle_lock", {"locked": False}).decision == "ask"
+    assert sentinel.judge("totally_unknown_tool", {}).decision == "ask"
+
+
+def test_decide_single_use():
+    item = proposals.propose("cancel_subscription", "Cancel Test Service", "test")
+    first = proposals.decide(item["id"], True)
+    assert first["status"] == "approved"
+    assert "execution" in first
+    second = proposals.decide(item["id"], True)
+    assert second.get("ok") is False and "already approved" in second.get("error", "")
+
+
+def test_home_state_survives_reload():
+    import importlib
+    home_mock.set_scene("movie-night")
+    reloaded = importlib.reload(home_mock)
+    assert reloaded.get_state()["active_scene"] == "movie-night"
+    reloaded.reset_state()
+    assert importlib.reload(home_mock).get_state()["active_scene"] == "default"
+
+
+def test_propose_caps_lengths():
+    item = proposals.propose("test", "T" * 500, "R" * 9000)
+    assert item.get("truncated") is True
+    assert len(item["title"]) <= 200 and len(item["reasons"]) <= 4000
+    # newest-last ordering with limit
+    assert len(proposals.list_proposals(limit=1)) == 1
+
+
+def test_remember_caps_value():
+    out = memory.remember("bigkey", "V" * 9000)
+    assert out.get("truncated") is True
+    assert len(memory.query("bigkey")[0]["value"]) <= 8000
+
+
+def test_chat_history_bounded():
+    for i in range(12):
+        memory.chat_history_append("user", f"ping {i}")
+    # prune helper keeps table small even after many turns
+    con = memory._db()
+    n = con.execute("SELECT COUNT(*) FROM chat_history").fetchone()[0]
+    con.close()
+    assert n <= memory.CHAT_HISTORY_MAX
+
+
+def test_server_rate_limiter():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("hearth_server", "mcp-server/server.py")
+    srv = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(srv)
+    ip = "10.9.9.9"
+    assert all(srv._rate_ok(ip) for _ in range(srv.RATE_LIMIT))
+    assert srv._rate_ok(ip) is False
+
+
+def test_corrupt_db_recovers():
+    from pathlib import Path
+    db = Path(memory.STATE_DIR) / "memory.db"
+    db.write_text("this is not sqlite at all {{{")
+    facts = memory.query()
+    assert isinstance(facts, list)  # recovered, reseeded, no exception
+    assert (db.parent).exists()
+
+
+def test_corrupt_audit_reports_false_not_crash():
+    from pathlib import Path
+    log = Path(audit._log_path())
+    with log.open("a") as f:
+        f.write("garbage{{{not json\n")
+    assert audit.verify() is False
+    # tidy: drop the poisoned line so later tests see a valid chain
+    lines = [l for l in log.read_text().splitlines() if not l.startswith("garbage")]
+    log.write_text("\n".join(lines) + ("\n" if lines else ""))
+    assert audit.verify() is True
+
+
+def test_advance_missing_goal_no_crash():
+    res = planner.plan("advance goal 999")
+    assert "couldn't advance" in res["draft"].lower()
+
+
+def test_forget_unknown_fact_honest():
+    res = planner.plan("forget about zzz_nope_nothing")
+    assert "couldn't find" in res["draft"].lower()
+
+
+def test_goals_advance_rejects_bad_id():
+    out = planner.TOOLS["goals_advance"]["handler"]({"id": "abc"})
+    assert out.get("ok") is False

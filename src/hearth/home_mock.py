@@ -4,7 +4,12 @@ Features lighting controls, HVAC climate, smart lock, ambient media, and real-ti
 """
 from __future__ import annotations
 import copy
+import json
+import os
 import time
+from pathlib import Path
+
+STATE_DIR = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
 
 DEFAULT_STATE = {
     "living_room": {
@@ -191,6 +196,7 @@ def update_device(room: str, device: str, patch: dict) -> dict:
         _state[room][device].update(patch)
     else:
         _state[room][device] = patch
+    _save()
     return {"ok": True, "state": get_state()}
 
 
@@ -199,6 +205,7 @@ def toggle_lock(door: str = "front_door", locked: bool = True) -> dict:
     status = "locked" if locked else "unlocked"
     _state["entryway"]["lock"]["front_door"] = status
     _state["entryway"]["lock"]["last_event"] = f"Manual {status} via Alexa+ UI at {time.strftime('%I:%M %p')}"
+    _save()
     return {"ok": True, "door": door, "status": status, "state": get_state()}
 
 
@@ -220,6 +227,7 @@ def set_scene(name: str) -> dict:
         else:
             _state[section] = val
     _state["active_scene"] = name
+    _save()
     return {"ok": True, "scene": name, "state": get_state()}
 
 
@@ -238,4 +246,36 @@ def reset_state() -> dict:
     """Reset to clean default state."""
     global _state
     _state = copy.deepcopy(DEFAULT_STATE)
+    _save()
     return {"ok": True, "state": get_state()}
+
+
+from . import atomic
+
+
+def _path() -> Path:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    return STATE_DIR / "home.json"
+
+
+def _save() -> None:
+    try:
+        atomic.atomic_write_text(_path(), json.dumps(_state))
+    except Exception:
+        pass
+
+
+def _load() -> None:
+    """Restore persisted twin state so scenes/locks survive a server restart."""
+    global _state
+    try:
+        p = _path()
+        if p.exists():
+            data = json.loads(p.read_text())
+            if isinstance(data, dict) and "living_room" in data:
+                _state = data
+    except Exception:
+        pass
+
+
+_load()

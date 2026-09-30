@@ -25,9 +25,9 @@
 
 ---
 
-### [0:50 - 1:30] Live Demo: Subscription Audit & Recovering $437/yr
+### [0:50 - 1:30] Live Demo: Subscription Audit & Recovering $803.76/yr
 - **Visual**: Browser opens to `http://localhost:8787`. Point out the glowing Alexa+ acoustic orb, protocol status, and clean Echo Show glassmorphism interface.
-  - Click the quick-prompt chip: *"💰 Save me $437 on renewals"*.
+  - Click the quick-prompt chip: *"💰 Save me $800 on renewals"*.
   - Show the live **Multi-Tool DAG visualizer** expanding:
     - `[1] memory_query`
     - `[2] inbox_scan`

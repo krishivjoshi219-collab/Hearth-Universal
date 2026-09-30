@@ -9,11 +9,57 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
+
+def _load_config() -> None:
+    """Optional config.yaml (env vars always win). Lets operators configure the
+    brain, port, and scheduler without touching code or exports."""
+    cfg_path = os.environ.get("HEARTH_CONFIG", os.path.join(os.path.dirname(__file__), "..", "config.yaml"))
+    if not os.path.exists(cfg_path):
+        return
+    try:
+        import yaml
+        with open(cfg_path) as f:
+            cfg = yaml.safe_load(f) or {}
+    except Exception as e:
+        print(f"config warn: ignoring {cfg_path}: {e}")
+        return
+    model = cfg.get("model", {})
+    if model.get("base_url"):
+        os.environ.setdefault("HEARTH_BASE_URL", str(model["base_url"]))
+    if model.get("model"):
+        os.environ.setdefault("HEARTH_MODEL", str(model["model"]))
+    if model.get("provider"):
+        os.environ.setdefault("HEARTH_BRAIN_PROVIDER", str(model["provider"]))
+    server = cfg.get("server", {})
+    if server.get("port"):
+        os.environ.setdefault("PORT", str(server["port"]))
+
+
+_load_config()
+
 from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
 
 from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains
+
+# Simple per-IP token bucket for the expensive chat endpoint (product abuse guard).
+_RATE_BUCKETS: dict[str, list] = {}
+RATE_LIMIT = int(os.environ.get("HEARTH_CHAT_RPM", "30"))
+
+
+def _rate_ok(ip: str) -> bool:
+    import time
+    now = time.time()
+    bucket = [t for t in _RATE_BUCKETS.get(ip, []) if now - t < 60]
+    if not bucket:
+        _RATE_BUCKETS.pop(ip, None)  # evict idle clients: no unbounded growth
+    if len(bucket) >= RATE_LIMIT:
+        _RATE_BUCKETS[ip] = bucket
+        return False
+    bucket.append(now)
+    _RATE_BUCKETS[ip] = bucket
+    return True
 
 PROTOCOL = "2025-11-25"
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web")
@@ -74,7 +120,7 @@ def home_get_state() -> dict:
 
 @mcp.tool()
 def home_set_scene(name: str) -> dict:
-    """Apply a smart home scene — GATED: requires human verification in production."""
+    """Apply a smart home scene (Tier-1 autonomous comfort: lights, climate, media)."""
     v = sentinel.judge("home_set_scene", {"name": name})
     audit.append("agent", "home_set_scene", {"name": name, "verdict": v.decision})
     if v.decision == "deny":
@@ -84,7 +130,7 @@ def home_set_scene(name: str) -> dict:
 
 @mcp.tool()
 def home_routine(name: str) -> dict:
-    """Execute a coordinated home routine (lighting, climate, appliances, media). Gated."""
+    """Execute a coordinated home routine (Tier-1 autonomous comfort)."""
     v = sentinel.judge("home_routine", {"name": name})
     audit.append("agent", "home_routine", {"name": name, "verdict": v.decision})
     if v.decision == "deny":
@@ -93,13 +139,33 @@ def home_routine(name: str) -> dict:
 
 
 @mcp.tool()
-def home_toggle_lock(door: str = "front_door", locked: bool = True) -> dict:
-    """Toggle smart entryway lock. Gated by Sentinel."""
+def home_toggle_lock(door: str = "front_door", locked: bool = True, proposal_id: str = "") -> dict:
+    """Engage the smart lock directly (Tier-1). UNLOCKING is Tier-2: pass an
+    approved proposal_id, or omit it to receive a staged approval proposal."""
     v = sentinel.judge("home_toggle_lock", {"door": door, "locked": locked})
-    audit.append("agent", "home_toggle_lock", {"door": door, "locked": locked, "verdict": v.decision})
     if v.decision == "deny":
+        audit.append("agent", "home_toggle_lock", {"door": door, "locked": locked, "verdict": v.decision})
         return {"ok": False, "error": v.reason}
-    return home_mock.toggle_lock(door=door, locked=locked)
+    if locked:
+        audit.append("agent", "home_toggle_lock", {"door": door, "locked": True, "verdict": v.decision})
+        return home_mock.toggle_lock(door=door, locked=True)
+    # Unlock path: fail-closed without an approved proposal.
+    if proposal_id:
+        p = proposals.get_proposal(proposal_id)
+        if p and p.get("status") == "approved" and p.get("kind") == "home_lock":
+            audit.append("agent", "home_toggle_lock", {"door": door, "locked": False, "via": proposal_id})
+            return home_mock.toggle_lock(door=door, locked=False)
+        return {"ok": False, "error": "proposal_id is not an approved home_lock proposal"}
+    item = proposals.propose(
+        kind="home_lock",
+        title="Unlock Front Door Entryway",
+        reasons="MCP client requested door unlock. Physical access requires human confirmation.",
+        risk_level="high",
+        diff="Front door: Locked -> Unlocked. Auto-lock re-engages after 5 minutes.",
+        meta={"door": door, "locked": False},
+    )
+    audit.append("agent", "home_toggle_lock", {"door": door, "locked": False, "verdict": "ask", "proposal": item["id"]})
+    return {"ok": False, "approval_required": True, "proposal": item}
 
 
 @mcp.tool()
@@ -262,15 +328,22 @@ async def api_chat(request: Request):
     provider = body.get("provider")
     if not message:
         return JSONResponse({"ok": False, "error": "Message is required"}, status_code=400)
-        
+    client_ip = request.client.host if request.client else "unknown"
+    if not _rate_ok(client_ip):
+        return JSONResponse({"ok": False, "error": "Rate limit exceeded (30/min). Slow down."}, status_code=429)
+
     out = planner.plan(message, preferred_provider=provider)
     return JSONResponse(out)
 
 
 @mcp.custom_route("/api/proposals", methods=["GET", "POST"])
 async def api_proposals(request: Request):
+    try:
+        limit = max(1, min(500, int(request.query_params.get("limit", "100"))))
+    except ValueError:
+        limit = 100
     return JSONResponse({
-        "proposals": proposals.list_proposals(),
+        "proposals": proposals.list_proposals(limit=limit),
         "pending_count": len(proposals.list_proposals("pending"))
     })
 
@@ -431,4 +504,25 @@ async def index(request: Request):
 
 if __name__ == "__main__":
     print(f"Hearth Universal on :{_PORT} | MCP {PROTOCOL} Streamable HTTP stateless | /mcp + /health + /")
+    print(f"brain provider={brains._get_active_provider()} model={os.environ.get('HEARTH_MODEL', 'default')} "
+          f"scheduler={'on' if os.environ.get('HEARTH_SCHEDULER') == '1' else 'off'} "
+          f"chat_rpm={RATE_LIMIT} state={os.environ.get('HEARTH_STATE_DIR', 'state')}")
+    if os.environ.get("HEARTH_SCHEDULER") == "1":
+        import threading
+
+        def _scheduler_loop() -> None:
+            import time as _t
+            interval = float(os.environ.get("HEARTH_SCHEDULER_MINUTES", "60")) * 60
+            while True:
+                _t.sleep(interval)
+                try:
+                    actives = [g for g in memory.list_goals() if g.get("status") == "active"]
+                    if actives:
+                        nxt = min(actives, key=lambda g: g["id"])
+                        out = memory.advance_goal(nxt["id"])
+                        audit.append("scheduler", "goals_tick", out)
+                except Exception:
+                    pass
+
+        threading.Thread(target=_scheduler_loop, daemon=True).start()
     mcp.run(transport="streamable-http")

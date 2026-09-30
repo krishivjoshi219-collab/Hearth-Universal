@@ -77,12 +77,15 @@ function appendMessage(role, text, metadata = {}) {
     <div class="msg-header">
       <span>${senderName}</span>
       <div style="display: flex; align-items: center; gap: 8px;">
-        ${role === "alexa" ? `<button class="msg-tts-btn" onclick="speakAlexa('${text.replace(/'/g, "\\'")}')">🔊 Replay</button>` : ""}
+        ${role === "alexa" ? `<button class="msg-tts-btn" data-say="1">🔊 Replay</button>` : ""}
         <span>${now}</span>
       </div>
     </div>
     <div class="msg-content"><p>${formatted}</p></div>
   `;
+
+  // Closure-based listener: brain text never touches HTML markup (XSS-safe).
+  msg.querySelector('[data-say]')?.addEventListener('click', () => speakAlexa(text));
 
   box.appendChild(msg);
   box.scrollTop = box.scrollHeight;

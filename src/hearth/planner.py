@@ -135,7 +135,7 @@ TOOLS: dict[str, dict[str, Any]] = {
             "properties": {"id": {"type": "integer"}},
             "required": ["id"]
         },
-        "handler": lambda args: memory.advance_goal(int(args.get("id", 1)))
+        "handler": lambda args: memory.advance_goal(_safe_goal_id(args.get("id")))
     },
     "goals_list": {
         "description": "List all active and completed household goals.",
@@ -256,6 +256,22 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
             dag_steps.append(step_record)
             audit.append("sentinel", "tool_denied", {"tool": tool_name, "args": args, "reason": v.reason})
             return {"ok": False, "error": v.reason}
+
+        if v.decision == "ask" and _requires_approval(tool_name, args):
+            # FAIL-CLOSED: stage a proposal, NEVER execute the gated action.
+            created = _stage_gated_proposal(tool_name, args)
+            step_record = {
+                "id": f"step_{len(dag_steps) + 1}",
+                "tool": tool_name,
+                "why": f"{why} → routed to Approval Tray (tier-2)",
+                "status": "awaiting_approval",
+                "inputs": args,
+                "result_summary": f"Proposal '{created.get('title')}' staged for human approval."
+            }
+            dag_steps.append(step_record)
+            audit.append("agent", tool_name, {"inputs": args, "status": "awaiting_approval", "proposal": created.get("id")})
+            proposals_created.append(created)
+            return {"ok": False, "approval_required": True, "proposal": created}
             
         handler = TOOLS.get(tool_name, {}).get("handler")
         if not handler:
@@ -323,6 +339,45 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
         "proposals_created": [p["id"] for p in proposals_created],
         "suggested_scene": semantic_res.get("suggested_scene"),
     }
+
+
+def _requires_approval(tool_name: str, args: dict) -> bool:
+    """True only for tier-2 state-changers. Proposing is itself the safe action."""
+    if tool_name == "actions_propose":
+        return False
+    if tool_name == "home_toggle_lock":
+        return args.get("locked", True) is False  # unlock=gated, lock=autonomous
+    if tool_name in ("home_update_device", "home_set_scene", "home_routine",
+                     "goals_create", "memory_remember"):
+        return False
+    return True  # fail-closed default for anything else Sentinel flags
+
+
+def _stage_gated_proposal(tool_name: str, args: dict) -> dict:
+    """Convert a gated agent action into a tray proposal (never executes)."""
+    if tool_name == "home_toggle_lock":
+        return proposals.propose(
+            kind="home_lock",
+            title="Unlock Front Door Entryway",
+            reasons="Agent requested door unlock. Physical access requires human confirmation.",
+            risk_level="high",
+            diff="Front door: Locked -> Unlocked. Auto-lock re-engages after 5 minutes.",
+            meta={"door": args.get("door", "front_door"), "locked": False},
+        )
+    return proposals.propose(
+        kind="gated_action",
+        title=f"Approve: {tool_name}",
+        reasons=f"Agent requested '{tool_name}' with {args}. Sentinel tier-2: needs human approval.",
+        risk_level="high",
+        meta={"tool": tool_name, "args": args},
+    )
+
+
+def _safe_goal_id(raw: Any) -> int:
+    try:
+        return int(raw)
+    except (TypeError, ValueError):
+        return -1  # memory.advance_goal reports "not found" instead of 500ing
 
 
 def _summarize_result(tool_name: str, res: Any) -> str:
@@ -415,6 +470,7 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                 proposals_created.append(created)
 
         context_lines.append(f"SubCount={len(subs)}, TotalSpend=${total_spend}/yr, PotentialSavings=${potential_save}/yr")
+        tray_pending = len(proposals.list_proposals("pending"))
         grounded_synthesis = (
             f"I completed an automated audit of your **{len(subs)} recurring household subscriptions** (total annual expenditure: **${total_spend:.2f}/yr**).\n\n"
             f"• **StreamBox 4K**: Dormant for 68 days with zero household playback -> **Recommendation: CANCEL**\n"
@@ -422,7 +478,7 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             f"• **Ultra Cloud Gaming**: Inactive library -> **Recommendation: CANCEL**\n"
             f"• **Echo Music HD & Cloud Storage**: Active daily household utilization confirmed -> **KEEP**\n\n"
             f"💰 **Total Projected Savings: ${potential_save:.2f}/year**.\n"
-            f"🛡️ **Propose-Never-Execute**: I have drafted **{len(proposals_created)} structured action cards** in your **Approval Tray**. Tap Approve to apply changes."
+            f"🛡️ **Propose-Never-Execute**: {len(proposals_created)} new cards drafted, **{tray_pending} total awaiting your review** in the **Approval Tray**. Tap Approve to apply changes."
         )
 
     # --------------------------------------------------------------------------
@@ -557,8 +613,11 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             # Extract key
             m = re.search(r"(?:forget|delete)\s+(?:about\s+)?(\w+)", low)
             key_to_del = m.group(1) if m else "dietary_preference"
-            call_tool("memory_delete", {"key": key_to_del}, f"Remove fact '{key_to_del}' from SQLite memory")
-            grounded_synthesis = f"✓ Removed fact **'{key_to_del}'** from persistent household memory."
+            del_res = call_tool("memory_delete", {"key": key_to_del}, f"Remove fact '{key_to_del}' from SQLite memory")
+            if del_res.get("ok"):
+                grounded_synthesis = f"✓ Removed fact **'{key_to_del}'** from persistent household memory."
+            else:
+                grounded_synthesis = f"I couldn't find a fact called **'{key_to_del}'** — nothing was deleted."
             
         elif (low.startswith("remember") or "remember that" in low or "add fact" in low or "store" in low) and not any(q_word in low for q_word in ("what do you remember", "what is stored", "recall", "list facts", "do you remember")):
             # Extract key and value
@@ -591,8 +650,13 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         intent = "HOUSEHOLD_GOALS"
         
         if "advance" in low:
-            adv_res = call_tool("goals_advance", {"id": 1}, "Advance goal step in SQLite")
-            grounded_synthesis = f"✓ Goal **#{adv_res['id']}** advanced to **Step {adv_res['progress']} of {adv_res['of']}** ({adv_res['status'].upper()}). Next milestone: *{adv_res.get('current_step')}*."
+            m_id = re.search(r"goal\s+(\d+)", low)
+            gid = int(m_id.group(1)) if m_id else 1
+            adv_res = call_tool("goals_advance", {"id": gid}, f"Advance goal {gid} step in SQLite")
+            if adv_res.get("ok") is False:
+                grounded_synthesis = f"Couldn't advance goal {gid}: {adv_res.get('error', 'unknown error')}."
+            else:
+                grounded_synthesis = f"✓ Goal **#{adv_res['id']}** advanced to **Step {adv_res['progress']} of {adv_res['of']}** ({adv_res['status'].upper()}). Next milestone: *{adv_res.get('current_step')}*."
         elif "create" in low:
             created = call_tool("goals_create", {
                 "title": "Establish Home Solar & Battery Storage",

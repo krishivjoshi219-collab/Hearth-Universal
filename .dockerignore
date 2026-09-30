@@ -1,0 +1,6 @@
+state/
+.git/
+pytest_cache/
+__pycache__/
+*.pyc
+.vault.env

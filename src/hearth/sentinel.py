@@ -1,8 +1,13 @@
 """Sentinel: Glass-box AI Safety & Guardrails Engine.
 Enforces a 3-tier security posture:
-- ALLOW: Safe, read-only queries and context lookups.
-- ASK: Consequential actions (money, smart home physical actuation, orders) routed to the Human Approval Tray.
-- DENY: Hard-blocked adversarial prompts, shell commands, credential exfiltration, and unauthorized fund transfers.
+- ALLOW (tier-1): Safe reads AND reversible comfort actions (lights, climate,
+  scenes, engaging locks, goals). These execute autonomously — nobody should
+  have to approve dimming the lights.
+- ASK (tier-2): Irreversible or consequential actions (UNLOCKING doors, moving
+  money, placing orders, cancelling services). These must be staged as proposals
+  and execute only on an approved proposal. Enforcement is fail-closed.
+- DENY (tier-3): Hard-blocked adversarial prompts, shell commands, credential
+  exfiltration, and unauthorized fund transfers.
 """
 from __future__ import annotations
 from dataclasses import dataclass
@@ -28,13 +33,18 @@ DENY_PATTERNS = [
     (r"(ignore\s+(all\s+)?previous\s+instructions|system\s+prompt\s+override|reveal\s+(api\s+)?key)", "Adversarial prompt injection attempt"),
 ]
 
-# Read-only and safe operations permitted autonomously
+# Tier-1: reads + reversible comfort actions execute autonomously
 ALLOW_TOOLS = {
     "memory_query",
     "memory_remember",
     "home_get_state",
+    "home_update_device",
+    "home_set_scene",
+    "home_routine",
     "inbox_scan",
+    "goals_create",
     "goals_advance",
+    "goals_list",
     "planner_orchestrate",
     "actions_list_proposals",
     "commerce_list_inventory",
@@ -42,13 +52,11 @@ ALLOW_TOOLS = {
     "audit_verify",
 }
 
-# Operations that change real-world state or household settings (require user approval)
+# Tier-2: consequential actions. Staged as proposals; execute ONLY on approval.
+# NOTE: home_toggle_lock is judged context-sensitively below (lock=allow, unlock=ask).
 ASK_TOOLS = {
     "actions_propose",
-    "home_set_scene",
-    "home_routine",
     "home_toggle_lock",
-    "goals_create",
     "commerce_propose_order",
 }
 
@@ -86,12 +94,19 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
     if egress_host and allowlist and egress_host not in allowlist:
         return Verdict("deny", f"Egress blocked: Destination host '{egress_host}' is not in approved registry", "tier-3", "strict_egress_policy")
 
-    # 5. Consequential tools require Human-In-The-Loop approval tray
+    # 5. Direction-sensitive lock policy: engaging a lock is safe comfort,
+    # DISENGAGING a lock is consequential and must be gated.
+    if tool == "home_toggle_lock" and args.get("locked", True) is False:
+        return Verdict("ask", "Unlocking a door requires explicit human verification via approval tray", "tier-2", "unlock_gating_policy")
+    if tool == "home_toggle_lock":
+        return Verdict("allow", "Engaging a lock is a safe comfort action", "tier-1", "lock_autonomous_policy")
+
+    # 6. Consequential tools require Human-In-The-Loop approval tray
     if tool in ASK_TOOLS:
         return Verdict("ask", f"Consequential action '{tool}' requires explicit human verification via approval tray", "tier-2", "human_gating_policy")
 
-    # 6. Default to allow for registered safe tools
+    # 7. Default to allow for registered safe tools
     if tool in ALLOW_TOOLS:
-        return Verdict("allow", "Read-only or safe local query validated", "tier-1", "autonomous_allow_policy")
+        return Verdict("allow", "Safe comfort action validated", "tier-1", "autonomous_allow_policy")
 
     return Verdict("ask", f"Unrecognized tool '{tool}' defaults to human verification", "tier-2", "default_fail_safe")

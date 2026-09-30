@@ -14,21 +14,25 @@ def _log_path() -> Path:
     return STATE_DIR / "audit.jsonl"
 
 
+from . import atomic
+
+
 def append(actor: str, action: str, detail: dict) -> dict:
     path = _log_path()
-    prev = "GENESIS"
-    if path.exists():
-        try:
-            last = path.read_text().strip().splitlines()[-1]
-            prev = json.loads(last).get("hash", "GENESIS")
-        except Exception:
-            prev = "GENESIS"
-    ts = int(time.time())
-    body = json.dumps({"ts": ts, "actor": actor, "action": action, "detail": detail, "prev": prev}, sort_keys=True)
-    h = hashlib.sha256(body.encode()).hexdigest()
-    entry = {"ts": ts, "actor": actor, "action": action, "detail": detail, "prev": prev, "hash": h}
-    with path.open("a") as f:
-        f.write(json.dumps(entry) + "\n")
+    with atomic.locked(path):
+        prev = "GENESIS"
+        if path.exists():
+            try:
+                last = path.read_text().strip().splitlines()[-1]
+                prev = json.loads(last).get("hash", "GENESIS")
+            except Exception:
+                prev = "GENESIS"
+        ts = int(time.time())
+        body = json.dumps({"ts": ts, "actor": actor, "action": action, "detail": detail, "prev": prev}, sort_keys=True)
+        h = hashlib.sha256(body.encode()).hexdigest()
+        entry = {"ts": ts, "actor": actor, "action": action, "detail": detail, "prev": prev, "hash": h}
+        with path.open("a") as f:
+            f.write(json.dumps(entry) + "\n")
     return entry
 
 
@@ -36,13 +40,20 @@ def verify() -> bool:
     path = _log_path()
     if not path.exists():
         return True
+    try:
+        lines = path.read_text().splitlines()
+    except Exception:
+        return False
     prev = "GENESIS"
-    for line in path.read_text().splitlines():
-        e = json.loads(line)
-        body = json.dumps({"ts": e["ts"], "actor": e["actor"], "action": e["action"], "detail": e["detail"], "prev": e["prev"]}, sort_keys=True)
-        if hashlib.sha256(body.encode()).hexdigest() != e["hash"]:
+    for line in lines:
+        try:
+            e = json.loads(line)
+            body = json.dumps({"ts": e["ts"], "actor": e["actor"], "action": e["action"], "detail": e["detail"], "prev": e["prev"]}, sort_keys=True)
+        except Exception:
             return False
-        if e["prev"] != prev:
+        if hashlib.sha256(body.encode()).hexdigest() != e.get("hash"):
+            return False
+        if e.get("prev") != prev:
             return False
         prev = e["hash"]
     return True

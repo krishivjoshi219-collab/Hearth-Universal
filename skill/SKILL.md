@@ -6,7 +6,7 @@ Target endpoint: `/mcp` (Streamable HTTP, MCP Protocol 2025-11-25).
 Hearth Universal transforms Alexa+ into an autonomous, proactive household operations agent that manages subscriptions, pantry replenishment, and smart home digital twins under an uncompromising **propose-never-execute** safety contract.
 
 ## When to Activate
-- User articulates multi-domain household requests ("Save me $437", "I'm heading home early", "Reorder coffee and pantry essentials", "Plan family weekend under $150").
+- User articulates multi-domain household requests ("Save me $800", "I'm heading home early", "Reorder coffee and pantry essentials", "Plan family weekend under $150").
 - Background proactive schedules (nightly subscription telemetry audit, consumable stock reorder alerts, energy conservation routines).
 - Physical access or home actuation (lock, lights, climate) requiring explicit human confirmation.
 
@@ -25,7 +25,7 @@ Hearth Universal transforms Alexa+ into an autonomous, proactive household opera
 - `home_toggle_lock(door, locked)`: Actuate smart entryway lock. [GATED]
 
 ### 3. Financial Intelligence & Commerce
-- `inbox_scan()`: Analyze subscription usage, dormant billing, and annual savings potential ($437/yr).
+- `inbox_scan()`: Analyze subscription usage, dormant billing, and annual savings potential ($803.76/yr).
 - `commerce_list_inventory()`: Monitor pantry consumables (coffee, detergent, filters) and depletion percentages.
 - `commerce_scan_deals()`: Match household essentials to active Subscribe & Save bundle discounts.
 
@@ -48,7 +48,10 @@ Hearth Universal transforms Alexa+ into an autonomous, proactive household opera
 - `emergency_lockdown()`: Rapidly verify perimeter locks, secure illumination, and report anomalies.
 
 ## Guardrail Architecture (Sentinel)
-1. **Propose-Never-Execute**: Any action that spends money, cancels services, or changes physical locks MUST be formatted as a structured proposal with cost delta and diff.
+Two tiers, enforced in code (not just documented):
+- **Tier-1 autonomous comfort** (lights, climate, scenes, engaging locks, reads, goals): executes immediately. Proven by `test_sentinel_two_tiers`.
+- **Tier-2 gated consequences** (UNLOCKING doors, spending, orders, cancellations): the agent MUST call `actions_propose` and NEVER execute directly. Direct gated calls fail closed with `approval_required`. Decisions are single-use (replay refused). Proven by `test_planner_gates_unlock` + HTTP smoke test.
+1. **Propose-Never-Execute (tier-2)**: Any action that spends money, cancels services, or UNLOCKS physical locks MUST be a structured proposal with cost delta and diff; approval executes it and writes an execution receipt.
 2. **Vault Secret Redaction**: Secrets (`{{vault:NAME}}`, API tokens, OTP codes) are replaced with `•••` before model context ingestion.
 3. **Strict Egress Validation**: Models and tool requests must communicate only with allowlisted endpoints (`*.amazonaws.com`, `api.openai.com`, `localhost`).
 4. **Adversarial Interception**: Shell injection (`rm -rf`, `mkfs`), SQL injections, and system prompt override attempts are hard-denied and audited.

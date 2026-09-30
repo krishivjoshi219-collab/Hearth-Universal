@@ -185,7 +185,7 @@ def _generate_intelligent_offline_response(messages: list[dict]) -> str:
             "• Metro Fitness Plus ($780.00/yr): 1 visit recorded in 45 days -> Recommendation: DOWNGRADE to Standard ($360/yr savings)\n"
             "• Ultra Cloud Gaming ($203.88/yr): Inactive library -> Recommendation: CANCEL\n"
             "• Echo Music HD & Cloud Storage: Active daily usage confirmed -> KEEP\n\n"
-            "💰 Total Projected Annual Savings: **$437.00/yr**.\n"
+            "💰 Total Projected Annual Savings: **$803.76/yr**.\n"
             "🛡️ Guardrail Check: No payments or subscriptions have been altered. I drafted 3 structured action proposals in your Approval Tray for your review."
         )
 
