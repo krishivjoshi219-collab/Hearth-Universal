@@ -1,0 +1,41 @@
+# Hearth Universal config — copy to config.yaml and paste ANY key. No AWS needed.
+model:
+  # Any OpenAI-compatible endpoint. Presets:
+  # Muse Spark:  base_url: https://api.meta.ai/v1, model: muse-spark-1.1
+  # Glimmer local via Ollama: base_url: http://localhost:11434/v1, model: muse-glimmer
+  # OpenAI: base_url: https://api.openai.com/v1, model: gpt-4o-mini
+  # OpenRouter: base_url: https://openrouter.ai/api/v1, model: any
+  # LM Studio: base_url: http://localhost:1234/v1, model: local
+  base_url: "https://api.meta.ai/v1"
+  model: "muse-spark-1.1"
+  # Resolved from env VAULT_MODEL_KEY or .vault.env — never logged raw.
+  api_key_ref: "{{vault:MODEL_KEY}}"
+  fallback: "mock"  # mock = zero-friction demo with no key; local = ollama
+
+server:
+  host: "0.0.0.0"
+  port: 8787
+  mcp_path: "/mcp"
+  stateless: true
+  protocol_version: "2025-11-25"
+
+# AWS Builder mini (optional, Week 3): fill to swap one call to Bedrock.
+# Leave empty for hackathon primary win — local/mock still eligible.
+aws:
+  enabled: false
+  region: "us-east-1"
+  bedrock_model: "anthropic.claude-3-5-sonnet-20240620-v1:0"
+
+home:
+  backend: "mock"  # mock | homeassistant (adapter slot)
+  default_scene: "evening-calm"
+
+sentinel:
+  egress_allowlist:
+    - "api.meta.ai"
+    - "localhost"
+    - "127.0.0.1"
+  deny_patterns:
+    - "rm -rf /"
+    - "mkfs"
+    - ":(){:|:&};:"

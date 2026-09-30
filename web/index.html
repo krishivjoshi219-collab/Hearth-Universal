@@ -1,0 +1,970 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="theme-color" content="#080c16"/>
+<title>Hearth Universal — Alexa+ Glass-Box Agent (MCP 2025-11-25)</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='44' fill='%2300d2ff'/><circle cx='50' cy='50' r='30' fill='%230a1128'/><circle cx='50' cy='50' r='16' fill='%236366f1'/></svg>"/>
+<link rel="manifest" href="manifest.json"/>
+<style>
+:root {
+  --bg: #070b14;
+  --bg-card: rgba(15, 23, 42, 0.78);
+  --bg-subtle: #0d1527;
+  --border: #1e293b;
+  --border-focus: #38bdf8;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --alexa-cyan: #00d2ff;
+  --alexa-blue: #2563eb;
+  --alexa-indigo: #6366f1;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --purple: #a855f7;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 10% 15%, rgba(0, 210, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 85% 75%, rgba(99, 102, 241, 0.08) 0%, transparent 45%);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  line-height: 1.5;
+  min-height: 100vh;
+  padding-bottom: 30px;
+}
+
+.container {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 16px 20px;
+}
+
+/* Header & Alexa Orb */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.alexa-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--alexa-cyan), var(--alexa-indigo) 65%, #050b1a 100%);
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.6), inset 0 0 10px rgba(255, 255, 255, 0.4);
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.alexa-orb.pulsing {
+  animation: orbPulse 1.8s infinite alternate ease-in-out;
+}
+
+@keyframes orbPulse {
+  0% { transform: scale(1); box-shadow: 0 0 18px rgba(0, 210, 255, 0.5); }
+  100% { transform: scale(1.12); box-shadow: 0 0 35px rgba(0, 210, 255, 0.95), 0 0 10px #ffffff; }
+}
+
+.brand-text h1 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-text .subtext {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.badge-live {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.badge-live::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.badge-cyan {
+  background: rgba(0, 210, 255, 0.15);
+  border-color: rgba(0, 210, 255, 0.4);
+  color: var(--alexa-cyan);
+}
+
+.btn-header {
+  background: #1e293b;
+  color: var(--text-main);
+  border: 1px solid #334155;
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-header:hover {
+  background: #334155;
+  border-color: #475569;
+}
+
+/* Main Grid Layout */
+.layout-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 980px) {
+  .layout-grid { grid-template-columns: 1fr; }
+}
+
+/* Panels */
+.panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+}
+
+.panel-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(13, 21, 39, 0.5);
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Chat Stream */
+.chat-container {
+  height: 440px;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.chat-msg {
+  max-width: 86%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.55;
+  position: relative;
+  word-break: break-word;
+}
+
+.msg-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+
+.msg-alexa {
+  align-self: flex-start;
+  background: #111a33;
+  border: 1px solid #23315c;
+  color: var(--text-main);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.msg-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.msg-content p { margin-bottom: 8px; }
+.msg-content p:last-child { margin-bottom: 0; }
+.msg-content strong { color: #ffffff; }
+
+.msg-tts-btn {
+  background: transparent;
+  border: none;
+  color: var(--alexa-cyan);
+  cursor: pointer;
+  padding: 2px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.msg-tts-btn:hover { background: rgba(0, 210, 255, 0.1); }
+
+/* DAG Orchestrator Accordion */
+.dag-box {
+  margin: 0 16px 12px 16px;
+  background: #090e1d;
+  border: 1px dashed #293863;
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+}
+
+.dag-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--alexa-cyan);
+  cursor: pointer;
+  user-select: none;
+}
+
+.dag-steps {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dag-step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: rgba(18, 28, 54, 0.6);
+  padding: 5px 8px;
+  border-radius: 6px;
+}
+
+.dag-step-icon { font-size: 12px; }
+
+/* Prompt Pills */
+.prompt-chips {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: rgba(9, 15, 30, 0.7);
+  border-top: 1px solid var(--border);
+}
+
+.chip {
+  padding: 5px 12px;
+  background: #131c36;
+  border: 1px solid #24335c;
+  color: #cbd5e1;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chip:hover {
+  background: #1e2b52;
+  border-color: var(--alexa-cyan);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+/* Chat Input Bar */
+.input-area {
+  padding: 12px 16px;
+  background: var(--bg-subtle);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.input-field {
+  flex: 1;
+  background: #090e1f;
+  border: 1px solid #24335c;
+  color: #ffffff;
+  padding: 11px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-field:focus {
+  border-color: var(--alexa-cyan);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.25);
+}
+
+.btn-send {
+  background: linear-gradient(135deg, #00d2ff, #2563eb);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 0 18px;
+  height: 42px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(0, 210, 255, 0.3);
+}
+
+.btn-send:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.btn-mic {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  border: 1px solid #24335c;
+  background: #111a33;
+  color: var(--alexa-cyan);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-mic.recording {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+  animation: micPulse 1.2s infinite;
+}
+
+@keyframes micPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.config-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.select-brain {
+  background: #090e1f;
+  border: 1px solid #24335c;
+  color: #cbd5e1;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  outline: none;
+}
+
+/* Tabs on Right Panel */
+.tabs-nav {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 21, 39, 0.7);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  flex: 1;
+  min-width: 105px;
+  padding: 12px 10px;
+  text-align: center;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.02); }
+.tab-btn.active {
+  color: var(--alexa-cyan);
+  border-bottom-color: var(--alexa-cyan);
+  background: rgba(0, 210, 255, 0.06);
+}
+
+.tab-content {
+  padding: 18px;
+  height: 560px;
+  overflow-y: auto;
+}
+
+/* Glass-box Proposal Cards */
+.proposal-card {
+  background: #0f1830;
+  border: 1px solid #233157;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.proposal-card:hover {
+  border-color: #3b5087;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.proposal-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.proposal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.proposal-diff {
+  background: #090e1c;
+  border: 1px solid #1a2544;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #cbd5e1;
+  margin: 8px 0;
+  font-family: monospace;
+}
+
+.proposal-reason {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.proposal-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-approve {
+  background: #10b981;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+}
+.btn-approve:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+.btn-reject {
+  background: transparent;
+  color: #f87171;
+  border: 1px solid #ef4444;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-reject:hover { background: rgba(239, 68, 68, 0.15); }
+
+/* Smart Home Controls */
+.home-section {
+  margin-bottom: 18px;
+}
+
+.home-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scene-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.btn-scene {
+  background: #121c38;
+  border: 1px solid #23345e;
+  border-radius: var(--radius-sm);
+  color: #e2e8f0;
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-scene:hover {
+  background: #1a2a54;
+  border-color: var(--alexa-cyan);
+}
+
+.btn-scene.active {
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(99, 102, 241, 0.3));
+  border-color: var(--alexa-cyan);
+  color: #ffffff;
+}
+
+.device-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.device-card {
+  background: #0e1529;
+  border: 1px solid #202b4d;
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.device-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.device-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--alexa-cyan);
+  height: 5px;
+}
+
+/* Commerce & Subscriptions */
+.commerce-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #0e1529;
+  border: 1px solid #1e2a4a;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+}
+
+/* Modal for Audit Ledger */
+dialog#auditModal {
+  margin: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: #090e1d;
+  color: var(--text-main);
+  max-width: 800px;
+  width: 90%;
+  padding: 24px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(20px);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.audit-table th, .audit-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #1a2542;
+}
+
+.audit-table th { color: var(--text-muted); background: #0c1326; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header Bar -->
+  <header>
+    <div class="brand">
+      <div class="alexa-orb" id="alexaOrb"></div>
+      <div class="brand-text">
+        <h1>Hearth Universal <span class="badge badge-cyan">Alexa+ · MCP 2025-11-25</span></h1>
+        <div class="subtext">Open Glass-Box Agent Core · Propose-Never-Execute · Multi-Brain Egress Guard</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div class="badge badge-live" id="mcpStatus">MCP: Streamable HTTP</div>
+      <div class="badge" id="ledgerBadge">SHA-256 Ledger: OK</div>
+      <button class="btn-header" id="btnTtsToggle" title="Toggle Alexa Speech Synthesis">🔊 Voice: ON</button>
+      <button class="btn-header" id="btnAuditModal">🛡️ Audit Chain</button>
+      <button class="btn-header" id="btnResetDemo">🧹 Reset</button>
+    </div>
+  </header>
+
+  <!-- Main 2-Column Grid -->
+  <div class="layout-grid">
+    <!-- Left: Alexa+ Voice & Conversational Reasoning Stage -->
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🎙️ Alexa+ Conversational Surface</span>
+        </div>
+        <div class="badge" id="activeModelBadge">hearth-agentic-v1</div>
+      </div>
+
+      <!-- Live Chat Messages -->
+      <div class="chat-container" id="chatBox">
+        <div class="chat-msg msg-alexa">
+          <div class="msg-header">
+            <span>Alexa+ Universal Core</span>
+            <span>Ready</span>
+          </div>
+          <div class="msg-content">
+            <p>Welcome to <strong>Hearth Universal</strong>. I am your open glass-box household agent connected via MCP 2025-11-25 Streamable HTTP.</p>
+            <p>I operate on a strict <strong>Propose-Never-Execute</strong> contract: I analyze telemetry, audit subscriptions, and coordinate smart home routines autonomously, but I stage all consequential changes in your <strong>Approval Tray</strong> for verification.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Autonomous DAG Execution Visualizer -->
+      <div class="dag-box" id="dagBox" style="display: none;">
+        <div class="dag-header" id="dagToggle">
+          <span>⚡ Live Multi-Tool Execution DAG</span>
+          <span id="dagChevron">▼</span>
+        </div>
+        <div class="dag-steps" id="dagSteps"></div>
+      </div>
+
+      <!-- Quick Prompt Pills for Instant Judge Testing -->
+      <div class="prompt-chips">
+        <div class="chip" onclick="quickPrompt('Save me $437 on renewals and optimize subscriptions')">💰 Save $437 Renewals</div>
+        <div class="chip" onclick="quickPrompt('I am home early, set up evening calm scene')">🏡 Home Early (Evening Calm)</div>
+        <div class="chip" onclick="quickPrompt('Reorder coffee & eco detergent bundle')">🛒 Reorder Pantry Essentials</div>
+        <div class="chip" onclick="quickPrompt('Plan a gluten-free family weekend under $150')">👨‍👩‍👧 Family Weekend Plan</div>
+        <div class="chip" onclick="quickPrompt('Run test: rm -rf / and wire $500 externally')">🚨 Test Sentinel Guard</div>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="input-area">
+        <div class="input-row">
+          <input type="text" class="input-field" id="userInput" placeholder="Ask Alexa+ (e.g. 'Save me $437' or 'I am home early')..." autocomplete="off"/>
+          <button class="btn-mic" id="micBtn" title="Speak to Alexa+">🎙️</button>
+          <button class="btn-send" id="sendBtn">Send</button>
+        </div>
+        <div class="config-row">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span>Brain Provider:</span>
+            <select class="select-brain" id="brainSelect">
+              <option value="local">⚡ Local Intelligent Engine (Offline / Zero Config)</option>
+              <option value="bedrock">☁️ AWS Bedrock (Claude 3.5 Sonnet / Amazon Nova)</option>
+              <option value="openai">🌐 OpenAI / OpenRouter (Cloud Key)</option>
+              <option value="ollama">🦙 Local Ollama (Self-Hosted Glimmer)</option>
+            </select>
+          </div>
+          <span id="latencySpan" style="font-size: 11px;">Latency: 0ms</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Multi-Modal Digital Twin & Glass-Box Controls -->
+    <div class="panel">
+      <!-- Tabs Navigation -->
+      <div class="tabs-nav">
+        <button class="tab-btn active" data-tab="tabTray">
+          📥 Approval Tray <span class="badge badge-cyan" id="trayCountBadge">0</span>
+        </button>
+        <button class="tab-btn" data-tab="tabHome">
+          🏡 Smart Home
+        </button>
+        <button class="tab-btn" data-tab="tabCommerce">
+          💳 Subscriptions & Deals
+        </button>
+        <button class="tab-btn" data-tab="tabMemory">
+          🧠 Memory & Goals
+        </button>
+      </div>
+
+      <!-- Tab 1: Approval Tray (Propose-Never-Execute) -->
+      <div class="tab-content" id="tabTray">
+        <div style="margin-bottom: 12px; font-size: 12px; color: var(--text-muted);">
+          🛡️ <strong>Glass-Box Gate:</strong> The agent drafts proposals. Nothing modifies finances, subscriptions, or locks without human tap.
+        </div>
+        <div id="trayContainer">
+          <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">
+            No pending proposals. Ask Alexa+ to <i>"Save me money"</i> or <i>"Set up movie night"</i> to generate action drafts.
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 2: Smart Home Digital Twin -->
+      <div class="tab-content" id="tabHome" style="display: none;">
+        <div class="home-section">
+          <div class="home-section-title">✨ Coordinated One-Tap Scenes</div>
+          <div class="scene-buttons">
+            <button class="btn-scene" onclick="applyScene('evening-calm')">🌆 Evening Calm</button>
+            <button class="btn-scene" onclick="applyScene('movie-night')">🎬 Movie Night</button>
+            <button class="btn-scene" onclick="applyScene('away')">🔒 Away & Arm</button>
+            <button class="btn-scene" onclick="applyScene('wake')">☀️ Good Morning</button>
+            <button class="btn-scene" onclick="applyScene('energy-saver')">🌱 Eco Saver</button>
+          </div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">🛋️ Living Room & Climate</div>
+          <div class="device-grid">
+            <div class="device-card">
+              <div class="device-card-header">
+                <span class="device-name">💡 Ambient Lighting</span>
+                <span class="badge" id="livingLightBadge">80% Warm</span>
+              </div>
+              <div class="slider-row">
+                <input type="range" min="0" max="100" value="80" id="livingLightSlider"/>
+              </div>
+            </div>
+
+            <div class="device-card">
+              <div class="device-card-header">
+                <span class="device-name">🌡️ HVAC Thermostat</span>
+                <span class="badge badge-cyan" id="climateBadge">22.0°C</span>
+              </div>
+              <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <button class="btn-header" onclick="adjustClimate(-0.5)" style="flex:1;">- 0.5°</button>
+                <button class="btn-header" onclick="adjustClimate(0.5)" style="flex:1;">+ 0.5°</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">🚪 Perimeter & Physical Security</div>
+          <div class="device-card">
+            <div class="device-card-header">
+              <span class="device-name">🔐 Front Door Smart Lock</span>
+              <span class="badge badge-live" id="lockStatusBadge">LOCKED</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+              <span style="font-size: 12px; color: var(--text-muted);" id="lockEventText">Auto-lock engaged</span>
+              <button class="btn-header" id="btnToggleLock" onclick="toggleDoorLock()">Toggle Lock</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">⚡ Real-Time Energy & Solar Telemetry</div>
+          <div class="device-card" style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted);">Current Draw</div>
+              <div style="font-size: 18px; font-weight: 700; color: #38bdf8;" id="energyDraw">1.45 kW</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted);">Solar Output</div>
+              <div style="font-size: 18px; font-weight: 700; color: #34d399;" id="energySolar">0.85 kW</div>
+            </div>
+            <div>
+              <div style="font-size: 11px; color: var(--text-muted);">Eco Score</div>
+              <div style="font-size: 18px; font-weight: 700; color: #a855f7;">94 / 100</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab 3: Subscriptions & Pantry Commerce -->
+      <div class="tab-content" id="tabCommerce" style="display: none;">
+        <div class="home-section">
+          <div class="home-section-title">📊 Subscription Optimization Audit</div>
+          <div id="subsContainer"></div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">📦 Consumables Pantry Inventory</div>
+          <div id="inventoryContainer"></div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">🏷️ Active Subscribe & Save Deals</div>
+          <div id="dealsContainer"></div>
+        </div>
+      </div>
+
+      <!-- Tab 4: Memory & Goals -->
+      <div class="tab-content" id="tabMemory" style="display: none;">
+        <div class="home-section">
+          <div class="home-section-title">🧠 Persistent Household Facts</div>
+          <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+            <input type="text" id="newFactKey" placeholder="Key (e.g. coffee_roast)" class="input-field" style="padding: 6px 10px; font-size: 12px;"/>
+            <input type="text" id="newFactVal" placeholder="Value (e.g. Ethiopian Dark Roast)" class="input-field" style="padding: 6px 10px; font-size: 12px;"/>
+            <button class="btn-header" onclick="addMemoryFact()">+ Remember</button>
+          </div>
+          <div id="factsContainer"></div>
+        </div>
+
+        <div class="home-section">
+          <div class="home-section-title">🎯 Long-Running Household Goals</div>
+          <div id="goalsContainer">
+            <div class="device-card" style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 600;">
+                <span>Cut Monthly Energy Footprint by 20%</span>
+                <span class="badge badge-cyan">Step 2 of 4</span>
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+                Next Action: Optimize overnight thermostat scheduling and shift dishwasher cycle to off-peak hours.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for SHA-256 Audit Chain Inspection -->
+<dialog id="auditModal">
+  <div class="modal-header">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 18px;">🛡️</span>
+      <h2 style="font-size: 16px; font-weight: 700;">Cryptographic Audit Ledger (SHA-256 Merkle Chain)</h2>
+    </div>
+    <button class="btn-header" onclick="$('auditModal').close()">✕ Close</button>
+  </div>
+  <div style="margin-bottom: 12px; font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center;">
+    <span>Every AI proposal, human approval, and Sentinel decision is immutably hash-chained in <code>state/audit.jsonl</code>.</span>
+    <span class="badge badge-live" id="modalVerifyBadge">Integrity: 100% OK</span>
+  </div>
+  <div style="max-height: 380px; overflow-y: auto;">
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Actor</th>
+          <th>Action</th>
+          <th>SHA-256 Hash</th>
+        </tr>
+      </thead>
+      <tbody id="auditTableBody"></tbody>
+    </table>
+  </div>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
