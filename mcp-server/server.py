@@ -1350,6 +1350,34 @@ async def api_commerce_scan(request: Request):
     return JSONResponse(res)
 
 
+WEB2_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
+
+
+@mcp.custom_route("/web2/{path:path}", methods=["GET"])
+async def web2_static(request: Request):
+    rel = (request.path_params.get("path", "") or "").strip("/") or "index.html"
+    target = os.path.normpath(os.path.join(WEB2_DIR, rel))
+    web2_root = os.path.abspath(WEB2_DIR)
+    if target.startswith(web2_root) and os.path.isfile(target):
+        ctype = "text/html"
+        if target.endswith(".css"):
+            ctype = "text/css"
+        elif target.endswith(".js"):
+            ctype = "application/javascript"
+        elif target.endswith(".json"):
+            ctype = "application/json"
+        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": ctype})
+    return PlainTextResponse("Not Found", status_code=404)
+
+
+@mcp.custom_route("/web2", methods=["GET"])
+async def web2_index(request: Request):
+    idx = os.path.join(WEB2_DIR, "index.html")
+    if os.path.exists(idx):
+        return FileResponse(idx, headers={"Cache-Control": "no-store"})
+    return PlainTextResponse("web2 UI not built yet.", status_code=404)
+
+
 @mcp.custom_route("/css/{path:path}", methods=["GET"])
 async def css_static(request: Request):
     rel = request.path_params.get("path", "")

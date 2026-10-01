@@ -1,0 +1,138 @@
+/* Hearth web2 — Calm Command token system. Single source of truth. */
+:root {
+  /* Zinc surfaces (solid; blur lives on overlay scrim only) */
+  --s0: #09090b;
+  --s1: #101014;
+  --s2: #17171c;
+  --s3: #1f1f24;
+
+  /* Lines + depth */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.45);
+  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.7);
+  --scrim: rgba(4, 4, 6, 0.72);
+
+  /* Type (verified contrast on --s0: body 7.76:1, accent 9.75:1) */
+  --t1: #f4f4f5;
+  --t2: #a1a1aa;
+  --t3: #63636b;
+
+  /* Signal: amber is the ONLY interactive accent. Emerald/rose are status-only. */
+  --amber: #f5a524;
+  --amber-dim: rgba(245, 165, 36, 0.14);
+  --ok: #10b981;
+  --ok-dim: rgba(16, 185, 129, 0.12);
+  --bad: #ef4444;
+  --bad-dim: rgba(239, 68, 68, 0.12);
+
+  /* Type scale (1.25 ratio; micro 11 mono exception) */
+  --fs-hero: 29px;
+  --fs-h2: 23px;
+  --fs-h3: 19px;
+  --fs-title: 15px;
+  --fs-body: 13.5px;
+  --fs-micro: 11px;
+  --font-sans: "Inter", "Geist", -apple-system, BlinkMacSystemFont,
+    "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --font-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* 8pt grid + geometry (3 radii only) */
+  --sp1: 8px;
+  --sp2: 12px;
+  --sp3: 16px;
+  --sp4: 24px;
+  --sp5: 32px;
+  --sp6: 48px;
+  --r-card: 12px;
+  --r-hero: 20px;
+  --r-pill: 999px;
+
+  /* Motion: 150-200ms ease-out, transform/opacity only */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-fast: 150ms;
+  --t-med: 200ms;
+  --focus: 0 0 0 2px var(--s0), 0 0 0 4px var(--amber);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background: var(--s0);
+  color: var(--t1);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  font-weight: 650;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+  border-radius: 6px;
+}
+
+/* Skeleton: geometry-matched pulse, 500ms ambient, static under reduced motion */
+.skel {
+  border-radius: 6px;
+  background: var(--s3);
+  animation: skpulse 600ms var(--ease) infinite alternate;
+}
+
+@keyframes skpulse {
+  from { opacity: 0.45; }
+  to { opacity: 0.9; }
+}
+
+/* Numeric telemetry: tabular figures, no layout jitter */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-micro);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .skel {
+    animation: none;
+    opacity: 0.6;
+  }
+}

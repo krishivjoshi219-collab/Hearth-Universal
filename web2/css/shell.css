@@ -1,0 +1,269 @@
+/* Hearth web2 — shell: top bar, tabs, command bar, toasts. */
+
+.shell {
+  max-width: 1824px;
+  margin: 0 auto;
+  padding: 0 var(--sp6);
+}
+
+/* ---- Top bar ---- */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp3);
+  padding: var(--sp3) 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp2);
+  font-weight: 700;
+  font-size: var(--fs-title);
+  letter-spacing: -0.01em;
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--amber), #b45309);
+  display: grid;
+  place-items: center;
+  color: #09090b;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.brand small {
+  display: block;
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  color: var(--t2);
+  letter-spacing: 0.04em;
+}
+
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp2);
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--s1);
+  font-size: var(--fs-micro);
+  color: var(--t2);
+  white-space: nowrap;
+}
+
+.pill .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ok);
+}
+
+.pill.warn .dot {
+  background: var(--amber);
+}
+
+select.persona {
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 5px 12px;
+  font-size: var(--fs-micro);
+  color: var(--t1);
+}
+
+/* ---- Tabs (Hick: 5 zones, one decision at a time) ---- */
+.tabs {
+  display: flex;
+  gap: 4px;
+  padding: var(--sp2) 0 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 10px var(--sp3);
+  color: var(--t2);
+  font-weight: 600;
+  font-size: var(--fs-body);
+  transition: color var(--t-fast) var(--ease);
+}
+
+.tab:hover {
+  color: var(--t1);
+}
+
+.tab[aria-selected="true"] {
+  color: var(--t1);
+  border-bottom-color: var(--amber);
+}
+
+.tab .count {
+  margin-left: 6px;
+  font-size: var(--fs-micro);
+  background: var(--amber-dim);
+  color: var(--amber);
+  border-radius: var(--r-pill);
+  padding: 1px 8px;
+}
+
+/* ---- Views ---- */
+.view {
+  padding: var(--sp4) 0 var(--sp6);
+}
+
+.view[hidden] {
+  display: none;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp3);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp3);
+}
+
+@media (max-width: 1100px) {
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---- Command bar (Fitts: 48px target, adjacent to stream) ---- */
+.cmdbar {
+  position: sticky;
+  bottom: var(--sp3);
+  display: flex;
+  gap: var(--sp2);
+  margin-top: var(--sp4);
+  background: var(--s1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-hero);
+  padding: var(--sp2);
+  box-shadow: var(--shadow-pop);
+}
+
+.cmdbar input {
+  flex: 1;
+  min-height: 48px;
+  background: transparent;
+  border: none;
+  padding: 0 var(--sp3);
+  font-size: var(--fs-body);
+}
+
+.cmdbar input::placeholder {
+  color: var(--t3);
+}
+
+.cmdbar input:focus {
+  outline: none;
+}
+
+.cmdbar:focus-within {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-pop), 0 0 0 2px rgba(245, 165, 36, 0.35);
+}
+
+.btn {
+  border: 1px solid var(--line);
+  background: var(--s2);
+  border-radius: var(--r-card);
+  padding: 0 var(--sp4);
+  min-height: 48px;
+  font-weight: 650;
+  transition: transform var(--t-fast) var(--ease),
+    background var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+
+.btn:hover {
+  border-color: var(--line-strong);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--amber);
+  border-color: var(--amber);
+  color: #09090b;
+}
+
+.btn-primary:hover {
+  background: #f7b13c;
+}
+
+/* ---- Toasts (quiet rollback language lives here) ---- */
+.toasts {
+  position: fixed;
+  bottom: var(--sp4);
+  right: var(--sp4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp2);
+  z-index: 60;
+  max-width: 360px;
+}
+
+.toast {
+  background: var(--s2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-card);
+  padding: var(--sp2) var(--sp3);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--fs-body);
+  animation: toastin var(--t-med) var(--ease);
+}
+
+.toast.err {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+@keyframes toastin {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- Empty states ---- */
+.empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r-card);
+  padding: var(--sp5) var(--sp3);
+  text-align: center;
+  color: var(--t2);
+}
+
+.empty strong {
+  display: block;
+  color: var(--t1);
+  margin-bottom: 4px;
+}
