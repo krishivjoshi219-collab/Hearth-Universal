@@ -35,7 +35,7 @@ def _wait_healthy(proc, timeout=40):
             pass
         if proc.poll() is not None:
             raise RuntimeError("server exited during startup")
-        time.sleep(1)
+        time.sleep(0.05)
     raise RuntimeError("server did not become healthy")
 
 
@@ -63,3 +63,7 @@ def test_mcp_http_smoke():
         assert "error" in err
     finally:
         proc.terminate()
+        try:
+            proc.wait(timeout=2)
+        except subprocess.TimeoutExpired:
+            proc.kill()

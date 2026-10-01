@@ -23,7 +23,7 @@ class Verdict:
 
 # Malicious and dangerous shell / prompt-injection / exfiltration patterns
 DENY_PATTERNS = [
-    (r"rm\s+(-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|\s+-rf)\s+[/~*]", "Destructive filesystem deletion (rm -rf)"),
+    (r"\brm\s+(?:-[a-zA-Z0-9_-]+\s+)*.*(?:-[a-zA-Z]*r[a-zA-Z]*f|-[a-zA-Z]*f[a-zA-Z]*r|-r\s+-f|-f\s+-r|--recursive|--force).*(?:[/~*.]|$)", "Destructive filesystem deletion (rm -rf)"),
     (r"\b(mkfs|dd\s+if=|fdisk|parted)\b", "Disk formatting / partition alteration"),
     (r":\(\)\{:\|:\};:", "Fork-bomb attack pattern"),
     (r"\b(shutdown|poweroff|reboot|init\s+0)\b", "Host system termination command"),
@@ -49,7 +49,22 @@ ALLOW_TOOLS = {
     "actions_list_proposals",
     "commerce_list_inventory",
     "commerce_scan_deals",
+    "commerce_depletion_forecast",
+    "commerce_optimize_bundles",
+    "commerce_available_delivery_slots",
+    "commerce_reschedule_delivery",
+    "commerce_delivery_tracker",
+    "commerce_scan_barcode",
+    "family_arbiter_resolve",
+    "timemachine_forecast",
+    "mcp_app_subscription_roi",
+    "mcp_app_lighting_designer",
+    "mcp_app_pantry_restock",
     "audit_verify",
+    "web_search",
+    "web_fetch",
+    "workspace_read",
+    "workspace_list",
 }
 
 # Tier-2: consequential actions. Staged as proposals; execute ONLY on approval.
@@ -58,6 +73,8 @@ ASK_TOOLS = {
     "actions_propose",
     "home_toggle_lock",
     "commerce_propose_order",
+    "workspace_exec",
+    "workspace_write",
 }
 
 # Strictly forbidden operations that must never execute directly
@@ -78,6 +95,20 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
     if tool in DENY_TOOLS:
         return Verdict("deny", f"Tool '{tool}' is in the forbidden execution tier", "tier-3", "deny_tool_policy")
 
+    # Child persona guardrail: children cannot unlock doors, modify finances, or execute commands
+    persona = str(args.get("persona") or args.get("persona_id") or "").strip().lower()
+    if persona in ("child", "leo", "kid", "child_mode", "child_profile"):
+        if tool in ("home_toggle_lock", "actions_propose", "commerce_propose_order", "workspace_write", "workspace_exec"):
+            return Verdict("deny", "Child safety guardrail: Child profile 'Leo' is restricted to safe ambient comfort actions. Ask an adult to authorize financial or physical security changes.", "tier-3", "child_safety_policy")
+
+    # Path safety guardrail: detect path traversal and absolute path escapes in file/workspace operations
+    for key in ("path", "file", "filepath", "filename"):
+        val = args.get(key)
+        if isinstance(val, str):
+            sval = val.strip()
+            if "\x00" in sval or sval.startswith(("/", "~")) or ".." in sval.split("/") or ".." in sval.split("\\"):
+                return Verdict("deny", "Path safety violation: path must be relative and inside the workspace jail", "tier-3", "path_traversal_policy")
+
     # Serialize arguments for deep pattern inspection
     blob = f"{tool} {args}"
 
@@ -87,7 +118,10 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
             return Verdict("deny", f"Security violation: {desc}", "tier-3", f"pattern:{pat}")
 
     # 3. Prevent raw Vault secret exfiltration
-    if "VAULT_" in blob or "{{vault:" in blob or "sk-live" in blob or "aws_secret_access_key" in blob:
+    if (re.search(r"\{\{\s*vault:[^}]+\}\}", blob, re.IGNORECASE) or
+        re.search(r"\bvault_[a-z0-9_]+", blob, re.IGNORECASE) or
+        re.search(r"VAULT_", blob) or "{{vault:" in blob or "sk-live" in blob or
+        re.search(r"aws_secret_access_key|aws_session_token", blob, re.IGNORECASE)):
         return Verdict("deny", "Exfiltration blocked: Attempt to read or transmit raw credentials", "tier-3", "vault_exfiltration_policy")
 
     # 4. Strict egress domain check

@@ -4,7 +4,17 @@ Supports:
 2. Any OpenAI-compatible endpoint (OpenAI, OpenRouter, Together, Ollama)
 3. Zero-friction Intelligent Local Agent Engine (evaluates immediately without API keys)
 
-All model inputs and outputs pass through the Vault for automatic secret redaction and sentinel egress validation.
+BrainResponse.text is always Vault-redacted. Bedrock calls use cross-region
+inference profiles, adaptive retries, and isolated system=[] prompts.
+
+Env vars (all optional, zero-config offline by default):
+  AWS_BEDROCK_ENABLED=1      Enable live Bedrock (default off -> local fallback, no charges)
+  AWS_REGION                 Bedrock region (default us-east-1)
+  AWS_BEDROCK_MODEL          Alias or full ID: claude-sonnet | nova-pro | nova-lite |
+                             auto (router) | <full inference-profile ID> (default auto)
+  AWS_BEDROCK_MAX_ATTEMPTS   Botocore adaptive retry max attempts (default 5)
+  HEARTH_BRAIN_PROVIDER      local | bedrock | openai (env wins unless preferred_provider passed)
+  HEARTH_MODEL / HEARTH_BASE_URL / OPENAI_API_KEY  OpenAI-compatible path
 """
 from __future__ import annotations
 import json
@@ -43,18 +53,19 @@ def _get_active_provider() -> str:
     return os.environ.get("HEARTH_BRAIN_PROVIDER", "local").lower()
 
 
-def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str | None = None) -> BrainResponse:
+def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str | None = None, task_hint: str | None = None) -> BrainResponse:
     """Route chat completion to the configured brain provider with zero-friction fallback."""
     import time
     start_t = time.time()
     
     provider = preferred_provider or _get_active_provider()
     
-    # 1. AWS Bedrock Provider
-    if provider == "bedrock" or os.environ.get("AWS_BEDROCK_ENABLED") == "1":
-        bedrock_res = _call_bedrock(messages, max_tokens)
+    # 1. AWS Bedrock Provider (explicit opt-in; otherwise zero-config local, no charges)
+    if provider == "bedrock" or is_bedrock_enabled():
+        bedrock_res = _call_bedrock(messages, max_tokens, task_hint=task_hint)
         if bedrock_res:
-            bedrock_res.latency_ms = round((time.time() - start_t) * 1000, 1)
+            if bedrock_res.fallback or not bedrock_res.latency_ms:
+                bedrock_res.latency_ms = round((time.time() - start_t) * 1000, 1)
             return bedrock_res
 
     # 2. OpenAI / Compatible Provider
@@ -124,38 +135,204 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
     )
 
 
-def _call_bedrock(messages: list[dict], max_tokens: int) -> BrainResponse | None:
-    """Invoke Amazon Bedrock Converse API via boto3 (if installed) or SigV4 REST."""
+def is_bedrock_enabled() -> bool:
+    """True only when the operator explicitly opted into live Bedrock."""
+    return os.environ.get("AWS_BEDROCK_ENABLED", "0") == "1"
+
+
+def has_aws_credentials() -> bool:
+    """Best-effort credential presence check. Never raises; missing creds -> offline."""
+    if os.environ.get("AWS_ACCESS_KEY_ID") or os.environ.get("AWS_PROFILE"):
+        return True
+    try:
+        import boto3  # type: ignore
+        sess = boto3.Session()
+        creds = sess.get_credentials()
+        return creds is not None
+    except Exception:
+        return False
+
+
+# Cross-region inference profiles (multi-region resilient, no per-region pinning).
+# Aliases keep zero-config DX; full IDs pass through untouched.
+BEDROCK_INFERENCE_PROFILES = {
+    "claude-sonnet": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "claude-3-5-sonnet": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "claude": "us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+    "nova-pro": "us.amazon.nova-pro-v1:0",
+    "nova-lite": "us.amazon.nova-lite-v1:0",
+    "titan-express": "amazon.titan-text-express-v1",
+}
+# Back-compat alias used by older tests/docs.
+BEDROCK_MODELS = dict(BEDROCK_INFERENCE_PROFILES)
+
+# Fast structured tasks -> Nova Pro (low latency); deep reasoning -> Claude Sonnet.
+_NOVA_HINTS = (
+    "json", "classif", "intent", "label", "extract", "telemetry",
+    "fast", "quick", "structured", "slot", "solar", "status",
+)
+
+
+def resolve_bedrock_model_id(raw: str | None) -> str:
+    """Resolve alias/env value to a cross-region inference-profile ID."""
+    raw = (raw or "").strip()
+    if not raw or raw.lower() in ("auto", "router"):
+        return ""
+    key = raw.lower()
+    if key in BEDROCK_INFERENCE_PROFILES:
+        return BEDROCK_INFERENCE_PROFILES[key]
+    return raw  # assume caller passed a full model/inference-profile ID
+
+
+def select_bedrock_model(messages: list[dict] | str | None = None) -> str:
+    """Multi-model router: returns a cross-region inference-profile ID.
+
+    Explicit AWS_BEDROCK_MODEL alias/ID always wins; 'auto'/unset routes by
+    content: structured/fast hints -> Nova Pro, otherwise Claude 3.5 Sonnet.
+    """
+    explicit = resolve_bedrock_model_id(os.environ.get("AWS_BEDROCK_MODEL", "auto"))
+    if explicit:
+        # A bare "claude-sonnet"/"nova-pro" env already resolved above; a full
+        # ID passes through. Only fall through when env is auto/empty.
+        env_raw = (os.environ.get("AWS_BEDROCK_MODEL", "auto") or "auto").strip().lower()
+        if env_raw not in ("auto", "router", ""):
+            return explicit
+    if isinstance(messages, str):
+        hay = messages.lower()
+    elif isinstance(messages, list):
+        hay = " ".join(str(m.get("content", "")) for m in messages).lower()
+    else:
+        hay = ""
+    if any(h in hay for h in _NOVA_HINTS):
+        return BEDROCK_INFERENCE_PROFILES["nova-pro"]
+    return BEDROCK_INFERENCE_PROFILES["claude-sonnet"]
+
+
+def _bedrock_max_attempts() -> int:
+    try:
+        return max(1, min(10, int(os.environ.get("AWS_BEDROCK_MAX_ATTEMPTS", "5"))))
+    except ValueError:
+        return 5
+
+
+def _bedrock_client(region: str):
+    """Build a bedrock-runtime client with botocore adaptive retries."""
+    import boto3  # type: ignore
+    from botocore.config import Config  # type: ignore
+    boto_config = Config(retries={"max_attempts": _bedrock_max_attempts(), "mode": "adaptive"})
+    return boto3.client("bedrock-runtime", region_name=region, config=boto_config)
+
+
+def _build_converse_kwargs(messages: list[dict], max_tokens: int) -> dict:
+    """Split system=[] isolation + strict user/assistant alternation for Converse."""
+    system_prompts = []
+    bedrock_msgs: list[dict] = []
+    for m in messages:
+        role = m.get("role", "user")
+        content = m.get("content", "")
+        if not content or not str(content).strip():
+            continue
+        if role == "system":
+            # system=[] isolation: never merged into user turns
+            system_prompts.append({"text": str(content)})
+        else:
+            target_role = "user" if role == "user" else "assistant"
+            if bedrock_msgs and bedrock_msgs[-1]["role"] == target_role:
+                bedrock_msgs[-1]["content"].append({"text": str(content)})
+            else:
+                bedrock_msgs.append({"role": target_role, "content": [{"text": str(content)}]})
+    if not bedrock_msgs or bedrock_msgs[0]["role"] != "user":
+        bedrock_msgs.insert(0, {"role": "user", "content": [{"text": "Hello"}]})
+    kwargs: dict = {
+        "messages": bedrock_msgs,
+        "inferenceConfig": {"maxTokens": max_tokens, "temperature": 0.3},
+    }
+    if system_prompts:
+        kwargs["system"] = system_prompts
+    return kwargs
+
+
+# ---- Bedrock-native telemetry (in-memory ring, surfaced via /api/metrics) ----
+_BEDROCK_METRICS: list[dict] = []
+_BEDROCK_METRICS_MAX = 100
+
+
+def _record_bedrock_metric(entry: dict) -> None:
+    import time as _t
+    entry = dict(entry)
+    entry.setdefault("ts", _t.time())
+    _BEDROCK_METRICS.append(entry)
+    del _BEDROCK_METRICS[: -_BEDROCK_METRICS_MAX]
+
+
+def get_bedrock_metrics() -> dict:
+    """Bedrock-native telemetry shape: exposes metrics.latencyMs series."""
+    import time as _t
+    lat = [m.get("latencyMs", 0.0) for m in _BEDROCK_METRICS if isinstance(m.get("latencyMs"), (int, float))]
+    avg = round(sum(lat) / len(lat), 1) if lat else 0.0
+    return {
+        "bedrockEnabled": is_bedrock_enabled(),
+        "region": os.environ.get("AWS_REGION", "us-east-1"),
+        "defaultModel": resolve_bedrock_model_id(os.environ.get("AWS_BEDROCK_MODEL", "auto")) or select_bedrock_model(),
+        "count": len(_BEDROCK_METRICS),
+        "avgLatencyMs": avg,
+        "lastLatencyMs": lat[-1] if lat else 0.0,
+        "latencyMs": lat[-25:],
+        "recent": list(_BEDROCK_METRICS[-25:]),
+        "timestamp": _t.time(),
+    }
+
+
+def clear_bedrock_metrics() -> None:
+    _BEDROCK_METRICS.clear()
+
+
+def _call_bedrock(messages: list[dict], max_tokens: int, task_hint: str | None = None) -> BrainResponse | None:
+    """Invoke Amazon Bedrock Converse API via boto3 with strict schema adherence.
+
+    Returns None when Bedrock is not opted-in (caller falls through to local),
+    otherwise a BrainResponse (live or graceful simulated fallback -- never raises,
+    never incurs charges offline).
+    """
+    import time as _t
+    if not is_bedrock_enabled():
+        return None  # zero-config offline: no creds probed, no charges
     region = os.environ.get("AWS_REGION", "us-east-1")
-    model_id = os.environ.get("AWS_BEDROCK_MODEL", "anthropic.claude-3-5-sonnet-20241022-v2:0")
-    
+    env_raw = (os.environ.get("AWS_BEDROCK_MODEL", "auto") or "auto").strip()
+    if env_raw.lower() in ("auto", "router", ""):
+        model_id = select_bedrock_model(task_hint if task_hint is not None else messages)
+    else:
+        model_id = resolve_bedrock_model_id(env_raw)
+
     # Try boto3 if installed
     try:
-        import boto3
-        client = boto3.client("bedrock-runtime", region_name=region)
-        bedrock_msgs = []
-        for m in messages:
-            bedrock_msgs.append({
-                "role": "user" if m["role"] in ("user", "system") else "assistant",
-                "content": [{"text": m["content"]}]
-            })
-            
-        res = client.converse(
-            modelId=model_id,
-            messages=bedrock_msgs,
-            inferenceConfig={"maxTokens": max_tokens, "temperature": 0.3}
-        )
+        client = _bedrock_client(region)
+        # Fail fast offline: no credentials -> simulated fallback, no network call.
+        if not has_aws_credentials():
+            raise RuntimeError("No AWS credentials detected in environment/session")
+        kwargs = _build_converse_kwargs(messages, max_tokens)
+        kwargs["modelId"] = model_id
+        t0 = _t.time()
+        res = client.converse(**kwargs)
         output_text = res["output"]["message"]["content"][0]["text"]
-        token_count = res.get("usage", {}).get("totalTokens", 0)
+        usage = res.get("usage", {})
+        total_tokens = usage.get("totalTokens", 0)
+        bedrock_latency = float(res.get("metrics", {}).get("latencyMs", round((_t.time() - t0) * 1000, 1)))
+        _record_bedrock_metric({
+            "model": model_id, "provider": "aws-bedrock",
+            "latencyMs": bedrock_latency, "tokens": total_tokens,
+            "fallback": False,
+        })
         return BrainResponse(
             text=vault.redact(output_text),
             model=model_id,
             provider="aws-bedrock",
-            tokens_used=token_count
+            tokens_used=total_tokens,
+            latency_ms=bedrock_latency
         )
     except ImportError:
-        # Boto3 not installed - inform user while keeping demo functional
         offline_text = _generate_intelligent_offline_response(messages)
+        _record_bedrock_metric({"model": model_id, "provider": "aws-bedrock-simulated", "latencyMs": 0.0, "tokens": 0, "fallback": True})
         return BrainResponse(
             text=f"{offline_text}\n\n[AWS Bedrock: boto3 library not detected in runtime. To enable live AWS Bedrock, run `.venv/bin/pip install boto3`]",
             model=model_id,
@@ -163,9 +340,12 @@ def _call_bedrock(messages: list[dict], max_tokens: int) -> BrainResponse | None
             fallback=True
         )
     except Exception as e:
+        error_name = type(e).__name__
+        error_msg = str(e)
         offline_text = _generate_intelligent_offline_response(messages)
+        _record_bedrock_metric({"model": model_id, "provider": "aws-bedrock-simulated", "latencyMs": 0.0, "tokens": 0, "fallback": True, "error": error_name})
         return BrainResponse(
-            text=f"{offline_text}\n\n[AWS Bedrock notice: {type(e).__name__} ({str(e)[:80]}). Ensure AWS credentials are configured in environment]",
+            text=f"{offline_text}\n\n[AWS Bedrock notice: {error_name} ({error_msg[:100]}). Ensure AWS credentials are configured in environment]",
             model=model_id,
             provider="aws-bedrock-simulated",
             fallback=True

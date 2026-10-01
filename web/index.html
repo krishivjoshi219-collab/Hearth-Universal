@@ -3,2461 +3,719 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="theme-color" content="#030712"/>
+  <meta name="theme-color" content="#050811"/>
   <meta name="description" content="Hearth Universal — The Open Glass-Box Household Operations Agent for Amazon Alexa+."/>
-  <title>Hearth Universal · Autonomous Glass-Box Household OS</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2300f0ff'/%3E%3Cstop offset='50%25' stop-color='%237000ff'/%3E%3Cstop offset='100%25' stop-color='%2300ff88'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='46' fill='%23050814' stroke='url(%23g)' stroke-width='4'/%3E%3Cpath d='M50 20 L74 42 L66 42 L66 74 L54 74 L54 56 L46 56 L46 74 L34 74 L34 42 L26 42 Z' fill='url(%23g)'/%3E%3C/svg%3E"/>
+  <title>Hearth Universal · Autonomous Glass-Box Household OS for Alexa+</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2306b6d4'/%3E%3Cstop offset='50%25' stop-color='%233b82f6'/%3E%3Cstop offset='100%25' stop-color='%2310b981'/%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='46' fill='%23090e1d' stroke='url(%23g)' stroke-width='4'/%3E%3Cpath d='M50 20 L74 42 L66 42 L66 74 L54 74 L54 56 L46 56 L46 74 L34 74 L34 42 L26 42 Z' fill='url(%23g)'/%3E%3C/svg%3E"/>
   <link rel="manifest" href="manifest.json"/>
-  <style>
-    /* =========================================================================
-       HEARTH UNIVERSAL — BACHYNSKYI SHOWCASE AESTHETIC
-       Kinetic 3D Design · Living Ambient Lighting · Holographic Glassmorphism
-       ========================================================================= */
-    :root {
-      --bg: #030712;
-      --bg-deep: #02040a;
-      --bg-surface: rgba(10, 15, 30, 0.7);
-      --bg-card: rgba(15, 23, 42, 0.65);
-      --bg-card-hover: rgba(22, 34, 64, 0.8);
-      --bg-input: rgba(8, 14, 28, 0.85);
-
-      --border-faint: rgba(255, 255, 255, 0.06);
-      --border-subtle: rgba(255, 255, 255, 0.12);
-      --border-highlight: rgba(0, 240, 255, 0.35);
-      --border-glow: rgba(168, 85, 247, 0.4);
-
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --text-dim: #64748b;
-      --text-bright: #ffffff;
-
-      --cyan: #00f0ff;
-      --cyan-glow: rgba(0, 240, 255, 0.35);
-      --purple: #a855f7;
-      --purple-glow: rgba(168, 85, 247, 0.35);
-      --emerald: #00ff88;
-      --emerald-glow: rgba(0, 255, 136, 0.35);
-      --amber: #fbbf24;
-      --amber-glow: rgba(251, 191, 36, 0.35);
-      --rose: #ff3366;
-      --rose-glow: rgba(255, 51, 102, 0.35);
-
-      --radius-sm: 8px;
-      --radius-md: 14px;
-      --radius-lg: 20px;
-      --radius-xl: 28px;
-      --radius-full: 9999px;
-
-      --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Inter", sans-serif;
-      --font-mono: "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
-
-      --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.4);
-      --shadow-glass: 0 16px 40px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      --shadow-glow-cyan: 0 0 35px -5px var(--cyan-glow);
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      background-color: var(--bg-deep);
-      color: var(--text);
-      font-family: var(--font);
-      font-size: 14px;
-      line-height: 1.55;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      position: relative;
-    }
-
-    /* Ambient Cursor Spotlight Canvas */
-    #ambient-spotlight {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      background: radial-gradient(
-        750px circle at var(--mouse-x, 50%) var(--mouse-y, 30%),
-        rgba(0, 240, 255, 0.08) 0%,
-        rgba(168, 85, 247, 0.05) 30%,
-        transparent 70%
-      );
-      transition: background 0.05s ease;
-    }
-
-    #particles-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.6;
-    }
-
-    /* Scrollbars */
-    ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
-    }
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: var(--radius-full);
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--cyan);
-    }
-
-    /* Main Container */
-    .app-viewport {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 16px 24px 32px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      flex: 1;
-    }
-
-    /* =========================================================================
-       1. EDITORIAL SHOWCASE HEADER
-       ========================================================================= */
-    .showcase-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 16px 24px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      box-shadow: var(--shadow-glass);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .showcase-header::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 15%;
-      width: 70%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
-      opacity: 0.7;
-    }
-
-    .brand-identity {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .brand-mark {
-      position: relative;
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(168, 85, 247, 0.3));
-      border: 1px solid rgba(0, 240, 255, 0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 0 24px rgba(0, 240, 255, 0.35);
-      flex-shrink: 0;
-    }
-
-    .brand-mark svg {
-      width: 26px;
-      height: 26px;
-      fill: none;
-      stroke: var(--cyan);
-      stroke-width: 2.2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      filter: drop-shadow(0 0 6px var(--cyan));
-    }
-
-    .brand-text h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--text-bright);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-transform: uppercase;
-    }
-
-    .brand-tag {
-      font-size: 10.5px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      padding: 3px 8px;
-      border-radius: 6px;
-      background: rgba(0, 240, 255, 0.15);
-      border: 1px solid rgba(0, 240, 255, 0.4);
-      color: var(--cyan);
-      letter-spacing: 0.5px;
-      text-shadow: 0 0 8px var(--cyan);
-    }
-
-    .brand-text p {
-      font-size: 12px;
-      color: var(--text-muted);
-      letter-spacing: 0.2px;
-    }
-
-    .header-centerpiece {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .clock-pill {
-      font-family: var(--font-mono);
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-bright);
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--border-subtle);
-      padding: 6px 14px;
-      border-radius: var(--radius-full);
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
-    }
-
-    .header-status-cluster {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .hud-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 14px;
-      border-radius: var(--radius-full);
-      font-size: 11.5px;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    .hud-badge.active-pulse {
-      border-color: rgba(0, 255, 136, 0.4);
-      color: var(--emerald);
-    }
-
-    .beacon-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--emerald);
-      box-shadow: 0 0 10px var(--emerald);
-      animation: pulse-beacon 2s infinite ease-in-out;
-    }
-
-    @keyframes pulse-beacon {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.85); }
-    }
-
-    .hud-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px;
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .hud-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-bright);
-      border-color: var(--border-highlight);
-      transform: translateY(-1px);
-    }
-
-    .hud-btn.danger:hover {
-      background: rgba(255, 51, 102, 0.18);
-      color: var(--rose);
-      border-color: rgba(255, 51, 102, 0.5);
-    }
-
-    /* =========================================================================
-       2. SHOWCASE STATS STRIP (BACHYNSKYI SIGNATURE METRICS)
-       ========================================================================= */
-    .showcase-stats-strip {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 14px;
-    }
-
-    @media (max-width: 960px) {
-      .showcase-stats-strip {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .stat-hero-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 14px 18px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--shadow-glass);
-      position: relative;
-      overflow: hidden;
-      transition: transform 0.2s ease, border-color 0.2s ease;
-    }
-
-    .stat-hero-card:hover {
-      border-color: var(--border-highlight);
-      transform: translateY(-2px);
-    }
-
-    .stat-hero-card::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent, var(--cyan)), transparent);
-      opacity: 0.6;
-    }
-
-    .stat-micro-label {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-dim);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 6px;
-    }
-
-    .stat-main-figure {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: var(--text-bright);
-      line-height: 1.1;
-      display: flex;
-      align-items: baseline;
-      gap: 6px;
-    }
-
-    .stat-sub-caption {
-      font-size: 11.5px;
-      color: var(--text-muted);
-      margin-top: 4px;
-    }
-
-    /* =========================================================================
-       3. AMBIENT SCENES & PERIMETER CONTROL
-       ========================================================================= */
-    .ambient-control-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 10px 20px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: var(--shadow-glass);
-      overflow-x: auto;
-    }
-
-    .scene-pill-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: nowrap;
-    }
-
-    .scene-group-label {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-right: 6px;
-      letter-spacing: 0.8px;
-      white-space: nowrap;
-    }
-
-    .scene-pill-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 14px;
-      border-radius: var(--radius-full);
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .scene-pill-btn:hover {
-      color: var(--text-bright);
-      background: rgba(0, 240, 255, 0.1);
-      border-color: var(--cyan);
-      box-shadow: 0 0 16px rgba(0, 240, 255, 0.25);
-      transform: translateY(-1px);
-    }
-
-    .scene-pill-btn.active {
-      color: var(--text-bright);
-      background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.1));
-      border-color: var(--amber);
-      box-shadow: 0 0 20px var(--amber-glow);
-    }
-
-    .scene-pill-btn .dot-ind {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      transition: all 0.2s ease;
-    }
-
-    .scene-pill-btn.active .dot-ind {
-      background: var(--amber);
-      box-shadow: 0 0 8px var(--amber);
-    }
-
-    .perimeter-quick-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 7px 16px;
-      border-radius: var(--radius-full);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.4);
-      color: var(--text);
-      white-space: nowrap;
-      transition: all 0.2s ease;
-    }
-
-    .perimeter-quick-btn.locked {
-      border-color: rgba(0, 255, 136, 0.4);
-      background: rgba(0, 255, 136, 0.12);
-      color: var(--emerald);
-      box-shadow: 0 0 16px rgba(0, 255, 136, 0.2);
-    }
-
-    .perimeter-quick-btn.unlocked {
-      border-color: rgba(255, 51, 102, 0.5);
-      background: rgba(255, 51, 102, 0.16);
-      color: var(--rose);
-      box-shadow: 0 0 20px var(--rose-glow);
-      animation: alert-flash 1.8s infinite;
-    }
-
-    @keyframes alert-flash {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.7; }
-    }
-
-    /* =========================================================================
-       4. MAIN SHOWCASE SPLIT (2 COLUMNS)
-       ========================================================================= */
-    .main-showcase-split {
-      display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(400px, 1fr);
-      gap: 16px;
-      align-items: start;
-      flex: 1;
-    }
-
-    @media (max-width: 1100px) {
-      .main-showcase-split {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    /* =========================================================================
-       LEFT COLUMN: THE ALEXA+ LIVING INTELLIGENCE SURFACE
-       ========================================================================= */
-    .intelligence-hub {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      padding: 20px;
-      min-height: 680px;
-      box-shadow: var(--shadow-glass);
-      position: relative;
-    }
-
-    /* Living 3D Neural Centerpiece (Spatial Core Hero Display) */
-    .neural-centerpiece-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 18px;
-      padding: 16px 20px;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      position: relative;
-      overflow: hidden;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 8px 30px rgba(0, 0, 0, 0.4);
-    }
-
-    .neural-centerpiece-bar::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 10%;
-      width: 80%;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), transparent);
-      opacity: 0.6;
-    }
-
-    .neural-orb-container {
-      display: flex;
-      align-items: center;
-      gap: 18px;
-      flex: 1;
-    }
-
-    /* Kinetic Interactive Astrolabe Canvas Wrapper */
-    .orb-canvas-wrapper {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .kinetic-orb-canvas {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      cursor: pointer;
-      position: relative;
-      z-index: 2;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .kinetic-orb-canvas:hover {
-      transform: scale(1.06);
-    }
-
-    .orb-core-glow {
-      position: absolute;
-      inset: -8px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(0, 240, 255, 0.22) 0%, rgba(168, 85, 247, 0.12) 50%, transparent 72%);
-      pointer-events: none;
-      z-index: 1;
-      filter: blur(14px);
-      animation: pulse-core 3s infinite ease-in-out;
-    }
-
-    @keyframes pulse-core {
-      0%, 100% { opacity: 0.8; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.1); }
-    }
-
-    .neural-meta-top {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 4px;
-      flex-wrap: wrap;
-    }
-
-    .neural-meta-info strong {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text-bright);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .neural-meta-info small {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-family: var(--font-mono);
-      display: block;
-    }
-
-    .brand-tag-cyan {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(0, 240, 255, 0.12);
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      color: var(--cyan);
-      letter-spacing: 0.5px;
-    }
-
-    .core-status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 10px;
-      border-radius: var(--radius-full);
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid rgba(0, 255, 136, 0.35);
-      color: var(--emerald);
-      font-size: 10.5px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .neural-telemetry-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-      flex-wrap: wrap;
-    }
-
-    .telemetry-chip {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      color: var(--text-dim);
-      background: rgba(255, 255, 255, 0.04);
-      padding: 2px 7px;
-      border-radius: 4px;
-      border: 1px solid var(--border-faint);
-    }
-
-    .voice-glow-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .voice-glow-btn:hover {
-      background: rgba(0, 240, 255, 0.15);
-      border-color: var(--cyan);
-      color: var(--cyan);
-      box-shadow: 0 0 16px var(--cyan-glow);
-      transform: translateY(-1px);
-    }
-
-    .voice-glow-btn.listening {
-      background: rgba(255, 51, 102, 0.2);
-      border-color: var(--rose);
-      color: var(--rose);
-      box-shadow: 0 0 24px var(--rose-glow);
-      animation: alert-flash 1s infinite;
-    }
-
-    /* Quick Scenario Action Chips */
-    .prompt-chip-rail {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 4px 0 6px;
-    }
-
-    .kinetic-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 14px;
-      border-radius: var(--radius-full);
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-muted);
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-subtle);
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .kinetic-chip:hover {
-      color: var(--text-bright);
-      background: rgba(0, 240, 255, 0.12);
-      border-color: var(--cyan);
-      box-shadow: 0 0 16px var(--cyan-glow);
-      transform: translateY(-2px);
-    }
-
-    /* Live Conversation Stream */
-    .conversation-viewport {
-      flex: 1;
-      overflow-y: auto;
-      min-height: 360px;
-      max-height: 520px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding: 8px 4px;
-    }
-
-    .message-stream-bubble {
-      display: flex;
-      flex-direction: column;
-      max-width: 90%;
-      animation: bubble-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes bubble-slide-in {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .message-stream-bubble.user {
-      align-self: flex-end;
-      align-items: flex-end;
-    }
-
-    .message-stream-bubble.alexa {
-      align-self: flex-start;
-      align-items: flex-start;
-    }
-
-    .bubble-author-tag {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      color: var(--text-dim);
-      margin-bottom: 5px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .bubble-glass-body {
-      padding: 14px 18px;
-      border-radius: var(--radius-lg);
-      font-size: 14px;
-      line-height: 1.6;
-      word-break: break-word;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-    }
-
-    .message-stream-bubble.user .bubble-glass-body {
-      background: linear-gradient(135deg, rgba(30, 58, 138, 0.7), rgba(15, 23, 42, 0.85));
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      color: #ffffff;
-      border-bottom-right-radius: 4px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .message-stream-bubble.alexa .bubble-glass-body {
-      background: rgba(10, 16, 32, 0.85);
-      border: 1px solid var(--border-subtle);
-      color: var(--text);
-      border-bottom-left-radius: 4px;
-      box-shadow: var(--shadow-glass);
-    }
-
-    .bubble-glass-body p {
-      margin: 6px 0;
-    }
-    .bubble-glass-body p:first-child { margin-top: 0; }
-    .bubble-glass-body p:last-child { margin-bottom: 0; }
-
-    .bubble-glass-body strong {
-      color: var(--text-bright);
-      font-weight: 700;
-    }
-
-    .bubble-glass-body ul {
-      margin: 8px 0 8px 20px;
-    }
-
-    .bubble-glass-body li {
-      margin: 4px 0;
-    }
-
-    /* Autonomous ReAct DAG Pipeline Component */
-    .autonomous-dag-fold {
-      margin-top: 12px;
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px dashed rgba(168, 85, 247, 0.4);
-      padding: 10px 14px;
-      font-size: 12px;
-    }
-
-    .autonomous-dag-fold summary {
-      cursor: pointer;
-      font-weight: 700;
-      color: var(--purple);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      user-select: none;
-    }
-
-    .autonomous-dag-fold summary:hover {
-      color: var(--cyan);
-    }
-
-    .dag-step-timeline {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-      padding-top: 8px;
-      border-top: 1px solid rgba(168, 85, 247, 0.2);
-    }
-
-    .dag-step-node {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .dag-node-badge {
-      font-size: 10px;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border-radius: var(--radius-full);
-      flex-shrink: 0;
-      margin-top: 1px;
-    }
-
-    .dag-node-badge.completed {
-      background: rgba(0, 255, 136, 0.15);
-      color: var(--emerald);
-      border: 1px solid rgba(0, 255, 136, 0.4);
-    }
-
-    .dag-node-badge.gated,
-    .dag-node-badge.awaiting_approval {
-      background: rgba(251, 191, 36, 0.15);
-      color: var(--amber);
-      border: 1px solid rgba(251, 191, 36, 0.4);
-    }
-
-    .dag-node-badge.blocked {
-      background: rgba(255, 51, 102, 0.15);
-      color: var(--rose);
-      border: 1px solid rgba(255, 51, 102, 0.4);
-    }
-
-    .dag-node-content code {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      color: var(--cyan);
-      font-weight: 700;
-    }
-
-    .dag-node-content p {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin: 3px 0 0;
-    }
-
-    /* Embedded Actions in Feed */
-    .infeed-action-bar {
-      display: flex;
-      gap: 8px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .infeed-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      background: rgba(0, 240, 255, 0.15);
-      border: 1px solid rgba(0, 240, 255, 0.4);
-      color: var(--cyan);
-      transition: all 0.2s ease;
-    }
-
-    .infeed-btn:hover {
-      background: rgba(0, 240, 255, 0.25);
-      box-shadow: 0 0 16px var(--cyan-glow);
-      transform: translateY(-1px);
-    }
-
-    .tts-sound-replay-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 8px;
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--text-dim);
-      background: transparent;
-      border: 1px solid var(--border-subtle);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .tts-sound-replay-btn:hover {
-      color: var(--cyan);
-      border-color: var(--cyan);
-      background: rgba(0, 240, 255, 0.05);
-    }
-
-    /* Modern Composer Bar */
-    .kinetic-composer {
-      display: flex;
-      gap: 10px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border-subtle);
-    }
-
-    .composer-field-wrap {
-      flex: 1;
-      position: relative;
-      display: flex;
-      align-items: center;
-    }
-
-    .composer-text-input {
-      width: 100%;
-      padding: 13px 48px 13px 18px;
-      border-radius: var(--radius-md);
-      background: var(--bg-input);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-bright);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .composer-text-input:focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 24px rgba(0, 240, 255, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.5);
-    }
-
-    .composer-mic-toggle {
-      position: absolute;
-      right: 12px;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: transparent;
-      border: none;
-      color: var(--text-dim);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      transition: all 0.2s ease;
-    }
-
-    .composer-mic-toggle:hover {
-      color: var(--cyan);
-      transform: scale(1.1);
-    }
-
-    .composer-mic-toggle.active {
-      color: var(--rose);
-      animation: alert-flash 1s infinite;
-    }
-
-    .composer-submit-btn {
-      padding: 0 24px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #00c6ff, #0072ff);
-      border: none;
-      color: #ffffff;
-      font-weight: 700;
-      font-size: 13.5px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(0, 114, 255, 0.4);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .composer-submit-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 6px 28px rgba(0, 198, 255, 0.6);
-    }
-
-    .composer-submit-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    /* =========================================================================
-       RIGHT COLUMN: GLASS-BOX OPERATIONS COMMAND TABS
-       ========================================================================= */
-    .operations-viewport {
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-surface);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-lg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      padding: 20px;
-      box-shadow: var(--shadow-glass);
-    }
-
-    /* Futuristic Pill Tab Bar */
-    .operations-tab-bar {
-      display: flex;
-      gap: 6px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid var(--border-subtle);
-      overflow-x: auto;
-    }
-
-    .op-tab-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 14px;
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
-      background: transparent;
-      border: 1px solid transparent;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .op-tab-btn:hover {
-      color: var(--text-bright);
-      background: rgba(255, 255, 255, 0.05);
-    }
-
-    .op-tab-btn.active {
-      color: var(--text-bright);
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.15));
-      border-color: rgba(0, 240, 255, 0.4);
-      box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
-    }
-
-    .op-badge-counter {
-      font-size: 10.5px;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      padding: 2px 7px;
-      border-radius: var(--radius-full);
-      background: var(--amber);
-      color: #000;
-      box-shadow: 0 0 10px var(--amber-glow);
-    }
-
-    .op-badge-counter.zero {
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--text-dim);
-      box-shadow: none;
-    }
-
-    /* Operations Views */
-    .tab-view-panel {
-      display: none;
-      padding-top: 16px;
-      animation: tab-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .tab-view-panel.active {
-      display: block;
-    }
-
-    @keyframes tab-enter {
-      from { opacity: 0; transform: translateY(6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .tab-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 2px;
-    }
-
-    .tab-header-row h2 {
-      font-size: 16px;
-      font-weight: 800;
-      letter-spacing: -0.3px;
-      color: var(--text-bright);
-      text-transform: uppercase;
-    }
-
-    .tab-header-row .subtitle-tag {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 6px;
-      background: rgba(0, 255, 136, 0.15);
-      color: var(--emerald);
-      border: 1px solid rgba(0, 255, 136, 0.3);
-    }
-
-    .tab-desc-text {
-      font-size: 12.5px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-    }
-
-    /* =========================================================================
-       TAB 1: APPROVALS TRAY
-       ========================================================================= */
-    .safety-contract-card {
-      background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(0, 240, 255, 0.08));
-      border: 1px solid rgba(168, 85, 247, 0.35);
-      border-radius: var(--radius-md);
-      padding: 12px 16px;
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-bottom: 16px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-    }
-
-    .safety-contract-card strong {
-      color: var(--text-bright);
-    }
-
-    .proposal-tilt-card {
-      background: rgba(10, 16, 32, 0.85);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      margin-bottom: 14px;
-      box-shadow: var(--shadow-glass);
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .proposal-tilt-card:hover {
-      border-color: var(--border-highlight);
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 24px rgba(0, 240, 255, 0.2);
-    }
-
-    .proposal-top-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 6px;
-    }
-
-    .proposal-card-name {
-      font-size: 14.5px;
-      font-weight: 700;
-      color: var(--text-bright);
-    }
-
-    .proposal-tag-cluster {
-      display: flex;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .badge-highlight {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 700;
-      padding: 3px 9px;
-      border-radius: var(--radius-full);
-      white-space: nowrap;
-    }
-
-    .badge-highlight.savings {
-      background: rgba(0, 255, 136, 0.15);
-      color: var(--emerald);
-      border: 1px solid rgba(0, 255, 136, 0.4);
-      text-shadow: 0 0 8px var(--emerald);
-    }
-
-    .badge-highlight.cost {
-      background: rgba(0, 240, 255, 0.15);
-      color: var(--cyan);
-      border: 1px solid rgba(0, 240, 255, 0.4);
-    }
-
-    .badge-highlight.risk {
-      background: rgba(255, 51, 102, 0.15);
-      color: var(--rose);
-      border: 1px solid rgba(255, 51, 102, 0.4);
-    }
-
-    .proposal-sub-meta {
-      font-size: 11px;
-      font-family: var(--font-mono);
-      color: var(--text-dim);
-      margin-bottom: 10px;
-    }
-
-    .proposal-reason-text {
-      font-size: 13px;
-      color: var(--text-muted);
-      margin-bottom: 12px;
-    }
-
-    .proposal-diff-highlight {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      padding: 10px 12px;
-      border-radius: var(--radius-sm);
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(0, 240, 255, 0.25);
-      color: var(--cyan);
-      margin-bottom: 14px;
-      white-space: pre-wrap;
-    }
-
-    .proposal-actions-split {
-      display: flex;
-      gap: 12px;
-    }
-
-    .kinetic-btn-approve {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      background: linear-gradient(135deg, #059669, #00ff88);
-      border: none;
-      color: #030712;
-      font-weight: 800;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 4px 20px rgba(0, 255, 136, 0.35);
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .kinetic-btn-approve:hover {
-      box-shadow: 0 6px 28px rgba(0, 255, 136, 0.6);
-      transform: translateY(-1px);
-    }
-
-    .kinetic-btn-reject {
-      flex: 1;
-      padding: 10px 16px;
-      border-radius: var(--radius-md);
-      background: rgba(255, 51, 102, 0.12);
-      border: 1px solid rgba(255, 51, 102, 0.4);
-      color: var(--rose);
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      transition: all 0.2s ease;
-    }
-
-    .kinetic-btn-reject:hover {
-      background: rgba(255, 51, 102, 0.22);
-      border-color: var(--rose);
-    }
-
-    .kinetic-empty-box {
-      padding: 40px 24px;
-      text-align: center;
-      border: 1px dashed var(--border-subtle);
-      border-radius: var(--radius-md);
-      color: var(--text-dim);
-      font-size: 13px;
-    }
-
-    /* =========================================================================
-       TAB 2: SMART HOME DIGITAL TWIN
-       ========================================================================= */
-    .room-architect-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-    }
-
-    .room-architect-card {
-      background: rgba(10, 16, 32, 0.85);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      padding: 16px;
-      box-shadow: var(--shadow-glass);
-    }
-
-    .room-architect-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text-bright);
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .device-row-control {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 8px 0;
-      border-top: 1px solid rgba(255, 255, 255, 0.04);
-      font-size: 13px;
-    }
-
-    .device-row-control:first-of-type {
-      border-top: none;
-    }
-
-    /* Kinetic Toggle Switch */
-    .kinetic-switch {
-      position: relative;
-      width: 44px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .kinetic-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .switch-track {
-      position: absolute;
-      cursor: pointer;
-      inset: 0;
-      background-color: #1e293b;
-      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      border-radius: 34px;
-      border: 1px solid var(--border-subtle);
-    }
-
-    .switch-track:before {
-      position: absolute;
-      content: "";
-      height: 18px;
-      width: 18px;
-      left: 2px;
-      bottom: 2px;
-      background-color: #cbd5e1;
-      transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-      border-radius: 50%;
-    }
-
-    .kinetic-switch input:checked + .switch-track {
-      background-color: rgba(0, 240, 255, 0.3);
-      border-color: var(--cyan);
-    }
-
-    .kinetic-switch input:checked + .switch-track:before {
-      transform: translateX(20px);
-      background-color: #ffffff;
-      box-shadow: 0 0 10px var(--cyan);
-    }
-
-    /* Precision Stepper */
-    .precision-stepper {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .stepper-arrow-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-bright);
-      cursor: pointer;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-    }
-
-    .stepper-arrow-btn:hover {
-      background: rgba(0, 240, 255, 0.15);
-      border-color: var(--cyan);
-      color: var(--cyan);
-    }
-
-    .stepper-readout {
-      font-family: var(--font-mono);
-      font-size: 13px;
-      font-weight: 700;
-      color: var(--text-bright);
-      min-width: 52px;
-      text-align: center;
-    }
-
-    /* Master Deadbolt Lock Card */
-    .master-deadbolt-btn {
-      width: 100%;
-      padding: 12px;
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      border: 1px solid var(--border-subtle);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 8px;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .master-deadbolt-btn.locked {
-      background: rgba(0, 255, 136, 0.12);
-      border-color: rgba(0, 255, 136, 0.45);
-      color: var(--emerald);
-      box-shadow: 0 0 16px rgba(0, 255, 136, 0.2);
-    }
-
-    .master-deadbolt-btn.unlocked {
-      background: rgba(255, 51, 102, 0.16);
-      border-color: rgba(255, 51, 102, 0.5);
-      color: var(--rose);
-      box-shadow: 0 0 24px var(--rose-glow);
-    }
-
-    /* =========================================================================
-       TAB 3: WEALTH & CONSUMABLES
-       ========================================================================= */
-    .wealth-hero-banner {
-      background: linear-gradient(135deg, rgba(0, 255, 136, 0.18), rgba(0, 240, 255, 0.08));
-      border: 1px solid rgba(0, 255, 136, 0.4);
-      border-radius: var(--radius-md);
-      padding: 18px 20px;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 0 30px rgba(0, 255, 136, 0.15);
-    }
-
-    .wealth-big-figure {
-      font-size: 34px;
-      font-weight: 900;
-      color: var(--emerald);
-      letter-spacing: -0.5px;
-      line-height: 1;
-      text-shadow: 0 0 16px rgba(0, 255, 136, 0.4);
-    }
-
-    .wealth-sub-note {
-      font-size: 12px;
-      color: var(--text-muted);
-      margin-top: 5px;
-    }
-
-    /* Pantry meter */
-    .pantry-level-track {
-      height: 7px;
-      border-radius: 99px;
-      background: rgba(255, 255, 255, 0.06);
-      margin: 6px 0 3px;
-      overflow: hidden;
-    }
-
-    .pantry-level-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.3s ease;
-    }
-
-    .pantry-level-fill.good { background: linear-gradient(90deg, #059669, #00ff88); }
-    .pantry-level-fill.low { background: linear-gradient(90deg, #d97706, #fbbf24); }
-    .pantry-level-fill.critical { background: linear-gradient(90deg, #dc2626, #ff3366); }
-
-    /* =========================================================================
-       TAB 4: HOUSEHOLD MEMORY & GOALS
-       ========================================================================= */
-    .memory-filter-input {
-      width: 100%;
-      padding: 10px 14px;
-      border-radius: var(--radius-md);
-      background: var(--bg-input);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-bright);
-      font-size: 13px;
-      outline: none;
-      margin-bottom: 14px;
-    }
-
-    .memory-filter-input:focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 16px var(--cyan-glow);
-    }
-
-    /* =========================================================================
-       TAB 5: SENTINEL & LEDGER
-       ========================================================================= */
-    .sentinel-policy-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-
-    .policy-tier-card {
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid var(--border-subtle);
-      font-size: 12px;
-    }
-
-    .policy-tier-card strong {
-      display: block;
-      margin-bottom: 4px;
-      font-size: 12.5px;
-      font-weight: 700;
-      text-transform: uppercase;
-    }
-
-    .policy-tier-card.tier-allow strong { color: var(--emerald); }
-    .policy-tier-card.tier-ask strong { color: var(--amber); }
-    .policy-tier-card.tier-deny strong { color: var(--rose); }
-
-    .merkle-audit-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    .merkle-audit-table th {
-      text-align: left;
-      padding: 8px 10px;
-      color: var(--text-dim);
-      font-weight: 700;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .merkle-audit-table td {
-      padding: 9px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      color: var(--text-muted);
-    }
-
-    .merkle-audit-table code {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      color: var(--cyan);
-    }
-
-    /* Toast shelf */
-    #hud-toast-shelf {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 99999;
-      pointer-events: none;
-    }
-
-    .hud-toast-item {
-      background: rgba(10, 16, 32, 0.95);
-      border: 1px solid var(--border-subtle);
-      border-left: 3px solid var(--cyan);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7);
-      border-radius: var(--radius-md);
-      padding: 12px 20px;
-      font-size: 13.5px;
-      color: var(--text-bright);
-      pointer-events: auto;
-      animation: toast-enter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .hud-toast-item.success { border-left-color: var(--emerald); }
-    .hud-toast-item.error { border-left-color: var(--rose); }
-    .hud-toast-item.warning { border-left-color: var(--amber); }
-
-    @keyframes toast-enter {
-      from { opacity: 0; transform: translateX(24px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    /* =========================================================================
-       2B. AUTONOMOUS HOUSEHOLD HEARTBEAT STREAM
-       ========================================================================= */
-    .heartbeat-ticker-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      padding: 10px 18px;
-      background: rgba(8, 12, 24, 0.65);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-      backdrop-filter: blur(20px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .heartbeat-ticker-bar::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 3px;
-      height: 100%;
-      background: var(--cyan);
-      box-shadow: 0 0 10px var(--cyan);
-    }
-
-    .heartbeat-badge {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 11px;
-      font-family: var(--font-mono);
-      font-weight: 800;
-      letter-spacing: 0.8px;
-      color: var(--cyan);
-      white-space: nowrap;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border-radius: var(--radius-full);
-      background: rgba(0, 240, 255, 0.08);
-      border: 1px solid rgba(0, 240, 255, 0.25);
-    }
-
-    .heartbeat-pulse-icon {
-      animation: pulse-beacon 1.5s infinite;
-    }
-
-    .heartbeat-event-stream {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      overflow-x: auto;
-      flex: 1;
-      padding: 2px 0;
-      scrollbar-width: none;
-    }
-    .heartbeat-event-stream::-webkit-scrollbar { display: none; }
-
-    .heartbeat-event-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 12px;
-      border-radius: var(--radius-full);
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-faint);
-      font-size: 12px;
-      white-space: nowrap;
-      color: var(--text-muted);
-      transition: all 0.2s ease;
-    }
-
-    .heartbeat-event-pill:hover {
-      background: rgba(255, 255, 255, 0.07);
-      border-color: var(--border-subtle);
-      color: var(--text-bright);
-    }
-
-    .heartbeat-event-pill strong {
-      color: var(--text-bright);
-      font-weight: 600;
-    }
-
-    .heartbeat-event-pill .event-time {
-      font-family: var(--font-mono);
-      font-size: 10.5px;
-      color: var(--text-dim);
-    }
-
-    .proactive-trigger-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 6px 14px;
-      border-radius: var(--radius-full);
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(168, 85, 247, 0.15));
-      border: 1px solid rgba(0, 240, 255, 0.35);
-      color: var(--cyan);
-      font-size: 11.5px;
-      font-weight: 700;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .proactive-trigger-btn:hover {
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(168, 85, 247, 0.25));
-      border-color: var(--cyan);
-      box-shadow: 0 0 20px var(--cyan-glow);
-      transform: translateY(-1px);
-    }
-
-    /* Mood Lighting Presets */
-    .room-mood-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 10px 0 6px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.25);
-      flex-wrap: wrap;
-    }
-
-    .room-mood-label {
-      font-size: 10.5px;
-      font-family: var(--font-mono);
-      color: var(--text-dim);
-      text-transform: uppercase;
-      margin-right: 4px;
-    }
-
-    .mood-preset-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 8px;
-      border-radius: 5px;
-      font-size: 10.5px;
-      font-weight: 600;
-      cursor: pointer;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border-faint);
-      color: var(--text-muted);
-      transition: all 0.15s ease;
-    }
-
-    .mood-preset-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--border-subtle);
-      color: var(--text-bright);
-      transform: translateY(-1px);
-    }
-
-    .mood-color-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    /* Live Animated Audio Equalizer Bars */
-    .audio-eq-bars {
-      display: inline-flex;
-      align-items: flex-end;
-      gap: 2.5px;
-      height: 12px;
-      margin-left: 6px;
-      vertical-align: middle;
-    }
-
-    .audio-eq-bar {
-      width: 2.5px;
-      background: var(--cyan);
-      border-radius: 1px;
-      animation: eq-bounce 0.8s infinite ease-in-out alternate;
-    }
-
-    .audio-eq-bar:nth-child(1) { height: 35%; animation-delay: 0.1s; }
-    .audio-eq-bar:nth-child(2) { height: 80%; animation-delay: 0.3s; }
-    .audio-eq-bar:nth-child(3) { height: 100%; animation-delay: 0.2s; }
-    .audio-eq-bar:nth-child(4) { height: 60%; animation-delay: 0.4s; }
-
-    @keyframes eq-bounce {
-      0% { height: 25%; }
-      100% { height: 100%; }
-    }
-
-    /* =========================================================================
-       GLASS-BOX CRYPTOGRAPHIC INSPECTION MODAL
-       ========================================================================= */
-    .inspection-modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(2, 4, 10, 0.8);
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      z-index: 10000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .inspection-modal-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    .inspection-modal-card {
-      width: 100%;
-      max-width: 680px;
-      background: rgba(13, 20, 38, 0.95);
-      border: 1px solid var(--border-glow);
-      border-radius: var(--radius-xl);
-      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-      display: flex;
-      flex-direction: column;
-      max-height: 85vh;
-      overflow: hidden;
-      transform: scale(0.96) translateY(10px);
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .inspection-modal-overlay.active .inspection-modal-card {
-      transform: scale(1) translateY(0);
-    }
-
-    .modal-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 20px 24px;
-      border-bottom: 1px solid var(--border-subtle);
-    }
-
-    .modal-title-wrap {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .modal-title-wrap h3 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text-bright);
-    }
-
-    .modal-close-btn {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-muted);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
-      transition: all 0.15s ease;
-    }
-
-    .modal-close-btn:hover {
-      background: rgba(255, 51, 102, 0.2);
-      border-color: var(--rose);
-      color: var(--rose);
-    }
-
-    .modal-body-scroll {
-      padding: 20px 24px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .modal-section h4 {
-      font-size: 11.5px;
-      font-family: var(--font-mono);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: var(--text-dim);
-      margin-bottom: 8px;
-    }
-
-    .sentinel-verdict-badge {
-      display: inline-block;
-      padding: 6px 12px;
-      border-radius: var(--radius-sm);
-      background: rgba(251, 191, 36, 0.12);
-      border: 1px solid var(--amber);
-      color: var(--amber);
-      font-family: var(--font-mono);
-      font-size: 11px;
-      font-weight: 700;
-    }
-
-    .merkle-hash-box {
-      font-family: var(--font-mono);
-      font-size: 12px;
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(0, 240, 255, 0.3);
-      color: var(--cyan);
-      word-break: break-all;
-    }
-
-    .impact-metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-
-    .metric-box {
-      padding: 10px 12px;
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border-faint);
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .metric-box span {
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .metric-box strong {
-      font-size: 13.5px;
-      font-weight: 700;
-    }
-
-    .modal-diff-pre {
-      font-family: var(--font-mono);
-      font-size: 11.5px;
-      padding: 12px;
-      border-radius: var(--radius-md);
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid var(--border-subtle);
-      color: #e2e8f0;
-      white-space: pre-wrap;
-      max-height: 140px;
-      overflow-y: auto;
-    }
-
-    .modal-footer-row {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 12px;
-      padding: 16px 24px;
-      border-top: 1px solid var(--border-subtle);
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    .showcase-footer {
-      text-align: center;
-      padding: 16px;
-      color: var(--text-dim);
-      font-size: 12px;
-      font-family: var(--font-mono);
-    }
-
-    .showcase-footer a {
-      color: var(--text-muted);
-      text-decoration: none;
-    }
-  </style>
+  
+  <!-- Modular Luxury Design System Stylesheets -->
+  <link rel="stylesheet" href="css/main.css"/>
+  <link rel="stylesheet" href="css/canvas.css"/>
+  <link rel="stylesheet" href="css/canvas-fluid.css"/>
+  <link rel="stylesheet" href="css/cards.css"/>
+  <link rel="stylesheet" href="css/tray.css"/>
+  <link rel="stylesheet" href="css/modal.css"/>
+  <link rel="stylesheet" href="css/floorplan.css"/>
 </head>
-<body>
-  <!-- Ambient Spotlight & Particle Canvas -->
-  <div id="ambient-spotlight"></div>
-  <canvas id="particles-canvas"></canvas>
+<body data-density="detail" data-motion="full">
+  <!-- Skip link: keyboard / D-pad / screen-reader fast path to composer -->
+  <a class="skip-link" href="#composerInput">Skip to Alexa composer</a>
+  <!-- Offline / API error banner (hidden by default, shown by canvas-ambient.js) -->
+  <div id="netErrorBanner" class="net-banner" role="alert" hidden>
+    <span aria-hidden="true">⚠️</span>
+    <span id="netErrorText">Connection lost — showing last known household state.</span>
+    <button id="netRetryBtn" class="net-retry" type="button">Retry</button>
+  </div>
+  <!-- Ambient Cursor Spotlight -->
+  <div id="ambient-glow"></div>
 
-  <div class="app-viewport">
+  <div class="app-container">
 
-    <!-- 1. EDITORIAL SHOWCASE HEADER -->
-    <header class="showcase-header">
-      <div class="brand-identity">
-        <div class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
+    <!-- 1. TOP NAVIGATION & PERSONA BAR -->
+    <header class="nav-header">
+      <div class="brand-section">
+        <div class="brand-logo-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
           </svg>
         </div>
-        <div class="brand-text">
-          <h1>Hearth Universal <span class="brand-tag">[ ALEXA+ OS ]</span></h1>
-          <p>The Open Glass-Box Household Operations Agent · MCP Spec 2025-11-25</p>
+        <div class="brand-info">
+          <h1>Hearth Universal <span class="badge-mcp">Alexa+ OS</span></h1>
+          <p>The Open Glass-Box Household Operations Agent · MCP 2025-11-25</p>
         </div>
       </div>
 
-      <div class="header-centerpiece">
-        <div class="clock-pill" id="liveClockDisplay">19:30:00</div>
-      </div>
-
-      <div class="header-status-cluster">
-        <span class="hud-badge active-pulse" id="protocolStatusPill">
-          <span class="beacon-dot"></span> <span id="protocolText">MCP Online · 16 Tools</span>
-        </span>
-        <span class="hud-badge" id="auditMerklePill">
-          🔒 SHA-256 Valid
-        </span>
-        <button class="hud-btn" id="soundToggleBtn" title="Toggle audio feedback effects">
-          🔊 Sound On
+      <!-- Dual View Mode Switcher -->
+      <nav class="view-mode-switcher" aria-label="Interface Mode" role="tablist" aria-orientation="horizontal">
+        <button class="view-mode-btn active" id="btnModeCanvas" role="tab" aria-selected="true" aria-controls="canvasViewSection" title="Echo Show Smart Canvas (press 1)">
+          <span aria-hidden="true">🌟</span> <span>Echo Show Smart Canvas</span>
         </button>
-        <button class="hud-btn danger" id="resetDemoBtn" title="Reset state cleanly">
-          Reset Demo
+        <button class="view-mode-btn" id="btnModeOps" role="tab" aria-selected="false" aria-controls="operationsViewSection" title="Operations Console (press 2)">
+          <span aria-hidden="true">⚡</span> <span>Operations Console</span>
+        </button>
+      </nav>
+
+      <!-- Right Persona & Status Cluster -->
+      <div class="nav-controls">
+        <div class="persona-select-wrap" title="Household Persona Context">
+          <span>👤</span>
+          <select class="persona-select" id="personaSelect" aria-label="Select Household Profile">
+            <option value="admin">Krishiv (Admin)</option>
+            <option value="partner">Sarah (Partner)</option>
+            <option value="child">Leo (Child - Guardrails Active)</option>
+            <option value="guest">Guest Visitor</option>
+          </select>
+        </div>
+
+        <span class="pill-badge active-green" id="protocolStatusPill">
+          <span class="beacon-pulse"></span>
+          <span>MCP 2025-11-25 Online</span>
+        </span>
+
+        <button class="btn-icon" id="soundToggleBtn" title="Toggle Acoustic Audio Feedback">
+          🔊 Sound On
         </button>
       </div>
     </header>
 
-    <!-- 2. SHOWCASE STATS STRIP (BACHYNSKYI METRICS) -->
-    <section class="showcase-stats-strip" aria-label="Key Household Telemetry">
-      <div class="stat-hero-card" style="--accent: var(--emerald);">
-        <div class="stat-micro-label">
-          <span>Recoverable Spend</span> <span>[ 01 ]</span>
+    <!-- =====================================================================
+         VIEW 1: ECHO SHOW 15 / 21 AMBIENT SMART CANVAS MODE
+         ===================================================================== -->
+    <section class="canvas-viewport" id="canvasViewSection" role="tabpanel" aria-labelledby="btnModeCanvas">
+      
+      <!-- Ambient Greeting & Weather Bar -->
+      <div class="ambient-greeting-card" role="region" aria-label="Household ambient briefing">
+        <div class="greeting-main">
+          <h2>Good Evening, Krishiv &amp; Family</h2>
+          <p>
+            <span>Living Room · 21.5°C</span>
+            <span>•</span>
+            <span style="color:var(--emerald);">Solar Net Positive (+2.4 kW)</span>
+            <span>•</span>
+            <span style="color:var(--cyan);">Front Door Secured</span>
+          </p>
         </div>
-        <div class="stat-main-figure" style="color:var(--emerald);" id="heroSavingsFigure">$803.76</div>
-        <div class="stat-sub-caption">Annual recurring waste audit complete</div>
+        <div class="greeting-right">
+          <div class="weather-badge">
+            <span>⛅</span> <span>72°F Partly Cloudy</span>
+          </div>
+          <div class="time-hero" id="liveClockDisplay">19:30:00</div>
+        </div>
       </div>
 
-      <div class="stat-hero-card" style="--accent: var(--cyan);">
-        <div class="stat-micro-label">
-          <span>Safety Contract</span> <span>[ 02 ]</span>
+      <!-- GLASS-BOX TIME MACHINE: TEMPORAL PREDICTION SCRUBBER -->
+      <div class="timemachine-dock" data-glance-hide="true">
+        <div class="timemachine-dock-left">
+          <span class="tm-pulse-icon" aria-hidden="true">⏳</span>
+          <div class="tm-meta-text">
+            <strong>TEMPORAL PREDICTION TIME MACHINE</strong>
+            <small id="tmNarrativeTag">Live telemetry · Zero projection drift</small>
+          </div>
         </div>
-        <div class="stat-main-figure" style="color:var(--cyan);">100% GATED</div>
-        <div class="stat-sub-caption">Propose-Never-Execute (0 auto-runs)</div>
+        <div class="timemachine-presets-group" id="timeMachineChips">
+          <button class="tm-preset-btn active" data-preset="now">
+            <span class="dot-live"></span> Live (8:50 PM)
+          </button>
+          <button class="tm-preset-btn" data-preset="bedtime">
+            <span>🌙</span> Bedtime (11:00 PM)
+          </button>
+          <button class="tm-preset-btn" data-preset="night">
+            <span>🌌</span> Deep Night (3:00 AM)
+          </button>
+          <button class="tm-preset-btn" data-preset="morning">
+            <span>🌅</span> Morning Wake (7:30 AM)
+          </button>
+        </div>
+        <div class="tm-scrub-row" title="Drag to scrub Live → Bedtime → Deep Night → Morning. Debounced 180ms, 60fps-safe.">
+          <label for="tmScrub">SCRUB</label>
+          <input type="range" id="tmScrub" min="0" max="3" step="1" value="0"
+            aria-label="Time Machine scrubber: Live, Bedtime, Deep Night, Morning Wake"
+            aria-valuetext="Live (8:50 PM)"/>
+          <span id="tmScrubHint" aria-live="polite">Live · drag to project</span>
+        </div>
+      </div>
+      <div class="tm-projection-bar" id="tmProjectionBar" aria-live="polite">
+        <span class="tm-proj-chip" title="Projected generation vs draw">⚡ Live projection…</span>
+        <span class="tm-proj-chip" title="Projected battery reserve">🔋 —</span>
+        <span class="tm-proj-chip" title="Projected lighting mood">💡 2700K evening calm</span>
+        <span class="tm-proj-chip pantry" title="Pantry replenishment hint">🛒 Pantry nominal</span>
       </div>
 
-      <div class="stat-hero-card" style="--accent: var(--purple);">
-        <div class="stat-micro-label">
-          <span>Energy Flow</span> <span>[ 03 ]</span>
+      <!-- 6-Widget Ambient Grid -->
+      <div class="ambient-widgets-grid" id="ambientGrid" role="list" aria-label="Ambient household widgets">
+        
+        <!-- WIDGET 1: SOLAR & GRID ENERGY FLOW -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Solar and grid flow widget">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>☀️</span>
+              <h3>Solar & Grid Flow</h3>
+            </div>
+            <span class="widget-badge green">+2.4 kW Net</span>
+          </div>
+          <div class="energy-main-stat">
+            <div class="energy-stat-number">+2.4 kW</div>
+            <div class="energy-stat-label">Solar Generation Peak</div>
+          </div>
+          <div class="energy-flow-svg-wrap">
+            <div class="flow-node-cluster">
+              <div class="flow-node">
+                <div class="flow-node-icon" style="color:var(--amber);">☀️</div>
+                <span class="flow-node-val">3.5 kW</span>
+              </div>
+              <div class="flow-pulse-line"></div>
+              <div class="flow-node">
+                <div class="flow-node-icon" style="color:var(--cyan);">🏠</div>
+                <span class="flow-node-val">1.1 kW</span>
+              </div>
+              <div class="flow-pulse-line"></div>
+              <div class="flow-node">
+                <div class="flow-node-icon" style="color:var(--emerald);">🔋</div>
+                <span class="flow-node-val">98%</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="stat-main-figure" style="color:var(--purple);" id="heroEnergyFigure">+2.4 kW</div>
-        <div class="stat-sub-caption">Solar generation offsetting draw</div>
+
+        <!-- WIDGET 2: PANTRY DEPLETION RADAR -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Pantry depletion radar">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>🛒</span>
+              <h3>Pantry Depletion</h3>
+            </div>
+            <span class="widget-badge amber">2 Need Reorder</span>
+          </div>
+          <div class="depletion-radar-items is-loading" id="depletionRadarFeed" aria-live="polite" aria-busy="true">
+            <div class="skeleton-row" aria-hidden="true"><span class="skeleton-bar"></span><span class="skeleton-tag"></span></div>
+            <div class="skeleton-row" aria-hidden="true"><span class="skeleton-bar"></span><span class="skeleton-tag"></span></div>
+            <div class="skeleton-row" aria-hidden="true"><span class="skeleton-bar"></span><span class="skeleton-tag"></span></div>
+            <div class="depletion-row">
+              <div class="depletion-item-meta">
+                <span class="depletion-bullet low"></span>
+                <span>Arabica Coffee</span>
+              </div>
+              <span class="depletion-days-tag">2.5d left</span>
+            </div>
+            <div class="depletion-row">
+              <div class="depletion-item-meta">
+                <span class="depletion-bullet critical"></span>
+                <span>Eco Laundry Pods</span>
+              </div>
+              <span class="depletion-days-tag">3.0d left</span>
+            </div>
+            <div class="depletion-row">
+              <div class="depletion-item-meta">
+                <span class="depletion-bullet good"></span>
+                <span>HEPA Filters</span>
+              </div>
+              <span class="depletion-days-tag">6.0d left</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- WIDGET 3: RING VIDEO DOORBELL LIVE STREAM -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Ring porch camera">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>🔔</span>
+              <h3>Ring Porch Cam</h3>
+            </div>
+            <span class="widget-badge green" id="perimeterLockBadge">SECURED (LOCKED)</span>
+          </div>
+          <div class="ring-cam-preview-box">
+            <canvas id="ringCamCanvas" tabindex="0" role="img" aria-label="Ring porch camera preview. Press Enter to simulate doorbell."></canvas>
+            <div class="cam-hud-overlay">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <span class="cam-live-indicator">● LIVE 1080P</span>
+                <button class="cam-action-trigger" id="ringSimulateBtn" title="Simulate a Ring Doorbell ring event">
+                  🔔 Ring Doorbell
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- WIDGET 4: SMART SCENES & COMFORT -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Smart scenes">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>🛋️</span>
+              <h3>Smart Scenes</h3>
+            </div>
+            <span class="widget-badge cyan">1-Tap Dial</span>
+          </div>
+          <div class="scenes-grid-quick" id="quickScenesList" role="group" aria-label="Smart scene presets">
+            <button class="scene-btn-quick active" data-scene="evening-calm">
+              <span>🌙</span> <span>Evening Calm</span>
+            </button>
+            <button class="scene-btn-quick" data-scene="movie-night">
+              <span>🎬</span> <span>Movie Night</span>
+            </button>
+            <button class="scene-btn-quick" data-scene="away">
+              <span>🛡️</span> <span>Away Guard</span>
+            </button>
+            <button class="scene-btn-quick" data-scene="energy-saver">
+              <span>🌱</span> <span>Eco Saver</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- WIDGET 5: FAMILY ARBITER & CONFLICT NEGOTIATION -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Family arbiter">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>⚖️</span>
+              <h3>Family Arbiter</h3>
+            </div>
+            <span class="widget-badge amber" id="arbiterBadge">Pareto Active</span>
+          </div>
+          <div class="arbiter-widget-body">
+            <div style="display:flex;gap:6px;margin-bottom:8px;" role="group" aria-label="Conflict type">
+              <button class="scene-btn-quick active" id="arbiterTabClimate" style="padding:4px 8px;font-size:10px;">🌡️ Climate</button>
+              <button class="scene-btn-quick" id="arbiterTabTariff" style="padding:4px 8px;font-size:10px;">⚡ Tariff</button>
+              <button class="scene-btn-quick" id="arbiterTabBedtime" style="padding:4px 8px;font-size:10px;">🌙 Bedtime</button>
+            </div>
+            <div class="arbiter-conflict-head" id="arbiterTitle">Dual-Resident Climate Conflict</div>
+            <div class="arbiter-parties-row" id="arbiterPartiesRow">
+              <span class="party-chip">Alex (20.0°C)</span>
+              <span class="party-vs">⚡</span>
+              <span class="party-chip">Sarah (23.0°C)</span>
+            </div>
+            <div class="arbiter-impact-note" id="arbiterImpact">
+              Compromise: 21.5°C Eco Flow (-18.5% peak energy, saves $24.80/mo)
+            </div>
+            <button class="btn-micro-action" id="arbiterSolveBtn">
+              ⚖️ Propose Compromise
+            </button>
+          </div>
+        </div>
+
+        <!-- WIDGET 6: AMAZON PRIME DELIVERY TRACKER & S&S ENGINE -->
+        <div class="widget-card" role="listitem" tabindex="0" aria-label="Prime delivery tracker">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>📦</span>
+              <h3>Prime Delivery & S&S</h3>
+            </div>
+            <span class="widget-badge green" id="deliveryBadge">2 Stops Away</span>
+          </div>
+          <div class="delivery-widget-body">
+            <div class="delivery-courier-row">
+              <span class="van-tag">🚚 Prime Van #482</span>
+              <span class="eta-tag">ETA ~7 mins</span>
+            </div>
+            <div class="delivery-stepper-line">
+              <div class="step-dot done" title="Ordered">✓</div>
+              <div class="step-connector done"></div>
+              <div class="step-dot done" title="Shipped">✓</div>
+              <div class="step-connector done"></div>
+              <div class="step-dot active" title="Out for Delivery">🚚</div>
+              <div class="step-connector"></div>
+              <div class="step-dot pending" title="Delivered">🏡</div>
+            </div>
+            <div class="delivery-items-note" id="deliveryItemsNote">Coffee Beans (2 lb), Laundry Pods</div>
+            <div style="display:flex;gap:6px;margin-top:6px;">
+              <button class="btn-micro-action" id="optimizeBundleBtn" style="flex:1;">
+                ✨ Optimize S&S Bundle
+              </button>
+              <button class="btn-micro-action secondary" id="openScannerModalBtn" style="flex:1;">
+                📷 Scan Barcode
+              </button>
+            </div>
+            <div style="margin-top:6px;">
+              <button class="btn-micro-action secondary" id="rescheduleSlotBtn" style="width:100%;font-size:11px;padding:6px 8px;">
+                🚚 Slot: <span id="currentSlotLabel">Tuesday Prime Household Day</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      <div class="stat-hero-card" style="--accent: var(--amber);">
-        <div class="stat-micro-label">
-          <span>Perimeter Status</span> <span>[ 04 ]</span>
+      <!-- INTERACTIVE 2.5D ARCHITECTURAL SPATIAL FLOORPLAN -->
+      <div class="floorplan-container-card" data-glance-hide="true">
+        <div class="floorplan-header-bar">
+          <div class="floorplan-title-block">
+            <span aria-hidden="true">📐</span>
+            <div>
+              <h3>Architectural Spatial Floorplan (2.5D Live Digital Twin)</h3>
+              <p>Dynamic ambient light radiance, micro-climate thermal zones, and family occupancy</p>
+            </div>
+            <button class="btn-icon glance-toggle" id="btnGlanceToggle" type="button" aria-pressed="false" title="Toggle glanceable countertop mode (G)">
+              🌙 Glance
+            </button>
+          </div>
+          <div class="floorplan-view-modes" id="floorplanViewModes">
+            <button class="fp-mode-btn active" data-mode="radiance" title="Photometric Light Radiance Pools">
+              <span>💡</span> Radiance
+            </button>
+            <button class="fp-mode-btn" data-mode="thermal" title="Micro-Climate Thermal Zones & Airflow">
+              <span>🌡️</span> Thermal
+            </button>
+            <button class="fp-mode-btn" data-mode="security" title="Perimeter Lock & Ring Radar Sensors">
+              <span>🛡️</span> Security
+            </button>
+          </div>
+          <div class="floorplan-actions-group">
+            <button class="fp-action-btn" id="fpAllLightsBtn" title="Toggle all household lighting">
+              <span>🔆</span> All Lights
+            </button>
+            <div class="floorplan-legend-row">
+              <span class="legend-pill" data-fp-mode="radiance" title="Dynamic Kelvin & RGB radiance pools — click to isolate Radiance view"><span class="dot-cct"></span> Radiance</span>
+              <span class="legend-pill" data-fp-mode="thermal" title="Micro-climate zones: <20°C cyan · 20–21.5°C emerald · >21.5°C amber + HVAC airflow — click for Thermal"><span class="dot-thermal"></span> Thermal</span>
+              <span class="legend-pill" data-fp-mode="security" title="Smart deadbolt perimeter security + Ring 140° radar — click for Security"><span class="dot-lock"></span> Perimeter</span>
+              <span class="legend-pill" title="Real-time family occupancy: Alex · Sarah · Leo radar dots"><span class="dot-user"></span> Occupant</span>
+              <span class="fp-fps-badge" id="floorplanFps" title="Render loop frame rate">● — fps</span>
+            </div>
+          </div>
         </div>
-        <div class="stat-main-figure" style="color:var(--amber);" id="heroPerimeterFigure">SECURED</div>
-        <div class="stat-sub-caption">Front deadbolt locked · Armed Home</div>
+        <div class="floorplan-stage-wrapper" id="floorplanStage">
+          <canvas id="floorplanCanvas" width="920" height="380"></canvas>
+          <div class="fp-tint-overlay" id="floorplanTint" aria-hidden="true"></div>
+          <div class="floorplan-tooltip" id="floorplanTooltip" role="status" aria-live="polite"></div>
+          <div class="floorplan-zone-hud" id="floorplanZoneHud">
+            Click any room to inspect micro-climate & controls
+          </div>
+        </div>
+        </div>
       </div>
-    </section>
 
-    <!-- 2B. AUTONOMOUS HOUSEHOLD HEARTBEAT STREAM -->
-    <section class="heartbeat-ticker-bar" aria-label="Autonomous Household Heartbeat">
-      <div class="heartbeat-badge">
-        <span class="heartbeat-pulse-icon">⚡</span>
-        <span>HEARTBEAT</span>
-      </div>
-      <div class="heartbeat-event-stream" id="heartbeatEventStream">
-        <div class="heartbeat-event-pill">
-          <span>☀️</span>
-          <div><strong>Solar Peak Inversion</strong> · Home offset draw (+1.8 kW)</div>
-          <span class="event-time">04:15 PM</span>
+      <!-- Autonomous Heartbeat Stream -->
+      <div class="heartbeat-strip" data-glance-hide="true" aria-label="Autonomous heartbeat">
+        <div class="heartbeat-badge-label">
+          <span>⚡</span> <span>AUTONOMOUS HEARTBEAT:</span>
         </div>
-        <div class="heartbeat-event-pill">
-          <span>🔒</span>
-          <div><strong>Auto-Lock Verified</strong> · Perimeter armed (Armed Home)</div>
-          <span class="event-time">05:30 PM</span>
+        <div class="heartbeat-event-list" id="heartbeatEventsStream">
+          <span class="heartbeat-pill-item">
+            <span>☀️</span> <strong>Solar Inversion</strong> · Home offset draw (+2.4 kW)
+          </span>
+          <span class="heartbeat-pill-item">
+            <span>🔒</span> <strong>Auto-Lock Verified</strong> · Perimeter armed
+          </span>
         </div>
-        <div class="heartbeat-event-pill">
-          <span>🌱</span>
-          <div><strong>Eco-Comfort Pulse</strong> · Climate setpoint dialed 21.5°C</div>
-          <span class="event-time">06:45 PM</span>
-        </div>
-      </div>
-      <button class="proactive-trigger-btn" id="triggerProactiveBtn" title="Simulate an autonomous proactive household event">
-        <span>✨ Trigger Proactive Pulse</span>
-      </button>
-    </section>
-
-    <!-- 3. AMBIENT SCENES & PERIMETER CONTROL -->
-    <section class="ambient-control-bar" aria-label="Ambient Scenes and Perimeter Lock">
-      <div class="scene-pill-group">
-        <span class="scene-group-label">Quick Scenes:</span>
-        <div id="quickScenesContainer" style="display:flex;gap:8px;"></div>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:12px;">
-        <button class="perimeter-quick-btn locked" id="quickPerimeterBtn" title="Toggle front door deadbolt">
-          <span id="quickPerimeterIcon">🔒</span> <span id="quickPerimeterText">Front Door Locked</span>
+        <button class="proactive-btn" id="proactiveTickBtn" title="Simulate proactive household event">
+          <span>✨ Trigger Proactive Pulse</span>
         </button>
       </div>
+
     </section>
 
-    <!-- 4. MAIN SHOWCASE SPLIT (2 COLUMNS) -->
-    <main class="main-showcase-split">
+    <!-- =====================================================================
+         VIEW 2: GLASS-BOX OPERATIONS CONSOLE (DEVELOPER / AUDITOR MODE)
+         ===================================================================== -->
+    <section class="canvas-viewport" id="operationsViewSection" style="display:none;" role="tabpanel" aria-labelledby="btnModeOps" hidden>
+      
+      <!-- Operations Auditor Status Bar -->
+      <div class="operations-header-bar">
+        <div class="operations-title-cluster">
+          <span style="font-size:22px;">⚡</span>
+          <div>
+            <h3>Operations &amp; Compliance Console</h3>
+            <p style="font-size:11.5px;color:var(--text-muted);margin-top:2px;">
+              Auditor-grade transparency into autonomous ReAct reasoning, Sentinel safety tiers, and append-only cryptographic ledger.
+            </p>
+          </div>
+        </div>
+        <div class="operations-badge-cluster">
+          <span class="operations-meta-pill green" id="opsMerkleStatusPill">
+            <span class="beacon-pulse"></span>
+            <span>SHA-256 Chain Intact</span>
+          </span>
+          <button class="btn-icon" id="btnVerifyAuditChain" title="Run live verification on append-only SHA-256 chain">
+            🛡️ Verify Ledger Cryptography
+          </button>
+          <button class="btn-approve-action" id="btnRunOpsAudit" style="padding:6px 14px;font-size:11.5px;" title="Trigger autonomous subscription and security audit">
+            ⚡ Run Proactive Audit
+          </button>
+        </div>
+      </div>
 
-      <!-- LEFT COLUMN: THE ALEXA+ LIVING INTELLIGENCE SURFACE -->
-      <section class="intelligence-hub" aria-label="Alexa Intelligence Hub">
+      <div class="ambient-widgets-grid">
         
-        <!-- Living 3D Neural Centerpiece (Spatial Core Hero Display) -->
-        <div class="neural-centerpiece-bar">
-          <div class="neural-orb-container">
-            <div class="orb-canvas-wrapper">
-              <canvas class="kinetic-orb-canvas" id="orbCanvas" width="200" height="200" title="Kinetic Alexa Orb — Move cursor or click to interact"></canvas>
-              <div class="orb-core-glow"></div>
+        <!-- OP PANEL 1: GLASS-BOX APPROVAL TRAY -->
+        <div class="widget-card" id="opsProposalTrayCard" style="grid-column: span 2;" role="region" aria-labelledby="trayHeading">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span aria-hidden="true">📥</span>
+              <h3 id="trayHeading">Glass-Box Approval Tray</h3>
             </div>
-            <div class="neural-meta-info">
-              <div class="neural-meta-top">
-                <strong>Hearth Intelligence <span class="brand-tag-cyan">[ GLASS-BOX ]</span></strong>
-                <span class="core-status-pill" id="coreStatusPill">
-                  <span class="beacon-dot"></span> <span id="coreStatusText">AUTONOMOUS · READY</span>
-                </span>
-              </div>
-              <small id="brainModelBadge">Brain: Bedrock (Claude 3.5) · Local Offline Engine</small>
-              <div class="neural-telemetry-row">
-                <span class="telemetry-chip">LATENCY: <strong id="telemetryLatency" style="color:var(--cyan);">14ms</strong></span>
-                <span class="telemetry-chip">CONTRACT: <strong style="color:var(--emerald);">PROPOSE-ONLY</strong></span>
-                <span class="telemetry-chip">SECURITY: <strong style="color:var(--purple);">SHA-256 SEALED</strong></span>
-              </div>
-            </div>
+            <span class="widget-badge amber" id="trayCountBadge" style="display:none;" role="status" aria-label="0 pending approvals">0</span>
           </div>
-          <div class="voice-control-actions">
-            <select id="brainProviderSelect" class="hud-btn" style="background:#0a1020;color:var(--cyan);border-color:rgba(0,240,255,0.4);font-family:var(--font-mono);font-size:11px;padding:6px 10px;" title="Switch active brain provider">
-              <option value="local">🧠 Local Agent (Offline)</option>
-              <option value="bedrock">☁️ Amazon Bedrock (Claude 3.5)</option>
-              <option value="openai">⚡ OpenAI / Ollama</option>
-            </select>
-            <button class="voice-glow-btn" id="micVoiceTrigger" title="Voice Input (Speech Recognition)">
-              🎙️
-            </button>
-            <button class="voice-glow-btn" id="alexaSpeechTestBtn" title="Synthesize Voice Response">
-              🔊
-            </button>
-        </div>
-
-        <!-- Quick Scenario Action Chips -->
-        <div class="prompt-chip-rail" id="quickPromptRail"></div>
-
-        <!-- Live Conversation Stream -->
-        <div class="conversation-viewport" id="conversationStream" aria-live="polite"></div>
-
-        <!-- Modern Composer Bar -->
-        <form class="kinetic-composer" id="composerForm" autocomplete="off">
-          <div class="composer-field-wrap">
-            <input 
-              type="text" 
-              class="composer-text-input" 
-              id="composerInput" 
-              placeholder="Ask Hearth: “Save me $800”, “I'm home early”, “Reorder coffee”, or voice command…" 
-              aria-label="Message Hearth Assistant"
-            />
-            <button type="button" class="composer-mic-toggle" id="composerMicToggle" title="Voice Dictation">
-              🎙️
-            </button>
-          </div>
-          <button type="submit" class="composer-submit-btn" id="composerSendBtn">
-            <span>Send</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="22" y1="2" x2="11" y2="13"></line>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
-          </button>
-        </form>
-      </section>
-
-      <!-- RIGHT COLUMN: GLASS-BOX OPERATIONS COMMAND TABS -->
-      <aside class="operations-viewport" aria-label="Operations Center">
-        <!-- Futuristic Pill Tab Bar -->
-        <nav class="operations-tab-bar" role="tablist">
-          <button class="op-tab-btn active" data-tab="approvals" role="tab">
-            [ 01 ] 📥 Approvals <span class="op-badge-counter zero" id="badgeTrayCount">0</span>
-          </button>
-          <button class="op-tab-btn" data-tab="home" role="tab">
-            [ 02 ] 🏠 Digital Twin
-          </button>
-          <button class="op-tab-btn" data-tab="wealth" role="tab">
-            [ 03 ] 💳 Wealth & Pantry
-          </button>
-          <button class="op-tab-btn" data-tab="memory" role="tab">
-            [ 04 ] 🧠 Memory & Goals
-          </button>
-          <button class="op-tab-btn" data-tab="sentinel" role="tab">
-            [ 05 ] 🛡️ Sentinel & Ledger
-          </button>
-        </nav>
-
-        <!-- TAB 1: APPROVALS TRAY -->
-        <div class="tab-view-panel active" id="view-approvals" role="tabpanel">
-          <div class="tab-header-row">
-            <h2>Glass-Box Approval Tray</h2>
-            <span class="subtitle-tag">Single-Use Confirmation</span>
-          </div>
-          <p class="tab-desc-text">
-            Consequential operations require 1-tap confirmation. Decisions are single-use with cryptographic audit receipts.
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+            Consequential actions (funds, subscriptions, door locks, exec) require 1-tap human authorization under our <strong>Propose-Never-Execute</strong> invariant.
+            <button class="ledger-link" id="ledgerVerifyLink" type="button">Verify ledger (audit_verify → GET /api/audit)</button>
           </p>
-
-          <div class="safety-contract-card">
-            <span style="font-size:16px;">🛡️</span>
-            <div>
-              <strong>Propose-Never-Execute Contract</strong>: Hearth drafts transparent proposals with verified cost deltas and diffs. Direct execution without your tap is blocked.
-            </div>
-          </div>
-
-          <div id="pendingProposalsFeed"></div>
-
-          <details style="margin-top:16px;" id="decidedFold" hidden>
-            <summary style="cursor:pointer;font-size:12px;font-family:var(--font-mono);color:var(--text-dim);" id="decidedFoldHeader">Decided Receipts (0)</summary>
-            <div id="decidedProposalsFeed" style="margin-top:10px;"></div>
-          </details>
-        </div>
-
-        <!-- TAB 2: SMART HOME DIGITAL TWIN -->
-        <div class="tab-view-panel" id="view-home" role="tabpanel">
-          <div class="tab-header-row">
-            <h2>Digital Twin Controls</h2>
-            <span class="subtitle-tag" id="activeSceneLabel">Scene: Default</span>
-          </div>
-          <p class="tab-desc-text">
-            Multi-room telemetry. Lighting & climate apply instantly; unlocking smart deadbolts requires human confirmation.
+          <div id="pendingProposalsFeed" role="list" aria-label="Approval proposals" aria-live="polite" aria-busy="false"></div>
+          <p class="tray-hint" aria-label="Keyboard shortcuts">
+            Shortcuts: <kbd>J</kbd>/<kbd>K</kbd> move · <kbd>A</kbd> approve · <kbd>X</kbd> deny · <kbd>Enter</kbd> inspect · <kbd>Esc</kbd> close · Swipe → approve / ← reject
           </p>
-
-          <div style="margin-bottom:14px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.4);border:1px solid var(--border-subtle);">
-            <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Coordinated Household Routines</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;" id="routinesButtonsList">
-              <button class="infeed-btn" data-routine="morning-kickstart">🌅 Morning Kickstart</button>
-              <button class="infeed-btn" data-routine="bedtime-lockdown">🌙 Bedtime Lockdown</button>
-              <button class="infeed-btn" data-routine="movie-night">🎬 Movie Setup</button>
-              <button class="infeed-btn" data-routine="energy-saver">🌱 Energy Saver</button>
-            </div>
-          </div>
-
-          <div class="room-architect-grid" id="roomArchitectList"></div>
         </div>
 
-        <!-- TAB 3: WEALTH & CONSUMABLES -->
-        <div class="tab-view-panel" id="view-wealth" role="tabpanel">
-          <div class="tab-header-row">
-            <h2>Subscription Audit & Pantry</h2>
-            <span class="subtitle-tag">Automated ROI</span>
+        <!-- OP PANEL 2: AUTONOMOUS ReAct DAG VISUALIZER -->
+        <div class="widget-card" id="opsDagVisualizerCard" style="grid-column: span 1;">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>⚡</span>
+              <h3>ReAct Execution DAG</h3>
+            </div>
+            <span class="widget-badge cyan" id="dagStatusBadge">LIVE PIPELINE</span>
           </div>
-          <p class="tab-desc-text">
-            Identifies dormant recurring services and tracks pantry stock levels.
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+            Real-time multi-tool reasoning pipeline: step dependencies, inputs, and Sentinel risk verdicts.
           </p>
-
-          <div class="wealth-hero-banner">
-            <div>
-              <div class="wealth-big-figure" id="wealthHeroSavings">$803.76</div>
-              <div class="wealth-sub-note" id="wealthHeroDetail">Annual recoverable waste identified</div>
-            </div>
-            <span class="badge-highlight savings">Audit Complete</span>
-          </div>
-
-          <h3 style="font-size:13.5px;color:var(--text-bright);margin:14px 0 8px;text-transform:uppercase;">Active Subscriptions</h3>
-          <div id="subscriptionsFeed"></div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 8px;">
-            <h3 style="font-size:13.5px;color:var(--text-bright);margin:0;text-transform:uppercase;">Consumable Pantry Telemetry</h3>
-            <button class="infeed-btn" id="stagePantryReorderBtn" style="font-size:11px;padding:3px 9px;">🛒 Stage Reorder Cart</button>
-          </div>
-          <div id="pantryInventoryFeed"></div>
-
-          <h3 style="font-size:13.5px;color:var(--text-bright);margin:18px 0 8px;text-transform:uppercase;">Subscribe & Save Bundle Deals</h3>
-          <div id="bundleDealsFeed"></div>
+          <div id="operationsDagContainer" class="dag-visualizer-container"></div>
         </div>
 
-        <!-- TAB 4: HOUSEHOLD MEMORY & GOALS -->
-        <div class="tab-view-panel" id="view-memory" role="tabpanel">
-          <div class="tab-header-row">
-            <h2>Household Memory (SQLite)</h2>
-            <span class="subtitle-tag">Vault Redacted</span>
+        <!-- OP PANEL 3: SENTINEL CRYPTOGRAPHIC MERKLE LEDGER -->
+        <div class="widget-card" id="opsMerkleLedgerCard" style="grid-column: span 2;">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>🛡️</span>
+              <h3>Sentinel Append-Only SHA-256 Ledger</h3>
+            </div>
+            <span class="widget-badge green" id="merkleVerifiedBadge">CHAIN VERIFIED ✓</span>
           </div>
-          <p class="tab-desc-text">
-            Persistent facts, preferences, and dietary rules. Search, add, or forget facts anytime.
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">
+            Every autonomous agent recommendation, Sentinel security evaluation, and human decision is immutably sealed in an append-only SHA-256 Merkle chain.
           </p>
-
-          <input type="text" class="memory-filter-input" id="memoryFilterInput" placeholder="Filter memory (e.g. dietary, budget, bedtime)..."/>
-          <div id="memoryFactsFeed"></div>
-
-          <form id="memoryAddForm" style="display:flex;gap:8px;margin-top:12px;" autocomplete="off">
-            <input type="text" id="memoryAddKey" placeholder="Fact key (e.g. bedtime)" style="flex:1;padding:8px 10px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border-subtle);color:#fff;" required/>
-            <input type="text" id="memoryAddVal" placeholder="Value (e.g. 10:30 PM)" style="flex:1;padding:8px 10px;border-radius:6px;background:var(--bg-input);border:1px solid var(--border-subtle);color:#fff;" required/>
-            <button type="submit" class="hud-btn" style="color:var(--cyan);border-color:var(--cyan);">Remember</button>
-          </form>
-
-          <h3 style="font-size:13.5px;color:var(--text-bright);margin:20px 0 8px;text-transform:uppercase;">Long-Running Household Goals</h3>
-          <div id="householdGoalsFeed"></div>
+          <div id="merkleLedgerContainer" class="merkle-chain-container"></div>
         </div>
 
-        <!-- TAB 5: SENTINEL & LEDGER -->
-        <div class="tab-view-panel" id="view-sentinel" role="tabpanel">
-          <div class="tab-header-row">
-            <h2>Sentinel Safety & SHA-256 Ledger</h2>
-            <span class="subtitle-tag">Cryptographic Merkle Chain</span>
+        <!-- OP PANEL 4: RECOVERABLE SPEND & WEALTH TELEMETRY -->
+        <div class="widget-card" id="opsSpendAuditCard" style="grid-column: span 1;">
+          <div class="widget-header">
+            <div class="widget-title-wrap">
+              <span>💳</span>
+              <h3>Subscription Waste Audit</h3>
+            </div>
+            <span class="widget-badge green">Saves $803.76/yr</span>
           </div>
-          <p class="tab-desc-text">
-            Autonomous policy matrix and tamper-evident append-only cryptographic ledger.
+          <div style="font-size:28px;font-weight:800;color:var(--emerald);margin:6px 0;letter-spacing:-0.5px;">$803.76<span style="font-size:12px;font-weight:600;color:var(--text-muted);margin-left:4px;">/yr identified</span></div>
+          <p style="font-size:12px;color:var(--text-muted);line-height:1.45;">
+            Recurring leakages detected across 5 services:
           </p>
-
-          <div class="sentinel-policy-grid">
-            <div class="policy-tier-card tier-allow">
-              <strong>Tier 1: Allow</strong>
-              Reads, smart scenes, climate, thermostats, locking doors.
+          <div style="margin:10px 0;display:flex;flex-direction:column;gap:6px;font-size:11.5px;font-family:var(--font-mono);">
+            <div style="display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);padding:5px 8px;border-radius:4px;">
+              <span style="color:var(--text-bright);">StreamBox 4K</span>
+              <span style="color:var(--rose);">Save $239.88/yr (Dormant 68d)</span>
             </div>
-            <div class="policy-tier-card tier-ask">
-              <strong>Tier 2: Ask</strong>
-              Unlocking doors, money transactions, subscription cancellation.
+            <div style="display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);padding:5px 8px;border-radius:4px;">
+              <span style="color:var(--text-bright);">Metro Fitness Plus</span>
+              <span style="color:var(--amber);">Save $360.00/yr (1 visit/45d)</span>
             </div>
-            <div class="policy-tier-card tier-deny">
-              <strong>Tier 3: Deny</strong>
-              Shell commands (rm -rf), vault secrets exfil, unverified wires.
-            </div>
-          </div>
-
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <h3 style="font-size:13px;color:var(--text-bright);text-transform:uppercase;">Recent Immutable Audit Log</h3>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <button class="infeed-btn" id="exportAuditBtn" style="font-size:11px;padding:3px 9px;">📥 Export JSON</button>
-              <span id="auditCountBadge" style="font-size:11px;font-family:var(--font-mono);color:var(--text-dim);">0 events</span>
+            <div style="display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);padding:5px 8px;border-radius:4px;">
+              <span style="color:var(--text-bright);">Ultra Cloud Gaming</span>
+              <span style="color:var(--cyan);">Save $203.88/yr (Unplayed)</span>
             </div>
           </div>
-
-          <div style="overflow-x:auto;">
-            <table class="merkle-audit-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Actor</th>
-                  <th>Action</th>
-                  <th>SHA-256 Hash</th>
-                </tr>
-              </thead>
-              <tbody id="merkleAuditBody"></tbody>
-            </table>
-          </div>
+          <button class="btn-icon" style="width:100%;margin-top:auto;" onclick="hearthApp.sendMessage('Audit my subscriptions and cancel dormant ones')">
+            ⚡ Re-Run Subscription Audit
+          </button>
         </div>
 
-      </aside>
-    </main>
+      </div>
+
+    </section>
+
+    <!-- =====================================================================
+         ALEXA+ LIVING CONVERSATIONAL SURFACE (ALWAYS ACCESSIBLE)
+         ===================================================================== -->
+    <section class="conversation-card" aria-label="Alexa Conversation Surface">
+      
+      <!-- Living 3D Neural Centerpiece (Astrolabe Orb + Voice Hub) -->
+      <div class="neural-centerpiece-bar" id="neuralCenterpieceBar">
+        <div class="neural-orb-container">
+          <div class="orb-canvas-wrapper" title="Kinetic Alexa Orb — Move cursor or click to interact">
+            <canvas class="kinetic-orb-canvas" id="orbCanvas" width="180" height="180"></canvas>
+            <div class="orb-core-glow"></div>
+          </div>
+          <div class="neural-meta-info">
+            <div class="neural-meta-top">
+              <span class="brand-tag-cyan">ALEXA+ OS CORE</span>
+              <span class="orb-status-pill" id="orbStatusPill">
+                <span class="status-dot"></span>
+                <span id="orbStatusText">IDLE · AMBIENT SENSING</span>
+              </span>
+            </div>
+            <strong>Hearth Universal Intelligence</strong>
+            <small id="orbNarrativeTag">Multi-Tool ReAct Orchestrator · Zero-Drift Telemetry · Fail-Closed Sentinel</small>
+          </div>
+        </div>
+        <div class="neural-quick-actions">
+          <button class="btn-icon" id="orbPingBtn" title="Play Echo acoustic ping">🔊 Ping</button>
+          <button class="btn-icon" id="orbQuickAuditBtn" title="Run instant subscription &amp; security sweep">⚡ Sweep</button>
+        </div>
+      </div>
+
+      <!-- Conversation Message Stream -->
+      <div id="conversationStream" class="conversation-stream" aria-live="polite" aria-busy="false"></div>
+      <div id="conversationEmpty" class="conversation-empty" role="status">
+        <div class="conversation-empty-icon" aria-hidden="true">💬</div>
+        <strong>No messages yet</strong>
+        <p>Ask Hearth to audit subscriptions, restock the pantry, or design lighting.<br/>Press <kbd>/</kbd> to focus the composer.</p>
+      </div>
+      <div id="conversationError" class="conversation-error" role="alert" hidden>
+        <span aria-hidden="true">⚠️</span>
+        <span id="conversationErrorText">Message failed to send.</span>
+        <button id="conversationRetryBtn" class="btn-icon" type="button">Retry</button>
+      </div>
+
+      <!-- Authentic Alexa Fluid Light Glow Wave Canvas -->
+      <div class="glow-wave-wrapper" id="glowWaveWrapper" aria-hidden="true">
+        <canvas id="alexaGlowCanvas" style="width:100%;height:36px;display:block;"></canvas>
+      </div>
+
+      <!-- Modern Composer Bar -->
+      <form id="composerForm" class="composer-bar" autocomplete="off">
+        <input 
+          type="text" 
+          id="composerInput" 
+          class="composer-input" 
+          placeholder="Ask Hearth: “Save me $800”, “Restock coffee”, “Launch lighting designer app”, or dictate…"
+          aria-label="Message Hearth Assistant"
+        />
+        <button type="button" class="composer-mic-btn" id="composerMicBtn" title="Dictate voice command">
+          🎙️
+        </button>
+        <button type="submit" class="composer-send-btn" title="Send command">
+          Send
+        </button>
+      </form>
+    </section>
 
     <!-- FOOTER -->
-    <footer class="showcase-footer">
+    <footer class="app-footer">
       HEARTH UNIVERSAL · SPEC 2025-11-25 STREAMABLE HTTP ON <code>/mcp</code> · PROPOSE-NEVER-EXECUTE CONTRACT · MIT OPEN SOURCE
     </footer>
 
   </div>
 
-  <!-- HUD TOAST SHELF -->
-  <div id="hud-toast-shelf" aria-live="polite"></div>
+  <!-- TOAST SHELF -->
+  <div id="trayLivePolite" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="trayLiveAssertive" class="sr-only" role="alert" aria-live="assertive" aria-atomic="true"></div>
+  <div id="toast-shelf" aria-live="polite" role="status"></div>
 
-  <!-- GLASS-BOX CRYPTOGRAPHIC INSPECTION MODAL -->
-  <div class="inspection-modal-overlay" id="inspectionModal" aria-hidden="true" role="dialog" aria-modal="true">
-    <div class="inspection-modal-card">
-      <div class="modal-header-row">
-        <div class="modal-title-wrap">
-          <span style="font-size:22px;">🛡️</span>
-          <div>
-            <h3 id="modalProposalTitle">Cryptographic Inspection</h3>
-            <small style="color:var(--text-dim);font-family:var(--font-mono);" id="modalProposalId">ID: prop-sample</small>
+  <!-- PANTRY BARCODE SCANNER MODAL -->
+  <div class="modal-backdrop" id="barcodeModal" aria-hidden="true" role="dialog" style="display:none;">
+    <div class="modal-window barcode-window">
+      <div class="modal-top-bar">
+        <div class="modal-header-meta">
+          <span class="modal-icon-shield">📷</span>
+          <div class="modal-title-text">
+            <h3>Pantry Quick Barcode Scanner</h3>
+            <small>Optical UPC / Barcode Stream Simulator</small>
           </div>
         </div>
-        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close Modal">✕</button>
+        <button class="modal-close-trigger" id="closeBarcodeModalBtn" aria-label="Close modal">✕</button>
       </div>
-      <div class="modal-body-scroll">
-        <div class="modal-section">
-          <h4>Sentinel 3-Tier Security Policy Evaluation</h4>
-          <div class="sentinel-verdict-badge" id="modalSentinelVerdict">TIER 2: ASK (GATED BY PROPOSE-NEVER-EXECUTE)</div>
-          <p id="modalSentinelReason" style="font-size:12.5px;color:var(--text-muted);margin-top:6px;"></p>
-        </div>
-        <div class="modal-section">
-          <h4>Cryptographic SHA-256 Ledger Audit Seal</h4>
-          <div class="merkle-hash-box" id="modalMerkleHash">SHA-256: 8f9b4c029...</div>
-          <small style="color:var(--text-dim);display:block;margin-top:4px;">Parent Link: Genesis Merkle Chain · Immutable Single-Use Consent Token</small>
-        </div>
-        <div class="modal-section">
-          <h4>Reversibility & Impact Analysis</h4>
-          <div class="impact-metrics-grid">
-            <div class="metric-box">
-              <span>Financial Impact</span>
-              <strong id="modalCostImpact" style="color:var(--emerald);">+$239.88/yr</strong>
-            </div>
-            <div class="metric-box">
-              <span>Reversibility</span>
-              <strong style="color:var(--cyan);">Guaranteed (1-Tap Undo)</strong>
-            </div>
-            <div class="metric-box">
-              <span>Execution Authority</span>
-              <strong style="color:var(--amber);">Human Confirmation Only</strong>
-            </div>
+      <div class="modal-content-area">
+        <div class="barcode-viewfinder">
+          <div class="scanner-laser-line"></div>
+          <div class="scanner-reticle"></div>
+          <div class="scanned-upc-graphic">
+            <div class="bars-pattern">||| | || |||| | ||| || |||</div>
+            <div class="upc-code-text">UPC #085942001 · Organic Arabica Coffee (2 lb)</div>
           </div>
         </div>
-        <div class="modal-section" id="modalDiffSection">
-          <h4>State Transition Diff</h4>
-          <pre class="modal-diff-pre" id="modalDiffPre"></pre>
+        <div class="barcode-status-note" id="barcodeStatusNote">
+          Align pantry item barcode inside viewfinder reticle.
         </div>
       </div>
-      <div class="modal-footer-row">
-        <button class="kinetic-btn-reject" id="modalRejectBtn"><span>✕ Reject Action</span></button>
-        <button class="kinetic-btn-approve" id="modalApproveBtn"><span>✓ 1-Tap Authorization & Execute</span></button>
+      <div class="modal-actions-bar">
+        <button class="btn-reject-action" id="simulateDepleteScanBtn">⚠️ Simulate Depletion (10%)</button>
+        <button class="btn-approve-action" id="simulateReplenishScanBtn">✓ Scan & Restock to 100%</button>
       </div>
     </div>
   </div>
 
-  <!-- APP CODE -->
-  <script src="app.js"></script>
+  <!-- GLASS-BOX CRYPTOGRAPHIC INSPECTION MODAL -->
+  <div class="modal-backdrop" id="inspectionModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="modalProposalTitle" aria-describedby="modalProposalId">
+    <div class="modal-window">
+      <div class="modal-top-bar">
+        <div class="modal-header-meta">
+          <span class="modal-icon-shield">🛡️</span>
+          <div class="modal-title-text">
+            <h3 id="modalProposalTitle">Cryptographic Inspection</h3>
+            <small id="modalProposalId">ID: prop-sample</small>
+          </div>
+        </div>
+        <button class="modal-close-trigger" id="modalCloseBtn" aria-label="Close modal">✕</button>
+      </div>
+      <div class="modal-content-area">
+        <!-- Sentinel Security Policy Card -->
+        <div class="inspection-card-block">
+          <h4>Sentinel 3-Tier Security Policy Evaluation</h4>
+          <span class="verdict-tag-pill" id="modalSentinelVerdict">TIER 2: ASK (GATED BY PROPOSE-NEVER-EXECUTE)</span>
+          <div class="sentinel-policy-row">
+            <span class="policy-badge" id="modalPolicyRule">Policy: Consequential Action Gating</span>
+            <span class="policy-badge" id="modalPolicyPersona">Actor: Krishiv (Admin)</span>
+            <span class="policy-badge" style="color:var(--emerald);">Fail-Closed Boundary: ENFORCED</span>
+          </div>
+          <p style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+            Physical security and money movement are strictly fail-closed. AI cannot bypass human consent.
+          </p>
+        </div>
+
+        <!-- Cryptographic SHA-256 Ledger Audit Seal -->
+        <div class="inspection-card-block">
+          <h4>Cryptographic SHA-256 Ledger Audit Seal</h4>
+          <div class="merkle-hash-row">
+            <div class="merkle-hash-display" id="modalMerkleHash">SHA-256: 8a4f91b72e0d...</div>
+            <button class="btn-copy-hash" id="btnCopyModalHash" title="Copy full SHA-256 hash to clipboard">📋 Copy</button>
+          </div>
+          <div class="merkle-meta-sub">
+            <span id="modalParentLink">Parent Link: Genesis Merkle Chain</span>
+            <span style="color:var(--purple);">Single-Use Consent Nonce: Valid Once</span>
+          </div>
+        </div>
+
+        <!-- Reversibility & Financial Impact Analysis Grid -->
+        <div class="inspection-card-block">
+          <h4>Reversibility &amp; Impact Analysis</h4>
+          <div class="impact-metrics-grid">
+            <div class="metric-box">
+              <span>Financial Delta</span>
+              <strong id="modalCostImpact" style="color:var(--emerald);">+$239.88/yr</strong>
+            </div>
+            <div class="metric-box">
+              <span>Reversibility</span>
+              <strong id="modalReversibility" style="color:var(--cyan);">Guaranteed (1-Tap Undo)</strong>
+            </div>
+            <div class="metric-box">
+              <span>Authority</span>
+              <strong id="modalAuthority" style="color:var(--amber);">Human Confirmation Only</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- State Transition Diff Previews -->
+        <div class="inspection-card-block">
+          <h4>State Transition Diff (Unified View)</h4>
+          <div class="diff-container-box">
+            <div class="diff-header-bar">
+              <span>SOURCE DELTA: BEFORE / AFTER</span>
+              <span>SYNTAX: UNIFIED DIFF</span>
+            </div>
+            <div class="diff-preview-pre" id="modalDiffPre"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions-bar">
+        <button class="btn-reject-action" id="modalRejectBtn" aria-label="Reject action (shortcut X)">Reject Action</button>
+        <button class="btn-approve-action" id="modalApproveBtn" aria-label="Approve action (shortcut A)">✓ 1-Tap Authorization</button>
+      </div>
+      <p class="tray-hint" style="padding:0 24px 14px;">Press <kbd>A</kbd> approve · <kbd>X</kbd> reject · <kbd>Esc</kbd> close · Focus is trapped inside this dialog.</p>
+    </div>
+  </div>
+
+  <!-- APP BOOTSTRAP SCRIPT (ES Module) -->
+  <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/lighting.js"></script>
+  <script type="module" src="js/timemachine.js"></script>
+  <script type="module" src="js/floorplan.js"></script>
+  <script src="js/canvas-ambient.js" defer></script>
 </body>
 </html>

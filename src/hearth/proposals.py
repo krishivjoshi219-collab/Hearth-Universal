@@ -56,11 +56,24 @@ def propose(
     with atomic.locked(p):
         try:
             items = json.loads(p.read_text())
+            if not isinstance(items, list):
+                items = []
         except Exception:
+            try:
+                os.replace(p, STATE_DIR / f"proposals.corrupt.{int(time.time())}.json")
+            except Exception:
+                pass
             items = []
 
         now = int(time.time())
-        pid = f"p{now % 1000000}_{len(items) + 1}"
+        existing_ids = {it.get("id") for it in items if isinstance(it, dict)}
+        counter = len(items) + 1
+        pid = f"p{now % 1000000}_{counter}"
+        while pid in existing_ids:
+            counter += 1
+            pid = f"p{now % 1000000}_{counter}"
+
+        safe_meta = meta if isinstance(meta, dict) else {}
         item = {
             "id": pid,
             "kind": kind,
@@ -69,7 +82,7 @@ def propose(
             "cost_delta_yr": cost_delta_yr,
             "risk_level": risk_level,
             "diff": diff_in,
-            "meta": meta or {},
+            "meta": safe_meta,
             "status": "pending",
             "ts": now,
             "decided_at": None,
@@ -89,10 +102,14 @@ def _cap(text: str, maximum: int) -> tuple[str, bool]:
 
 def list_proposals(status: str | None = None, limit: int = LIST_DEFAULT_LIMIT) -> list[dict]:
     """Retrieve proposals from persistent state, optionally filtered, newest last, capped."""
+    p = _path()
     try:
-        items = json.loads(_path().read_text())
+        with atomic.locked(p):
+            items = json.loads(p.read_text())
+        if not isinstance(items, list):
+            return []
         if status:
-            items = [it for it in items if it.get("status") == status]
+            items = [it for it in items if isinstance(it, dict) and it.get("status") == status]
         return items[-max(1, limit):]
     except Exception:
         return []
@@ -116,11 +133,22 @@ def decide(pid: str, approved: bool) -> dict:
     """
     from . import audit as _audit
 
+    if isinstance(approved, str):
+        approved = approved.strip().lower() not in ("false", "0", "no", "f", "")
+    else:
+        approved = bool(approved)
+
     p = _path()
     with atomic.locked(p):
         try:
             items = json.loads(p.read_text())
+            if not isinstance(items, list):
+                items = []
         except Exception:
+            try:
+                os.replace(p, STATE_DIR / f"proposals.corrupt.{int(time.time())}.json")
+            except Exception:
+                pass
             items = []
 
         for it in items:
@@ -131,8 +159,19 @@ def decide(pid: str, approved: bool) -> dict:
                 it["status"] = "approved" if approved else "rejected"
                 it["decided_at"] = int(time.time())
                 if approved:
-                    it["execution"] = _execute_approved_action(it)
-                    _audit.append("executor", "execution_applied", {"id": pid, "execution": it["execution"]})
+                    try:
+                        it["execution"] = _execute_approved_action(it)
+                    except Exception as exc:
+                        it["execution"] = {"applied": False, "at": int(time.time()), "error": str(exc)}
+                    try:
+                        _audit.append("executor", "execution_applied", {"id": pid, "execution": it["execution"]})
+                    except Exception:
+                        pass
+                else:
+                    try:
+                        _audit.append("human", "proposal_rejected", {"id": pid, "title": it.get("title")})
+                    except Exception:
+                        pass
                 atomic.atomic_write_text(p, json.dumps(items, indent=2))
                 return it
 
@@ -142,7 +181,9 @@ def decide(pid: str, approved: bool) -> dict:
 def _execute_approved_action(proposal: dict) -> dict:
     """Execute authorized action after human green-light. Returns a receipt."""
     kind = proposal.get("kind", "")
-    meta = proposal.get("meta", {})
+    meta = proposal.get("meta") or {}
+    if not isinstance(meta, dict):
+        meta = {}
     now = int(time.time())
     if kind == "home_scene":
         from . import home_mock
@@ -160,11 +201,37 @@ def _execute_approved_action(proposal: dict) -> dict:
     elif kind == "commerce_order":
         return {"applied": True, "at": now,
                 "note": f"order staged for '{proposal.get('title')}' at ${abs(proposal.get('cost_delta_yr', 0)):.2f} (checkout simulated — no live payment in sandbox)"}
+    elif kind == "arbiter_compromise":
+        from . import home_mock
+        action_data = meta.get("proposed_action", {})
+        if action_data.get("device") == "thermostat" and "setpoint" in action_data:
+            home_mock.update_device("living_room", "climate", {"target_c": float(action_data["setpoint"]), "mode": "eco"})
+        return {"applied": True, "at": now,
+                "note": f"applied arbitrated compromise '{proposal.get('title')}': {action_data.get('diff', 'compromise applied')}"}
+    elif kind == "delivery_reschedule":
+        from . import commerce
+        slot_id = meta.get("slot_id") or meta.get("new_slot", "slot_overnight_urgent")
+        if isinstance(slot_id, str) and slot_id.startswith("slot_"):
+            commerce.reschedule_delivery_slot(slot_id, reason=proposal.get("title", ""))
+        return {"applied": True, "at": now,
+                "note": f"rescheduled delivery window: {meta.get('diff', 'delivery updated')}"}
+    elif kind == "workspace_exec":
+        from . import sandbox
+        res = sandbox.execute(str(meta.get("cmd", ""))[:2000])
+        return {"applied": bool(res.get("ok")), "at": now,
+                "note": f"workspace exec rc={res.get('rc')}", "output": res.get("output", "")[:2000]}
+    elif kind == "workspace_write":
+        from . import sandbox
+        res = sandbox.write_file(str(meta.get("path", "")), str(meta.get("content", "")))
+        return {"applied": bool(res.get("ok")), "at": now,
+                "note": res.get("path", res.get("error", "write failed"))}
     return {"applied": True, "at": now, "note": f"approved {kind} recorded"}
 
 
 def clear_proposals() -> dict:
-    """Clear proposal list for fresh testing."""
+    """Clear proposal list for fresh testing with atomic locking."""
     p = _path()
-    p.write_text("[]")
+    with atomic.locked(p):
+        atomic.atomic_write_text(p, "[]")
     return {"ok": True}
+

@@ -98,3 +98,60 @@
   Added a visible "🔊 Voice: ON/OFF" control in the simulator header and tied the audio activation to the first "Send" or prompt chip interaction.
 - **Actionable Suggestion for Developer Relations / SDK Team**:  
   When providing templates for simulated web experiences, include a pre-flight audio unlock pattern in the sample starter kit.
+
+---
+
+### Friction Entry 6: Strict-JSON Tool Protocol on Small Local Models (ReAct Loop)
+
+- **Specific Task Attempted**:  
+  Drive a general ReAct loop (`{"call"|"final"}`) on small local models (`qwen2.5-coder:1.5b` or `llama3.2:1b`) via Ollama.
+- **Steps Taken**:  
+  1. Sent system prompt demanding exactly-one-JSON-object replies with a 19-tool spec.
+  2. Parsed with balanced-brace extraction; retried with error observations.
+- **Expected Result**:  
+  Model emits clean `{"call": {...}}` / `{"final": ...}` turns.
+- **Actual Result**:  
+  1.5b models frequently wrap JSON in conversational prose, hallucinate tool names, and unpromptedly convert units (e.g. °C to °F).
+- **Severity Rating**: **Important**
+- **Workaround Used**:  
+  Implemented dual-mode agent execution: a deterministic offline DAG engine by default for instant zero-config testing, with the ReAct loop activated for live LLM brains. Added balanced-brace JSON extraction and graceful error recovery.
+- **Actionable Suggestion for Developer Relations / SDK Team**:  
+  Alexa+ docs should publish a minimal JSON tool-call contract with worked small-model prompt few-shot examples, ensuring local edge testing closely mirrors the cloud orchestrator.
+
+---
+
+### Friction Entry 7: FastMCP Custom Route Mounting & Modular Static Asset Serving
+
+- **Specific Task Attempted**:  
+  Serve a modular web application (`/css/*`, `/js/*`, `/assets/*`) from the same FastMCP process handling `/mcp` Streamable HTTP requests and `/api/*` custom endpoints.
+- **Steps Taken**:  
+  1. Created modular ES6 files (`web/js/voice.js`, `web/js/twin.js`, etc.) and CSS stylesheets.
+  2. Registered `@mcp.custom_route("/css/{path:path}")` and `@mcp.custom_route("/js/{path:path}")`.
+- **Expected Result**:  
+  FastMCP's underlying Starlette application seamlessly resolves wildcard sub-path parameters and serves the assets with appropriate `text/css` and `application/javascript` MIME types.
+- **Actual Result**:  
+  Depending on the FastMCP version and Starlette router ordering, path parameter extraction on wildcard subroutes can conflict with catch-all root routes, returning 404s or fallback index files.
+- **Severity Rating**: **Important**
+- **Workaround Used**:  
+  Explicitly registered sanitized path endpoints in `mcp-server/server.py` that resolve relative file paths securely against the `web/` directory and return `Response(content, media_type="text/css")` / `Response(content, media_type="application/javascript")`.
+- **Actionable Suggestion for Developer Relations / SDK Team**:  
+  Provide a native `mcp.mount_static(path="/static", directory="web")` helper method in FastMCP to make bundling companion web UIs or simulated Echo Show canvases frictionless.
+
+---
+
+### Friction Entry 8: Client-Side Interactive MCP App UI Reflection & State Synchronization
+
+- **Specific Task Attempted**:  
+  Deliver interactive mini-applications (e.g., CCT/RGB Lighting Designer, Subscription ROI budget slider, Amazon Subscribe & Save cart) directly from MCP tool execution results.
+- **Steps Taken**:  
+  1. MCP tool `mcp_app_lighting_designer` returns structured UI metadata (`{"type": "mcp_app", "app_id": "lighting_designer", ...}`).
+  2. Simulated Alexa+ client parses the response and mounts the interactive canvas component.
+- **Expected Result**:  
+  Client renders an interactive canvas where user manipulation (e.g., dragging the color picker) directly previews state changes and emits verified action proposals.
+- **Actual Result**:  
+  Standard MCP specs do not yet define a formal schema for dynamic micro-UI rendering (MCP Apps), leaving developers to invent ad-hoc JSON wrappers.
+- **Severity Rating**: **Important**
+- **Workaround Used**:  
+  Standardized a clean micro-UI schema in Hearth Universal (`mcp_app` type tag with `state`, `controls`, and `actions`) and created a modular client renderer in `web/js/mcp-apps.js`.
+- **Actionable Suggestion for Developer Relations / SDK Team**:  
+  Standardize an official "MCP App / APL (Alexa Presentation Language) Component" payload structure in the Alexa+ SDK, allowing tools to return interactive micro-UIs that render natively on Echo Show 15/21 and Fire TV devices.

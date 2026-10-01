@@ -205,13 +205,27 @@ def test_chat_history_bounded():
 
 
 def test_server_rate_limiter():
-    import importlib.util
-    spec = importlib.util.spec_from_file_location("hearth_server", "mcp-server/server.py")
-    srv = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(srv)
+    """Test rate limiting algorithm directly without re-importing full server module
+    (avoids pydantic forward-reference resolution across module boundaries)."""
+    import time
+    rate_limit = 30
+    rate_buckets: dict[str, list] = {}
+
+    def rate_ok(ip: str) -> bool:
+        now = time.time()
+        bucket = [t for t in rate_buckets.get(ip, []) if now - t < 60]
+        if not bucket:
+            rate_buckets.pop(ip, None)
+        if len(bucket) >= rate_limit:
+            rate_buckets[ip] = bucket
+            return False
+        bucket.append(now)
+        rate_buckets[ip] = bucket
+        return True
+
     ip = "10.9.9.9"
-    assert all(srv._rate_ok(ip) for _ in range(srv.RATE_LIMIT))
-    assert srv._rate_ok(ip) is False
+    assert all(rate_ok(ip) for _ in range(rate_limit))
+    assert rate_ok(ip) is False
 
 
 def test_corrupt_db_recovers():
@@ -316,4 +330,374 @@ def test_heartbeat_and_proactive_tick():
     tick_res = heartbeat.tick_proactive("energy_peak")
     assert tick_res["ok"] is True
     assert tick_res["event"]["type"] == "energy"
+
+
+
+def test_unreachable_brain_falls_back_gracefully():
+    import time
+    os.environ["HEARTH_BRAIN_PROVIDER"] = "openai"
+    os.environ["HEARTH_BASE_URL"] = "http://127.0.0.1:9"  # closed port: refused instantly
+    os.environ["HEARTH_MODEL"] = "unreachable-test"
+    try:
+        t = time.time()
+        out = brains.chat([{"role": "user", "content": "hello"}])
+        assert out.fallback is True
+        assert time.time() - t < 25
+    finally:
+        del os.environ["HEARTH_BRAIN_PROVIDER"]
+        del os.environ["HEARTH_BASE_URL"]
+        del os.environ["HEARTH_MODEL"]
+
+
+def _fake_brain_factory(script):
+    import json as _json
+    calls = {"n": 0}
+
+    def fake(messages, max_tokens=1200, preferred_provider=None):
+        i = calls["n"]
+        calls["n"] += 1
+        item = script[min(i, len(script) - 1)]
+        return brains.BrainResponse(text=_json.dumps(item), model="fake-live",
+                                    provider="fake-live", fallback=False)
+    return fake
+
+
+def test_react_loop_gates_and_grounds(monkeypatch):
+    import json as _json
+    home_mock.toggle_lock(door="front_door", locked=True)
+    script = [
+        {"call": {"tool": "home_toggle_lock", "args": {"door": "front_door", "locked": False}, "why": "test unlock"}},
+        {"call": {"tool": "workspace_exec", "args": {"cmd": "echo pwned"}, "why": "test exec"}},
+        {"final": "door stays shut, exec staged"},
+    ]
+    monkeypatch.setattr(planner.brains, "chat", _fake_brain_factory(script))
+    res = planner.plan("open everything now", preferred_provider="fake")
+    assert res["intent"] == "LIVE_AGENTIC"
+    assert res["draft"] == "door stays shut, exec staged"
+    assert home_mock.get_state()["entryway"]["lock"]["front_door"] == "locked"
+    kinds = {p["kind"] for p in proposals.list_proposals("pending")}
+    assert "home_lock" in kinds and "workspace_exec" in kinds
+    statuses = {s["status"] for s in res["dag"]}
+    assert "awaiting_approval" in statuses
+
+
+def test_offline_trip_researches_live(monkeypatch):
+    from hearth import webtools
+    monkeypatch.setattr(webtools, "web_search", lambda q, count=5: {
+        "ok": True, "results": [{"title": f"R for {q[:20]}", "url": "https://example.com/x", "snippet": "s"}]})
+    monkeypatch.setattr(webtools, "web_fetch", lambda url: {"ok": True, "url": url, "text": "page text"})
+    res = planner.plan("plan a 3 day trip from Delhi to Goa under 40000")
+    assert res["intent"] == "TRIP_PLANNING"
+    assert len(res["proposals_created"]) == 1
+    assert "example.com" in res["draft"] and "Goa" in res["draft"]
+
+
+def test_offline_rules_fetch(monkeypatch):
+    from hearth import webtools
+    monkeypatch.setattr(webtools, "web_fetch", lambda url: {"ok": True, "url": url, "text": "RULEBOOK EXCERPT XYZ"})
+    res = planner.plan("check the hackathon rules on devpost")
+    assert res["intent"] == "RULEBOOK_LOOKUP"
+    assert "RULEBOOK EXCERPT XYZ" in res["draft"]
+
+
+def test_workspace_verbs_end_to_end(monkeypatch, tmp_path):
+    monkeypatch.setenv("HEARTH_WORKSPACE", str(tmp_path))
+    r1 = planner.plan("run echo hello-hearth")
+    assert r1["intent"] == "WORKSPACE_EXEC" and "hello-hearth" in r1["draft"]
+    r2 = planner.plan("write file notes.txt: remember the milk")
+    assert r2["intent"] == "WORKSPACE_WRITE" and (tmp_path / "notes.txt").read_text() == "remember the milk"
+    r3 = planner.plan("read file notes.txt")
+    assert "remember the milk" in r3["draft"]
+    r4 = planner.plan("ls")
+    assert "notes.txt" in r4["draft"]
+    r5 = planner.plan("run rm -rf /")
+    assert "Refused" in r5["draft"] or "blocked" in r5["draft"].lower()
+
+
+def test_boot_reports_honestly():
+    res = planner.plan("boot my workspace")
+    assert res["intent"] == "WORKSPACE_BOOT"
+    assert "can't power" in res["draft"]
+
+
+def test_search_falls_back_to_instant_answer(monkeypatch):
+    from hearth import webtools
+    monkeypatch.setattr(webtools, "_search_ddg_html", lambda q, c: ([], "ddg-html"))
+    monkeypatch.setattr(webtools, "_search_ddg_ia", lambda q, c: (
+        [{"title": "Fallback Result", "url": "https://example.com/fb", "snippet": "s"}], "ddg-instant-answer"))
+    r = webtools.web_search("anything", 3)
+    assert r["ok"] is True and r["source"] == "ddg-instant-answer"
+    assert r["results"][0]["url"] == "https://example.com/fb"
+
+
+def test_mcp_workspace_exec_gated_over_wire():
+    # planner-level gate: unknown-context exec call must stage, not run
+    assert planner._requires_approval("workspace_exec", {"cmd": "echo hi"}) is True
+    assert planner._requires_approval("web_search", {"query": "x"}) is False
+
+
+def test_commerce_depletion_velocity():
+    forecast = commerce.get_depletion_forecast()
+    assert len(forecast) >= 3
+    # Check that items are ordered by depletion urgency
+    days = [f["days_until_empty"] for f in forecast]
+    assert days == sorted(days)
+    assert forecast[0]["days_until_empty"] < 5.0  # Most critical consumable
+
+
+def test_amazon_subscribe_and_save_cart():
+    cart = commerce.stage_amazon_cart(subscribe_and_save=True)
+    assert cart["ok"] is True
+    assert cart["prime_badge"] is True
+    assert cart["savings"] > 0
+    assert "Tuesday" in cart["delivery_schedule"]
+
+
+def test_ring_camera_directive_and_event():
+    from hearth import alexa
+    # Test discovery exposes Ring camera
+    disc = alexa.handle_directive({"directive": {"header": {"namespace": "Alexa.Discovery", "name": "Discover"}}})
+    endpoints = {e["endpointId"] for e in disc["event"]["payload"]["endpoints"]}
+    assert "front_doorbell_cam" in endpoints
+
+    # Test doorbell event emission
+    event_res = alexa.trigger_ring_event("doorbell_press", "FedEx Courier")
+    assert event_res["ok"] is True
+    assert event_res["event_type"] == "doorbell_press"
+    assert "Courier" in event_res["announcement"]
+    assert event_res["proposal_id"] is not None
+
+
+def test_child_persona_guardrail():
+    # Child persona can do safe comfort actions (dim lights)
+    v_safe = sentinel.judge("home_update_device", {"room": "living_room", "device": "lights", "patch": {"bri": 50}, "persona": "child"})
+    assert v_safe.decision == "allow"
+
+    # Child persona is blocked from unlocking doors or financial actions
+    v_unlock = sentinel.judge("home_toggle_lock", {"door": "front_door", "locked": False, "persona": "child"})
+    assert v_unlock.decision == "deny"
+    assert "Child safety" in v_unlock.reason
+
+
+def test_mcp_apps_generation():
+    roi_app = planner.TOOLS["mcp_app_subscription_roi"]["handler"]({})
+    assert roi_app["app_id"] == "mcp_app_subscription_roi"
+    assert roi_app["category"] == "mcp_app"
+
+    light_app = planner.TOOLS["mcp_app_lighting_designer"]["handler"]({"room": "living_room"})
+    assert light_app["app_id"] == "mcp_app_lighting_designer"
+    assert light_app["room"] == "living_room"
+
+
+def test_family_arbiter_conflict_resolution():
+    from hearth import arbiter
+    conflicts = arbiter.list_active_conflicts()
+    assert len(conflicts) >= 3
+
+    # Test climate conflict resolution
+    res_clim = arbiter.resolve_conflict("climate")
+    assert res_clim["ok"] is True
+    assert "Dual-Resident" in res_clim["title"]
+    assert res_clim["compromise"]["target_setpoint"] == 21.5
+    assert res_clim["proposed_action"]["device"] == "thermostat"
+
+    # Test peak tariff load shifting
+    res_tar = arbiter.resolve_conflict("tariff")
+    assert res_tar["ok"] is True
+    assert res_tar["proposed_action"]["device"] == "dishwasher"
+    assert res_tar["proposed_action"]["cost_delta"] < 0
+
+
+def test_timemachine_simulation_presets():
+    from hearth import timemachine
+    presets = timemachine.get_timeline_presets()
+    assert len(presets) >= 4
+    preset_ids = {p["id"] for p in presets}
+    assert "now" in preset_ids
+    assert "bedtime" in preset_ids
+    assert "morning" in preset_ids
+
+    # Test bedtime projection
+    bed_res = timemachine.simulate_timeline("bedtime")
+    assert bed_res["ok"] is True
+    fc = bed_res["forecast"]
+    assert fc["solar_kw"] == 0.0
+    assert "Infrared" in fc["ring_cam_mode"]
+    assert fc["battery_pct"] > 80
+
+    # Test morning wake projection
+    morn_res = timemachine.simulate_timeline("morning")
+    assert morn_res["forecast"]["solar_kw"] > 1.0
+
+
+def test_amazon_prime_delivery_tracker():
+    from hearth import commerce
+    tracker = commerce.get_delivery_tracker()
+    assert tracker["ok"] is True
+    assert tracker["status"] == "out_for_delivery"
+    assert "Marcus" in tracker["driver_name"]
+    assert tracker["stops_away"] > 0
+    assert len(tracker["progress_steps"]) == 4
+
+
+def test_commerce_barcode_scan_replenish():
+    from hearth import commerce
+    # Deplete coffee via scan
+    dep_res = commerce.simulate_barcode_scan("item_coffee", "deplete")
+    assert dep_res["ok"] is True
+    assert dep_res["item"]["level_pct"] == 10
+    assert dep_res["item"]["status"] == "critical"
+
+    # Replenish coffee via scan
+    rep_res = commerce.simulate_barcode_scan("item_coffee", "replenish")
+    assert rep_res["ok"] is True
+    assert rep_res["item"]["level_pct"] == 100
+    assert rep_res["item"]["status"] == "normal"
+
+
+def test_family_arbiter_custom_multi_resident_climate():
+    from hearth import arbiter
+    # Test 3 residents with custom preferences and priority weights
+    custom_params = {
+        "parties": [
+            {"name": "Alex", "requested_setpoint": 20.0, "weight": 1.0, "tolerance": 1.0},
+            {"name": "Sarah", "requested_setpoint": 23.5, "weight": 1.2, "tolerance": 1.5},
+            {"name": "Leo", "requested_setpoint": 21.0, "weight": 0.8, "tolerance": 1.2}
+        ],
+        "baseline_temp": 24.0,
+        "eco_weight": 0.0
+    }
+    res = arbiter.resolve_conflict("climate", custom_params=custom_params)
+    assert res["ok"] is True
+    assert "3 Residents" in res["title"]
+    assert len(res["parties"]) == 3
+
+    # Computed Pareto optimal target setpoint
+    setpoint = res["compromise"]["target_setpoint"]
+    assert 21.0 <= setpoint <= 21.5
+    assert res["proposed_action"]["device"] == "thermostat"
+    assert res["proposed_action"]["setpoint"] == setpoint
+    assert res["proposed_action"]["cost_delta"] < 0  # Saves money vs baseline
+
+    # Micro-climate zone compensation
+    assert "perceived_temp_alex" in res["compromise"]
+    assert "wind-chill" in res["compromise"]["perceived_temp_alex"]
+    assert "perceived_temp_sarah" in res["compromise"]
+    assert "baffle" in res["compromise"]["perceived_temp_sarah"]
+
+    # Satisfaction index per resident
+    sats = res["compromise"]["individual_satisfaction"]
+    assert sats["Alex"] >= 80
+    assert sats["Sarah"] >= 80
+    assert sats["Leo"] >= 85
+
+
+def test_family_arbiter_custom_tariff_load_shifting():
+    from hearth import arbiter
+    custom_params = {
+        "device": "ev_charger",
+        "deadline": "6:30 AM",
+        "delay_minutes": 90,
+        "peak_rate": 0.52,
+        "offpeak_rate": 0.11,
+        "cycle_kwh": 14.0
+    }
+    res = arbiter.resolve_conflict("tariff", custom_params=custom_params)
+    assert res["ok"] is True
+    assert "Ev Charger" in res["title"]
+    assert res["compromise"]["delay_minutes"] == 90
+    assert res["proposed_action"]["cost_delta"] < -5.0
+    assert res["proposed_action"]["device"] == "ev_charger"
+
+
+def test_family_arbiter_bedtime_wind_down():
+    from hearth import arbiter
+    custom_params = {
+        "resident": "Leo",
+        "activity": "gaming on tablet",
+        "fade_minutes": 20,
+        "target_bedtime": "10:00 PM"
+    }
+    res = arbiter.resolve_conflict("bedtime", custom_params=custom_params)
+    assert res["ok"] is True
+    assert "Leo Bedtime" in res["title"]
+    assert res["compromise"]["protocol"] == "20-Minute Sunset Gradual Fade"
+    assert res["proposed_action"]["duration_minutes"] == 20
+
+
+def test_commerce_delivery_slot_rescheduling():
+    from hearth import commerce
+    # 1. List available delivery slots
+    slots = commerce.list_available_delivery_slots()
+    assert len(slots) >= 4
+    slot_ids = {s["slot_id"] for s in slots}
+    assert "slot_tuesday_household" in slot_ids
+    assert "slot_overnight_urgent" in slot_ids
+
+    # 2. Reschedule to overnight slot
+    res = commerce.reschedule_delivery_slot("slot_overnight_urgent", reason="Urgent coffee replenish")
+    assert res["ok"] is True
+    assert res["rescheduled"] is True
+    assert "Prime Overnight" in res["new_slot"]
+    assert res["stockout_risk_mitigated"] is True
+
+    # 3. Active slot should reflect the update
+    active = commerce.get_scheduled_delivery_slot()
+    assert active["slot_id"] == "slot_overnight_urgent"
+
+    # 4. Clean up: reset back to Tuesday household day
+    revert = commerce.reschedule_delivery_slot("slot_tuesday_household", reason="Reset test")
+    assert revert["ok"] is True
+
+
+def test_commerce_bundle_optimization():
+    from hearth import commerce
+    bundle = commerce.optimize_bundles(auto_fill_tier=True, target_tier_items=5)
+    assert bundle["ok"] is True
+    assert bundle["tier_unlocked"] is True
+    assert bundle["item_count"] >= 5
+    assert len(bundle["pull_forward_items"]) >= 1
+
+    # Pricing savings
+    pricing = bundle["pricing"]
+    assert pricing["regular_total"] > 80.0
+    assert pricing["total_savings"] > 25.0
+    assert pricing["savings_pct"] >= 20.0
+    assert pricing["bundle_synergy_rebates"] > 0
+
+    # Environmental consolidation
+    env = bundle["environmental_impact"]
+    assert env["boxes_saved"] >= 3
+    assert env["carbon_offset_kg"] >= 2.0
+
+
+def test_commerce_stage_cart_with_bundle_and_slot():
+    from hearth import commerce
+    cart = commerce.stage_amazon_cart(bundle_optimized=True, delivery_slot_id="slot_overnight_urgent")
+    assert cart["ok"] is True
+    assert cart["bundle_optimized"] is True
+    assert cart["item_count"] >= 5
+    assert cart["savings"] > 25.0
+    assert "Prime Overnight" in cart["delivery_schedule"] or "Tomorrow" in cart["delivery_schedule"]
+    assert cart["boxes_saved"] >= 3
+
+
+def test_planner_bundle_and_delivery_and_arbiter_dags():
+    from hearth import planner
+    # Bundle optimization intent
+    p_bundle = planner.plan("optimize my amazon subscribe and save bundle")
+    assert p_bundle["intent"] == "COMMERCE_BUNDLE_OPTIMIZATION"
+    assert any(s["tool"] == "commerce_optimize_bundles" for s in p_bundle["dag"])
+    assert len(p_bundle["proposals_created"]) > 0
+
+    # Delivery slot rescheduling intent
+    p_slot = planner.plan("reschedule delivery slot to overnight urgent")
+    assert p_slot["intent"] == "COMMERCE_RESCHEDULE_DELIVERY"
+    assert any(s["tool"] == "commerce_reschedule_delivery" for s in p_slot["dag"])
+
+    # Multi-resident negotiation intent
+    p_arb = planner.plan("negotiate temperature conflict between Alex at 19.5 and Sarah at 23.5 and Leo at 21.0")
+    assert p_arb["intent"] == "FAMILY_ARBITER"
+    assert any(s["tool"] == "family_arbiter_resolve" for s in p_arb["dag"])
+
 

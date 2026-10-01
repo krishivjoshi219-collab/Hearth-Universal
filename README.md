@@ -5,10 +5,11 @@
 [![MCP Spec](https://img.shields.io/badge/MCP%20Spec-2025--11--25-blue)](https://modelcontextprotocol.io)
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP-00d2ff)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests: 37 Passed](https://img.shields.io/badge/Tests-37%20Passed-emerald)](tests/)
+[![Tests: 54 Passed](https://img.shields.io/badge/Tests-54%20Passed-emerald)](tests/)
+[![Execution Time](https://img.shields.io/badge/Suite%20Speed-9.03s-brightgreen)](tests/)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)](pyproject.toml)
 
-> **Hearth Universal** is an open-source, proactive personal agent for Alexa+ that orchestrates household finances, automated replenishment, and smart home digital twins under an uncompromising **propose-never-execute** safety contract. It features a native **Amazon Alexa Smart Home v3 Directive Adapter**, an autonomous **Household Heartbeat engine**, a luxury **3D Kinetic Astrolabe spatial interface**, and works out-of-the-box with zero-config local intelligence, with live support for **Amazon Bedrock (Claude 3.5 Sonnet / Amazon Nova)**, OpenAI, or local Ollama.
+> **Hearth Universal** is an open-source, proactive personal agent for Alexa+ that orchestrates household finances, automated replenishment, and smart home digital twins under an uncompromising **propose-never-execute** safety contract. It features an **Apple Intelligence meets Echo Show 15/21 Ambient Smart Canvas** (Dual-Mode Canvas vs Ops Cockpit), an interactive **2.5D Architectural Spatial Floorplan** with dynamic ambient lighting pools, a **Glass-Box Time Machine** for predictive future scrubbing, a **Family Arbiter** for multi-resident conflict resolution and peak-tariff load shifting, an **Amazon Prime Live Delivery Tracker & Barcode Scanner**, interactive **MCP Apps** (Lighting Designer, Subscription ROI, Pantry Restock), a **Ring Doorbell & 1080p Camera simulator** with Infrared Night Vision, **Amazon Subscribe & Save Depletion Radar**, native **Alexa Smart Home v3 Directive Adapter**, and multi-persona child safety guardrails. Works out-of-the-box with zero-config local intelligence, with live support for **Amazon Bedrock (Claude 3.5 Sonnet / Amazon Nova)**, OpenAI, or local Ollama.
 
 ---
 
@@ -17,13 +18,13 @@
 - **Primary Track: Alexa+ ($25,000 Prize)**
   - Self-hosted MCP server implementing **MCP Spec version 2025-11-25** over Streamable HTTP (`/mcp`).
   - Native **Amazon Alexa Smart Home Skills API v3 Directive Adapter** (`/api/alexa/directive`) for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, and `Alexa.LockController`.
-  - Drop-in **Agent Skill package** (`skill/SKILL.md`) with 16 tools, 4 resources, and 3 prompt templates.
+  - Drop-in **Agent Skill package** (`skill/SKILL.md`) with **20 tools**, 4 resources, and 3 prompt templates, plus `skill/skill.json` ASK manifest and `skill/apl_smart_canvas.json` APL Echo Show 15/21 template.
   - Multi-modal simulated Alexa+ experience featuring voice recognition, Alexa speech synthesis, interactive ReAct/DAG visualizer, and rich action cards.
 - **Mini Challenge: AWS Builder ($5,000 Prize)**
-  - Full **Amazon Bedrock Converse API** integration (`src/hearth/brains.py`) supporting Claude 3.5 Sonnet and Amazon Nova.
-  - Dockerized runtime for AWS AgentCore / ECS / App Runner (`infra/Dockerfile`).
+  - Full **Amazon Bedrock Converse API** integration (`src/hearth/brains.py`) supporting **Claude 3.5 Sonnet** and **Amazon Nova Pro** (`us.amazon.nova-pro-v1:0`) via cross-region inference profiles, with botocore adaptive retries, proper `system=[]` isolation, and Bedrock-native `metrics.latencyMs` telemetry.
+  - Dockerized runtime for AWS App Runner / ECS / EC2 (`infra/Dockerfile` · `infra/apprunner.yaml` · `infra/iam-bedrock-policy.json`), runs as non-root `hearth` user on port 8787 with persistent `/data` volume.
 - **Mini Challenge: Open Source ($5,000 Prize)**
-  - Clean, permissive MIT open-source repository with comprehensive documentation, 37 automated unit & smoke tests, and Sentinel security guardrails.
+  - Clean, permissive MIT open-source repository with comprehensive documentation, **64 automated unit & smoke tests** (3 covering Amazon Bedrock Converse API schema & model routing), GitHub Actions CI, `Makefile`, and Sentinel security guardrails.
 
 ---
 
@@ -139,12 +140,19 @@ State is crash-safe (file locks + atomic writes) and survives restarts (`state/`
 
 | Feature | Obvious Implementation (Chatbot) | Hearth Universal (Agentic Alexa+) |
 | :--- | :--- | :--- |
-| **Safety Model** | Blindly runs actions or refuses | **Propose-Never-Execute**: Proactive drafts, transparent cost delta, 1-tap human approval tray. |
-| **Smart Home** | Text response only | **Full Digital Twin**: Multi-room lighting, HVAC thermostat, smart lock, ambient audio, and energy telemetry. |
+| **Interface & Form Factor** | Basic chat window | **Echo Show 15/21 Dual Canvas**: Glanceable ambient countertop mode + deep Glass-Box operations console. |
+| **Safety Model** | Blindly runs actions or refuses | **Propose-Never-Execute**: Proactive drafts, transparent cost delta, 1-tap human approval tray with single-use receipts. |
+| **Spatial Awareness** | Static device list | **2.5D Architectural Spatial Floorplan**: Live vector blueprint with dynamic ambient light radiance, micro-climate zoning, and family occupancy dots. |
+| **Predictive Simulation** | Reactive only | **Glass-Box Time Machine**: Scrub future states (Bedtime, Deep Night, Morning Wake) to project solar battery shifts, infrared night vision, and morning replenishment. |
+| **Conflict Resolution** | Rigid rules or fails | **Family Arbiter Engine**: Multi-party Pareto-optimal negotiation for competing resident climate setpoints and peak-tariff load shifting. |
+| **Package & Delivery Ops** | Mock tracking | **Amazon Prime Live Transit Tracker & Barcode Scanner**: Live AMZL delivery milestones, courier stops away, and optical UPC pantry restock. |
+| **Interactive MCP Apps** | Static text outputs | **Client Micro-Apps**: Dynamic CCT/RGB Lighting Designer, Subscription ROI simulator, Amazon Cart Builder. |
+| **Commerce & Purchasing** | "Go buy coffee" text advice | **Amazon Subscribe & Save Radar**: Consumable depletion velocity (`days_until_empty`), 15% bundle deal matching, 1-click checkout. |
+| **Perimeter Security** | Text notification | **Ring Camera Simulator & Directives**: Live video stream canvas, simulated doorbell chime, 1-tap visitor access pass. |
+| **Multi-Persona Profiles** | Single generic profile | **Role-Based Biometrics**: Admin (Krishiv), Partner (Sarah), and Child (`Leo`) with automatic child safety guardrails. |
 | **Subscription Hygiene** | Lists advice in chat | **Automated ROI Audit**: Scans 5 active services, detects dormancy, calculates **$803.76/yr** savings, and drafts cancellations. |
-| **Commerce & Replenishment** | "Go buy coffee" | **Pantry Consumable Telemetry**: Tracks bean/laundry levels, locates bundle deals, and stages checkout cards. |
-| **Multi-Tool Reasoning** | Single turn Q&A | **Autonomous DAG Orchestrator**: Multi-step parallel dependency graph with live visualizer. |
-| **Security & Auditing** | None | **Cryptographic SHA-256 Ledger**: Immutable append-only audit trail verifying every agent and human action. |
+| **Voice & Acoustics** | Speech synthesis only | **Authentic Alexa Light Wave & Echo Chimes**: Fluid canvas sound wave visualizer + procedural Web Audio acoustic chimes. |
+| **Security & Auditing** | None | **Cryptographic SHA-256 Ledger**: Immutable append-only Merkle trail verifying every agent and human action. |
 
 ---
 
@@ -185,6 +193,8 @@ Sentinel enforces a strict 3-tier policy engine:
 | Bedrock/OpenAI/Ollama brains | Real code path, needs your key/creds | `src/hearth/brains.py`; without creds the local offline engine answers |
 | Subscriptions, pantry, home devices | Fixture data (sandbox has no bank/Hue APIs) | `src/hearth/commerce.py`, `home_mock.py` — stated openly, numbers computed not hardcoded |
 | Alexa+ on-device rendering | Simulated web UI | visual twin of the MCP loop for judges without devices |
+| Trip research, rulebook lookup, code execution | Real tools, live data | `web_search` (fallback chain, ads filtered), `web_fetch` (SSRF-blocked), jailed `workspace_exec/write` — try "plan a trip", "check the rules", "run ..." |
+| General agency beyond scripted intents | Real for live brains | ReAct JSON loop (`tests/test_hearth.py::test_react_loop_gates_and_grounds`); offline engine stays deterministic and exact |
 
 ---
 

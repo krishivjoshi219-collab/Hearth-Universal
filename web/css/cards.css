@@ -1,0 +1,329 @@
+/* =========================================================================
+   AMAZON MEDIA CARDS, SUBSCRIBE & SAVE CAROUSELS, AND MCP APPS
+   Amazon Prime Badging · Interactive Color Wheel · Budget ROI Slider
+   ========================================================================= */
+
+/* Amazon Media Card */
+.amazon-media-card {
+  background: linear-gradient(135deg, rgba(20, 30, 55, 0.9), rgba(12, 18, 36, 0.85));
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin: 12px 0;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.amazon-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 10px;
+}
+
+.prime-brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #00a8e1;
+  background: rgba(0, 168, 225, 0.14);
+  border: 1px solid rgba(0, 168, 225, 0.35);
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.5px;
+}
+
+.discount-tag-orange {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #ff9900;
+  background: rgba(255, 153, 0, 0.15);
+  border: 1px solid rgba(255, 153, 0, 0.35);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+.amazon-cart-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.amazon-cart-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12.5px;
+}
+
+.item-left-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.item-thumb-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.item-pricing {
+  text-align: right;
+}
+
+.item-sale-price {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.item-reg-price {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: line-through;
+}
+
+.amazon-card-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  border: 1px solid var(--border-faint);
+}
+
+.savings-highlight {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--emerald);
+}
+
+.total-figure {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-bright);
+}
+
+/* Horizontal Deal Carousel */
+.amazon-carousel-rail {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scroll-snap-type: x mandatory;
+}
+
+.carousel-card {
+  flex: 0 0 240px;
+  scroll-snap-align: start;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.carousel-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-accent);
+}
+
+.carousel-card-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-bright);
+}
+
+/* =========================================================================
+   INTERACTIVE CLIENT-SIDE MCP APPS
+   ========================================================================= */
+.mcp-app-wrapper {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+  margin: 14px 0;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 20px var(--cyan-glow);
+}
+
+.mcp-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 10px;
+}
+
+.mcp-app-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+}
+
+.mcp-app-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--cyan);
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid var(--border-accent);
+  padding: 2px 7px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+/* APP 1: LIGHTING DESIGNER COLOR WHEEL */
+.lighting-designer-body {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 20px;
+  align-items: center;
+}
+
+.color-wheel-canvas-wrap {
+  width: 130px;
+  height: 130px;
+  position: relative;
+  margin: 0 auto;
+}
+
+#colorWheelCanvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  cursor: crosshair;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.color-wheel-reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
+}
+
+.lighting-controls-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.slider-group-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slider-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.luxury-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.12);
+  outline: none;
+}
+
+.luxury-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--cyan);
+  cursor: pointer;
+  box-shadow: 0 0 10px var(--cyan);
+  transition: transform 0.1s ease;
+}
+
+.luxury-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.lighting-presets-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  font-size: 11.5px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-chip-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-bright);
+}
+
+/* APP 2: SUBSCRIPTION ROI SIMULATOR */
+.roi-simulator-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.roi-stat-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 12px 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-faint);
+}
+
+.roi-figure-wrap h4 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--emerald);
+  letter-spacing: -0.5px;
+}
+
+.roi-figure-wrap p {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}

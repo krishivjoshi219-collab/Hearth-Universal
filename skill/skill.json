@@ -1,0 +1,68 @@
+{
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "name": "Hearth Universal",
+          "summary": "Open-source glass-box personal operating system on Alexa+ MCP.",
+          "description": "Hearth Universal connects Alexa+ to local home automation, subscription hygiene, and multi-resident arbitration under the Propose-Never-Execute contract. Multi-modal: voice + Fire TV D-pad/keyboard + APL visual cards in a single turn, with TTS queue, Echo chime, light-wave hooks, and a ReAct visualizer trace.",
+          "examplePhrases": [
+            "Alexa, ask Hearth to run a subscription audit",
+            "Alexa, ask Hearth to solve the thermostat dispute",
+            "Alexa, show me the pending approval tray",
+            "Alexa, turn on the living room lights",
+            "Alexa, set the thermostat to 21 degrees",
+            "Alexa, show me the thermostat card"
+          ]
+        }
+      },
+      "category": "SMART_HOME"
+    },
+    "apis": {
+      "smartHome": {
+        "protocolVersion": "3"
+      }
+    },
+    "manifestVersion": "1.0",
+    "permissions": [
+      {
+        "name": "alexa::devices:all:geolocation:read"
+      },
+      {
+        "name": "alexa::household:lists:read"
+      }
+    ],
+    "hearth": {
+      "multimodal": {
+        "voice": true,
+        "dpad": ["Up", "Down", "Left", "Right", "Select", "Back"],
+        "keyboard": true,
+        "visualCards": true,
+        "singleFlow": true
+      },
+      "aplTemplate": "skill/apl_smart_canvas.json",
+      "aplVersion": "2024.1",
+      "ttsQueue": true,
+      "chimes": ["wake", "success", "warning", "scan"],
+      "lightWaveModes": ["idle", "listening", "thinking", "speaking", "alert"],
+      "reactVisualizer": true,
+      "simulator": {
+        "noDeviceRequired": true,
+        "voiceTurnEndpoint": "/api/alexa/voice-turn",
+        "dpadEndpoint": "/api/alexa/dpad",
+        "directiveEndpoint": "/api/alexa/directive",
+        "aplEndpoint": "/api/alexa/apl"
+      },
+      "controllers": [
+        "Alexa.Discovery",
+        "Alexa.PowerController",
+        "Alexa.BrightnessController",
+        "Alexa.ThermostatController",
+        "Alexa.LockController",
+        "Alexa.CameraStreamController",
+        "Alexa.DoorbellEventSource",
+        "Alexa.MotionSensor"
+      ]
+    }
+  }
+}

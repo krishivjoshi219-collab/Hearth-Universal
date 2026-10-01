@@ -1,0 +1,259 @@
+/* =========================================================================
+   GLASS-BOX APPROVAL TRAY — WORLD-CLASS MICRO-INTERACTIONS + A11Y
+   150–250ms transform/opacity-only motion · no layout jank · swipe · receipts
+   ========================================================================= */
+
+/* Tabs — 180ms pill switch, transform/opacity only */
+.proposal-tray-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px;
+  border-radius: 9999px;
+  border: 1px solid var(--border-subtle);
+}
+.proposal-tab-btn {
+  flex: 1;
+  padding: 7px 12px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms var(--ease-spring), opacity 180ms ease;
+  will-change: transform, opacity;
+}
+.proposal-tab-btn:hover { color: var(--text-bright); background: rgba(255,255,255,0.05); }
+.proposal-tab-btn:active { transform: scale(0.97); }
+.proposal-tab-btn.active {
+  background: linear-gradient(135deg, rgba(6,182,212,0.24), rgba(59,130,246,0.18));
+  color: #fff;
+  border-color: rgba(6,182,212,0.45);
+}
+.proposal-tab-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6,182,212,0.6), 0 0 16px rgba(6,182,212,0.35);
+}
+
+/* Action cards */
+.tray-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-accent);
+  background: rgba(12, 16, 28, 0.8);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  transition: transform 200ms var(--ease-spring), opacity 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  will-change: transform, opacity;
+  position: relative;
+  touch-action: pan-y;
+}
+.tray-card:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(0,0,0,0.45); }
+.tray-card:focus-visible, .tray-card:focus-within {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: var(--shadow-focus);
+}
+.tray-card.is-approving, .tray-card.is-rejecting {
+  opacity: 0.72;
+  pointer-events: none;
+}
+.tray-card.is-approving::after, .tray-card.is-rejecting::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+  opacity: 0;
+  animation: tray-shimmer 600ms ease infinite;
+  pointer-events: none;
+}
+@keyframes tray-shimmer {
+  0% { opacity: 0; transform: translateX(-12%); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(12%); }
+}
+/* Swipe affordance — transform only */
+.tray-card.swipe-right { transform: translateX(56px); opacity: 0.6; border-color: var(--border-emerald); }
+.tray-card.swipe-left { transform: translateX(-56px); opacity: 0.6; border-color: rgba(239,68,68,0.4); }
+.tray-card.flash-ok { border-color: var(--border-emerald); box-shadow: 0 0 18px var(--emerald-glow); }
+.tray-card.flash-err { border-color: rgba(239,68,68,0.5); box-shadow: 0 0 18px var(--rose-glow); }
+
+/* Cost-delta transparency strip */
+.cost-delta-strip {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.32);
+  border: 1px solid var(--border-faint);
+  font-size: 12px;
+}
+.cost-delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid;
+  letter-spacing: -0.01em;
+}
+.cost-delta-pill.save { color: var(--emerald); background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.4); }
+.cost-delta-pill.spend { color: var(--cyan); background: rgba(6,182,212,0.12); border-color: rgba(6,182,212,0.4); }
+.cost-delta-pill.neutral { color: var(--text-bright); background: rgba(255,255,255,0.06); border-color: var(--border-subtle); }
+.cost-delta-note { color: var(--text-muted); font-size: 11.5px; }
+.cost-delta-note strong { color: var(--text-bright); }
+
+/* Receipt — single-use display */
+.receipt-block {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(16,185,129,0.07);
+  border: 1px solid rgba(16,185,129,0.32);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.receipt-block.rejected { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.3); }
+.receipt-title { font-weight: 800; font-size: 12px; letter-spacing: -0.01em; }
+.receipt-block .receipt-note { color: var(--text-muted); margin-top: 2px; }
+.receipt-block code { font-family: var(--font-mono); font-size: 11px; color: var(--cyan); }
+.single-use-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(168,85,247,0.14);
+  border: 1px solid rgba(168,85,247,0.4);
+  color: #c084fc;
+  text-transform: uppercase;
+}
+.ledger-link {
+  color: var(--cyan);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+}
+.ledger-link:hover { color: #fff; }
+.ledger-link:focus-visible { outline: none; box-shadow: var(--shadow-focus); border-radius: 4px; }
+
+/* Meta row */
+.proposal-meta-tags-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+}
+.tag-single-use {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 10.5px;
+}
+
+/* Action buttons — 1-tap 44px targets, 180ms */
+.tray-actions { display: flex; align-items: stretch; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.tray-actions .btn-approve-action, .tray-actions .btn-reject-action, .tray-actions .btn-icon {
+  min-height: 44px;
+  transition: transform 180ms var(--ease-spring), box-shadow 180ms ease, background-color 180ms ease, opacity 180ms ease;
+  will-change: transform, opacity;
+}
+.tray-actions .btn-approve-action:active, .tray-actions .btn-reject-action:active { transform: scale(0.96); }
+.btn-approve-action:disabled, .btn-reject-action:disabled { opacity: 0.6; cursor: progress; }
+
+/* Empty state */
+.tray-empty {
+  text-align: center;
+  padding: 32px 16px;
+  background: rgba(0,0,0,0.25);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-subtle);
+  color: var(--text-dim);
+}
+.tray-empty strong { color: var(--text-bright); font-size: 13.5px; display: block; }
+.tray-empty p { font-size: 11.5px; margin-top: 4px; color: var(--text-muted); max-width: 46ch; margin-inline: auto; }
+.tray-empty-actions { display: flex; gap: 8px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+
+/* Shortcuts hint */
+.tray-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.tray-hint kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid var(--border-subtle);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  color: var(--text-bright);
+}
+
+/* Screen-reader only */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Skip link for tray */
+.tray-skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--cyan);
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  z-index: 50;
+}
+.tray-skip:focus { left: 8px; top: 8px; }
+
+/* Reduced motion — kill shimmer/translate */
+@media (prefers-reduced-motion: reduce) {
+  .tray-card, .proposal-tab-btn, .tray-actions * { transition: none !important; animation: none !important; }
+  .tray-card:hover { transform: none; }
+  .tray-card.is-approving::after, .tray-card.is-rejecting::after { display: none; }
+}
+
+/* Mobile: stack actions, full-width approve */
+@media (max-width: 640px) {
+  .tray-actions .btn-icon { flex: 1 1 100%; }
+  .tray-actions .btn-reject-action, .tray-actions .btn-approve-action { flex: 1 1 46%; }
+  .cost-delta-strip { font-size: 11.5px; }
+}

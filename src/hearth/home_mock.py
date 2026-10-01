@@ -254,13 +254,15 @@ from . import atomic
 
 
 def _path() -> Path:
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    return STATE_DIR / "home.json"
+    d = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
+    d.mkdir(parents=True, exist_ok=True)
+    return d / "home.json"
 
 
 def _save() -> None:
     try:
-        atomic.atomic_write_text(_path(), json.dumps(_state))
+        with atomic.locked(_path()):
+            atomic.atomic_write_text(_path(), json.dumps(_state))
     except Exception:
         pass
 
@@ -274,8 +276,21 @@ def _load() -> None:
             data = json.loads(p.read_text())
             if isinstance(data, dict) and "living_room" in data:
                 _state = data
+            else:
+                raise ValueError("invalid home state shape")
     except Exception:
-        pass
+        try:
+            import time as _t
+            p = _path()
+            if p.exists():
+                os.replace(p, p.parent / f"home.corrupt.{int(_t.time())}.json")
+        except Exception:
+            pass
+        try:
+            from . import audit as _audit
+            _audit.append("sentinel", "state_quarantined", {"file": "home.json"})
+        except Exception:
+            pass
 
 
 _load()
