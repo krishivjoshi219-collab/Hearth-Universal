@@ -16,10 +16,60 @@ def _log_path() -> Path:
 
 from . import atomic
 
+# Retention: the chain is append-only, but the file is not infinite.
+# Past this many lines the ledger archives (hash-linked checkpoint) and restarts.
+AUDIT_MAX_LINES = 10000
+
+
+def count() -> int:
+    path = _log_path()
+    try:
+        if not path.exists():
+            return 0
+        return sum(1 for line in path.read_text().splitlines() if line.strip())
+    except Exception:
+        return -1
+
+
+def _maybe_rotate(path: Path) -> None:
+    """Archive a full ledger and restart it with a hash-linked checkpoint.
+
+    verify() keeps passing: the new file is its own valid chain whose first
+    entry commits to the archive digest. Nothing is ever silently dropped.
+    """
+    try:
+        lines = [line for line in path.read_text().splitlines() if line.strip()]
+    except Exception:
+        return
+    if len(lines) < AUDIT_MAX_LINES:
+        return
+    import time as _t
+    digest = hashlib.sha256("\n".join(lines).encode()).hexdigest()
+    archive = path.parent / f"audit-archive-{int(_t.time())}.jsonl"
+    try:
+        os.replace(path, archive)
+    except Exception:
+        return
+    checkpoint = {
+        "ts": int(_t.time()),
+        "actor": "system",
+        "action": "ledger_rotated",
+        "detail": {"archive": archive.name, "entries": len(lines), "digest": digest},
+        "prev": f"ARCHIVED:{digest}",
+    }
+    body = json.dumps(checkpoint, sort_keys=True, default=str)
+    checkpoint["hash"] = hashlib.sha256(body.encode()).hexdigest()
+    try:
+        with path.open("a") as f:
+            f.write(json.dumps(checkpoint) + "\n")
+    except Exception:
+        pass
+
 
 def append(actor: str, action: str, detail: dict) -> dict:
     path = _log_path()
     with atomic.locked(path):
+        _maybe_rotate(path)
         prev = "GENESIS"
         if path.exists():
             try:
@@ -59,6 +109,7 @@ def verify() -> bool:
     if not lines:
         return True
     prev = "GENESIS"
+    first = True
     for line in lines:
         try:
             e = json.loads(line)
@@ -68,6 +119,9 @@ def verify() -> bool:
         if hashlib.sha256(body.encode()).hexdigest() != e.get("hash"):
             return False
         if e.get("prev") != prev:
-            return False
+            # Rotation checkpoints commit to the archive digest instead of GENESIS.
+            if not (first and str(e.get("prev", "")).startswith("ARCHIVED:")):
+                return False
         prev = e["hash"]
+        first = False
     return True

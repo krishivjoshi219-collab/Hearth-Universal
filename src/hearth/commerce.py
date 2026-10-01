@@ -412,7 +412,8 @@ def reschedule_delivery_slot(slot_id: str, item_ids: list[str] | None = None, re
     prev_slot = get_scheduled_delivery_slot()
     _SCHEDULED_SLOT_ID = slot_id
 
-    # Persist
+    # Persist (locked + atomic: concurrent reschedules must not tear the file).
+    from . import atomic as _atomic
     p = _delivery_schedule_file()
     p.parent.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -424,7 +425,8 @@ def reschedule_delivery_slot(slot_id: str, item_ids: list[str] | None = None, re
         "rescheduled_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "reason": reason or f"Rescheduled to {target_slot['name']}"
     }
-    p.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    with _atomic.locked(p):
+        _atomic.atomic_write_text(p, json.dumps(payload, indent=2))
 
     affected_items = [i["name"] for i in HOUSEHOLD_ESSENTIALS if (not item_ids or i["id"] in item_ids)]
     diff_str = f"{prev_slot['name']} -> {target_slot['name']} ({target_slot['delivery_window']})"

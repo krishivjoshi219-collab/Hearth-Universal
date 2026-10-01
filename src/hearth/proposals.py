@@ -17,6 +17,7 @@ TITLE_MAX = 200
 REASONS_MAX = 4000
 DIFF_MAX = 4000
 LIST_DEFAULT_LIMIT = 100
+PROPOSALS_MAX = 500
 
 
 def _path() -> Path:
@@ -90,6 +91,13 @@ def propose(
         if t_trunc or r_trunc or d_trunc:
             item["truncated"] = True
         items.append(item)
+        # Retention: never drop pending; shed oldest decided beyond the cap.
+        if len(items) > PROPOSALS_MAX:
+            pending = [it for it in items if isinstance(it, dict) and it.get("status") == "pending"]
+            decided = [it for it in items if not (isinstance(it, dict) and it.get("status") == "pending")]
+            room = PROPOSALS_MAX - len(pending)
+            keep_decided = decided[-room:] if room > 0 else []
+            items = pending + keep_decided
         atomic.atomic_write_text(p, json.dumps(items, indent=2))
     return item
 

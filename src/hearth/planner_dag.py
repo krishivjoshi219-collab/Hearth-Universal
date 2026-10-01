@@ -12,6 +12,8 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from . import atomic
+
 
 def _state_dir() -> Path:
     return Path(os.environ.get("HEARTH_STATE_DIR", "state"))
@@ -35,9 +37,8 @@ def _load_all() -> dict:
 def _save_all(data: dict) -> None:
     d = _state_dir()
     d.mkdir(parents=True, exist_ok=True)
-    tmp = d / "orchestrations.json.tmp"
-    tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
-    os.replace(tmp, _sessions_file())
+    with atomic.locked(_sessions_file()):
+        atomic.atomic_write_text(_sessions_file(), json.dumps(data, indent=2))
 
 
 # ---------------------------------------------------------------------------

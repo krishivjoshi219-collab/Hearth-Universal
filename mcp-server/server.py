@@ -101,11 +101,47 @@ def _global_ok(ip: str) -> bool:
 def _throttled(request: Request):
     ip = request.client.host if request.client else "unknown"
     if not _global_ok(ip):
+        _bump("global_limited")
         return JSONResponse(
             {"ok": False, "error": "Global rate budget exceeded (200/min). Slow down."},
             status_code=429,
         )
     return None
+
+
+# Lightweight ops counters (in-memory; exposed via /api/metrics, no PII).
+_COUNTERS = {"chat": 0, "decide": 0, "chat_rate_limited": 0,
+             "global_limited": 0, "chat_timeout": 0, "auth_denied": 0}
+
+
+def _bump(key: str) -> None:
+    try:
+        _COUNTERS[key] = _COUNTERS.get(key, 0) + 1
+    except Exception:
+        pass
+
+
+def _validate_env() -> None:
+    """Fail-safe boot validation: clamp nonsense, never crash a judge demo."""
+    try:
+        port = int(os.environ.get("PORT", "8787"))
+        if not 1 <= port <= 65535:
+            raise ValueError
+    except ValueError:
+        print("config warn: bad PORT, falling back to 8787")
+        os.environ["PORT"] = "8787"
+    for var, lo, hi, default in (("HEARTH_CHAT_RPM", 1, 1000, "30"),
+                                 ("HEARTH_GLOBAL_RPM", 10, 10000, "200")):
+        try:
+            v = int(os.environ.get(var, default))
+            if not lo <= v <= hi:
+                raise ValueError
+        except ValueError:
+            print(f"config warn: bad {var}, falling back to {default}")
+            os.environ[var] = default
+
+
+_validate_env()
 
 
 def _require_dict_body(body) -> bool:
@@ -124,6 +160,7 @@ def _adult_or_403(request: Request, action: str):
         return None
     if not auth.auth_configured():
         return None
+    _bump("auth_denied")
     audit.append("sentinel", "auth_denied", {"action": action, "via": ident.via})
     code = 401 if ident.persona in ("anonymous", "intruder") else 403
     return JSONResponse(
@@ -132,6 +169,8 @@ def _adult_or_403(request: Request, action: str):
     )
 
 PROTOCOL = "2025-11-25"
+HEARTH_VERSION = "1.31.0"
+START_TIME = _time.time()
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web")
 _PORT = int(os.environ.get("PORT", "8787"))
 
@@ -764,11 +803,29 @@ def emergency_lockdown(
 
 @mcp.custom_route("/health", methods=["GET"])
 async def health(request: Request):
+    import sqlite3 as _sqlite
+    db_ok, writable = False, False
+    try:
+        state_dir = os.environ.get("HEARTH_STATE_DIR", os.path.join(os.path.dirname(__file__), "..", "state"))
+        os.makedirs(state_dir, exist_ok=True)
+        writable = os.access(state_dir, os.W_OK)
+        con = _sqlite.connect(os.path.join(state_dir, "memory.db"), timeout=2)
+        con.execute("SELECT 1").fetchone()
+        con.close()
+        db_ok = True
+    except Exception:
+        pass
     return JSONResponse({
-        "status": "ok",
+        "status": "ok" if (db_ok and writable) else "degraded",
+        "version": HEARTH_VERSION,
+        "uptime_s": round(_time.time() - START_TIME, 1),
         "protocol": PROTOCOL,
         "transport": "streamable-http",
         "audit_ok": audit.verify(),
+        "audit_events": audit.count(),
+        "db_ok": db_ok,
+        "state_writable": writable,
+        "auth_enforced": auth.auth_configured(),
         "tools_count": len(mcp._tool_manager.list_tools()),
         "active_provider": brains._get_active_provider(),
     })
@@ -790,6 +847,7 @@ async def api_chat(request: Request):
         return JSONResponse({"ok": False, "error": "Message is required"}, status_code=400)
     client_ip = request.client.host if request.client else "unknown"
     if not _rate_ok(client_ip):
+        _bump("chat_rate_limited")
         return JSONResponse({"ok": False, "error": "Rate limit exceeded (30/min). Slow down."}, status_code=429)
 
     # Never stall the event loop: planner does blocking network/SQLite inside.
@@ -799,11 +857,13 @@ async def api_chat(request: Request):
             asyncio.to_thread(planner.plan, message, provider), timeout=25
         )
     except asyncio.TimeoutError:
+        _bump("chat_timeout")
         audit.append("system", "chat_timeout", {"message_len": len(message)})
         return JSONResponse(
             {"ok": False, "error": "Hearth timed out after 25s — retry, or try a simpler goal."},
             status_code=504,
         )
+    _bump("chat")
     return JSONResponse(out)
 
 
@@ -856,6 +916,7 @@ async def api_decide(request: Request):
         return JSONResponse(out, status_code=404)
         
     audit.append("human", "actions_decide", {"id": pid, "approved": approved})
+    _bump("decide")
     return JSONResponse(out)
 
 
@@ -1121,6 +1182,8 @@ async def api_metrics(request: Request):
     m = brains.get_bedrock_metrics()
     m["recent"] = m.get("recent", [])[-limit:]
     m["latencyMs"] = m.get("latencyMs", [])[-limit:]
+    m["http"] = dict(_COUNTERS)
+    m["audit_events"] = audit.count()
     return JSONResponse(m)
 
 
@@ -1305,12 +1368,13 @@ def _load_persona() -> dict:
 
 def _save_persona(p: dict) -> None:
     try:
+        from pathlib import Path as _Path
+        from hearth import atomic as _atomic
         import json as _json
         os.makedirs(os.path.dirname(_PERSONA_FILE), exist_ok=True)
-        tmp = _PERSONA_FILE + ".tmp"
-        with open(tmp, "w") as f:
-            f.write(_json.dumps(p))
-        os.replace(tmp, _PERSONA_FILE)
+        target = _Path(_PERSONA_FILE)
+        with _atomic.locked(target):
+            _atomic.atomic_write_text(target, _json.dumps(p))
     except Exception:
         pass
 
