@@ -1293,9 +1293,10 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         call_tool("home_get_state", {}, "Inspect ambient smart home environment")
         grounded_synthesis = (
             f"I analyzed your request: *\"{goal}\"*. "
-            "I checked your persistent household facts from SQLite, verified live smart home telemetry (living room 22.0°C, door locked), "
+            "I checked your persistent household facts from SQLite, "
+            "verified live smart home telemetry, "
             "and evaluated active proposals in your Glass-box Approval Tray. "
-            "Safe read operations were executed autonomously; any consequential actions will always require your 1-tap authorization."
+            "Safe reads ran autonomously; consequential actions need 1-tap approval."
         )
 
     return {
