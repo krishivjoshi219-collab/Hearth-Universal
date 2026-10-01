@@ -83,7 +83,7 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 
 ## ⚙️ How We Built It
 
-- **MCP Server Core (`mcp>=1.29.1`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 20 tools, 4 resources, and 3 prompt templates.
+- **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 33 tools, 4 resources, and 3 prompt templates.
 - **Amazon Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Built standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, `Alexa.DoorbellEventSource`, and `Alexa.CameraStreamController`.
 - **Commerce & Depletion Engine (`src/hearth/commerce.py`)**: Designed consumption forecasting models, Prime delivery window allocation, and Subscribe & Save tiered discount logic.
 - **Family Arbiter (`src/hearth/arbiter.py`)**: Multi-resident Pareto-optimal conflict negotiation engine with peak-tariff shaving.
@@ -91,7 +91,7 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 - **Sentinel Safety Matrix (`src/hearth/sentinel.py`)**: Engineered persona-aware policy gating, regex threat interception (`rm -rf`, token leaks), and single-use approval receipt validation.
 - **Amazon Bedrock Integration (`src/hearth/brains.py`)**: Wired the standardized AWS Bedrock Converse API (`client.converse()`) for Claude 3.5 Sonnet and Amazon Nova Pro with token telemetry tracking.
 - **Modular Zero-Build Frontend (`web/`)**: Built a zero-build, responsive PWA using clean ES6+ modules (`voice.js`, `twin.js`, `mcp-apps.js`, `proposals.js`, `app.js`) and modular CSS (`main.css`, `canvas.css`, `cards.css`, `modal.css`). Runs instantly in any browser without Node, npm, or bundlers.
-- **Testing & Verification**: 54 automated unit and regression tests in `tests/test_hearth.py` plus an over-the-wire HTTP integration test in `tests/test_mcp_http.py`. 100% pass rate in 9.03s.
+- **Testing & Verification**: 141 automated unit, regression, contract, auth, and over-the-wire smoke tests. 100% pass rate in ~25s.
 
 ---
 
@@ -107,7 +107,7 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **54 Automated Tests**: Comprehensive unit, regression, and over-the-wire smoke tests running in under 10 seconds (9.03s).
+- **141 Automated Tests**: Unit, regression, auth-fortress, reliability, contract, and over-the-wire smoke tests running in ~25 seconds.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Rich Media & Interactive MCP Apps**: Setting a new benchmark for Alexa+ multimodal UI by delivering interactive color wheels, ROI sliders, and cart carousels directly from tool invocations.
 

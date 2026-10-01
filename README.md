@@ -9,7 +9,7 @@
 [![MCP Spec](https://img.shields.io/badge/MCP%20Spec-2025--11--25-blue)](https://modelcontextprotocol.io)
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP-00d2ff)](https://modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Tests: 119 Passed](https://img.shields.io/badge/Tests-119%20Passed-emerald)](tests/)
+[![Tests: 141 Passed](https://img.shields.io/badge/Tests-141%20Passed-emerald)](tests/)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)](pyproject.toml)
 
 > **Hearth Universal** is an open-source, proactive household agent for **Alexa+** that orchestrates
@@ -18,7 +18,7 @@
 > the agent drafts, prices, and stages every consequential action; **nothing moves without your 1-tap approval**.
 >
 > Judges need **no API keys, no devices, no AWS account**: clone, run one command, and the full
-> Echo Show simulator, MCP handshake, and 119-test suite work offline in ~30 seconds.
+> Echo Show simulator, MCP handshake, and 141-test suite work offline in ~30 seconds.
 
 ---
 
@@ -26,7 +26,7 @@
 
 | Timestamp | What you see | Why it matters |
 |---|---|---|
-| 0:00–0:15 | Terminal: `curl …/mcp initialize` → `"protocolVersion": "2025-11-25"`; `pytest -q` → **119 passed** | Real spec compliance, real tests — not slides |
+| 0:00–0:15 | Terminal: `curl …/mcp initialize` → `"protocolVersion": "2025-11-25"`; `pytest -q` → **141 passed** | Real spec compliance, real tests — not slides |
 | 0:15–0:35 | Echo Show canvas: *"Audit my subscriptions"* → DAG animates → **$803.76/yr** savings card → 1-tap Approve | Agentic orchestration + money saved, glass-box |
 | 0:35–0:50 | *"Unlock the front door"* → `approval_required`, door stays locked → Approve → receipt → replay refused | Safety is enforced in-protocol, verifiable |
 | 0:50–1:00 | Time Machine scrub Bedtime → Deep Night; `audit_verify` → **chain intact** | Predictive twin + cryptographic audit |
@@ -42,7 +42,7 @@
 | **Potential Impact** | Computed savings ($803.76/yr), depletion-driven Subscribe & Save, caretaking mode, tariff load-shifting — credible Appstore-shaped household product, not a demo toy | `src/hearth/commerce.py`, `delivery.py`, `family.py` |
 | **Quality of Idea** | Propose-never-execute + SHA-256 Merkle receipts + Family Arbiter Pareto negotiation + session-persistent DAG orchestration with media-card MCP Apps | `src/hearth/planner_dag.py`, `proposals.py`, `audit.py` |
 | **AWS Builder mini** | Bedrock Converse API (Claude 3.5 Sonnet → Nova Pro → Nova Lite → local fallback), adaptive retries, `system=[]` isolation, per-call `latencyMs`/token telemetry, App Runner + IAM least-privilege deploy | `src/hearth/brains.py`, `infra/`, `docs/aws_builder_integration.md` |
-| **Open Source mini** | MIT, 119 tests, CI, Makefile, docs, friction logs — contribution-ready | `LICENSE`, `CONTRIBUTING.md`, `docs/` |
+| **Open Source mini** | MIT, 141 tests, CI, Makefile, docs, friction logs — contribution-ready | `LICENSE`, `CONTRIBUTING.md`, `docs/` |
 
 ---
 
@@ -87,7 +87,7 @@ curl -s http://localhost:8787/mcp \
 ### Run the suite
 
 ```bash
-python3 -m pytest tests/ -q   # 119 passed, ~30s
+python3 -m pytest tests/ -q   # 141 passed, ~25s
 ```
 
 ---
@@ -175,7 +175,7 @@ src/hearth/
 web/                      Echo Show simulator (canvas · floorplan · tray · voice)
 skill/                    SKILL.md · skill.json · apl_smart_canvas.json
 infra/                    Dockerfile · apprunner.yaml · Bedrock IAM policy
-tests/                    119 tests (unit + live MCP + fuzz/hardening)
+tests/                    141 tests (unit + live MCP + fuzz/hardening + auth + contracts)
 docs/                     feedback · friction logs · AWS guide · video script · devpost text
 ```
 
@@ -244,7 +244,7 @@ docs/                     feedback · friction logs · AWS guide · video script
 | Subscriptions, pantry, home devices | Fixture data (no bank/Hue APIs in sandbox) | computed numbers, stated openly |
 | Alexa+ on-device rendering | Simulated web UI | visual twin for judges without devices |
 | Trip research, rulebook lookup, code exec | Real tools, live data | `web_search`, SSRF-blocked `web_fetch`, jailed `workspace_exec/write` |
-| 119 tests green | Real | `python3 -m pytest tests/ -q` |
+| 141 tests green | Real | `python3 -m pytest tests/ -q` |
 
 ---
 

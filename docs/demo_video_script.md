@@ -17,9 +17,9 @@
 
 ### [0:25 - 0:45] 60-Second Setup & MCP Spec Verification
 - **Visual**: Screen capture of terminal.
-  - Run: `python mcp-server/server.py` (shows FastMCP starting on port `8787`).
+  - Run: `python3 mcp-server/server.py` (shows FastMCP starting on port `8787`).
   - Run: `curl POST /mcp` initialize request. Output displays `"protocolVersion": "2025-11-25"`.
-  - Run: `pytest -v` (49 passing tests in ~19s).
+  - Run: `pytest -q` (141 passing tests in ~25s).
 - **Narrator**:
   > *"Hearth is completely zero-friction and zero-build. It requires no closed API keys, Node.js, or physical devices to evaluate. Our server exposes a fully compliant MCP 2025-11-25 Streamable HTTP endpoint. As you can see with this curl handshake, it validates immediately against the latest specification."*
 
@@ -46,8 +46,7 @@
     - `[1] memory_query`
     - `[2] inbox_scan`
     - `[3] commerce_scan_deals`
-    - `[4] sentinel_judge`
-    - `[5] actions_propose`
+    - `[4] actions_propose` (×3, one per savings card)
   - Alexa speaks response via TTS: *"I audited 5 active household subscriptions. StreamBox 4K has been dormant for 68 days..."*
   - Automatically navigates to the **Approval Tray**. Three rich proposal cards appear:
     - *Cancel StreamBox 4K* (+$239.88/yr)
@@ -65,8 +64,8 @@
   - An interactive **Lighting Designer MCP App** mounts in chat: show the HTML5 color wheel canvas. Drag the pointer to Amber 2700K; the Living Room lights react instantly.
   - Click prompt chip: *"🛒 Restock Coffee & Milk"*.
   - A rich **Amazon Subscribe & Save Cart Card** renders:
-    - Fair-Trade Coffee Beans: $22.87 ($26.90 with 15% discount applied).
-    - Prime Delivery Slot: *Tomorrow, 8 AM - 11 AM*.
+    - Organic Arabica Whole Bean Coffee (2 lb): $18.69 ($21.99 with 15% discount applied).
+    - Prime Delivery: *Tomorrow by 8 AM (Prime FREE)*.
     - One-tap "Approve Amazon Order" stages into the Approval Tray.
 - **Narrator**:
   > *"Hearth Universal pioneers interactive MCP Apps. Tools don't just return plain text—they render micro-UIs directly in the interface. Here, our Lighting Designer lets users visually fine-tune color temperatures, while our Amazon Subscribe & Save card automatically calculates 15% bulk discounts and secures Prime delivery windows."*
@@ -86,10 +85,9 @@
 ---
 
 ### [2:30 - 2:45] Cryptographic Audit Ledger & Conclusion
-- **Visual**: Click the **"🛡️ Audit Chain"** button in the header.
-  - The SHA-256 Merkle Ledger dialog opens.
-  - Show the table of events with timestamps, actors (`agent`, `human`, `sentinel`), and verifiable SHA-256 hashes.
-  - Point to the badge: *"Integrity: 100% VALID"*.
+- **Visual**: Open **Settings** and click **"Verify now"** next to Ledger.
+  - The status line reads *"Chain intact · N sealed events"* (SHA-256 verified live).
+  - Every proposal, approval, and Sentinel decision is hash-chained in the append-only ledger.
   - Display the GitHub repo URL and MIT license on screen.
 - **Narrator**:
   > *"Every proposal, approval, and Sentinel decision is cryptographically hash-chained in an immutable SHA-256 ledger. Hearth Universal brings transparent, verifiable, and safe agency to Amazon Alexa+.*  

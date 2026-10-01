@@ -1,0 +1,10 @@
+{
+  "name": "Hearth",
+  "short_name": "Hearth",
+  "description": "Hearth — calm household command. Propose first, never execute without you.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#09090b",
+  "icons": []
+}

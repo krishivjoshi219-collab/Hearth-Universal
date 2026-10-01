@@ -171,7 +171,7 @@ def _adult_or_403(request: Request, action: str):
 PROTOCOL = "2025-11-25"
 HEARTH_VERSION = "1.31.0"
 START_TIME = _time.time()
-WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web")
+WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
 _PORT = int(os.environ.get("PORT", "8787"))
 
 mcp = FastMCP(
@@ -644,8 +644,11 @@ def family_arbiter_resolve(
     Computes Pareto-optimal compromise setpoints balancing comfort, energy cost, and occupancy.
     Tier-1 autonomous resolution.
     """
-    plan = arbiter.resolve_conflict(conflict_type, custom_params=custom_params)
-    audit.append("agent", "family_arbiter_resolve", {"type": conflict_type, "plan": plan["title"]})
+    try:
+        plan = arbiter.resolve_conflict(conflict_type, custom_params=custom_params)
+    except (ValueError, TypeError) as e:
+        return {"ok": False, "error": f"Invalid arbiter input: {e}"}
+    audit.append("agent", "family_arbiter_resolve", {"type": conflict_type, "plan": plan.get("title")})
     return plan
 
 
@@ -1515,7 +1518,12 @@ async def api_arbiter(request: Request):
         except Exception:
             ctype = "climate"
             custom_params = None
-        plan = arbiter.resolve_conflict(ctype, custom_params=custom_params)
+        try:
+            plan = arbiter.resolve_conflict(ctype, custom_params=custom_params)
+        except (ValueError, TypeError) as e:
+            return JSONResponse({"ok": False, "error": f"Invalid arbiter input: {e}"}, status_code=400)
+        if not isinstance(plan, dict):
+            return JSONResponse({"ok": False, "error": "Arbiter returned no plan"}, status_code=502)
         return JSONResponse(plan)
     return JSONResponse({"ok": True, "conflicts": arbiter.list_active_conflicts()})
 

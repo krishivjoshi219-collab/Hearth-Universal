@@ -32,9 +32,12 @@ def client(app):
 
 @pytest.fixture(autouse=True)
 def clean_env(monkeypatch):
-    monkeypatch.delenv("HEARTH_ADULT_PIN", raising=False)
-    monkeypatch.delenv("HEARTH_TOKENS", raising=False)
-    monkeypatch.delenv("HEARTH_TOKENS_FILE", raising=False)
+    for var in ("HEARTH_ADULT_PIN", "HEARTH_TOKENS", "HEARTH_TOKENS_FILE"):
+        monkeypatch.delenv(var, raising=False)
+    yield
+    # Direct os.environ writes below must never leak into other test files.
+    for var in ("HEARTH_ADULT_PIN", "HEARTH_TOKENS", "HEARTH_TOKENS_FILE"):
+        os.environ.pop(var, None)
 
 
 def _mk_pending(kind="test-auth-probe"):
