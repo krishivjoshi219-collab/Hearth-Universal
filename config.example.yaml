@@ -39,3 +39,12 @@ sentinel:
     - "rm -rf /"
     - "mkfs"
     - ":(){:|:&};:"
+
+# Auth fortress (optional, local-first). Unset = open zero-config demo.
+# Set either and Tier-2 REST (approve, unlock-execute, reset, brain switch,
+# persona escalation) goes fail-closed. Clients send X-Hearth-PIN or
+# Authorization: Bearer <token>. Prefer env vars over this file for secrets.
+auth:
+  # adult_pin: "change-me-4plus-chars"  # or env HEARTH_ADULT_PIN
+  # tokens: "secrettoken:admin,leotoken:child"  # or env HEARTH_TOKENS / HEARTH_TOKENS_FILE
+  tokens_file: ""

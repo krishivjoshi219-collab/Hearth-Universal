@@ -446,6 +446,8 @@ def test_commerce_depletion_velocity():
 
 
 def test_amazon_subscribe_and_save_cart():
+    # Hermetic: pin the schedule; the persisted slot file is shared process state.
+    commerce.reschedule_delivery_slot("slot_tuesday_household", reason="test hermetic pin")
     cart = commerce.stage_amazon_cart(subscribe_and_save=True)
     assert cart["ok"] is True
     assert cart["prime_badge"] is True

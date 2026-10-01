@@ -43,7 +43,7 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
 
-from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine
+from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth
 
 # Simple per-IP token bucket for the expensive chat endpoint (product abuse guard).
 _RATE_BUCKETS: dict[str, list] = {}
@@ -78,6 +78,26 @@ def _rate_ok(ip: str) -> bool:
 
 def _require_dict_body(body) -> bool:
     return isinstance(body, dict)
+
+
+def _identity(request: Request):
+    pin, bearer = auth.extract_creds(request.headers)
+    return auth.identify(pin=pin, bearer=bearer)
+
+
+def _adult_or_403(request: Request, action: str):
+    """Fail-closed Tier-2 gate. Open only when auth is unconfigured (zero-config demo)."""
+    ident = _identity(request)
+    if ident.full:
+        return None
+    if not auth.auth_configured():
+        return None
+    audit.append("sentinel", "auth_denied", {"action": action, "via": ident.via})
+    code = 401 if ident.persona in ("anonymous", "intruder") else 403
+    return JSONResponse(
+        {"ok": False, "error": "Adult authorization required (X-Hearth-PIN or bearer token).", "action": action},
+        status_code=code,
+    )
 
 PROTOCOL = "2025-11-25"
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web")
@@ -775,7 +795,12 @@ async def api_decide(request: Request):
         
     if not pid:
         return JSONResponse({"ok": False, "error": "Proposal ID is required"}, status_code=400)
-        
+
+    if approved:
+        gate = _adult_or_403(request, "actions_decide:approve")
+        if gate is not None:
+            return gate
+
     out = proposals.decide(pid, approved)
     if isinstance(out, dict) and out.get("ok") is False:
         err = str(out.get("error", ""))
@@ -802,6 +827,10 @@ async def api_memory(request: Request):
     key = str(body.get("key", "")).strip()
     val = str(body.get("value", "")).strip()
     owner = str(body.get("owner", "household")).strip()
+    # Identity binding: a bearer token speaks for its own persona, never the body's.
+    ident = _identity(request)
+    if ident.via == "token" and ident.persona not in ("anonymous", "intruder"):
+        owner = ident.persona
 
     if request.method == "DELETE":
         if not key:
@@ -858,6 +887,9 @@ async def api_home_lock(request: Request):
         # Require an approved home_lock proposal, else stage one (propose-never-execute).
         proposal_id = str(body.get("proposal_id", "") or body.get("proposalId", ""))
         if proposal_id:
+            gate = _adult_or_403(request, "home_toggle_lock:unlock")
+            if gate is not None:
+                return gate
             p = proposals.get_proposal(proposal_id)
             if p and p.get("status") == "approved" and p.get("kind") == "home_lock":
                 res = home_mock.toggle_lock(locked=False)
@@ -973,6 +1005,9 @@ async def api_audit(request: Request):
 
 @mcp.custom_route("/api/reset", methods=["POST"])
 async def api_reset(request: Request):
+    gate = _adult_or_403(request, "system_reset")
+    if gate is not None:
+        return gate
     home_mock.reset_state()
     proposals.clear_proposals()
     audit.append("human", "system_reset", {"action": "clean_state_reset"})
@@ -995,6 +1030,9 @@ async def api_brain(request: Request):
         body = await request.json()
         provider = str(body.get("provider", "local")).lower()
         if provider in ("local", "bedrock", "openai", "ollama"):
+            gate = _adult_or_403(request, "brain_switch")
+            if gate is not None:
+                return gate
             os.environ["HEARTH_BRAIN_PROVIDER"] = provider
             audit.append("human", "brain_switch", {"provider": provider})
             return JSONResponse({"ok": True, "active_provider": provider})
@@ -1208,6 +1246,11 @@ async def api_persona(request: Request):
             body = await request.json()
             pid = str(body.get("id", "admin")).lower()
             if pid in _PERSONAS_MAP:
+                # Escalation to a privileged persona requires adulthood when auth is on.
+                if pid in ("admin", "partner"):
+                    gate = _adult_or_403(request, "persona_escalate")
+                    if gate is not None:
+                        return gate
                 ACTIVE_PERSONA = _PERSONAS_MAP[pid]
                 _save_persona(ACTIVE_PERSONA)
                 audit.append("human", "persona_switched", {"persona": ACTIVE_PERSONA})
