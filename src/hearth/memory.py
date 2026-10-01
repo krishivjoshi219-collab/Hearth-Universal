@@ -352,13 +352,14 @@ def remember(key: str, value: str, owner: str = "household") -> dict:
     return out
 
 
-def query(q: str = "", requester: str = "household") -> list[dict]:
+def query(q: str = "", requester: str = "household", limit: int = 200) -> list[dict]:
     """Query stored household facts (% and _ treated literally, not as wildcards).
 
     Context-aware v2: ``requester`` scopes visibility. Household/admin/partner
     see everything; the child profile (Leo) sees household + its own facts and
     never sees sensitive admin/partner facts.
     """
+    limit = max(1, min(500, int(limit)))
     who = canonical_resident(requester)
     con = _db()
     try:
@@ -367,10 +368,10 @@ def query(q: str = "", requester: str = "household") -> list[dict]:
             q_esc = q_str.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
             like = f"%{q_esc}%"
             rows = con.execute(
-                "SELECT key, value, owner FROM facts WHERE key LIKE ? ESCAPE '\\' OR value LIKE ? ESCAPE '\\'",
-                (like, like)).fetchall()
+                "SELECT key, value, owner FROM facts WHERE key LIKE ? ESCAPE '\\' OR value LIKE ? ESCAPE '\\' LIMIT ?",
+                (like, like, limit)).fetchall()
         else:
-            rows = con.execute("SELECT key, value, owner FROM facts ORDER BY updated_at DESC").fetchall()
+            rows = con.execute("SELECT key, value, owner FROM facts ORDER BY updated_at DESC LIMIT ?", (limit,)).fetchall()
         facts = [{"key": k, "value": v, "owner": o} for k, v, o in rows]
         if who == CHILD_PROFILE:
             facts = [
@@ -575,17 +576,18 @@ def advance_goal(gid: int) -> dict:
         con.close()
 
 
-def list_goals(status: str | None = None) -> list[dict]:
+def list_goals(status: str | None = None, limit: int = 200) -> list[dict]:
     """Retrieve household goals, optionally filtered by status."""
+    limit = max(1, min(500, int(limit)))
     con = _db()
     try:
         cols = _columns(con, "goals")
         if {"owner", "last_advanced_at"} <= cols:
             sel = ("SELECT id, title, steps, status, progress, created_at, owner, priority, deadline, "
-                   "last_advanced_at FROM goals ORDER BY id ASC")
+                   "last_advanced_at FROM goals ORDER BY id ASC LIMIT ?")
         else:
-            sel = "SELECT id, title, steps, status, progress, created_at FROM goals ORDER BY id ASC"
-        rows = con.execute(sel).fetchall()
+            sel = "SELECT id, title, steps, status, progress, created_at FROM goals ORDER BY id ASC LIMIT ?"
+        rows = con.execute(sel, (limit,)).fetchall()
         res = [_row_to_goal(r) for r in rows]
         if status:
             res = [g for g in res if g.get("status") == status]
@@ -646,8 +648,9 @@ def chat_history_get(limit: int = 10) -> list[dict]:
     """Fetch recent chat messages for conversational grounding."""
     con = _db()
     try:
+        limit = max(1, min(500, int(limit)))
         rows = con.execute("SELECT role, content, model, ts FROM chat_history ORDER BY id DESC LIMIT ?",
-                           (max(1, int(limit)),)).fetchall()
+                           (limit,)).fetchall()
         return [{"role": r[0], "content": r[1], "model": r[2], "ts": r[3]} for r in reversed(rows)]
     finally:
         con.close()

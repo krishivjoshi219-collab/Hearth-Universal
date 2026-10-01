@@ -3,9 +3,11 @@ Serves MCP protocol on /mcp, REST APIs for simulator on /api/*, and interactive 
 Verifies via curl POST /mcp initialize -> protocolVersion 2025-11-25.
 """
 from __future__ import annotations
+import asyncio
 import json
 import os
 import sys
+import time as _time
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
@@ -74,6 +76,36 @@ def _rate_ok(ip: str) -> bool:
     bucket.append(now)
     _RATE_BUCKETS[ip] = bucket
     return True
+
+
+# Global POST budget: cheap per-IP ceiling so one hammering client can't stall
+# the loop for everyone. Generous (200/min) — legit use never trips it.
+_GLOBAL_BUCKETS: dict[str, list] = {}
+GLOBAL_LIMIT = int(os.environ.get("HEARTH_GLOBAL_RPM", "200"))
+
+
+def _global_ok(ip: str) -> bool:
+    now = _time.time()
+    if len(_GLOBAL_BUCKETS) > 2000:
+        for k in list(_GLOBAL_BUCKETS.keys())[:1000]:
+            _GLOBAL_BUCKETS.pop(k, None)
+    bucket = [t for t in _GLOBAL_BUCKETS.get(ip, []) if now - t < 60]
+    if len(bucket) >= GLOBAL_LIMIT:
+        _GLOBAL_BUCKETS[ip] = bucket
+        return False
+    bucket.append(now)
+    _GLOBAL_BUCKETS[ip] = bucket
+    return True
+
+
+def _throttled(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    if not _global_ok(ip):
+        return JSONResponse(
+            {"ok": False, "error": "Global rate budget exceeded (200/min). Slow down."},
+            status_code=429,
+        )
+    return None
 
 
 def _require_dict_body(body) -> bool:
@@ -760,7 +792,18 @@ async def api_chat(request: Request):
     if not _rate_ok(client_ip):
         return JSONResponse({"ok": False, "error": "Rate limit exceeded (30/min). Slow down."}, status_code=429)
 
-    out = planner.plan(message, preferred_provider=provider)
+    # Never stall the event loop: planner does blocking network/SQLite inside.
+    # 25s hard deadline, then an honest 504 (client retries safely: chat is read-only).
+    try:
+        out = await asyncio.wait_for(
+            asyncio.to_thread(planner.plan, message, provider), timeout=25
+        )
+    except asyncio.TimeoutError:
+        audit.append("system", "chat_timeout", {"message_len": len(message)})
+        return JSONResponse(
+            {"ok": False, "error": "Hearth timed out after 25s — retry, or try a simpler goal."},
+            status_code=504,
+        )
     return JSONResponse(out)
 
 
@@ -779,6 +822,9 @@ async def api_proposals(request: Request):
 @mcp.custom_route("/api/decide", methods=["POST"])
 @mcp.custom_route("/api/proposals/{pid}/decide", methods=["POST"])
 async def api_decide(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -815,6 +861,9 @@ async def api_decide(request: Request):
 
 @mcp.custom_route("/api/memory", methods=["GET", "POST", "DELETE"])
 async def api_memory(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     if request.method == "GET":
         q = request.query_params.get("q", "")
         return JSONResponse({"facts": memory.query(q)})
@@ -857,6 +906,9 @@ async def api_home(request: Request):
 
 @mcp.custom_route("/api/home/scene", methods=["POST"])
 async def api_home_scene(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -870,6 +922,9 @@ async def api_home_scene(request: Request):
 @mcp.custom_route("/api/home/lock", methods=["POST"])
 @mcp.custom_route("/api/devices/front_door_lock", methods=["POST"])
 async def api_home_lock(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -914,6 +969,9 @@ async def api_home_lock(request: Request):
 @mcp.custom_route("/api/home/device", methods=["POST"])
 @mcp.custom_route("/api/devices", methods=["POST"])
 async def api_home_device(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -940,6 +998,9 @@ async def api_home_device(request: Request):
 
 @mcp.custom_route("/api/home/routine", methods=["POST"])
 async def api_home_routine(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -971,6 +1032,9 @@ async def api_goals(request: Request):
 
 @mcp.custom_route("/api/goals/advance", methods=["POST"])
 async def api_goals_advance(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
     except Exception:
@@ -1005,6 +1069,9 @@ async def api_audit(request: Request):
 
 @mcp.custom_route("/api/reset", methods=["POST"])
 async def api_reset(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     gate = _adult_or_403(request, "system_reset")
     if gate is not None:
         return gate
@@ -1016,6 +1083,9 @@ async def api_reset(request: Request):
 
 @mcp.custom_route("/api/brain", methods=["GET", "POST"])
 async def api_brain(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     if request.method == "GET":
         return JSONResponse({
             "active_provider": brains._get_active_provider(),
@@ -1060,10 +1130,10 @@ async def api_export(request: Request):
     return JSONResponse({
         "protocol": PROTOCOL,
         "timestamp": _t.time(),
-        "memory": memory.query(),
-        "goals": memory.list_goals(),
+        "memory": memory.query(limit=200),
+        "goals": memory.list_goals(limit=100),
         "home": home_mock.get_state(),
-        "proposals": proposals.list_proposals(),
+        "proposals": proposals.list_proposals(limit=100),
         "heartbeat": heartbeat.get_events(),
         "audit_integrity": audit.verify()
     })
@@ -1071,6 +1141,9 @@ async def api_export(request: Request):
 
 @mcp.custom_route("/api/alexa/directive", methods=["POST"])
 async def api_alexa_directive(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Amazon Alexa Smart Home Skills API v3 directive endpoint.
 
     Returns the native Alexa response PLUS a headless `hearth` companion
@@ -1109,6 +1182,9 @@ async def api_alexa_directive(request: Request):
 
 @mcp.custom_route("/api/alexa/voice-turn", methods=["POST"])
 async def api_alexa_voice_turn(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """No-device simulator: utterance -> directive round-trip + multimodal envelope."""
     try:
         body = await request.json()
@@ -1187,6 +1263,9 @@ async def api_heartbeat(request: Request):
 
 @mcp.custom_route("/api/simulate/tick", methods=["POST"])
 async def api_simulate_tick(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Trigger a proactive household simulation event."""
     try:
         body = await request.json()
@@ -1240,6 +1319,9 @@ ACTIVE_PERSONA = _load_persona()
 
 @mcp.custom_route("/api/persona", methods=["GET", "POST"])
 async def api_persona(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     global ACTIVE_PERSONA
     if request.method == "POST":
         try:
@@ -1264,6 +1346,9 @@ async def api_persona(request: Request):
 
 @mcp.custom_route("/api/ring/event", methods=["POST"])
 async def api_ring_event(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Trigger simulated Ring Doorbell or Motion event."""
     try:
         body = await request.json()
@@ -1286,6 +1371,9 @@ async def api_commerce_depletion(request: Request):
 
 @mcp.custom_route("/api/commerce/stage-cart", methods=["POST"])
 async def api_stage_cart(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Stage Amazon cart reorder proposal with slot selection and bundle tier optimization."""
     try:
         body = await request.json()
@@ -1309,6 +1397,9 @@ async def api_stage_cart(request: Request):
 
 @mcp.custom_route("/api/commerce/optimize-bundles", methods=["GET", "POST"])
 async def api_commerce_optimize_bundles(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Amazon Subscribe & Save 5+ item bundle tier optimizer."""
     item_ids = None
     auto_fill = True
@@ -1346,6 +1437,9 @@ async def api_delivery_slots(request: Request):
 
 @mcp.custom_route("/api/arbiter", methods=["GET", "POST"])
 async def api_arbiter(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Catalog of household conflicts and resolution proposals with deep multi-resident negotiation."""
     if request.method == "POST":
         try:
@@ -1364,6 +1458,9 @@ async def api_arbiter(request: Request):
 
 @mcp.custom_route("/api/timemachine", methods=["GET", "POST"])
 async def api_timemachine(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     """Temporal simulation engine endpoints."""
     if request.method == "POST":
         try:
@@ -1382,6 +1479,9 @@ async def api_delivery_tracker(request: Request):
 
 @mcp.custom_route("/api/commerce/scan", methods=["POST"])
 async def api_commerce_scan(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
         item_id = str(body.get("item_id", "item_coffee"))

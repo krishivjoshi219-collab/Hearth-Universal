@@ -84,36 +84,44 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 latency_ms=round((time.time() - start_t) * 1000, 1)
             )
 
-        try:
-            payload = json.dumps({
-                "model": model,
-                "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": 0.3,
-            }).encode()
-            
-            req = urllib.request.Request(
-                base_url.rstrip("/") + "/chat/completions",
-                data=payload,
-                headers={
-                    "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}"
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=20) as r:
-                data = json.loads(r.read().decode())
-                
-            raw_text = data["choices"][0]["message"]["content"]
-            tokens = data.get("usage", {}).get("total_tokens", 0)
-            return BrainResponse(
-                text=vault.redact(raw_text),
-                model=model,
-                provider="openai-compatible",
-                tokens_used=tokens,
-                latency_ms=round((time.time() - start_t) * 1000, 1)
-            )
-        except Exception as e:
+        last_err: Exception | None = None
+        for attempt in (1, 2):
+            try:
+                payload = json.dumps({
+                    "model": model,
+                    "messages": messages,
+                    "max_tokens": max_tokens,
+                    "temperature": 0.3,
+                }).encode()
+
+                req = urllib.request.Request(
+                    base_url.rstrip("/") + "/chat/completions",
+                    data=payload,
+                    headers={
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {api_key}"
+                    },
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=10) as r:
+                    data = json.loads(r.read().decode())
+
+                raw_text = data["choices"][0]["message"]["content"]
+                tokens = data.get("usage", {}).get("total_tokens", 0)
+                return BrainResponse(
+                    text=vault.redact(raw_text),
+                    model=model,
+                    provider="openai-compatible",
+                    tokens_used=tokens,
+                    latency_ms=round((time.time() - start_t) * 1000, 1)
+                )
+            except Exception as e:
+                last_err = e
+                if attempt == 1:
+                    time.sleep(0.5)  # one backoff beat, then fail over fast
+                continue
+        else:
+            e = last_err
             # Graceful failover to offline engine
             offline_text = _generate_intelligent_offline_response(messages)
             return BrainResponse(
