@@ -1,0 +1,48 @@
+{
+  "$schema": "https://developer.amazon.com/schemas/alexa-plus/addon-manifest-v1.json",
+  "manifestVersion": "1.0",
+  "addon": {
+    "id": "amzn1.ask.addon.hearth.operations",
+    "name": "Hearth Universal Operations Agent",
+    "version": "1.32.0",
+    "shortDescription": "Autonomous proactive home operations, digital twin resilience & pantry optimization.",
+    "fullDescription": "Hearth Universal is an Alexa+ Add-on providing game-theoretic household arbitration, 7-day Monte Carlo future resilience forecasting, pantry depletion radar with 15% Subscribe & Save savings, and strict propose-never-execute safety guardrails.",
+    "examplePhrases": [
+      "Alexa, ask Hearth to run an energy audit",
+      "Alexa, ask Hearth to check the pantry replenishment radar",
+      "Alexa, ask Hearth what the Family Arbiter recommends for the thermostat",
+      "Alexa, ask Hearth to stage a 7-day weather resilience plan"
+    ],
+    "locales": ["en-US"],
+    "categories": ["SMART_HOME", "PRODUCTIVITY", "SHOPPING"]
+  },
+  "runtime": {
+    "transport": "Streamable-HTTP-MCP-2025-11-25",
+    "endpoint": "http://localhost:8787/mcp",
+    "protocolVersion": "2025-11-25",
+    "latencyTargetMs": 500
+  },
+  "display": {
+    "supportedModes": ["inline", "fullscreen", "hydrated", "voice-only"],
+    "defaultMode": "inline",
+    "mcpAppsStandard": "@modelcontextprotocol/ext-apps",
+    "views": {
+      "timeline": "ui://hearth/views/timeline",
+      "energy_mesh": "ui://hearth/views/energy_mesh",
+      "parliament": "ui://hearth/views/parliament",
+      "resilience": "ui://hearth/views/resilience"
+    }
+  },
+  "authentication": {
+    "type": "oauth2.1",
+    "protectedResourceMetadata": "http://localhost:8787/.well-known/oauth-protected-resource",
+    "authorizationServerMetadata": "http://localhost:8787/.well-known/oauth-authorization-server",
+    "grantTypes": ["authorization_code", "client_credentials", "refresh_token"],
+    "codeChallengeMethods": ["S256"],
+    "scopes": ["mcp:service", "mcp:tools", "mcp:resources"]
+  },
+  "legal": {
+    "privacyPolicyUrl": "http://localhost:8787/privacy",
+    "termsOfUseUrl": "http://localhost:8787/terms"
+  }
+}

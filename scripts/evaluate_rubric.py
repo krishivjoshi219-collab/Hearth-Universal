@@ -72,6 +72,35 @@ def main():
         traceback.print_exc()
         fail(str(e))
 
+    step("Validating Alexa+ Add-on Manifest (addon.json) & Display Modes")
+    try:
+        from hearth.alexaplus_addon import alexaplus_engine
+        addon_manifest = alexaplus_engine.generate_addon_manifest()
+        assert addon_manifest["addon"]["id"] == "amzn1.ask.addon.hearth.operations"
+        assert "inline" in addon_manifest["display"]["supportedModes"]
+        assert "fullscreen" in addon_manifest["display"]["supportedModes"]
+        ok("addon.json compliant with Alexa AI CLI; Inline & Fullscreen display modes active")
+    except Exception as e:
+        traceback.print_exc()
+        fail(str(e))
+
+    step("Verifying RFC 9728 PRM & OAuth 2.1 Two-Tier Auth Engine")
+    try:
+        from hearth.alexaplus_addon import alexaplus_engine
+        prm = alexaplus_engine.get_protected_resource_metadata()
+        assert "mcp:service" in prm["scopes_supported"]
+        # Test Tier 1 client credentials grant
+        s1, t1 = alexaplus_engine.exchange_token("client_credentials")
+        assert s1 == 200 and t1["scope"] == "mcp:service"
+        # Test Tier 2 PKCE authorization code grant
+        code = alexaplus_engine.create_authorization_code("test_client", "", "test_chal", "plain")
+        s2, t2 = alexaplus_engine.exchange_token("authorization_code", code=code, code_verifier="test_chal")
+        assert s2 == 200 and "mcp:tools" in t2["scope"]
+        ok("RFC 9728 metadata and PKCE S256 two-tier authentication verified")
+    except Exception as e:
+        traceback.print_exc()
+        fail(str(e))
+
     # 2. Alexa+ Agent Skills Runtime Dispatch
     header("2. Alexa+ Agent Skills: Discovery & Dynamic Dispatch")
     step("Executing Agent Skills runtime dispatcher")

@@ -49,7 +49,7 @@ from hearth import (
     sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
     brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
     strands_agent, agentcore, agent_skills, mcp_strands_adapter,
-    parliament, causal_twin, meta_skill, model_mesh, real_mode
+    parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon
 )
 
 _SERVER_START_TIME = _time.time()
@@ -981,8 +981,147 @@ async def health(request: Request):
         "meta_synthesizer_ok": True,
         "model_mesh_providers": len(model_mesh.model_mesh.providers),
         "agent_skills_count": len(agent_skills.agent_skills_runtime.list_skills()),
+        "alexaplus_addon_ok": True,
+        "oauth2_1_ready": True,
     })
 
+
+# ==============================================================================
+# Official Amazon Alexa+ Add-on & OAuth 2.1 (RFC 9728) Endpoints
+# ==============================================================================
+
+@mcp.custom_route("/.well-known/oauth-protected-resource", methods=["GET"])
+async def oauth_protected_resource(request: Request):
+    """RFC 9728 Protected Resource Metadata for Alexa+ discovery."""
+    base_url = str(request.base_url).rstrip("/")
+    return JSONResponse(alexaplus_addon.alexaplus_engine.get_protected_resource_metadata(base_url))
+
+
+@mcp.custom_route("/.well-known/oauth-authorization-server", methods=["GET"])
+async def oauth_authorization_server(request: Request):
+    """OAuth 2.1 Authorization Server Metadata for Alexa+ discovery."""
+    base_url = str(request.base_url).rstrip("/")
+    return JSONResponse(alexaplus_addon.alexaplus_engine.get_auth_server_metadata(base_url))
+
+
+@mcp.custom_route("/oauth/authorize", methods=["GET", "POST"])
+async def oauth_authorize(request: Request):
+    """OAuth 2.1 Authorization Endpoint for user account linking with PKCE."""
+    params = request.query_params
+    client_id = params.get("client_id", "")
+    redirect_uri = params.get("redirect_uri", "")
+    response_type = params.get("response_type", "code")
+    code_challenge = params.get("code_challenge", "")
+    code_challenge_method = params.get("code_challenge_method", "S256")
+    scope = params.get("scope", "mcp:tools mcp:resources")
+    state = params.get("state", "")
+    resource = params.get("resource", "")
+
+    # Issue authorization code
+    code = alexaplus_addon.alexaplus_engine.create_authorization_code(
+        client_id=client_id,
+        redirect_uri=redirect_uri,
+        code_challenge=code_challenge,
+        code_challenge_method=code_challenge_method,
+        scope=scope,
+        resource=resource,
+    )
+
+    if redirect_uri:
+        delim = "&" if "?" in redirect_uri else "?"
+        target = f"{redirect_uri}{delim}code={code}"
+        if state:
+            target += f"&state={state}"
+        from starlette.responses import RedirectResponse
+        return RedirectResponse(target, status_code=302)
+
+    return JSONResponse({
+        "ok": True,
+        "code": code,
+        "state": state,
+        "message": "OAuth 2.1 Authorization Code issued successfully.",
+    })
+
+
+@mcp.custom_route("/oauth/token", methods=["POST"])
+async def oauth_token(request: Request):
+    """OAuth 2.1 Token Endpoint supporting client_credentials (M2M) and authorization_code (PKCE)."""
+    # Extract client credentials from Basic Auth header if present
+    auth_header = request.headers.get("authorization", "")
+    client_id = ""
+    client_secret = ""
+    if auth_header.lower().startswith("basic "):
+        import base64
+        try:
+            decoded = base64.b64decode(auth_header[6:]).decode("utf-8")
+            if ":" in decoded:
+                client_id, client_secret = decoded.split(":", 1)
+        except Exception:
+            pass
+
+    # Extract body fields (either JSON or application/x-www-form-urlencoded)
+    content_type = request.headers.get("content-type", "")
+    data = {}
+    if "application/json" in content_type:
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+    else:
+        try:
+            form = await request.form()
+            data = dict(form)
+        except Exception:
+            data = {}
+
+    grant_type = data.get("grant_type", "client_credentials")
+    code = data.get("code", "")
+    code_verifier = data.get("code_verifier", "")
+    refresh_token = data.get("refresh_token", "")
+    client_id = client_id or data.get("client_id", "")
+    client_secret = client_secret or data.get("client_secret", "")
+    resource = data.get("resource", "")
+    scope = data.get("scope", "")
+
+    status_code, token_resp = alexaplus_addon.alexaplus_engine.exchange_token(
+        grant_type=grant_type,
+        code=code,
+        code_verifier=code_verifier,
+        refresh_token=refresh_token,
+        client_id=client_id,
+        client_secret=client_secret,
+        resource=resource,
+        scope=scope,
+    )
+    return JSONResponse(token_resp, status_code=status_code)
+
+
+@mcp.custom_route("/addon.json", methods=["GET"])
+@mcp.custom_route("/api/addon/manifest", methods=["GET"])
+async def addon_manifest(request: Request):
+    """Official Alexa+ Add-on manifest conforming to Alexa AI CLI & Developer Portal."""
+    return JSONResponse(alexaplus_addon.alexaplus_engine.generate_addon_manifest())
+
+
+@mcp.custom_route("/privacy", methods=["GET"])
+async def privacy_policy(request: Request):
+    return JSONResponse({
+        "name": "Hearth Universal Alexa+ Add-on Privacy Policy",
+        "last_updated": "2026-09-16",
+        "data_retention": "Local-first episodic memory with SHA-256 Merkle audit trail",
+        "third_party_sharing": "Zero external data sharing without user consent",
+        "compliance": "COPPA compliant child persona guardrails & Propose-Never-Execute",
+    })
+
+
+@mcp.custom_route("/terms", methods=["GET"])
+async def terms_of_use(request: Request):
+    return JSONResponse({
+        "name": "Hearth Universal Alexa+ Add-on Terms of Service",
+        "last_updated": "2026-09-16",
+        "license": "Apache 2.0 / Open Source Glass-Box AI",
+        "warranty": "Provided as-is under open source license for Amazon Developer Hackathon",
+    })
 
 
 @mcp.custom_route("/api/chat", methods=["POST"])
