@@ -226,6 +226,7 @@ select.persona {
   gap: var(--sp2);
   z-index: 60;
   max-width: 360px;
+  pointer-events: none;
 }
 
 .toast {
@@ -236,6 +237,7 @@ select.persona {
   box-shadow: var(--shadow-pop);
   font-size: var(--fs-body);
   animation: toastin var(--t-med) var(--ease);
+  pointer-events: none;
 }
 
 .toast.err {

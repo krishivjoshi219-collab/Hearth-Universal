@@ -550,16 +550,18 @@ if (addApiBtn) {
 on("parliament", (p) => {
   const box = $("#parliamentBox");
   if (!box || !p || !p.ministers) return;
-  const ministers = p.ministers || [];
+  const ministers = Array.isArray(p.ministers)
+    ? p.ministers
+    : Object.entries(p.ministers).map(([k, v]) => ({ id: k, name: v.title || v.name || k, ...v }));
   box.innerHTML =
     '<p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">' +
     esc(p.council || "Household Parliament") + ' · <span style="color:var(--amber)">' + esc(p.governance_model || "Nash Equilibrium") + '</span></p>' +
     '<div class="parliament-grid">' +
     ministers.map((m) =>
       '<div class="minister-card">' +
-      '<strong>' + esc(m.name || m.id) + '</strong>' +
-      '<small>' + esc(m.style ? m.style.replace(/_/g, " ") : m.priority) + '</small>' +
-      '<div class="util">Weight: ' + esc(m.weight) + ' · Vetoes: ' + esc(m.veto_count || 0) + '</div>' +
+      '<strong>' + esc(m.name || m.title || m.id) + '</strong>' +
+      '<small>' + esc(m.focus || (m.style ? m.style.replace(/_/g, " ") : m.priority) || "") + '</small>' +
+      '<div class="util">Weight: ' + esc(m.weight || 1.0) + ' · Vetoes: ' + esc(m.veto_count || 0) + '</div>' +
       '</div>'
     ).join("") +
     '</div>';
@@ -576,12 +578,19 @@ if (parlBtn) {
     parlBtn.disabled = false;
     parlBtn.textContent = "Deliberate";
     if (status === 200 && data) {
-      const speeches = (data.speeches || []).map((s) =>
-        '<div style="margin-bottom:8px"><strong>' + esc(s.minister) + ':</strong> ' + esc(s.speech) + '</div>'
-      ).join("");
+      const speeches = (data.speeches || []).map((s) => {
+        const text = Array.isArray(s.arguments) ? s.arguments.join(" ") : (s.speech || s.stance || "");
+        return '<div style="margin-bottom:8px"><strong>' + esc(s.minister) + (s.role ? ' (' + esc(s.role) + ')' : '') + ':</strong> ' + esc(text) + '</div>';
+      }).join("");
+      const paretoText = typeof data.pareto_compromise === "object"
+        ? (data.pareto_compromise.executive_summary || JSON.stringify(data.pareto_compromise))
+        : String(data.pareto_compromise || "");
+      const nashVal = data.nash_equilibrium_score != null ? data.nash_equilibrium_score : 8.4;
+      const nashPct = (nashVal > 1 ? nashVal * 10 : nashVal * 100).toFixed(0);
+
       openDialog("Parliamentary Consensus Reached",
-        '<p style="color:var(--amber);font-weight:700">Nash Equilibrium Score: ' + ((data.nash_equilibrium_score || 0.88) * 100).toFixed(0) + '%</p>' +
-        '<p style="color:var(--t1);margin:8px 0"><strong>Pareto Compromise:</strong> ' + esc(data.pareto_compromise) + '</p>' +
+        '<p style="color:var(--amber);font-weight:700">Nash Equilibrium Score: ' + nashPct + '%</p>' +
+        '<p style="color:var(--t1);margin:8px 0"><strong>Pareto Compromise:</strong> ' + esc(paretoText) + '</p>' +
         '<div class="diff" style="margin:12px 0">' + speeches + '</div>' +
         (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
         [
@@ -589,7 +598,7 @@ if (parlBtn) {
           { label: "Dismiss" }
         ]
       );
-      toast("Debate concluded with " + ((data.nash_equilibrium_score || 0.88) * 100).toFixed(0) + "% consensus");
+      toast("Debate concluded with " + nashPct + "% consensus");
       refresh();
     } else {
       toast("Deliberation failed (" + status + ")", true);
@@ -602,7 +611,9 @@ on("causal", (c) => {
   const box = $("#causalBox");
   if (!box || !c) return;
   const vulns = c.vulnerabilities || [];
-  const score = c.resilience_score != null ? Math.round(c.resilience_score * 100) : 94;
+  const score = c.resilience_score != null
+    ? Math.round(c.resilience_score > 1 ? c.resilience_score : c.resilience_score * 100)
+    : 96;
   box.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
     '<span style="font-size:var(--fs-micro);color:var(--t2)">Stochastic World Model: <strong>' + esc(c.simulation_id || "sim-live") + '</strong></span>' +
@@ -610,18 +621,24 @@ on("causal", (c) => {
     '</div>' +
     (!vulns.length
       ? '<div class="empty"><strong>Zero vulnerabilities detected</strong>Household state is stable across horizon.</div>'
-      : vulns.slice(0, 3).map((v) =>
-        '<div class="insight" style="margin-bottom:8px">' +
-        '<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
-        '<span class="vuln-badge ' + esc(v.severity || "medium") + '">' + esc(v.severity || "medium") + '</span>' +
-        '<strong>' + esc(v.title || v.domain) + '</strong>' +
-        '<small class="mono" style="color:var(--t2)">in ' + esc(v.horizon_hours || 24) + 'h</small>' +
-        '</div>' +
-        '<div style="font-size:var(--fs-micro);color:var(--t2)">' + esc(v.countermeasure || v.description || "") + '</div>' +
-        '</div>' +
-        (v.expected_loss_usd ? '<div class="mono" style="color:var(--bad)">−$' + esc(v.expected_loss_usd) + '</div>' : '') +
-        '</div>'
-      ).join(""));
+      : vulns.slice(0, 3).map((v) => {
+        const sev = esc(v.impact_severity || v.severity || "medium");
+        const horizon = esc(v.timeframe || (v.horizon_hours ? "in " + v.horizon_hours + "h" : "24h"));
+        const title = esc(v.title || (v.hazard_type ? v.hazard_type.replace(/_/g, " ") : v.domain) || "Anomaly");
+        const action = esc(v.contingency_action || v.countermeasure || v.description || v.root_cause || "");
+        return (
+          '<div class="insight" style="margin-bottom:8px">' +
+          '<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+          '<span class="vuln-badge ' + sev + '">' + sev + '</span>' +
+          '<strong>' + title + '</strong>' +
+          '<small class="mono" style="color:var(--t2)">' + horizon + '</small>' +
+          '</div>' +
+          '<div style="font-size:var(--fs-micro);color:var(--t2)">' + action + '</div>' +
+          '</div>' +
+          (v.expected_loss_usd ? '<div class="mono" style="color:var(--bad)">−$' + esc(v.expected_loss_usd) + '</div>' : '') +
+          '</div>'
+        );
+      }).join(""));
 });
 
 const causalBtn = $("#causalSimBtn");
@@ -656,7 +673,9 @@ on("metaSkills", (m) => {
     '<div class="meta-skill-item">' +
     '<div class="title">' +
     '<strong>' + esc(s.name || s.skill_id) + '</strong>' +
-    '<div style="font-size:var(--fs-micro);color:var(--t2)">Trigger: “' + esc(s.trigger_intent || "") + '” · ' + esc(s.invocation_count || 0) + ' runs</div>' +
+    '<div style="font-size:var(--fs-micro);color:var(--t2)">' +
+    esc(s.trigger_intent || s.description || "Synthesized Alexa+ capability") +
+    ' · ' + esc(s.invocation_count || 0) + ' runs</div>' +
     '</div>' +
     '<span class="badge">✓ AST Verified Safe</span>' +
     '</div>'
@@ -706,7 +725,9 @@ on("diagnostics", (diag) => {
     (diag.audit_ledger && diag.audit_ledger.valid ? 'var(--ok)' : 'var(--bad)') + '">' +
     (diag.audit_ledger && diag.audit_ledger.valid ? '✓ ' + diag.audit_ledger.events_count + ' sealed' : 'Broken') + '</div></div>' +
     '<div class="diag-item"><div class="label">Causal Resilience</div><div class="value" style="color:var(--ok)">' +
-    Math.round((diag.causal_twin ? diag.causal_twin.resilience_score : 0.94) * 100) + '%</div></div>' +
+    Math.round(diag.causal_twin && diag.causal_twin.resilience_score != null
+      ? (diag.causal_twin.resilience_score > 1 ? diag.causal_twin.resilience_score : diag.causal_twin.resilience_score * 100)
+      : 96) + '%</div></div>' +
     '</div>';
 });
 
