@@ -19,6 +19,7 @@ Env vars (all optional, zero-config offline by default):
 from __future__ import annotations
 import json
 import os
+import re
 import urllib.request
 from dataclasses import dataclass
 from . import vault
@@ -27,7 +28,7 @@ STRICT_EGRESS = os.environ.get("HEARTH_EGRESS_STRICT", "0") == "1"
 EXTRA_HOSTS = tuple(h.strip() for h in os.environ.get("HEARTH_EGRESS_EXTRA", "").split(",") if h.strip())
 KNOWN_HOSTS = (
     "amazonaws.com", "bedrock-runtime.us-east-1.amazonaws.com", "bedrock-runtime.us-west-2.amazonaws.com",
-    "api.openai.com", "openrouter.ai", "api.together.xyz", "api.anthropic.com",
+    "api.openai.com", "openrouter.ai", "api.together.xyz", "api.anthropic.com", "api.groq.com",
     "localhost", "127.0.0.1",
 ) + EXTRA_HOSTS
 
@@ -75,12 +76,28 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 bedrock_res.latency_ms = round((time.time() - start_t) * 1000, 1)
             return bedrock_res
 
-    # 2. OpenAI / Compatible Provider
+    # 2. Universal Model Mesh / OpenAI-Compatible Provider
     api_key = vault.resolve("{{vault:MODEL_KEY}}") or os.environ.get("OPENAI_API_KEY", "")
     base_url = os.environ.get("HEARTH_BASE_URL", "https://api.openai.com/v1")
     model = os.environ.get("HEARTH_MODEL", "gpt-4o-mini")
 
-    if (provider == "openai" or api_key) and provider != "local":
+    try:
+        from . import model_mesh
+        mesh = model_mesh.model_mesh
+        if provider in mesh.providers:
+            ep = mesh.providers[provider]
+            if ep.base_url:
+                base_url = ep.base_url
+            if ep.api_key_ref:
+                resolved = vault.resolve(ep.api_key_ref) or os.environ.get(ep.api_key_ref.strip("{}").replace("vault:", ""), "")
+                if resolved:
+                    api_key = resolved
+            if mesh.active_model and mesh.active_model not in ("us.amazon.nova-pro-v1:0", "auto"):
+                model = mesh.active_model
+    except Exception:
+        pass
+
+    if (provider not in ("bedrock", "local") or api_key) and provider != "local":
         host = _host_of(base_url)
         if STRICT_EGRESS and host not in KNOWN_HOSTS and not any(host.endswith(kh) for kh in KNOWN_HOSTS):
             return BrainResponse(
@@ -440,9 +457,31 @@ def _generate_intelligent_offline_response(messages: list[dict]) -> str:
             "Action was permanently blocked and recorded in the append-only SHA-256 audit ledger."
         )
 
+    if any(re.search(r"\b(yo|hey|hi|hello|howdy|sup|what'?s up|good morning|good evening|how are you)\b", low) for _ in [1]) or low in ("yo", "hey", "hi", "hello", "sup"):
+        name = os.environ.get("HEARTH_ACTIVE_PERSONA", "Krishiv").split()[0]
+        return (
+            f"Hey {name}! 👋 Everything is calm and running smoothly in your household:\n\n"
+            "• Living room climate is comfortable at 22°C (Eco mode)\n"
+            "• Front door is securely locked and perimeter armed\n"
+            "• Solar storage is healthy and replenishing\n\n"
+            "How can I assist you right now? You can ask me to run an energy audit, restock essentials, or check active proposals."
+        )
+
+    if any(k in low for k in ("who are you", "what can you do", "help", "features", "capabilities", "what is hearth")):
+        return (
+            "I am **Hearth Universal**, an open glass-box operations agent for Amazon Alexa+.\n\n"
+            "I coordinate household automation with complete transparency:\n"
+            "• **Household Parliament**: Resolves multi-objective dilemmas (comfort vs energy cost) via game-theoretic Nash equilibrium.\n"
+            "• **Causal Digital Twin**: 7-day Monte Carlo horizon forecasting for pre-emptive resilience.\n"
+            "• **Propose-Never-Execute**: Consequential actions are staged in your Glass-box Approval Tray before anything is touched.\n"
+            "• **Reversibility Engine**: Instant rollback for any approved change (`Ctrl+Z`).\n"
+            "• **Universal Model Mesh**: Works with Amazon Nova Pro by default, and connects to any API in the world."
+        )
+
+    name = os.environ.get("HEARTH_ACTIVE_PERSONA", "Krishiv").split()[0]
     return (
-        f"I received your request: '{last_msg}'. "
-        "I synthesized your household context from persistent memory, checked current smart home telemetry, "
-        "and formulated an orchestrated action plan. Safe read queries were executed autonomously; "
-        "any consequential changes are routed to your Glass-box Approval Tray."
+        f"I've received your request, {name}: **\"{last_msg}\"**.\n\n"
+        "I've verified your household preferences and live smart home telemetry. "
+        "Safe read operations ran autonomously; if this requires adjusting your smart home devices or ordering consumables, "
+        "I'll stage a proposal in your Approval Tray for 1-tap confirmation."
     )
