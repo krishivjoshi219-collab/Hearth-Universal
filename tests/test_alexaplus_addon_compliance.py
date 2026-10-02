@@ -13,19 +13,37 @@ https://developer.amazon.com/docs/alexaplus/add-ons/home.html
 import base64
 import hashlib
 import json
-import urllib.request
-import urllib.error
+import os
+import sys
+import pytest
+from starlette.testclient import TestClient
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
+
 from hearth.alexaplus_addon import alexaplus_engine
+import server
 
-BASE_URL = "http://localhost:8787"
+
+@pytest.fixture
+def client():
+    app = server.mcp.streamable_http_app()
+    return TestClient(app)
 
 
-def test_rfc9728_protected_resource_metadata():
+def _get_client(client=None):
+    if client is not None:
+        return client
+    app = server.mcp.streamable_http_app()
+    return TestClient(app)
+
+
+def test_rfc9728_protected_resource_metadata(client=None):
     """Verify RFC 9728 Protected Resource Metadata document at /.well-known/oauth-protected-resource."""
-    url = f"{BASE_URL}/.well-known/oauth-protected-resource"
-    resp = urllib.request.urlopen(url)
-    assert resp.status == 200, f"Expected 200, got {resp.status}"
-    data = json.loads(resp.read().decode())
+    c = _get_client(client)
+    resp = c.get("/.well-known/oauth-protected-resource")
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+    data = resp.json()
     
     assert data["resource"].endswith("/mcp")
     assert "mcp:service" in data["scopes_supported"]
@@ -37,12 +55,12 @@ def test_rfc9728_protected_resource_metadata():
     print("✓ RFC 9728 Protected Resource Metadata verified")
 
 
-def test_oauth_authorization_server_metadata():
+def test_oauth_authorization_server_metadata(client=None):
     """Verify OAuth 2.1 Authorization Server Metadata document at /.well-known/oauth-authorization-server."""
-    url = f"{BASE_URL}/.well-known/oauth-authorization-server"
-    resp = urllib.request.urlopen(url)
-    assert resp.status == 200, f"Expected 200, got {resp.status}"
-    data = json.loads(resp.read().decode())
+    c = _get_client(client)
+    resp = c.get("/.well-known/oauth-authorization-server")
+    assert resp.status_code == 200, f"Expected 200, got {resp.status_code}"
+    data = resp.json()
     
     assert data["authorization_endpoint"].endswith("/oauth/authorize")
     assert data["token_endpoint"].endswith("/oauth/token")
@@ -53,18 +71,16 @@ def test_oauth_authorization_server_metadata():
     print("✓ OAuth 2.1 Authorization Server Metadata verified")
 
 
-def test_tier1_client_credentials_grant():
+def test_tier1_client_credentials_grant(client=None):
     """Verify Tier 1 Machine-to-Machine Client Credentials Grant for service discovery."""
-    url = f"{BASE_URL}/oauth/token"
-    payload = json.dumps({
+    c = _get_client(client)
+    resp = c.post("/oauth/token", json={
         "grant_type": "client_credentials",
         "client_id": "alexa-plus-crawler",
         "client_secret": "test_sec_9941"
-    }).encode()
-    req = urllib.request.Request(url, data=payload, headers={"Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    assert resp.status == 200
-    data = json.loads(resp.read().decode())
+    })
+    assert resp.status_code == 200
+    data = resp.json()
     
     assert data["token_type"] == "Bearer"
     assert data["scope"] == "mcp:service"
@@ -73,31 +89,28 @@ def test_tier1_client_credentials_grant():
     print("✓ Tier 1 Client Credentials (M2M) Grant verified")
 
 
-def test_tier2_pkce_authorization_code_grant():
+def test_tier2_pkce_authorization_code_grant(client=None):
     """Verify Tier 2 User-Level Account Linking with PKCE S256 verification."""
+    c = _get_client(client)
     verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk_TEST_SUITE"
     challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("utf-8")).digest()).decode("utf-8").rstrip("=")
     
     # 1. Authorize step
-    auth_url = f"{BASE_URL}/oauth/authorize?client_id=alexa-hub&code_challenge={challenge}&code_challenge_method=S256&scope=mcp:tools+mcp:resources"
-    resp = urllib.request.urlopen(auth_url)
-    assert resp.status == 200
-    auth_data = json.loads(resp.read().decode())
+    resp = c.get(f"/oauth/authorize?client_id=alexa-hub&code_challenge={challenge}&code_challenge_method=S256&scope=mcp:tools+mcp:resources")
+    assert resp.status_code == 200
+    auth_data = resp.json()
     code = auth_data["code"]
     assert code.startswith("authcode_")
     
     # 2. Token exchange step with code_verifier
-    token_url = f"{BASE_URL}/oauth/token"
-    payload = json.dumps({
+    resp2 = c.post("/oauth/token", json={
         "grant_type": "authorization_code",
         "code": code,
         "code_verifier": verifier,
         "client_id": "alexa-hub"
-    }).encode()
-    req = urllib.request.Request(token_url, data=payload, headers={"Content-Type": "application/json"})
-    resp = urllib.request.urlopen(req)
-    assert resp.status == 200
-    data = json.loads(resp.read().decode())
+    })
+    assert resp2.status_code == 200
+    data = resp2.json()
     
     assert data["token_type"] == "Bearer"
     assert "mcp:tools" in data["scope"]
@@ -106,25 +119,23 @@ def test_tier2_pkce_authorization_code_grant():
     assert data["refresh_token"].startswith("Atzr|")
     
     # 3. Token refresh step
-    ref_payload = json.dumps({
+    resp3 = c.post("/oauth/token", json={
         "grant_type": "refresh_token",
         "refresh_token": data["refresh_token"]
-    }).encode()
-    req_ref = urllib.request.Request(token_url, data=ref_payload, headers={"Content-Type": "application/json"})
-    resp_ref = urllib.request.urlopen(req_ref)
-    assert resp_ref.status == 200
-    ref_data = json.loads(resp_ref.read().decode())
+    })
+    assert resp3.status_code == 200
+    ref_data = resp3.json()
     assert ref_data["token_type"] == "Bearer"
     assert ref_data["access_token"].startswith("Atza|")
     print("✓ Tier 2 PKCE S256 Authorization Code & Refresh Token Grants verified")
 
 
-def test_addon_manifest():
+def test_addon_manifest(client=None):
     """Verify official addon.json manifest structure."""
-    url = f"{BASE_URL}/addon.json"
-    resp = urllib.request.urlopen(url)
-    assert resp.status == 200
-    manifest = json.loads(resp.read().decode())
+    c = _get_client(client)
+    resp = c.get("/addon.json")
+    assert resp.status_code == 200
+    manifest = resp.json()
     
     assert "addon" in manifest
     assert manifest["addon"]["id"] == "amzn1.ask.addon.hearth.operations"
@@ -158,16 +169,17 @@ def test_display_modes_and_voice_sanitization():
     print("✓ Display Modes and Voice Sanitization verified")
 
 
-def test_privacy_and_terms():
+def test_privacy_and_terms(client=None):
     """Verify legal policy endpoints required by Alexa+ certification."""
-    resp_priv = urllib.request.urlopen(f"{BASE_URL}/privacy")
-    assert resp_priv.status == 200
-    priv_data = json.loads(resp_priv.read().decode())
+    c = _get_client(client)
+    resp_priv = c.get("/privacy")
+    assert resp_priv.status_code == 200
+    priv_data = resp_priv.json()
     assert "Privacy Policy" in priv_data["name"]
     
-    resp_terms = urllib.request.urlopen(f"{BASE_URL}/terms")
-    assert resp_terms.status == 200
-    terms_data = json.loads(resp_terms.read().decode())
+    resp_terms = c.get("/terms")
+    assert resp_terms.status_code == 200
+    terms_data = resp_terms.json()
     assert "Terms of Service" in terms_data["name"]
     print("✓ Privacy Policy and Terms of Service endpoints verified")
 
