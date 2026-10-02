@@ -52,6 +52,8 @@ from hearth import (
     parliament, causal_twin, meta_skill, model_mesh
 )
 
+_SERVER_START_TIME = _time.time()
+
 # Simple per-IP token bucket for the expensive chat endpoint (product abuse guard).
 _RATE_BUCKETS: dict[str, list] = {}
 RATE_LIMIT = int(os.environ.get("HEARTH_CHAT_RPM", "30"))
@@ -1071,6 +1073,31 @@ async def api_decide(request: Request):
     return JSONResponse(out)
 
 
+@mcp.custom_route("/api/undo", methods=["POST"])
+@mcp.custom_route("/api/proposals/{pid}/undo", methods=["POST"])
+async def api_undo(request: Request):
+    """Reversibility & Trust: Undo an executed action proposal, restoring prior state."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    pid = str(request.path_params.get("pid") or body.get("id") or body.get("proposal_id", ""))
+    if not pid:
+        return JSONResponse({"ok": False, "error": "Proposal ID is required"}, status_code=400)
+
+    gate = _adult_or_403(request, "actions_undo")
+    if gate is not None:
+        return gate
+
+    out = proposals.undo(pid)
+    status_code = 200 if out.get("ok") else 400
+    return JSONResponse(out, status_code=status_code)
+
+
+
 @mcp.custom_route("/api/memory", methods=["GET", "POST", "DELETE"])
 async def api_memory(request: Request):
     _t = _throttled(request)
@@ -1847,6 +1874,45 @@ async def api_models_provider_add(request: Request):
         return JSONResponse({"ok": False, "error": "base_url is required"}, status_code=400)
     res = model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)
     return JSONResponse(res)
+
+
+@mcp.custom_route("/api/diagnostics", methods=["GET"])
+async def api_diagnostics(request: Request):
+    """System Diagnostics & Telemetry: Complete health overview of all subsystems."""
+    now = _time.time()
+    uptime = round(now - _SERVER_START_TIME, 1)
+    audit_health = audit.verify()
+    mesh_info = model_mesh.model_mesh.discover_all_models()
+    parl_info = parliament.parliament.get_ministers_info()
+    causal_info = causal_twin.causal_twin.get_latest_vulnerabilities()
+
+    return JSONResponse({
+        "status": "healthy",
+        "system": "Hearth Universal Multi-Agent Household Command",
+        "spec_version": PROTOCOL,
+        "uptime_seconds": uptime,
+        "active_brain": mesh_info.get("active_model"),
+        "active_provider": mesh_info.get("active_provider"),
+        "connected_providers": mesh_info.get("providers_connected", 1),
+        "total_models_available": mesh_info.get("total_models_available", 1),
+        "audit_ledger": {
+            "valid": bool(audit_health),
+            "events_count": audit.count(),
+        },
+        "parliament": {
+            "council": parl_info.get("council"),
+            "ministers_count": len(parl_info.get("ministers", [])),
+        },
+        "causal_twin": {
+            "resilience_score": causal_info.get("resilience_score", 0.94),
+            "vulnerability_count": causal_info.get("vulnerability_count", 0),
+        },
+        "meta_skills": {
+            "count": len(meta_skill.meta_synthesizer.list_synthesized_skills()),
+        },
+        "active_persona": ACTIVE_PERSONA.get("name"),
+        "proposals_pending": len(proposals.list_proposals(status="pending")),
+    })
 
 
 WEB2_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")

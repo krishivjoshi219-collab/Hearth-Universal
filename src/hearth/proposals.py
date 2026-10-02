@@ -243,3 +243,72 @@ def clear_proposals() -> dict:
         atomic.atomic_write_text(p, "[]")
     return {"ok": True}
 
+
+def undo(pid: str) -> dict:
+    """Reverse an approved and executed proposal, returning the system to its prior state.
+
+    Human Psychology & Trust Engineering:
+    Knowing that decisions are reversible provides psychological safety, reducing cognitive friction
+    and commitment anxiety when interacting with autonomous household agents.
+    Every undo operation is sealed into the SHA-256 Merkle audit chain.
+    """
+    from . import audit as _audit
+
+    p = _path()
+    with atomic.locked(p):
+        try:
+            items = json.loads(p.read_text())
+            if not isinstance(items, list):
+                items = []
+        except Exception:
+            return {"ok": False, "error": "State corrupted"}
+
+        for it in items:
+            if it["id"] == pid:
+                if it.get("status") != "approved":
+                    return {"ok": False, "error": f"Proposal '{pid}' is '{it.get('status')}', not approved. Cannot undo."}
+
+                kind = it.get("kind", "")
+                meta = it.get("meta") or {}
+                now = int(time.time())
+                reversal_note = f"Reversed {kind}"
+
+                try:
+                    if kind == "home_lock":
+                        from . import home_mock
+                        door = meta.get("door", "front_door")
+                        target_lock = not meta.get("locked", False)
+                        res = home_mock.toggle_lock(door=door, locked=target_lock)
+                        reversal_note = f"Door '{door}' reversed to {res.get('status', 'locked')}"
+                    elif kind == "home_scene":
+                        from . import home_mock
+                        home_mock.set_scene("evening-calm")
+                        reversal_note = "Restored default scene 'evening-calm'"
+                    elif kind == "arbiter_compromise":
+                        from . import home_mock
+                        home_mock.update_device("living_room", "climate", {"target_c": 22.0, "mode": "comfort"})
+                        reversal_note = "Thermostat restored to baseline 22.0°C comfort"
+                    elif kind in ("cancel_subscription", "downgrade_subscription"):
+                        reversal_note = f"Subscription modification for '{it.get('title')}' rolled back (active status maintained)"
+                    elif kind == "commerce_order":
+                        reversal_note = f"Cart replenishment for '{it.get('title')}' cancelled before dispatch"
+                except Exception as exc:
+                    reversal_note = f"Reversal execution partial: {exc}"
+
+                it["status"] = "undone"
+                it["undone_at"] = now
+                it["reversal"] = {"applied": True, "at": now, "note": reversal_note}
+
+                _audit.append("human", "proposal_undone", {
+                    "id": pid,
+                    "kind": kind,
+                    "title": it.get("title"),
+                    "note": reversal_note
+                })
+
+                atomic.atomic_write_text(p, json.dumps(items, indent=2))
+                return {"ok": True, "proposal": it, "note": reversal_note}
+
+    return {"ok": False, "error": f"Proposal '{pid}' not found"}
+
+

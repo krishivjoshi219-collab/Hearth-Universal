@@ -20,6 +20,7 @@
       </div>
       <div class="topbar-right">
         <span class="pill" id="protoPill"><span class="dot"></span><span id="protoText">Connecting…</span></span>
+        <button class="pill" id="chimeBtn" title="Toggle audio feedback earcons" style="cursor:pointer;padding:5px 8px" aria-label="Toggle audio feedback">🔔</button>
         <span class="pill" id="dialPill" title="Autonomy level">Propose</span>
         <select class="persona" id="modelSel" aria-label="Universal Model Mesh Brain" title="Active Reasoning Brain">
           <option value="us.amazon.nova-pro-v1:0">Amazon Nova Pro · Bedrock</option>
@@ -56,6 +57,21 @@
         <div class="panel">
           <div class="panel-head"><h3>Delivery</h3></div>
           <div class="panel-body" id="deliveryBox"><div class="empty"><strong>No transit info</strong>Stage a restock to track a van.</div></div>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head">
+          <h3>Living Household Simulator</h3>
+          <span class="spacer"></span>
+          <span class="pill">Test Drive Real-Life Triggers</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">Simulate dynamic household events to witness real-time multi-agent arbitration, Sentinel security gating, and proactive Subscribe &amp; Save optimization.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn scenario-btn" data-scenario="energy_peak" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">⚡ Peak Tariff ($0.38/kWh)</button>
+            <button class="btn scenario-btn" data-scenario="pantry_alert" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">📦 Pantry Stockout Threshold</button>
+            <button class="btn scenario-btn" data-scenario="security" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">🛡️ Night Perimeter Integrity</button>
+          </div>
         </div>
       </div>
     </section>
@@ -160,7 +176,28 @@
         <div class="setrow"><div class="lab">Adult PIN<small>Required for money, unlocks and resets. Set via HEARTH_ADULT_PIN.</small></div><input type="password" id="pinInput" placeholder="••••" autocomplete="off"/></div>
         <div class="setrow"><div class="lab">Ledger<small id="ledgerState">Checking chain…</small></div><button class="btn" id="verifyBtn" style="min-height:40px">Verify now</button></div>
       </div></div>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-head">
+          <h3>System Diagnostics &amp; Telemetry</h3>
+          <span class="spacer"></span>
+          <span class="pill" id="diagHealthPill" style="color:var(--ok)">● Healthy</span>
+        </div>
+        <div class="panel-body" id="diagBox">
+          <div class="skel" style="height:80px"></div>
+        </div>
+      </div>
     </section>
+
+    <div class="light-wave-bar idle" id="lightWaveBar" role="presentation"></div>
+
+    <div class="quick-chips" id="quickChips" aria-label="Living Household Scenarios &amp; Quick Commands">
+      <button type="button" class="chip" data-cmd="Surge solar optimization: pre-cool living room to 20°C before 4 PM peak tariff">⚡ Peak Solar Surge</button>
+      <button type="button" class="chip" data-cmd="Audit household renewals and stage dormant subscription cancellations">💸 Audit Renewals ($803/yr)</button>
+      <button type="button" class="chip" data-cmd="Scan pantry inventory and stage 15% Subscribe and Save restock bundle">☕ Restock Pantry (15% Save)</button>
+      <button type="button" class="chip" data-cmd="Convene Household Parliament: deliberate energy conservation versus resident wellness">🏛️ Parliament Deliberate</button>
+      <button type="button" class="chip" data-cmd="Run Causal Digital Twin 7-day Monte Carlo stochastic resilience forecast">🔮 7-Day Causal Forecast</button>
+    </div>
 
     <form class="cmdbar" id="cmdForm" autocomplete="off">
       <input id="cmdInput" placeholder="Tell Hearth a goal — “cut my subscriptions”, “restock coffee”, “movie night”…" aria-label="Command Hearth"/>

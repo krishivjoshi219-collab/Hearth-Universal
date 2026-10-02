@@ -19,6 +19,69 @@ export function toast(msg, err) {
   while (box.children.length > 4) box.firstChild.remove();
 }
 
+/* ---------- luxury calm feedback: light-wave & earcons ---------- */
+let audioMuted = false;
+export function playEarcon(type = "success") {
+  if (audioMuted) return;
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    if (type === "success") {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc1.type = "sine";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(523.25, now);
+      osc2.frequency.setValueAtTime(659.25, now + 0.08);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+      osc1.start(now);
+      osc1.stop(now + 0.25);
+      osc2.start(now + 0.08);
+      osc2.stop(now + 0.35);
+    } else if (type === "alert") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.09, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    }
+  } catch {}
+}
+
+export function setLightWave(mode = "idle") {
+  const bar = $("#lightWaveBar");
+  if (!bar) return;
+  bar.className = "light-wave-bar " + mode;
+  if (mode !== "idle") {
+    clearTimeout(bar._timer);
+    bar._timer = setTimeout(() => {
+      if (bar.className.includes(mode)) bar.className = "light-wave-bar idle";
+    }, 3800);
+  }
+}
+
+const chimeBtn = $("#chimeBtn");
+if (chimeBtn) {
+  chimeBtn.addEventListener("click", () => {
+    audioMuted = !audioMuted;
+    chimeBtn.textContent = audioMuted ? "🔕" : "🔔";
+    chimeBtn.title = audioMuted ? "Audio muted" : "Audio earcons enabled";
+    toast(audioMuted ? "Audio muted" : "Audio earcons enabled");
+  });
+}
+
 /* ---------- tabs (1..5 shortcuts, / focuses command) ---------- */
 const views = ["home", "activity", "approvals", "insights", "settings"];
 function show(name) {
@@ -253,6 +316,35 @@ on("proposals", (res) => {
     list.appendChild(el);
   });
 });
+let lastApprovedPid = null;
+async function undoProposal(id, el) {
+  toast("Reversing action…");
+  setLightWave("thinking");
+  const { status, data } = await post("/api/undo", { id });
+  if (status === 200 && data.ok) {
+    dialStats.undo += 1;
+    paintDial();
+    playEarcon("alert");
+    setLightWave("alert");
+    toast("Action reversed: " + (data.note || "prior state restored"));
+    refresh();
+  } else {
+    setLightWave("alert");
+    toast("Reversal failed: " + (data.error || status), true);
+  }
+}
+
+document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.target.matches("input,textarea")) {
+    if (lastApprovedPid) {
+      e.preventDefault();
+      const pidToUndo = lastApprovedPid;
+      lastApprovedPid = null;
+      undoProposal(pidToUndo);
+    }
+  }
+});
+
 async function decide(id, approved, el, note) {
   // Optimistic: settle the row instantly (reversible until server answers), roll back on failure.
   const actions = el.querySelector(".intent-actions");
@@ -265,9 +357,24 @@ async function decide(id, approved, el, note) {
     dialStats.proceed += approved ? 1 : 0;
     dialStats.undo += 0;
     paintDial();
+    if (approved) {
+      lastApprovedPid = id;
+      playEarcon("success");
+      setLightWave("success");
+    } else {
+      playEarcon("alert");
+    }
     if (data.execution || approved) {
       const r = el.querySelector(".intent-actions");
-      if (r) r.outerHTML = '<div class="receipt">✓ ' + esc(note || (approved ? "Executed once — receipt sealed in ledger." : "Rejected — no side effects.")) + "</div>";
+      if (r) {
+        r.outerHTML =
+          '<div class="receipt">✓ ' +
+          esc(note || (approved ? "Executed once — receipt sealed in ledger." : "Rejected — no side effects.")) +
+          (approved ? ' <button class="btn-undo" data-undopid="' + esc(id) + '">↩ Undo</button>' : '') +
+          '</div>';
+        const uBtn = el.querySelector('[data-undopid="' + id + '"]');
+        if (uBtn) uBtn.addEventListener("click", () => undoProposal(id, el));
+      }
     }
     toast(note || (approved ? "Approved and executed once" : "Rejected — nothing happened"));
     setTimeout(refresh, 800);
@@ -277,6 +384,8 @@ async function decide(id, approved, el, note) {
   } else {
     el.innerHTML = snapshot;
     rebindIntent(el);
+    setLightWave("alert");
+    playEarcon("alert");
     toast("Server refused (" + status + ") — rolled back, nothing changed", true);
   }
 }
@@ -294,6 +403,7 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   const msg = input.value.trim();
   if (!msg) return;
   input.value = "";
+  setLightWave("thinking");
   const log = $("#chatLog");
   const el = document.createElement("div");
   el.className = "event human";
@@ -303,13 +413,19 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   const { status, data } = await post("/api/chat", { message: msg });
   el.querySelector(".when").textContent = new Date().toLocaleTimeString();
   if (status === 429) {
+    setLightWave("alert");
+    playEarcon("alert");
     toast("Slow down — 30 requests per minute", true);
     return;
   }
   if (status !== 200 || !data) {
+    setLightWave("alert");
+    playEarcon("alert");
     toast("Hearth didn't answer (" + status + ") — retrying is safe", true);
     return;
   }
+  setLightWave(data.blocked ? "alert" : "speaking");
+  if (!data.blocked) playEarcon("success");
   const text = data.draft || data.text || data.synthesis || data.message || data.error || "Done.";
   const row = document.createElement("div");
   row.className = "event agent";
@@ -325,6 +441,39 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   else addEvent("agent", (data.intent || " Answered") + " — " + msg.slice(0, 60), { steps: (data.dag || []).length });
   refresh();
 });
+
+/* ---------- quick starter prompt chips (blank canvas relief) ---------- */
+$$(".chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    const cmd = chip.dataset.cmd;
+    if (!cmd) return;
+    const input = $("#cmdInput");
+    input.value = cmd;
+    $("#cmdForm").dispatchEvent(new Event("submit"));
+  });
+});
+
+/* ---------- living household simulator (home view) ---------- */
+$$(".scenario-btn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const scenario = btn.dataset.scenario;
+    btn.disabled = true;
+    setLightWave("thinking");
+    const { status, data } = await post("/api/simulate/tick", { scenario });
+    btn.disabled = false;
+    if (status === 200 && data.ok) {
+      playEarcon("success");
+      setLightWave("speaking");
+      toast("Event simulated: " + (data.event ? data.event.title : scenario));
+      refresh();
+    } else {
+      setLightWave("alert");
+      playEarcon("alert");
+      toast("Simulation failed", true);
+    }
+  });
+});
+
 
 /* ---------- universal model mesh ---------- */
 let modelsCatalog = [];
@@ -537,6 +686,29 @@ if (metaSkillBtn) {
     }
   });
 }
+
+/* ---------- system diagnostics telemetry ---------- */
+on("diagnostics", (diag) => {
+  const box = $("#diagBox");
+  if (!box || !diag) return;
+  const pill = $("#diagHealthPill");
+  if (pill) {
+    pill.textContent = diag.status === "healthy" ? "● Healthy · " + Math.round(diag.uptime_seconds) + "s up" : "● Degraded";
+    pill.style.color = diag.status === "healthy" ? "var(--ok)" : "var(--bad)";
+  }
+  box.innerHTML =
+    '<div class="diag-grid">' +
+    '<div class="diag-item"><div class="label">Brain &amp; Provider</div><div class="value" style="font-size:var(--fs-body)">' +
+    esc((diag.active_brain || "nova-pro").split(":").pop()) + ' · ' + esc((diag.active_provider || "bedrock").toUpperCase()) + '</div></div>' +
+    '<div class="diag-item"><div class="label">FastMCP Protocol</div><div class="value">' +
+    esc(diag.spec_version || "2025-11-25") + '</div></div>' +
+    '<div class="diag-item"><div class="label">Audit Merkle Chain</div><div class="value" style="color:' +
+    (diag.audit_ledger && diag.audit_ledger.valid ? 'var(--ok)' : 'var(--bad)') + '">' +
+    (diag.audit_ledger && diag.audit_ledger.valid ? '✓ ' + diag.audit_ledger.events_count + ' sealed' : 'Broken') + '</div></div>' +
+    '<div class="diag-item"><div class="label">Causal Resilience</div><div class="value" style="color:var(--ok)">' +
+    Math.round((diag.causal_twin ? diag.causal_twin.resilience_score : 0.94) * 100) + '%</div></div>' +
+    '</div>';
+});
 
 /* ---------- settings verify ---------- */
 $("#verifyBtn").addEventListener("click", async () => {

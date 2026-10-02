@@ -25,6 +25,8 @@ async function get(path) {
 
 let timer = null;
 let failures = 0;
+let currentInterval = 4000;
+let baseInterval = 4000;
 
 export async function refresh() {
   try {
@@ -33,7 +35,14 @@ export async function refresh() {
       get("/api/proposals?limit=100").catch(() => null),
       get("/api/audit").catch(() => null),
     ]);
-    failures = 0;
+    if (failures > 0) {
+      failures = 0;
+      currentInterval = baseInterval;
+      if (timer) {
+        clearInterval(timer);
+        timer = setInterval(refresh, currentInterval);
+      }
+    }
     emit("status", { ok: true });
     if (home) emit("home", home);
     if (props) emit("proposals", props);
@@ -62,13 +71,24 @@ export async function refresh() {
       const meta = await get("/api/meta-skills").catch(() => null);
       if (meta) emit("metaSkills", meta);
     } catch {}
+    try {
+      const diag = await get("/api/diagnostics").catch(() => null);
+      if (diag) emit("diagnostics", diag);
+    } catch {}
   } catch (e) {
     failures++;
+    currentInterval = Math.min(15000, baseInterval * Math.pow(1.5, Math.min(failures, 4)));
+    if (timer) {
+      clearInterval(timer);
+      timer = setInterval(refresh, currentInterval);
+    }
     emit("status", { ok: false, failures });
   }
 }
 
-export function startPolling(ms = 5000) {
+export function startPolling(ms = 4000) {
+  baseInterval = ms;
+  currentInterval = ms;
   refresh();
   if (timer) clearInterval(timer);
   timer = setInterval(refresh, ms);
