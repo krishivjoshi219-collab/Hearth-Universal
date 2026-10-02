@@ -181,12 +181,19 @@ def compute_days_until_empty(item: dict) -> float:
         level = float(item.get("level_pct", 0.0))
     except (TypeError, ValueError):
         level = 0.0
+    import math as _math
+    if not _math.isfinite(level):
+        level = 0.0
+    level = max(0.0, min(100.0, level))
     if rate and rate > 0:
         return round(level / rate, 1)
     try:
-        return float(item.get("days_until_empty", 99.0))
+        fallback = float(item.get("days_until_empty", 99.0))
     except (TypeError, ValueError):
         return 99.0
+    if not _math.isfinite(fallback):
+        return 99.0
+    return max(0.0, min(3650.0, fallback))
 
 
 def get_depletion_velocity(item_id: str) -> dict:
@@ -929,12 +936,12 @@ def _resolve_scan_target(code: str) -> dict | None:
     for item in HOUSEHOLD_ESSENTIALS:
         if item["id"] == key or item.get("asin") == key:
             return item
-    # UPC hook: exact + case-insensitive + digit-only fallback.
+    # UPC hook: exact + case-insensitive + digit-only EXACT fallback (no substring).
     upc_hit = UPC_INDEX.get(key) or UPC_INDEX.get(key.upper())
     if not upc_hit:
         digits = "".join(ch for ch in key if ch.isdigit())
         for upc, iid in UPC_INDEX.items():
-            if upc.isdigit() and digits and (digits == upc or digits in upc or upc in digits):
+            if upc.isdigit() and digits and digits == upc:
                 upc_hit = iid
                 break
     if upc_hit:

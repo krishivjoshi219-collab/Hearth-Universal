@@ -10,6 +10,9 @@ build/
 state/
 .kilo/
 .vault.env
+config.yaml
+.env
+.env.*
 *.log
 .DS_Store
 web/

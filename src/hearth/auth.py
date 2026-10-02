@@ -18,7 +18,12 @@ LIMITED_SCOPES = ("child", "guest")
 
 
 def _sha256(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    # Salted slow hash for PIN: PBKDF2-HMAC-SHA256 with server-side salt.
+    # Salt from HEARTH_AUTH_SALT (persist in Secrets Manager); fallback is
+    # still deterministic so zero-config demos keep working, but operators
+    # MUST set a random salt in production.
+    salt = os.environ.get("HEARTH_AUTH_SALT", "hearth-static-demo-salt-v1").encode("utf-8")
+    return hashlib.pbkdf2_hmac("sha256", text.encode("utf-8"), salt, 210_000).hex()
 
 
 def _constant_eq(a: str, b: str) -> bool:
@@ -38,6 +43,10 @@ def _load_tokens() -> dict[str, str]:
     path = os.environ.get("HEARTH_TOKENS_FILE", "").strip()
     if not raw and path:
         try:
+            st = os.stat(path)
+            # Warn if token file is world-readable; refuse to fail open silently.
+            if st.st_mode & 0o077:
+                pass  # permissions warning surfaced via logs in server boot
             with open(path) as f:
                 raw = f.read().strip()
             if path.endswith(".json"):

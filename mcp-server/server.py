@@ -112,6 +112,7 @@ def _throttled(request: Request):
         return JSONResponse(
             {"ok": False, "error": "Global rate budget exceeded (200/min). Slow down."},
             status_code=429,
+            headers={"Retry-After": "60"},
         )
     return None
 
@@ -323,10 +324,12 @@ def home_toggle_lock(
     # Unlock path: fail-closed without an approved proposal.
     if proposal_id:
         p = proposals.get_proposal(proposal_id)
-        if p and p.get("status") == "approved" and p.get("kind") == "home_lock":
+        if p and p.get("status") == "approved" and p.get("kind") == "home_lock" and not p.get("consumed_at"):
+            if not proposals.mark_consumed(proposal_id, "mcp:home_toggle_lock"):
+                return {"ok": False, "error": "proposal already consumed — single-use, replay refused"}
             audit.append("agent", "home_toggle_lock", {"door": door, "locked": False, "via": proposal_id})
             return home_mock.toggle_lock(door=door, locked=False)
-        return {"ok": False, "error": "proposal_id is not an approved home_lock proposal"}
+        return {"ok": False, "error": "proposal_id is not an approved unused home_lock proposal"}
     item = proposals.propose(
         kind="home_lock",
         title="Unlock Front Door Entryway",
@@ -531,11 +534,13 @@ def workspace_exec(
         return {"ok": False, "error": v.reason}
     if proposal_id:
         p = proposals.get_proposal(proposal_id)
-        if p and p.get("status") == "approved" and p.get("kind") == "workspace_exec":
+        if p and p.get("status") == "approved" and p.get("kind") == "workspace_exec" and not p.get("consumed_at"):
+            if not proposals.mark_consumed(proposal_id, "mcp:workspace_exec"):
+                return {"ok": False, "error": "proposal already consumed — single-use, replay refused"}
             out = sandbox.execute(cmd)
             audit.append("agent", "workspace_exec", {"cmd": cmd[:200], "via": proposal_id, "rc": out.get("rc")})
             return out
-        return {"ok": False, "error": "proposal_id is not an approved workspace_exec proposal"}
+        return {"ok": False, "error": "proposal_id is not an approved unused workspace_exec proposal"}
     item = proposals.propose(kind="workspace_exec", title=f"Run: {cmd[:80]}",
                              reasons="MCP client requested workspace shell execution.",
                              risk_level="medium", diff=cmd[:500], meta={"cmd": cmd[:2000]})
@@ -560,11 +565,13 @@ def workspace_write(
         return {"ok": False, "error": v.reason}
     if proposal_id:
         p = proposals.get_proposal(proposal_id)
-        if p and p.get("status") == "approved" and p.get("kind") == "workspace_write":
+        if p and p.get("status") == "approved" and p.get("kind") == "workspace_write" and not p.get("consumed_at"):
+            if not proposals.mark_consumed(proposal_id, "mcp:workspace_write"):
+                return {"ok": False, "error": "proposal already consumed — single-use, replay refused"}
             out = sandbox.write_file(path, content)
             audit.append("agent", "workspace_write", {"path": path, "via": proposal_id})
             return out
-        return {"ok": False, "error": "proposal_id is not an approved workspace_write proposal"}
+        return {"ok": False, "error": "proposal_id is not an approved unused workspace_write proposal"}
     item = proposals.propose(kind="workspace_write", title=f"Write file: {path[:120]}",
                              reasons="MCP client requested a workspace file write.",
                              risk_level="medium", diff=f"path: {path[:200]}\nbytes: {len(content or '')}",
@@ -1007,6 +1014,9 @@ async def oauth_authorization_server(request: Request):
 @mcp.custom_route("/oauth/authorize", methods=["GET", "POST"])
 async def oauth_authorize(request: Request):
     """OAuth 2.1 Authorization Endpoint for user account linking with PKCE."""
+    gated = _throttled(request)
+    if gated is not None:
+        return gated
     params = request.query_params
     client_id = params.get("client_id", "")
     redirect_uri = params.get("redirect_uri", "")
@@ -1017,15 +1027,20 @@ async def oauth_authorize(request: Request):
     state = params.get("state", "")
     resource = params.get("resource", "")
 
-    # Issue authorization code
-    code = alexaplus_addon.alexaplus_engine.create_authorization_code(
-        client_id=client_id,
-        redirect_uri=redirect_uri,
-        code_challenge=code_challenge,
-        code_challenge_method=code_challenge_method,
-        scope=scope,
-        resource=resource,
-    )
+    if response_type and response_type != "code":
+        return JSONResponse({"ok": False, "error": "response_type must be 'code'."}, status_code=400)
+    # Issue authorization code (fail-closed validation inside)
+    try:
+        code = alexaplus_addon.alexaplus_engine.create_authorization_code(
+            client_id=client_id,
+            redirect_uri=redirect_uri,
+            code_challenge=code_challenge,
+            code_challenge_method=code_challenge_method,
+            scope=scope,
+            resource=resource,
+        )
+    except ValueError as e:
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
     if redirect_uri:
         delim = "&" if "?" in redirect_uri else "?"
@@ -1046,6 +1061,9 @@ async def oauth_authorize(request: Request):
 @mcp.custom_route("/oauth/token", methods=["POST"])
 async def oauth_token(request: Request):
     """OAuth 2.1 Token Endpoint supporting client_credentials (M2M) and authorization_code (PKCE)."""
+    gated = _throttled(request)
+    if gated is not None:
+        return gated
     # Extract client credentials from Basic Auth header if present
     auth_header = request.headers.get("authorization", "")
     client_id = ""
@@ -1209,10 +1227,11 @@ async def api_decide(request: Request):
     if not pid:
         return JSONResponse({"ok": False, "error": "Proposal ID is required"}, status_code=400)
 
-    if approved:
-        gate = _adult_or_403(request, "actions_decide:approve")
-        if gate is not None:
-            return gate
+    # Both approve AND reject require adult auth when configured (prevents
+    # anonymous grief-rejection of pending trays). Zero-config demo stays open.
+    gate = _adult_or_403(request, "actions_decide")
+    if gate is not None:
+        return gate
 
     if pid.startswith("prop_real_"):
         res = real_mode.real_manager.decide_real_proposal(pid, "approve" if approved else "reject")
@@ -1264,7 +1283,10 @@ async def api_memory(request: Request):
         return _t
     if request.method == "GET":
         q = request.query_params.get("q", "")
-        return JSONResponse({"facts": memory.query(q)})
+        ident = _identity(request)
+        requester = ident.persona if ident.persona not in ("anonymous", "intruder", "admin") else "household"
+        # Token-bound scoping: child/guest only see child-safe facts.
+        return JSONResponse({"facts": memory.query(q, requester=requester)})
         
     try:
         body = await request.json()
@@ -1275,11 +1297,17 @@ async def api_memory(request: Request):
     val = str(body.get("value", "")).strip()
     owner = str(body.get("owner", "household")).strip()
     # Identity binding: a bearer token speaks for its own persona, never the body's.
+    # PIN-admin may set household scope; anonymous can never spoof admin/partner.
     ident = _identity(request)
     if ident.via == "token" and ident.persona not in ("anonymous", "intruder"):
         owner = ident.persona
+    elif owner in ("admin", "partner") and ident.persona not in ("admin", "partner"):
+        owner = "household"
 
     if request.method == "DELETE":
+        gate = _adult_or_403(request, "memory_delete")
+        if gate is not None:
+            return gate
         if not key:
             return JSONResponse({"ok": False, "error": "Key is required"}, status_code=400)
         audit.append("human", "memory_delete", {"key": key})
@@ -1380,11 +1408,15 @@ async def api_home_lock(request: Request):
             if gate is not None:
                 return gate
             p = proposals.get_proposal(proposal_id)
-            if p and p.get("status") == "approved" and p.get("kind") == "home_lock":
+            if p and p.get("status") == "approved" and p.get("kind") == "home_lock" and not p.get("consumed_at"):
                 res = home_mock.toggle_lock(locked=False)
+                try:
+                    proposals.mark_consumed(proposal_id, "home_toggle_lock:unlock")
+                except Exception:
+                    pass
                 audit.append("human", "home_toggle_lock", {"locked": False, "via": proposal_id})
                 return JSONResponse(res)
-            return JSONResponse({"ok": False, "error": "proposal_id is not an approved home_lock proposal"}, status_code=403)
+            return JSONResponse({"ok": False, "error": "proposal_id is not an approved unused home_lock proposal"}, status_code=403)
         item = proposals.propose(
             kind="home_lock",
             title="Unlock Front Door Entryway",
@@ -1417,6 +1449,12 @@ async def api_home_device(request: Request):
     patch = body.get("patch", {})
     if not isinstance(patch, dict):
         return JSONResponse({"ok": False, "error": "patch must be an object"}, status_code=400)
+    # Child-safety + fail-closed: climate/lock changes via REST respect persona.
+    persona = str(body.get("persona", "") or body.get("persona_id", ""))
+    v = sentinel.judge("home_update_device", {"persona": persona})
+    if v.decision == "deny":
+        audit.append("sentinel", "rest_device_denied", {"reason": v.reason})
+        return JSONResponse({"ok": False, "error": v.reason}, status_code=403)
     # Reject non-finite floats (NaN/Inf) to avoid JSON/state poisoning.
     try:
         import math as _math
@@ -1473,10 +1511,14 @@ async def api_goals_advance(request: Request):
         body = await request.json()
     except Exception:
         return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
     try:
         gid = int(body.get("id", 0))
     except (TypeError, ValueError):
         return JSONResponse({"ok": False, "error": "Numeric goal id required"}, status_code=400)
+    if gid <= 0 or gid > 10_000_000:
+        return JSONResponse({"ok": False, "error": "goal id out of range"}, status_code=400)
     out = memory.advance_goal(gid)
     audit.append("human", "goals_advance", {"id": gid, "out": out})
     return JSONResponse(out)
@@ -1484,6 +1526,12 @@ async def api_goals_advance(request: Request):
 
 @mcp.custom_route("/api/audit", methods=["GET"])
 async def api_audit(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "audit_read")
+    if gate is not None:
+        return gate
     mode = real_mode.real_manager.get_mode()
     if mode == "real":
         events = real_mode.real_manager.list_real_events()
@@ -1572,6 +1620,12 @@ async def api_metrics(request: Request):
 
 @mcp.custom_route("/api/export", methods=["GET"])
 async def api_export(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "export_read")
+    if gate is not None:
+        return gate
     import time as _t
     return JSONResponse({
         "protocol": PROTOCOL,
@@ -2006,12 +2060,17 @@ async def api_parliament_ministers(request: Request):
 @mcp.custom_route("/api/causal/simulate", methods=["POST"])
 async def api_causal_simulate(request: Request):
     """Run Monte Carlo counterfactual forward simulations on the Causal Digital Twin."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
     try:
         body = await request.json()
         days = int(body.get("days_ahead", 7))
         iters = int(body.get("iterations", 250))
     except Exception:
         days, iters = 7, 250
+    days = max(1, min(14, days))
+    iters = max(50, min(500, iters))
     from dataclasses import asdict
     res = causal_twin.causal_twin.run_simulation(days_ahead=days, iterations=iters)
     return JSONResponse(asdict(res))
@@ -2068,16 +2127,36 @@ async def api_models_set_active(request: Request):
 @mcp.custom_route("/api/models/providers/add", methods=["POST"])
 async def api_models_provider_add(request: Request):
     """Connect Hearth Universal to ANY custom API or base URL in the world."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "models_provider_add")
+    if gate is not None:
+        return gate
     try:
         body = await request.json()
-        name = body.get("name", "Custom API")
-        base_url = body.get("base_url")
-        api_key = body.get("api_key", "")
+        name = str(body.get("name", "Custom API"))[:120]
+        base_url = str(body.get("base_url", ""))[:500]
+        api_key = str(body.get("api_key", ""))
     except Exception:
         return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
-    if not base_url:
-        return JSONResponse({"ok": False, "error": "base_url is required"}, status_code=400)
+    if not base_url or not base_url.startswith(("https://", "http://localhost", "http://127.0.0.1")):
+        return JSONResponse({"ok": False, "error": "base_url must be https (or http loopback for dev)"}, status_code=400)
+    if len(api_key) > 500:
+        return JSONResponse({"ok": False, "error": "api_key too long"}, status_code=400)
+    # SSRF guard: block private/metadata hosts for custom providers.
+    try:
+        from urllib.parse import urlparse as _up
+        host = (_up(base_url).hostname or "").lower()
+        ok, _reason = True, ""
+        from hearth import webtools as _wt
+        ok, _reason = _wt._host_allowed(base_url)
+        if not ok:
+            return JSONResponse({"ok": False, "error": f"blocked provider host: {_reason}"}, status_code=400)
+    except Exception:
+        pass
     res = model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)
+    audit.append("human", "models_provider_add", {"name": name, "base_url": base_url})
     return JSONResponse(res)
 
 
@@ -2220,12 +2299,38 @@ async def api_real_reset(request: Request):
 WEB2_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
 
 
+def _safe_join(root: str, rel: str) -> str | None:
+    """Fail-closed static join: commonpath + realpath, no prefix bypass."""
+    import os as _os
+    root_real = _os.path.realpath(root)
+    target = _os.path.realpath(_os.path.join(root_real, (rel or "").strip("/")))
+    try:
+        if _os.path.commonpath([target, root_real]) != root_real:
+            return None
+    except Exception:
+        return None
+    if not _os.path.isfile(target):
+        return None
+    return target
+
+
+_SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+}
+
+if os.environ.get("HEARTH_HSTS", "0") == "1":
+    _SECURITY_HEADERS["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+
+
 @mcp.custom_route("/web2/{path:path}", methods=["GET"])
 async def web2_static(request: Request):
     rel = (request.path_params.get("path", "") or "").strip("/") or "index.html"
-    target = os.path.normpath(os.path.join(WEB2_DIR, rel))
-    web2_root = os.path.abspath(WEB2_DIR)
-    if target.startswith(web2_root) and os.path.isfile(target):
+    target = _safe_join(WEB2_DIR, rel)
+    if target:
         ctype = "text/html"
         if target.endswith(".css"):
             ctype = "text/css"
@@ -2233,7 +2338,7 @@ async def web2_static(request: Request):
             ctype = "application/javascript"
         elif target.endswith(".json"):
             ctype = "application/json"
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": ctype})
+        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": ctype, **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
@@ -2248,20 +2353,18 @@ async def web2_index(request: Request):
 @mcp.custom_route("/css/{path:path}", methods=["GET"])
 async def css_static(request: Request):
     rel = request.path_params.get("path", "")
-    target = os.path.normpath(os.path.join(WEB_DIR, "css", rel))
-    css_root = os.path.abspath(os.path.join(WEB_DIR, "css"))
-    if target.startswith(css_root) and os.path.isfile(target):
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "text/css"})
+    target = _safe_join(os.path.join(WEB_DIR, "css"), rel)
+    if target:
+        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "text/css", **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
 @mcp.custom_route("/js/{path:path}", methods=["GET"])
 async def js_static(request: Request):
     rel = request.path_params.get("path", "")
-    target = os.path.normpath(os.path.join(WEB_DIR, "js", rel))
-    js_root = os.path.abspath(os.path.join(WEB_DIR, "js"))
-    if target.startswith(js_root) and os.path.isfile(target):
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "application/javascript"})
+    target = _safe_join(os.path.join(WEB_DIR, "js"), rel)
+    if target:
+        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "application/javascript", **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
@@ -2282,10 +2385,9 @@ async def manifest(request: Request):
 @mcp.custom_route("/vendor/{path:path}", methods=["GET"])
 async def vendor_static(request: Request):
     rel = request.path_params.get("path", "")
-    target = os.path.normpath(os.path.join(WEB_DIR, "vendor", rel))
-    vendor_root = os.path.abspath(os.path.join(WEB_DIR, "vendor"))
-    if target.startswith(vendor_root) and os.path.isfile(target):
-        return FileResponse(target)
+    target = _safe_join(os.path.join(WEB_DIR, "vendor"), rel)
+    if target:
+        return FileResponse(target, headers={**_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 

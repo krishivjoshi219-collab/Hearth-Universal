@@ -40,6 +40,16 @@ def _host_of(base_url: str) -> str:
         return ""
 
 
+def _egress_allowed(host: str) -> bool:
+    """Exact-or-subdomain match only (attackeramazonaws.com must NOT match amazonaws.com)."""
+    h = (host or "").lower().strip().strip(".")
+    for kh in KNOWN_HOSTS:
+        k = kh.lower().strip().strip(".")
+        if h == k or h.endswith("." + k):
+            return True
+    return False
+
+
 @dataclass
 class BrainResponse:
     text: str
@@ -98,8 +108,16 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
         pass
 
     if (provider not in ("bedrock", "local") or api_key) and provider != "local":
-        host = _host_of(base_url)
-        if STRICT_EGRESS and host not in KNOWN_HOSTS and not any(host.endswith(kh) for kh in KNOWN_HOSTS):
+        host = _host_of(base_url).lower()
+        if not api_key:
+            return BrainResponse(
+                text=_generate_intelligent_offline_response(messages) + "\n\n[Security Notice: no API key configured; refusing empty-key request]",
+                model=model,
+                provider="local-fallback",
+                fallback=True,
+                latency_ms=round((time.time() - start_t) * 1000, 1)
+            )
+        if STRICT_EGRESS and not _egress_allowed(host):
             return BrainResponse(
                 text=_generate_intelligent_offline_response(messages) + f"\n\n[Security Notice: Egress to host '{host}' was blocked by Sentinel policy (not allowlisted)]",
                 model=model,

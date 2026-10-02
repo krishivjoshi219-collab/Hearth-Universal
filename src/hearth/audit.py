@@ -1,12 +1,24 @@
 """Append-only hash-chained audit log. Proves restraint: what was proposed vs executed."""
 from __future__ import annotations
 import hashlib
+import hmac
 import json
 import os
 import time
 from pathlib import Path
 
 STATE_DIR = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
+
+
+def _hmac_key() -> bytes:
+    # HMAC key binds the chain to a server secret so stolen files can't be
+    # rewritten with a valid chain. Zero-config fallback keeps demos working;
+    # operators MUST set HEARTH_AUDIT_KEY (32+ random bytes hex) in prod.
+    return os.environ.get("HEARTH_AUDIT_KEY", "hearth-demo-audit-key-v1").encode("utf-8")
+
+
+def _chain_hash(body: str) -> str:
+    return hmac.new(_hmac_key(), body.encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def _log_path() -> Path:
@@ -58,7 +70,7 @@ def _maybe_rotate(path: Path) -> None:
         "prev": f"ARCHIVED:{digest}",
     }
     body = json.dumps(checkpoint, sort_keys=True, default=str)
-    checkpoint["hash"] = hashlib.sha256(body.encode()).hexdigest()
+    checkpoint["hash"] = _chain_hash(body)
     try:
         with path.open("a") as f:
             f.write(json.dumps(checkpoint) + "\n")
@@ -91,7 +103,7 @@ def append(actor: str, action: str, detail: dict) -> dict:
         except Exception:
             safe_detail = {"value": str(detail)}
             body = json.dumps({"ts": ts, "actor": str(actor), "action": str(action), "detail": safe_detail, "prev": prev}, sort_keys=True, default=str)
-        h = hashlib.sha256(body.encode()).hexdigest()
+        h = _chain_hash(body)
         entry = {"ts": ts, "actor": str(actor), "action": str(action), "detail": safe_detail, "prev": prev, "hash": h}
         with path.open("a") as f:
             f.write(json.dumps(entry) + "\n")
@@ -116,7 +128,9 @@ def verify() -> bool:
             body = json.dumps({"ts": e["ts"], "actor": e["actor"], "action": e["action"], "detail": e["detail"], "prev": e["prev"]}, sort_keys=True, default=str)
         except Exception:
             return False
-        if hashlib.sha256(body.encode()).hexdigest() != e.get("hash"):
+        # Accept legacy plain-SHA256 entries (pre-hardening) OR HMAC entries.
+        legacy = hashlib.sha256(body.encode()).hexdigest()
+        if _chain_hash(body) != e.get("hash") and legacy != e.get("hash"):
             return False
         if e.get("prev") != prev:
             # Rotation checkpoints commit to the archive digest instead of GENESIS.

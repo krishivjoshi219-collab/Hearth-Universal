@@ -30,9 +30,9 @@ def client(app):
 
 
 def test_proposals_cap_never_drops_pending(monkeypatch):
+    # Isolated: clear tray so cross-test pending doesn't pollute the cap.
+    proposals.clear_proposals()
     monkeypatch.setattr(proposals, "PROPOSALS_MAX", 6)
-    before_pending = {it["id"] for it in proposals.list_proposals(limit=1000)
-                      if it.get("status") == "pending"}
     ids = [proposals.propose(kind="cap-probe", title=f"t{i}", reasons="r",
                              risk_level="low", diff="d", meta={})["id"] for i in range(4)]
     for pid in ids[:2]:
@@ -43,8 +43,8 @@ def test_proposals_cap_never_drops_pending(monkeypatch):
     items = proposals.list_proposals(limit=1000)
     pend = {it["id"] for it in items if it.get("status") == "pending"}
     decided = [it for it in items if it.get("status") != "pending"]
-    assert before_pending.issubset(pend)  # no pre-existing pending shed
     assert set(ids[2:]).issubset(pend)  # no new pending shed
+    assert len(items) <= 6  # total bounded (pending + decided)
     assert len(decided) <= 6  # oldest decided shed to the cap
 
 

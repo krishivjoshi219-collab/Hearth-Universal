@@ -97,8 +97,10 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
 
     # Child persona guardrail: children cannot unlock doors, modify finances, or execute commands
     persona = str(args.get("persona") or args.get("persona_id") or "").strip().lower()
-    if persona in ("child", "leo", "kid", "child_mode", "child_profile"):
-        if tool in ("home_toggle_lock", "actions_propose", "commerce_propose_order", "workspace_write", "workspace_exec"):
+    persona_norm = persona.replace("-", "_").replace(" ", "_")
+    _child_aliases = {"child", "leo", "kid", "child_mode", "child_profile", "minor", "teen", "son", "daughter", "guest", "anonymous"}
+    if persona_norm in _child_aliases:
+        if tool in ("home_toggle_lock", "actions_propose", "commerce_propose_order", "workspace_write", "workspace_exec", "actions_decide", "actions_execute_direct"):
             return Verdict("deny", "Child safety guardrail: Child profile 'Leo' is restricted to safe ambient comfort actions. Ask an adult to authorize financial or physical security changes.", "tier-3", "child_safety_policy")
 
     # Path safety guardrail: detect path traversal and absolute path escapes in file/workspace operations
@@ -106,7 +108,9 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
         val = args.get(key)
         if isinstance(val, str):
             sval = val.strip()
-            if "\x00" in sval or sval.startswith(("/", "~")) or ".." in sval.split("/") or ".." in sval.split("\\"):
+            low = sval.lower()
+            if ("\x00" in sval or "%00" in low or "%2e" in low or sval.startswith(("/", "~")) or low.startswith("c:/")
+                    or ".." in sval.split("/") or ".." in sval.split("\\")):
                 return Verdict("deny", "Path safety violation: path must be relative and inside the workspace jail", "tier-3", "path_traversal_policy")
 
     # Serialize arguments for deep pattern inspection
@@ -124,9 +128,14 @@ def judge(tool: str, args: dict | None = None, egress_host: str = "", allowlist:
         re.search(r"aws_secret_access_key|aws_session_token", blob, re.IGNORECASE)):
         return Verdict("deny", "Exfiltration blocked: Attempt to read or transmit raw credentials", "tier-3", "vault_exfiltration_policy")
 
-    # 4. Strict egress domain check
-    if egress_host and allowlist and egress_host not in allowlist:
-        return Verdict("deny", f"Egress blocked: Destination host '{egress_host}' is not in approved registry", "tier-3", "strict_egress_policy")
+    # 4. Strict egress domain check (fail-closed when egress policy is enabled)
+    if egress_host:
+        import os as _os
+        strict = _os.environ.get("HEARTH_EGRESS_STRICT", "0") == "1"
+        if strict and (not allowlist or egress_host not in allowlist):
+            return Verdict("deny", f"Egress blocked: Destination host '{egress_host}' is not in approved registry", "tier-3", "strict_egress_policy")
+        if allowlist and egress_host not in allowlist:
+            return Verdict("deny", f"Egress blocked: Destination host '{egress_host}' is not in approved registry", "tier-3", "strict_egress_policy")
 
     # 5. Direction-sensitive lock policy: engaging a lock is safe comfort,
     # DISENGAGING a lock is consequential and must be gated.

@@ -22,7 +22,21 @@ DENY_CMD = (
     r"\b(sudo|su\s|doas|chmod\s+.*\s+/\s|chown)\b",
     r"(curl|wget).*\|\s*(bash|sh)",
     r"\bDROP\s+TABLE\b",
+    # Block common shell-evasion / pipe-to-interpreter chains (fail-closed).
+    r"\|\s*(bash|sh|python3?|perl|ruby|node|busybox)\b",
+    r"\$\{\s*IFS",
+    r"`[^`]*`",
+    r"\$\([^)]*\)",
+    r"\b(base64\s+-d|xxd\s+-r|openssl\s+enc)\b",
+    r"\b(os\.system|subprocess|popen|eval|exec)\b",
 )
+
+# Allowlist for shell=False execution: no shell metachars, known binaries only.
+ALLOWED_BINARIES = {
+    "ls", "cat", "echo", "pwd", "whoami", "date", "env", "git", "python3", "python",
+    "node", "npm", "pip", "pytest", "lsb_release", "uname", "head", "tail", "wc", "grep",
+}
+SHELL_METACHARS = (";", "|", "&", "`", "$", "(", ")", "<", ">", "\n", "\r", "*", "?", "~", "#")
 
 
 def root() -> Path:
@@ -33,7 +47,12 @@ def root() -> Path:
 
 def _jail(rel: str) -> tuple[Path | None, str]:
     rel = (rel or "").strip()[:PATH_MAX]
-    if not rel or "\x00" in rel or rel.startswith(("/", "~")) or ".." in Path(rel).parts:
+    if not rel or "\x00" in rel or "%00" in rel.lower() or "%2e" in rel.lower():
+        return None, "path must be relative and inside the workspace"
+    low = rel.replace("\\", "/")
+    if low.startswith(("/", "~")) or low.startswith("c:/"):
+        return None, "path must be relative and inside the workspace"
+    if ".." in Path(low).parts:
         return None, "path must be relative and inside the workspace"
     try:
         p = (root() / rel).resolve()
@@ -97,8 +116,11 @@ def _denied(cmd: str) -> str:
 
 
 def execute(cmd: str, timeout: int = EXEC_TIMEOUT) -> dict:
-    """Run a shell command jailed to the workspace root. Audited, capped, timed out."""
+    """Run a command jailed to the workspace root WITHOUT a shell (allowlisted
+    binaries only). Shell metachars/pipes are rejected — use explicit argv.
+    Audited, capped, timed out."""
     from . import audit as _audit
+    import shlex
     cmd = (cmd or "")[:2000].strip()
     if not cmd:
         return {"ok": False, "error": "empty command"}
@@ -106,11 +128,21 @@ def execute(cmd: str, timeout: int = EXEC_TIMEOUT) -> dict:
     if hit:
         _audit.append("sentinel", "exec_blocked", {"cmd": cmd[:200], "reason": hit})
         return {"ok": False, "error": f"blocked: {hit}"}
+    if any(c in cmd for c in SHELL_METACHARS):
+        _audit.append("sentinel", "exec_blocked", {"cmd": cmd[:200], "reason": "shell metacharacters rejected (shell=False)"})
+        return {"ok": False, "error": "blocked: shell metacharacters (;,|,`,$,() etc.) are not allowed"}
+    try:
+        argv = shlex.split(cmd, posix=True)
+    except Exception:
+        return {"ok": False, "error": "unparseable command"}
+    if not argv or argv[0].split("/")[-1] not in ALLOWED_BINARIES:
+        _audit.append("sentinel", "exec_blocked", {"cmd": cmd[:200], "reason": "binary not allowlisted"})
+        return {"ok": False, "error": f"blocked: binary '{argv[0] if argv else ''}' not allowlisted"}
     timeout = max(1, min(int(timeout or EXEC_TIMEOUT), 120))
     env = {"PATH": "/usr/bin:/bin:/usr/local/bin", "HOME": os.environ.get("HOME", "/tmp"),
            "LANG": "C.UTF-8", "PYTHONPATH": "src"}
     try:
-        proc = subprocess.run(cmd, shell=True, cwd=str(root()), env=env,
+        proc = subprocess.run(argv, shell=False, cwd=str(root()), env=env,
                               capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         _audit.append("agent", "workspace_exec", {"cmd": cmd[:200], "timeout": True})

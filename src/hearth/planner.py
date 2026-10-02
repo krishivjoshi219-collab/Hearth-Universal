@@ -898,7 +898,12 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         elif "turn on" in low and ("light" in low or "lights" in low):
             bri_val = 80
             match_num = re.search(r"(\d+)%", low)
-            if match_num: bri_val = int(match_num.group(1))
+            if match_num:
+                try:
+                    bri_val = int(match_num.group(1))
+                except ValueError:
+                    bri_val = 80
+            bri_val = max(0, min(100, bri_val))
             res = call_tool("home_update_device", {
                 "room": room_target,
                 "device": "lights",
@@ -910,7 +915,14 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         elif any(k in low for k in ("thermostat", "temperature", "temp", "climate", "degree")):
             deg_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:degrees?|°|c\b)", low)
             if deg_match:
-                new_temp = float(deg_match.group(1))
+                import math as _math
+                try:
+                    new_temp = float(deg_match.group(1))
+                except ValueError:
+                    new_temp = 21.5
+                if not _math.isfinite(new_temp):
+                    new_temp = 21.5
+                new_temp = max(10.0, min(30.0, new_temp))  # child-safe comfort band
                 call_tool("home_update_device", {
                     "room": room_target,
                     "device": "climate",

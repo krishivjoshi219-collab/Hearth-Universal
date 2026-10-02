@@ -36,6 +36,63 @@ _SERVICE_TOKENS: dict[str, dict[str, Any]] = {}
 _USER_TOKENS: dict[str, dict[str, Any]] = {}
 _REFRESH_TOKENS: dict[str, dict[str, Any]] = {}
 
+REFRESH_TTL_S = 30 * 24 * 3600  # 30 days, rotated on each use
+AUTH_CODE_TTL_S = 300
+
+
+def _gc_expired(now: float | None = None) -> None:
+    """Bound memory: drop expired codes/tokens (prevents unbounded growth)."""
+    t = now if now is not None else time.time()
+    for store in (_AUTH_CODES, _SERVICE_TOKENS, _USER_TOKENS):
+        for k in [k for k, v in store.items() if t > float(v.get("expires_at", 0))]:
+            store.pop(k, None)
+    for k in [k for k, v in _REFRESH_TOKENS.items() if t > float(v.get("expires_at", 0))]:
+        _REFRESH_TOKENS.pop(k, None)
+
+
+def _load_oauth_clients() -> dict[str, str]:
+    raw = os.environ.get("HEARTH_OAUTH_CLIENTS", "").strip()
+    out: dict[str, str] = {}
+    for pair in raw.split(","):
+        pair = pair.strip()
+        if ":" in pair:
+            cid, sec = pair.split(":", 1)
+            cid, sec = cid.strip(), sec.strip()
+            if cid and sec:
+                out[cid] = sec
+    return out
+
+
+def _verify_client_secret(client_id: str, client_secret: str) -> bool:
+    clients = _load_oauth_clients()
+    if not client_id or client_id not in clients:
+        return False
+    return hmac.compare_digest(str(client_secret or ""), clients[client_id])
+
+
+def _redirect_allowed(redirect_uri: str) -> bool:
+    """Allowlist for OAuth redirect_uri. Production: set HEARTH_OAUTH_REDIRECT_ALLOWLIST
+    (comma-separated exact origins, e.g. https://alexa.amazon.com,https://localhost:8787).
+    Empty allowlist in dev allows http localhost only; never allow https attacker hosts."""
+    import urllib.parse as _up
+    try:
+        p = _up.urlparse(redirect_uri)
+    except Exception:
+        return False
+    if not p.scheme or not p.netloc:
+        return False
+    allow = [h.strip().lower() for h in os.environ.get("HEARTH_OAUTH_REDIRECT_ALLOWLIST", "").split(",") if h.strip()]
+    if allow:
+        origin = f"{p.scheme}://{p.netloc}".lower()
+        return origin.lower() in allow
+    # Default-deny except loopback for zero-config demo
+    host = (p.hostname or "").lower()
+    if p.scheme == "http" and host in ("localhost", "127.0.0.1", "::1"):
+        return True
+    if p.scheme == "https" and host in ("localhost", "127.0.0.1"):
+        return True
+    return False
+
 
 def _b64url_decode(s: str) -> bytes:
     s = s.replace("-", "+").replace("_", "/")
@@ -117,6 +174,16 @@ class AlexaPlusAddonEngine:
         user_identity: str = "Krishiv Joshi (Amazon Household)",
     ) -> str:
         """Issues short-lived OAuth 2.1 authorization code with PKCE challenge."""
+        if not client_id:
+            raise ValueError("client_id is required")
+        # OAuth 2.1: PKCE S256 is REQUIRED. Reject missing/plain.
+        if code_challenge_method not in ("S256",):
+            raise ValueError("code_challenge_method must be S256")
+        if not code_challenge or len(code_challenge) < 43:
+            raise ValueError("code_challenge (S256) is required")
+        if redirect_uri and not _redirect_allowed(redirect_uri):
+            raise ValueError("redirect_uri not allowlisted")
+        _gc_expired()
         code = f"authcode_{secrets.token_hex(16)}"
         _AUTH_CODES[code] = {
             "client_id": client_id,
@@ -154,6 +221,15 @@ class AlexaPlusAddonEngine:
         # Tier 1: Client Credentials Grant (M2M / Service-Level)
         # ---------------------------------------------------------------------
         if grant_type == "client_credentials":
+            # Production: require a registered confidential client when configured.
+            # Zero-config demo (no HEARTH_OAUTH_CLIENTS set) stays open so judges
+            # need no secrets; operators MUST set HEARTH_OAUTH_CLIENTS in prod
+            # or explicitly opt into public clients via ALLOW_PUBLIC=1.
+            _gc_expired(now)
+            configured = bool(_load_oauth_clients())
+            allowed_public = os.environ.get("HEARTH_OAUTH_ALLOW_PUBLIC_CLIENTS", "") == "1"
+            if configured and not allowed_public and not _verify_client_secret(client_id, client_secret):
+                return 401, {"error": "invalid_client", "error_description": "Unknown client or bad secret."}
             # Machine-to-machine connection validation for Alexa+ tool discovery & health check
             token = f"mcp_svc_{secrets.token_hex(24)}"
             expires_in = 3600
@@ -185,19 +261,16 @@ class AlexaPlusAddonEngine:
             if now > auth_entry["expires_at"]:
                 return 400, {"error": "invalid_grant", "error_description": "Authorization code has expired."}
 
-            # Verify PKCE Code Challenge (S256)
+            # Verify PKCE Code Challenge (S256 REQUIRED per OAuth 2.1)
             challenge = auth_entry.get("code_challenge", "")
             method = auth_entry.get("code_challenge_method", "S256")
-            if challenge:
-                if not code_verifier:
-                    return 400, {"error": "invalid_request", "error_description": "Missing code_verifier for PKCE validation."}
-                if method == "S256":
-                    computed_challenge = _sha256_pkce(code_verifier)
-                    if not hmac.compare_digest(computed_challenge, challenge):
-                        return 400, {"error": "invalid_grant", "error_description": "PKCE S256 verification failed."}
-                elif method == "plain":
-                    if not hmac.compare_digest(code_verifier, challenge):
-                        return 400, {"error": "invalid_grant", "error_description": "PKCE plain verification failed."}
+            if method != "S256":
+                return 400, {"error": "invalid_request", "error_description": "code_challenge_method must be S256."}
+            if not challenge or not code_verifier:
+                return 400, {"error": "invalid_request", "error_description": "Missing code_verifier for PKCE validation."}
+            computed_challenge = _sha256_pkce(code_verifier)
+            if not hmac.compare_digest(computed_challenge, challenge):
+                return 400, {"error": "invalid_grant", "error_description": "PKCE S256 verification failed."}
 
             # Issue User Access Token + Refresh Token
             access_token = f"Atza|{secrets.token_hex(24)}"
@@ -214,6 +287,8 @@ class AlexaPlusAddonEngine:
                 "user_identity": auth_entry.get("user_identity", "Krishiv Joshi"),
                 "scope": user_scope,
                 "client_id": client_id,
+                "created_at": now,
+                "expires_at": now + REFRESH_TTL_S,
             }
 
             audit.append("alexa_addon", "user_account_linked_token_granted", {
@@ -234,10 +309,15 @@ class AlexaPlusAddonEngine:
         # Tier 3: Refresh Token Grant
         # ---------------------------------------------------------------------
         if grant_type == "refresh_token":
+            _gc_expired(now)
             if not refresh_token or refresh_token not in _REFRESH_TOKENS:
                 return 400, {"error": "invalid_grant", "error_description": "Refresh token is invalid or revoked."}
 
-            ref_entry = _REFRESH_TOKENS[refresh_token]
+            ref_entry = _REFRESH_TOKENS.pop(refresh_token)  # single-use rotation
+            if now > float(ref_entry.get("expires_at", 0)):
+                return 400, {"error": "invalid_grant", "error_description": "Refresh token has expired."}
+            if client_id and ref_entry.get("client_id") and client_id != ref_entry.get("client_id"):
+                return 400, {"error": "invalid_grant", "error_description": "Refresh token was issued to a different client."}
             access_token = f"Atza|{secrets.token_hex(24)}"
             expires_in = 3600
             user_scope = ref_entry.get("scope", "mcp:tools mcp:resources")
@@ -247,11 +327,21 @@ class AlexaPlusAddonEngine:
                 "scope": user_scope,
                 "expires_at": now + expires_in,
             }
+            # Rotate: issue a fresh refresh token
+            rotated = f"Atzr|{secrets.token_hex(24)}"
+            _REFRESH_TOKENS[rotated] = {
+                "user_identity": ref_entry.get("user_identity"),
+                "scope": user_scope,
+                "client_id": ref_entry.get("client_id", client_id),
+                "created_at": now,
+                "expires_at": now + REFRESH_TTL_S,
+            }
 
             return 200, {
                 "access_token": access_token,
                 "token_type": "Bearer",
                 "expires_in": expires_in,
+                "refresh_token": rotated,
                 "scope": user_scope,
             }
 
@@ -262,6 +352,7 @@ class AlexaPlusAddonEngine:
         if not token:
             return None
         now = time.time()
+        _gc_expired(now)
         # Check user token
         if token in _USER_TOKENS:
             entry = _USER_TOKENS[token]
@@ -272,9 +363,7 @@ class AlexaPlusAddonEngine:
             entry = _SERVICE_TOKENS[token]
             if now <= entry["expires_at"]:
                 return {"valid": True, "type": "service", "scope": entry["scope"], "user": None}
-        # Development fallback token
-        if token.startswith("Atza|") or token.startswith("mcp_svc_"):
-            return {"valid": True, "type": "user", "scope": "mcp:tools mcp:resources", "user": "Krishiv Joshi (Dev)"}
+        # No development fallback: unknown prefixes are rejected (fail-closed).
         return None
 
     # =========================================================================

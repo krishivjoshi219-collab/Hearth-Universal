@@ -101,15 +101,17 @@ def emit_event(event_type: str, icon: str, title: str, detail: str, status: str 
         "id": f"hb-{int(now * 1000) % 1000000}",
         "timestamp": now,
         "time_str": time.strftime("%I:%M %p"),
-        "type": event_type,
-        "icon": icon,
-        "title": title,
-        "detail": detail,
-        "status": status
+        "type": str(event_type)[:64],
+        "icon": str(icon)[:8],
+        "title": str(title)[:200],
+        "detail": str(detail)[:2000],
+        "status": str(status)[:32],
     }
     _events.append(evt)
+    # Bound in-process RAM: keep last 200 only (file keeps last 30).
+    del _events[:-200]
     _save()
-    audit.append("heartbeat", f"event_{event_type}", {"title": title, "detail": detail})
+    audit.append("heartbeat", f"event_{event_type}", {"title": str(title)[:200]})
     return evt
 
 

@@ -359,7 +359,11 @@ def query(q: str = "", requester: str = "household", limit: int = 200) -> list[d
     see everything; the child profile (Leo) sees household + its own facts and
     never sees sensitive admin/partner facts.
     """
-    limit = max(1, min(500, int(limit)))
+    try:
+        limit = max(1, min(500, int(limit)))
+    except (TypeError, ValueError):
+        limit = 200
+    q = str(q or "")[:300]
     who = canonical_resident(requester)
     con = _db()
     try:
@@ -428,6 +432,9 @@ def list_residents() -> list[dict]:
 
 def delete(key: str) -> dict:
     """Remove a fact from household memory."""
+    key = str(key or "")[:KEY_MAX]
+    if not key:
+        return {"ok": False, "error": "Key is required"}
     con = _db()
     try:
         with _locked_write():
@@ -578,7 +585,10 @@ def advance_goal(gid: int) -> dict:
 
 def list_goals(status: str | None = None, limit: int = 200) -> list[dict]:
     """Retrieve household goals, optionally filtered by status."""
-    limit = max(1, min(500, int(limit)))
+    try:
+        limit = max(1, min(500, int(limit)))
+    except (TypeError, ValueError):
+        limit = 200
     con = _db()
     try:
         cols = _columns(con, "goals")
@@ -604,6 +614,11 @@ def scheduler_tick(now: float | None = None, min_interval_s: int = 3600) -> dict
     using ``last_advanced_at`` when the v2 column exists; falls back to plain
     oldest-active advancement on v1 schemas.
     """
+    try:
+        min_interval_s = int(min_interval_s)
+    except (TypeError, ValueError):
+        min_interval_s = 3600
+    min_interval_s = max(300, min(86400, min_interval_s))  # 5m..24h, no 0-bypass
     ts = int(now if now is not None else time.time())
     actives = [g for g in list_goals("active")]
     if not actives:
@@ -648,9 +663,43 @@ def chat_history_get(limit: int = 10) -> list[dict]:
     """Fetch recent chat messages for conversational grounding."""
     con = _db()
     try:
-        limit = max(1, min(500, int(limit)))
+        try:
+            limit = max(1, min(500, int(limit)))
+        except (TypeError, ValueError):
+            limit = 10
         rows = con.execute("SELECT role, content, model, ts FROM chat_history ORDER BY id DESC LIMIT ?",
                            (limit,)).fetchall()
         return [{"role": r[0], "content": r[1], "model": r[2], "ts": r[3]} for r in reversed(rows)]
     finally:
         con.close()
+
+
+def delete_all(owner: str = "") -> dict:
+    """GDPR erasure: delete facts (optionally scoped to owner) + chat history."""
+    from . import audit as _audit
+    who = canonical_resident(owner) if owner else ""
+    con = _db()
+    try:
+        with _locked_write():
+            con.execute("BEGIN IMMEDIATE")
+            try:
+                if who:
+                    con.execute("DELETE FROM facts WHERE owner=?", (who,))
+                    con.execute("DELETE FROM goals WHERE id IN (SELECT id FROM goals)") if False else None
+                else:
+                    con.execute("DELETE FROM facts")
+                    con.execute("DELETE FROM chat_history")
+                con.execute("COMMIT")
+            except Exception:
+                try:
+                    con.execute("ROLLBACK")
+                except Exception:
+                    pass
+                raise
+    finally:
+        con.close()
+    try:
+        _audit.append("human", "gdpr_erasure", {"owner": who or "all"})
+    except Exception:
+        pass
+    return {"ok": True, "owner": who or "all"}

@@ -33,12 +33,17 @@ home:
 sentinel:
   egress_allowlist:
     - "api.meta.ai"
-    - "localhost"
-    - "127.0.0.1"
   deny_patterns:
     - "rm -rf /"
     - "mkfs"
     - ":(){:|:&};:"
+
+# Production hardening (set via env in prod; never commit secrets):
+#   HEARTH_ADULT_PIN=<long random PIN>  HEARTH_AUTH_SALT=<random 32B hex>
+#   HEARTH_AUDIT_KEY=<random 32B hex>  HEARTH_STATE_DIR=/data/state
+#   HEARTH_OAUTH_CLIENTS="alexa-hub:<secret>"  HEARTH_OAUTH_REDIRECT_ALLOWLIST="https://localhost:8787"
+#   HEARTH_OAUTH_ALLOW_PUBLIC_CLIENTS=0  HEARTH_EGRESS_STRICT=1  HEARTH_HSTS=1
+# Serve behind TLS reverse proxy (App Runner / nginx) with auth enforced.
 
 # Auth fortress (optional, local-first). Unset = open zero-config demo.
 # Set either and Tier-2 REST (approve, unlock-execute, reset, brain switch,

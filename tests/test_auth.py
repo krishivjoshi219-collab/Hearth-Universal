@@ -92,13 +92,18 @@ def test_brain_switch_gated_with_pin(client):
     assert r.status_code == 200
 
 
-# --- HTTP: approve needs adulthood; reject stays open (no side effect) ---
+# --- HTTP: approve AND reject both gated (reject griefing prevention) ---
 
 def test_approve_gated_reject_open(client):
     os.environ["HEARTH_ADULT_PIN"] = "s3cret-pin"
     pid = _mk_pending()
     assert client.post("/api/decide", json={"id": pid, "approved": True}).status_code == 401
+    # Production-grade: anonymous reject is also gated (prevents tray griefing).
     r = client.post("/api/decide", json={"id": pid, "approved": False})
+    assert r.status_code == 401
+    # Authenticated reject succeeds.
+    h = {"X-Hearth-PIN": "s3cret-pin"}
+    r = client.post("/api/decide", json={"id": pid, "approved": False}, headers=h)
     assert r.status_code == 200
     assert proposals.get_proposal(pid)["status"] == "rejected"
 

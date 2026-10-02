@@ -21,8 +21,11 @@ _METADATA_NETS = (
     ipaddress.ip_network("172.16.0.0/12"),
     ipaddress.ip_network("192.168.0.0/16"),
     ipaddress.ip_network("169.254.0.0/16"),  # cloud metadata
+    ipaddress.ip_network("0.0.0.0/8"),  # current-network / invalid
     ipaddress.ip_network("::1/128"),
     ipaddress.ip_network("fc00::/7"),
+    ipaddress.ip_network("fe80::/10"),  # link-local v6
+    ipaddress.ip_network("::ffff:0:0/96"),  # v4-mapped v6 (covers ::ffff:127.0.0.1)
 )
 
 
@@ -115,6 +118,13 @@ def _search_ddg_ia(q: str, count: int) -> tuple[list, str]:
 _TAG_RE = re.compile(r"<(script|style|nav|footer|header|aside|noscript)[^>]*>.*?</\1>", re.S | re.I)
 
 
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """SSRF-safe: never auto-follow redirects; caller must re-validate."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
 def web_fetch(url: str) -> dict:
     """Fetch a page and return readable text (scripts/styles stripped, capped)."""
     from . import audit as _audit
@@ -127,7 +137,18 @@ def web_fetch(url: str) -> dict:
         return {"ok": False, "error": f"blocked: {reason}"}
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Hearth/1.0)"}, method="GET")
-        with urllib.request.urlopen(req, timeout=FETCH_TIMEOUT) as r:
+        # Do NOT follow redirects automatically: validate each hop against SSRF policy.
+        opener = urllib.request.build_opener(NoRedirectHandler())
+        with opener.open(req, timeout=FETCH_TIMEOUT) as r:
+            status = getattr(r, "status", 200) or 200
+            if status in (301, 302, 303, 307, 308):
+                loc = r.headers.get("Location", "")
+                nxt = urllib.parse.urljoin(url, loc)
+                ok2, reason2 = _host_allowed(nxt)
+                if not ok2:
+                    _audit.append("sentinel", "egress_blocked", {"url": nxt, "reason": f"redirect: {reason2}"})
+                    return {"ok": False, "error": f"blocked redirect: {reason2}"}
+                return {"ok": False, "error": "redirects require explicit follow (blocked for SSRF safety)"}
             raw = r.read(FETCH_MAX_BYTES + 1)
             final_url = r.geturl()
     except Exception as e:
