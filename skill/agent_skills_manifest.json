@@ -1,0 +1,55 @@
+{
+  "$schema": "https://developer.amazon.com/schemas/alexa-plus/agent-skills-v1.json",
+  "manifestVersion": "1.0",
+  "agentSkillsSpec": "2026-09-16",
+  "publisher": {
+    "name": "Hearth Universal Community",
+    "organization": "Open Glass-Box Agent Project"
+  },
+  "skillPackage": {
+    "id": "amzn1.ask.skill.hearth.operations",
+    "version": "1.32.0",
+    "title": "Hearth Universal Operations Agent for Alexa+",
+    "description": "Proactive household operations agent for Amazon Alexa+ providing AWS Strands multi-agent orchestration, pantry depletion radar, Family Arbiter Pareto optimization, and propose-never-execute safety gating."
+  },
+  "runtime": {
+    "transport": "Streamable-HTTP-MCP-2025-11-25",
+    "serverEndpoint": "http://localhost:8787/mcp",
+    "protocolVersion": "2025-11-25"
+  },
+  "skills": [
+    {
+      "id": "amzn1.ask.skill.hearth.household_ops",
+      "name": "Household Operations & Digital Twin",
+      "capabilities": ["digital_twin_read", "scene_control", "time_travel_forecast"],
+      "tools": ["home_get_state", "home_set_scene", "timemachine_forecast"],
+      "requires_human_approval": false
+    },
+    {
+      "id": "amzn1.ask.skill.hearth.commerce_replenish",
+      "name": "Pantry & Subscribe & Save Optimizer",
+      "capabilities": ["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling"],
+      "tools": ["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery"],
+      "requires_human_approval": true
+    },
+    {
+      "id": "amzn1.ask.skill.hearth.family_arbiter",
+      "name": "Family Arbiter & Energy Arbitrage",
+      "capabilities": ["pareto_bargaining", "tariff_load_shifting"],
+      "tools": ["family_arbiter_resolve"],
+      "requires_human_approval": false
+    },
+    {
+      "id": "amzn1.ask.skill.hearth.strands_supervisor",
+      "name": "AWS Strands Multi-Agent Orchestrator",
+      "capabilities": ["multi_agent_delegation", "agentcore_memory_persistence", "supervisor_synthesis"],
+      "tools": ["strands_agent_orchestrate", "agentcore_memory_sync"],
+      "requires_human_approval": true
+    }
+  ],
+  "safetyPolicies": {
+    "propose_never_execute": true,
+    "audit_trail": "SHA-256 Merkle Ledger",
+    "child_guardrails": "Auto-enforced for persona 'child'"
+  }
+}

@@ -50,7 +50,14 @@ class BrainResponse:
 
 
 def _get_active_provider() -> str:
-    return os.environ.get("HEARTH_BRAIN_PROVIDER", "local").lower()
+    env_p = os.environ.get("HEARTH_BRAIN_PROVIDER")
+    if env_p:
+        return env_p.lower()
+    try:
+        from . import model_mesh
+        return model_mesh.model_mesh.active_provider
+    except Exception:
+        return "local"
 
 
 def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str | None = None, task_hint: str | None = None) -> BrainResponse:
@@ -200,20 +207,33 @@ def select_bedrock_model(messages: list[dict] | str | None = None) -> str:
     """
     explicit = resolve_bedrock_model_id(os.environ.get("AWS_BEDROCK_MODEL", "auto"))
     if explicit:
-        # A bare "claude-sonnet"/"nova-pro" env already resolved above; a full
-        # ID passes through. Only fall through when env is auto/empty.
         env_raw = (os.environ.get("AWS_BEDROCK_MODEL", "auto") or "auto").strip().lower()
         if env_raw not in ("auto", "router", ""):
             return explicit
+
     if isinstance(messages, str):
         hay = messages.lower()
     elif isinstance(messages, list):
         hay = " ".join(str(m.get("content", "")) for m in messages).lower()
     else:
         hay = ""
-    if any(h in hay for h in _NOVA_HINTS):
-        return BEDROCK_INFERENCE_PROFILES["nova-pro"]
-    return BEDROCK_INFERENCE_PROFILES["claude-sonnet"]
+
+    if hay:
+        if any(h in hay for h in _NOVA_HINTS):
+            return BEDROCK_INFERENCE_PROFILES["nova-pro"]
+        return BEDROCK_INFERENCE_PROFILES["claude-sonnet"]
+
+    # When no content is provided, default to Amazon Nova Pro
+    try:
+        from . import model_mesh
+        if model_mesh.model_mesh.active_model and model_mesh.model_mesh.active_provider == "bedrock":
+            m_id = resolve_bedrock_model_id(model_mesh.model_mesh.active_model)
+            if m_id:
+                return m_id
+    except Exception:
+        pass
+
+    return BEDROCK_INFERENCE_PROFILES["nova-pro"]
 
 
 def _bedrock_max_attempts() -> int:

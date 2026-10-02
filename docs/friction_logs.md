@@ -9,7 +9,7 @@
 ### Friction Entry 1: Streamable HTTP `Accept` Header Negotiation in MCP Server
 
 - **Specific Task Attempted**:  
-  Perform standard `initialize` handshake with the FastMCP Streamable HTTP server via `curl` and automated HTTP client libraries.
+  Perform standard `initialize` handshake with FastMCP Streamable HTTP server via `curl` and automated HTTP client libraries.
 - **Steps Taken**:  
   1. Configured FastMCP with `stateless_http=True` and `streamable_http_path="/mcp"`.
   2. Executed `curl -X POST http://localhost:8787/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0",...}'`.
@@ -36,7 +36,7 @@
 - **Expected Result**:  
   Stateless server ignores any injected session headers and treats each HTTP POST independently.
 - **Actual Result**:  
-  Server logged warnings and occasionally returned session mismatch errors (`Session ID not recognized`).
+  Server logged warnings and returned session mismatch errors (`Session ID not recognized`).
 - **Severity Rating**: **Critical**
 - **Workaround Used**:  
   Overrode session verification middleware to permit arbitrary session identifiers when `stateless_http=True` is set.
@@ -45,36 +45,17 @@
 
 ---
 
-### Friction Entry 3: Schema Generation for Optional Dictionary Arguments in FastMCP Tools
+### Friction Entry 3: Amazon Bedrock Converse API Regional Model ID & Profile Discovery
 
 - **Specific Task Attempted**:  
-  Expose the `actions_propose` and `home_update_device` MCP tools with optional metadata dictionaries (`meta: dict | None = None`).
-- **Steps Taken**:  
-  1. Annotated function signature with `meta: dict | None = None`.
-  2. Called `tools/list` over MCP JSON-RPC.
-- **Expected Result**:  
-  The tool manifest in `tools/list` exposes `meta` as an optional object property with `{ type: "object" }`.
-- **Actual Result**:  
-  Pydantic type reflection in older FastMCP builds omitted the property description or threw a schema generation warning for unstructured dictionary types.
-- **Severity Rating**: **Important**
-- **Workaround Used**:  
-  Explicitly typed parameters using primitive fallback strings or serialized JSON strings (`meta: str = ""`) in the outer tool interface, parsing internally.
-- **Actionable Suggestion for Developer Relations / SDK Team**:  
-  Provide a standardized guide on Pydantic v2 type mapping for FastMCP tools, including examples for nested dictionaries, lists, and enums.
-
----
-
-### Friction Entry 4: Amazon Bedrock Converse API Regional Model ID Discovery
-
-- **Specific Task Attempted**:  
-  Dynamically invoke Amazon Bedrock models (`Claude 3.5 Sonnet` and `Amazon Nova Pro`) across different AWS regions (`us-east-1`, `us-west-2`, `eu-west-1`).
+  Dynamically invoke Amazon Bedrock models (`Claude 3.5 Sonnet` and `Amazon Nova Pro`) across different AWS regions (`us-east-1`, `us-west-2`).
 - **Steps Taken**:  
   1. Initialized `boto3.client("bedrock-runtime", region_name=region)`.
   2. Passed model ID string `anthropic.claude-3-5-sonnet-20241022-v2:0` to `client.converse()`.
 - **Expected Result**:  
   Consistent execution across supported regions.
 - **Actual Result**:  
-  Model IDs have subtle syntax variations across versions (`:0` suffix vs raw name), and cross-region inference profiles require prepending `us.` or `eu.` prefixes (e.g. `us.anthropic.claude-3-5-sonnet-20241022-v2:0`). When a developer inputs a standard model ID in a region using cross-region routing, Bedrock returns a `ValidationException`.
+  Cross-region inference profiles require prepending `us.` or `eu.` prefixes (e.g. `us.anthropic.claude-3-5-sonnet-20241022-v2:0`). When a developer inputs a standard model ID in a region using cross-region routing, Bedrock returns a `ValidationException`.
 - **Severity Rating**: **Important**
 - **Workaround Used**:  
   Created an internal provider normalization map in `src/hearth/brains.py` with automatic region prefixing and graceful failover to offline simulation.
@@ -83,75 +64,57 @@
 
 ---
 
-### Friction Entry 5: Web Speech Synthesis Inconsistency Across Embedded Device WebViews
+### Friction Entry 4: Alexa+ Agent Skills Manifest Tool Schema Reflection
 
 - **Specific Task Attempted**:  
-  Enable Alexa voice text-to-speech audio playback in the simulated Alexa+ interface when tested inside tablet/embedded browsers (Fire OS / Android WebViews).
+  Generate declarative Alexa+ Agent Skills manifest schemas (`skill/agent_skills_manifest.json`) from dynamically registered Python MCP tools.
 - **Steps Taken**:  
-  1. Called `window.speechSynthesis.speak(utterance)` upon receiving the agent's plan.
+  1. Inspected FastMCP tool parameters using Python's `inspect` and Pydantic field annotations.
+  2. Exported tool definitions into the Alexa+ Agent Skills capability structure.
 - **Expected Result**:  
-  Natural voice playback begins immediately.
+  Clean reflection of input JSON schemas without requiring duplicate manual manifest definitions.
 - **Actual Result**:  
-  Browsers require a prior user interaction (click/tap) before allowing audio playback. On initial load, voice synthesis was silently muted without throwing an exception.
-- **Severity Rating**: **Nice-to-have**
+  FastMCP wraps parameter definitions inside Pydantic models whose schema generation can produce `$defs` references or complex title fields that the Alexa+ Agent Skills parser rejects as non-primitive.
+- **Severity Rating**: **Important**
 - **Workaround Used**:  
-  Added a visible "🔊 Voice: ON/OFF" control in the simulator header and tied the audio activation to the first "Send" or prompt chip interaction.
+  Built a normalized schema transformer in `src/hearth/mcp_strands_adapter.py` that strips internal `$defs` references and produces flat JSON Schema object definitions.
 - **Actionable Suggestion for Developer Relations / SDK Team**:  
-  When providing templates for simulated web experiences, include a pre-flight audio unlock pattern in the sample starter kit.
+  Publish an official JSON Schema validator CLI for Alexa+ Agent Skills manifests to let developers lint their manifests before deploying.
 
 ---
 
-### Friction Entry 6: Strict-JSON Tool Protocol on Small Local Models (ReAct Loop)
+### Friction Entry 5: Bedrock AgentCore Memory State Serialization & SQLite Concurrency Locks
 
 - **Specific Task Attempted**:  
-  Drive a general ReAct loop (`{"call"|"final"}`) on small local models (`qwen2.5-coder:1.5b` or `llama3.2:1b`) via Ollama.
+  Persist rapid conversational turns and episodic context in Bedrock AgentCore Memory while simultaneous background household heartbeat ticks occur.
 - **Steps Taken**:  
-  1. Sent system prompt demanding exactly-one-JSON-object replies with a 19-tool spec.
-  2. Parsed with balanced-brace extraction; retried with error observations.
+  1. Simulated multi-threaded household ticks advancing long-running goals in parallel with chat turns.
+  2. Wrote episodic memory entries to local file storage.
 - **Expected Result**:  
-  Model emits clean `{"call": {...}}` / `{"final": ...}` turns.
+  Non-blocking writes with atomic persistence.
 - **Actual Result**:  
-  1.5b models frequently wrap JSON in conversational prose, hallucinate tool names, and unpromptedly convert units (e.g. °C to °F).
+  Under concurrent thread access, uncoordinated file writes caused intermittent `JSONDecodeError` on subsequent reads.
 - **Severity Rating**: **Important**
 - **Workaround Used**:  
-  Implemented dual-mode agent execution: a deterministic offline DAG engine by default for instant zero-config testing, with the ReAct loop activated for live LLM brains. Added balanced-brace JSON extraction and graceful error recovery.
+  Wrapped all AgentCore Memory read/write cycles in `src/hearth/agentcore.py` with atomic file locking (`src/hearth/atomic.py`) and temporary file renaming.
 - **Actionable Suggestion for Developer Relations / SDK Team**:  
-  Alexa+ docs should publish a minimal JSON tool-call contract with worked small-model prompt few-shot examples, ensuring local edge testing closely mirrors the cloud orchestrator.
+  Provide a reference local persistence adapter in the AWS AgentCore Python starter kit that includes atomic file lock semantics.
 
 ---
 
-### Friction Entry 7: FastMCP Custom Route Mounting & Modular Static Asset Serving
+### Friction Entry 6: AWS Strands Agents SDK Sub-Agent Exception Isolation
 
 - **Specific Task Attempted**:  
-  Serve a modular web application (`/css/*`, `/js/*`, `/assets/*`) from the same FastMCP process handling `/mcp` Streamable HTTP requests and `/api/*` custom endpoints.
+  Orchestrate parallel sub-agent calls (`ArbiterNegotiatorAgent`, `ReplenishmentDepletionAgent`) via the Strands Supervisor pattern when one sub-agent encounters missing telemetry.
 - **Steps Taken**:  
-  1. Created modular ES6 files (`web/js/voice.js`, `web/js/twin.js`, etc.) and CSS stylesheets.
-  2. Registered `@mcp.custom_route("/css/{path:path}")` and `@mcp.custom_route("/js/{path:path}")`.
+  1. Invoked Strands Supervisor with a complex multi-domain goal.
+  2. Simulated a transient timeout in the replenishment data provider.
 - **Expected Result**:  
-  FastMCP's underlying Starlette application seamlessly resolves wildcard sub-path parameters and serves the assets with appropriate `text/css` and `application/javascript` MIME types.
+  The supervisor isolates the failure to the specific sub-agent, continues executing remaining sub-agents, and presents partial results.
 - **Actual Result**:  
-  Depending on the FastMCP version and Starlette router ordering, path parameter extraction on wildcard subroutes can conflict with catch-all root routes, returning 404s or fallback index files.
+  An unhandled exception in one sub-agent halted the entire supervisor execution loop without returning partial findings.
 - **Severity Rating**: **Important**
 - **Workaround Used**:  
-  Explicitly registered sanitized path endpoints in `mcp-server/server.py` that resolve relative file paths securely against the `web/` directory and return `Response(content, media_type="text/css")` / `Response(content, media_type="application/javascript")`.
+  Wrapped sub-agent execution in `src/hearth/strands_agent.py` with individual `try/except` blocks, collecting partial summaries and reporting degraded status gracefully.
 - **Actionable Suggestion for Developer Relations / SDK Team**:  
-  Provide a native `mcp.mount_static(path="/static", directory="web")` helper method in FastMCP to make bundling companion web UIs or simulated Echo Show canvases frictionless.
-
----
-
-### Friction Entry 8: Client-Side Interactive MCP App UI Reflection & State Synchronization
-
-- **Specific Task Attempted**:  
-  Deliver interactive mini-applications (e.g., CCT/RGB Lighting Designer, Subscription ROI budget slider, Amazon Subscribe & Save cart) directly from MCP tool execution results.
-- **Steps Taken**:  
-  1. MCP tool `mcp_app_lighting_designer` returns structured UI metadata (`{"type": "mcp_app", "app_id": "lighting_designer", ...}`).
-  2. Simulated Alexa+ client parses the response and mounts the interactive canvas component.
-- **Expected Result**:  
-  Client renders an interactive canvas where user manipulation (e.g., dragging the color picker) directly previews state changes and emits verified action proposals.
-- **Actual Result**:  
-  Standard MCP specs do not yet define a formal schema for dynamic micro-UI rendering (MCP Apps), leaving developers to invent ad-hoc JSON wrappers.
-- **Severity Rating**: **Important**
-- **Workaround Used**:  
-  Standardized a clean micro-UI schema in Hearth Universal (`mcp_app` type tag with `state`, `controls`, and `actions`) and created a modular client renderer in `web/js/mcp-apps.js`.
-- **Actionable Suggestion for Developer Relations / SDK Team**:  
-  Standardize an official "MCP App / APL (Alexa Presentation Language) Component" payload structure in the Alexa+ SDK, allowing tools to return interactive micro-UIs that render natively on Echo Show 15/21 and Fire TV devices.
+  Incorporate built-in fault tolerance and partial resolution patterns directly into the AWS Strands Agents SDK supervisor harness.

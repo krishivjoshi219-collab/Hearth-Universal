@@ -45,7 +45,12 @@ from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
 from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
 
-from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth
+from hearth import (
+    sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
+    brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
+    strands_agent, agentcore, agent_skills, mcp_strands_adapter,
+    parliament, causal_twin, meta_skill, model_mesh
+)
 
 # Simple per-IP token bucket for the expensive chat endpoint (product abuse guard).
 _RATE_BUCKETS: dict[str, list] = {}
@@ -719,6 +724,142 @@ def commerce_scan_barcode(
     return res
 
 
+@mcp.tool()
+def strands_agent_orchestrate(
+    goal: Annotated[str, Field(description="Complex multi-domain household goal for AWS Strands multi-agent supervisor")],
+    session_id: Annotated[str, Field(description="Optional session ID for conversational context tracking")] = ""
+) -> dict:
+    """AWS Strands Agents SDK multi-agent supervisor orchestrating specialized sub-agents.
+
+    Coordinates ArbiterNegotiatorAgent, ReplenishmentDepletionAgent, and SentinelGuardianAgent
+    with Bedrock AgentCore Memory session tracking.
+    Tier-1 autonomous multi-agent orchestration.
+    """
+    res = strands_agent.supervisor.orchestrate_goal(goal, session_id=session_id or None)
+    audit.append("agent", "strands_agent_orchestrate", {
+        "goal": goal,
+        "agents": res.get("delegated_agents"),
+        "session_id": res.get("session_id")
+    })
+    return res
+
+
+@mcp.tool()
+def agentcore_memory_sync(
+    session_id: Annotated[str, Field(description="Session ID to inspect or retrieve turns from Bedrock AgentCore Memory")],
+    query: Annotated[str, Field(description="Optional query to search episodic memory across sessions")] = ""
+) -> dict:
+    """Inspect and query Bedrock AgentCore Memory store.
+
+    Retrieves conversational turns for the active session or searches cross-session
+    episodic memory matching query terms.
+    Tier-1 autonomous read.
+    """
+    if query:
+        matches = agentcore.memory_store.search_episodic_context(query)
+        return {"ok": True, "query": query, "episodic_matches": matches}
+    turns = agentcore.memory_store.get_session_turns(session_id)
+    return {"ok": True, "session_id": session_id, "turns": turns, "stats": agentcore.memory_store.get_stats()}
+
+
+@mcp.tool()
+def parliament_deliberate_issue(
+    topic: Annotated[str, Field(description="Household dilemma or conflicting priority to debate (e.g., peak tariff vs AC comfort)")],
+    peak_tariff: Annotated[float, Field(description="Current or projected electricity tariff in $/kWh")] = 0.48,
+    target_temp: Annotated[int, Field(description="Desired indoor thermostat temperature")] = 71,
+    battery_soc: Annotated[int, Field(description="Battery state of charge percentage")] = 84
+) -> dict:
+    """Deliberate a household dilemma using the 3-minister Game-Theoretic Parliament.
+
+    Executes structured multi-turn dialectic debate between FrugalMind, BioComfort,
+    and EcoSovereign to synthesize a Pareto-optimal Nash equilibrium consensus.
+    Tier-1 autonomous deliberation; stages proposals under Propose-Never-Execute.
+    """
+    from dataclasses import asdict
+    session = parliament.parliament.deliberate(
+        topic=topic,
+        context={"peak_tariff": peak_tariff, "target_temp": target_temp, "battery_soc": battery_soc}
+    )
+    return asdict(session)
+
+
+@mcp.tool()
+def parliament_get_ministers() -> dict:
+    """Retrieve parliamentary minister profiles, focus areas, and utility weights."""
+    return parliament.parliament.get_ministers_info()
+
+
+@mcp.tool()
+def causal_twin_simulate(
+    days_ahead: Annotated[int, Field(description="Forecast horizon in days (1 to 14)")] = 7,
+    iterations: Annotated[int, Field(description="Number of Monte Carlo iterations (50 to 500)")] = 250
+) -> dict:
+    """Run Monte Carlo counterfactual forward simulations on the Causal Digital Twin.
+
+    Identifies pre-emptive grid tariff spikes, brownout risks, and pantry stockouts
+    before they happen, staging pre-emptive contingency plans in the Approval Tray.
+    Tier-1 autonomous simulation.
+    """
+    from dataclasses import asdict
+    res = causal_twin.causal_twin.run_simulation(days_ahead=days_ahead, iterations=iterations)
+    return asdict(res)
+
+
+@mcp.tool()
+def causal_twin_get_vulnerabilities() -> dict:
+    """Retrieve fast vulnerability snapshot from the causal world model."""
+    return causal_twin.causal_twin.get_latest_vulnerabilities()
+
+
+@mcp.tool()
+def meta_skill_synthesize(
+    requirement: Annotated[str, Field(description="Natural language description of the new capability or automation needed")],
+    persona: Annotated[str, Field(description="Author persona requesting the skill ('Alex' or 'Leo')")] = "Alex"
+) -> dict:
+    """Autonomously compile, sandbox-verify, and mount a brand-new Alexa+ Agent Skill at runtime.
+
+    Synthesizes parameter schemas and execution logic, validates against Sentinel safety
+    policies, and dynamically mounts the skill into the live running agent environment.
+    Tier-1 / Tier-2 sandboxed synthesis.
+    """
+    return meta_skill.meta_synthesizer.synthesize(requirement=requirement, author_persona=persona)
+
+
+@mcp.tool()
+def meta_skill_list_synthesized() -> list:
+    """List all autonomously synthesized and hot-mounted Alexa+ Agent Skills."""
+    return meta_skill.meta_synthesizer.list_synthesized_skills()
+
+
+@mcp.tool()
+def brains_list_available_models() -> dict:
+    """Discover all connected AI models across Bedrock, OpenAI, Ollama, and custom endpoints.
+
+    Pings all configured API base URLs in real-time, reporting latency, online status,
+    and available model IDs with Amazon Bedrock + Nova Pro as default.
+    """
+    return model_mesh.model_mesh.discover_all_models()
+
+
+@mcp.tool()
+def brains_set_active_model(
+    model_id: Annotated[str, Field(description="Model identifier (e.g. 'us.amazon.nova-pro-v1:0', 'gpt-4o', 'qwen2.5-coder:1.5b')")],
+    provider: Annotated[str, Field(description="Provider slug (e.g. 'bedrock', 'openai', 'ollama', 'openrouter', 'custom')")] = "bedrock"
+) -> dict:
+    """Switch the active reasoning brain and model across all agent workflows."""
+    return model_mesh.model_mesh.set_active_model(model_id=model_id, provider_name=provider)
+
+
+@mcp.tool()
+def brains_add_custom_provider(
+    name: Annotated[str, Field(description="Display name for the custom API (e.g. 'My Local vLLM', 'Groq Fast')")],
+    base_url: Annotated[str, Field(description="Base URL for the OpenAI-compatible endpoint (e.g. 'http://localhost:8000/v1')")],
+    api_key: Annotated[str, Field(description="Optional API key for authentication")] = ""
+) -> dict:
+    """Connect Hearth Universal to ANY custom API or base URL in the world."""
+    return model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)
+
+
 # ==============================================================================
 # MCP Resources
 # ==============================================================================
@@ -831,6 +972,13 @@ async def health(request: Request):
         "auth_enforced": auth.auth_configured(),
         "tools_count": len(mcp._tool_manager.list_tools()),
         "active_provider": brains._get_active_provider(),
+        "active_model": model_mesh.model_mesh.active_model,
+        "strands_harness_ok": True,
+        "parliament_ok": True,
+        "causal_twin_ok": True,
+        "meta_synthesizer_ok": True,
+        "model_mesh_providers": len(model_mesh.model_mesh.providers),
+        "agent_skills_count": len(agent_skills.agent_skills_runtime.list_skills()),
     })
 
 
@@ -1562,6 +1710,142 @@ async def api_commerce_scan(request: Request):
         item_id = "item_coffee"
         action = "replenish"
     res = commerce.simulate_barcode_scan(item_id, action)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/strands/orchestrate", methods=["POST"])
+async def api_strands_orchestrate(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    """AWS Strands Agents multi-agent supervisor goal execution."""
+    try:
+        body = await request.json()
+        goal = str(body.get("goal", "")).strip()
+        sid = body.get("session_id")
+        ctx = body.get("context")
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not goal:
+        return JSONResponse({"ok": False, "error": "goal is required"}, status_code=400)
+    res = strands_agent.supervisor.orchestrate_goal(goal, session_id=sid, context=ctx)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/strands/telemetry", methods=["GET"])
+async def api_strands_telemetry(request: Request):
+    """Telemetry counters for AWS Strands Agents SDK and Bedrock AgentCore Memory."""
+    return JSONResponse({
+        "ok": True,
+        "framework": "AWS Strands Agents SDK + Bedrock AgentCore",
+        "memory_stats": agentcore.memory_store.get_stats(),
+        "gateway_stats": agentcore.gateway.get_telemetry(),
+        "supervisor_active": True,
+        "subagents": ["ArbiterNegotiatorAgent", "ReplenishmentDepletionAgent", "SentinelGuardianAgent"],
+    })
+
+
+@mcp.custom_route("/api/agent-skills", methods=["GET"])
+async def api_agent_skills(request: Request):
+    """Retrieve the standardized Alexa+ Agent Skills manifest."""
+    return JSONResponse(agent_skills.agent_skills_runtime.export_agent_skills_manifest())
+
+
+@mcp.custom_route("/api/parliament/deliberate", methods=["POST"])
+async def api_parliament_deliberate(request: Request):
+    """Deliberate a household dilemma using the 3-minister Game-Theoretic Parliament."""
+    try:
+        body = await request.json()
+        topic = body.get("topic", "Household energy and comfort optimization")
+        ctx = body.get("context", {})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    from dataclasses import asdict
+    session = parliament.parliament.deliberate(topic=topic, context=ctx)
+    return JSONResponse(asdict(session))
+
+
+@mcp.custom_route("/api/parliament/ministers", methods=["GET"])
+async def api_parliament_ministers(request: Request):
+    """Retrieve parliamentary minister profiles and weights."""
+    return JSONResponse(parliament.parliament.get_ministers_info())
+
+
+@mcp.custom_route("/api/causal/simulate", methods=["POST"])
+async def api_causal_simulate(request: Request):
+    """Run Monte Carlo counterfactual forward simulations on the Causal Digital Twin."""
+    try:
+        body = await request.json()
+        days = int(body.get("days_ahead", 7))
+        iters = int(body.get("iterations", 250))
+    except Exception:
+        days, iters = 7, 250
+    from dataclasses import asdict
+    res = causal_twin.causal_twin.run_simulation(days_ahead=days, iterations=iters)
+    return JSONResponse(asdict(res))
+
+
+@mcp.custom_route("/api/causal/vulnerabilities", methods=["GET"])
+async def api_causal_vulnerabilities(request: Request):
+    """Retrieve fast vulnerability snapshot from the causal world model."""
+    return JSONResponse(causal_twin.causal_twin.get_latest_vulnerabilities())
+
+
+@mcp.custom_route("/api/meta-skills/synthesize", methods=["POST"])
+async def api_meta_skills_synthesize(request: Request):
+    """Autonomously synthesize and mount a new Agent Skill at runtime."""
+    try:
+        body = await request.json()
+        req_text = body.get("requirement", "")
+        persona = body.get("persona", "Alex")
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not req_text:
+        return JSONResponse({"ok": False, "error": "requirement is required"}, status_code=400)
+    res = meta_skill.meta_synthesizer.synthesize(requirement=req_text, author_persona=persona)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/meta-skills", methods=["GET"])
+async def api_meta_skills_list(request: Request):
+    """List all autonomously synthesized and hot-mounted Alexa+ Agent Skills."""
+    return JSONResponse({"ok": True, "skills": meta_skill.meta_synthesizer.list_synthesized_skills()})
+
+
+@mcp.custom_route("/api/models", methods=["GET"])
+async def api_models_list(request: Request):
+    """Discover all connected AI models across Bedrock, OpenAI, Ollama, and custom endpoints."""
+    return JSONResponse(model_mesh.model_mesh.discover_all_models())
+
+
+@mcp.custom_route("/api/models/active", methods=["POST"])
+async def api_models_set_active(request: Request):
+    """Switch the active reasoning brain and model across all agent workflows."""
+    try:
+        body = await request.json()
+        model_id = body.get("model_id")
+        provider = body.get("provider", "bedrock")
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not model_id:
+        return JSONResponse({"ok": False, "error": "model_id is required"}, status_code=400)
+    res = model_mesh.model_mesh.set_active_model(model_id=model_id, provider_name=provider)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/models/providers/add", methods=["POST"])
+async def api_models_provider_add(request: Request):
+    """Connect Hearth Universal to ANY custom API or base URL in the world."""
+    try:
+        body = await request.json()
+        name = body.get("name", "Custom API")
+        base_url = body.get("base_url")
+        api_key = body.get("api_key", "")
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not base_url:
+        return JSONResponse({"ok": False, "error": "base_url is required"}, status_code=400)
+    res = model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)
     return JSONResponse(res)
 
 

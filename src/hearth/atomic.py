@@ -7,6 +7,7 @@ import fcntl
 import os
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Any
 
 
 @contextmanager
@@ -30,3 +31,10 @@ def atomic_write_text(path: Path, text: str) -> None:
     with open(tmp, "w") as f:
         f.write(text)
     os.replace(tmp, path)
+
+
+def atomic_write_json(path: Path, data: Any) -> None:
+    """Write JSON data crash-safely via atomic rename."""
+    import json
+    atomic_write_text(path, json.dumps(data, indent=2))
+

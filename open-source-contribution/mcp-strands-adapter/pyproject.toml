@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-strands-adapter"
+version = "0.1.0"
+authors = [
+  { name="Hearth Universal Contributors", email="developers@hearth-universal.local" },
+]
+description = "Universal bridge connecting AWS Strands Agents SDK to Model Context Protocol (MCP 2025-11-25) over Streamable HTTP."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["mcp", "model-context-protocol", "aws-strands", "bedrock", "alexa-plus", "agentic-ai"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/krishivjoshi219-collab/Hearth-Universal"
+"Bug Tracker" = "https://github.com/krishivjoshi219-collab/Hearth-Universal/issues"
