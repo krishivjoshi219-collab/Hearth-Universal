@@ -86,9 +86,9 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
         mesh = model_mesh.model_mesh
         if provider in mesh.providers:
             ep = mesh.providers[provider]
-            if ep.base_url:
+            if ep.base_url and "HEARTH_BASE_URL" not in os.environ:
                 base_url = ep.base_url
-            if ep.api_key_ref:
+            if ep.api_key_ref and "VAULT_MODEL_KEY" not in os.environ and "OPENAI_API_KEY" not in os.environ:
                 resolved = vault.resolve(ep.api_key_ref) or os.environ.get(ep.api_key_ref.strip("{}").replace("vault:", ""), "")
                 if resolved:
                     api_key = resolved

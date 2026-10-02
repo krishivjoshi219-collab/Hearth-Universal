@@ -140,6 +140,16 @@ function show(name) {
     const tab = $('.tab[data-view="' + v + '"]');
     tab.setAttribute("aria-selected", v === name ? "true" : "false");
   });
+
+  // Floating chat button: only visible on non-home tabs
+  const floatBtn = $("#floatingChatBtn");
+  const floatWidget = $("#floatingChatWidget");
+  if (floatBtn) {
+    floatBtn.hidden = (name === "home");
+  }
+  if (name === "home" && floatWidget) {
+    floatWidget.hidden = true;
+  }
 }
 $$(".tab").forEach((t) =>
   t.addEventListener("click", () => show(t.dataset.view))
@@ -152,7 +162,16 @@ document.addEventListener("keydown", (e) => {
   if (e.key >= "1" && e.key <= "5") show(views[+e.key - 1]);
   if (e.key === "/") {
     e.preventDefault();
-    $("#cmdInput").focus();
+    const isHome = !$("#view-home").hidden;
+    if (isHome) {
+      $("#cmdInput").focus();
+    } else {
+      const widget = $("#floatingChatWidget");
+      if (widget) {
+        widget.hidden = false;
+        $("#widgetCmdInput")?.focus();
+      }
+    }
   }
 });
 
@@ -446,22 +465,32 @@ function rebindIntent(el) {
   );
 }
 
-/* ---------- chat: DAG + why, never silent ---------- */
-$("#cmdForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const input = $("#cmdInput");
-  const msg = input.value.trim();
+/* ---------- shared chat runner (synchronized across Home & Floating Widget) ---------- */
+async function handleUserChat(msg) {
   if (!msg) return;
-  input.value = "";
   setLightWave("thinking");
-  const log = $("#chatLog");
-  const el = document.createElement("div");
-  el.className = "event human";
-  el.innerHTML = '<div class="event-row"><span class="actor">you</span><div class="what">' +
-    esc(msg) + '</div><span class="when">sending…</span></div>';
-  log.prepend(el);
+  
+  const homeLog = $("#chatLog");
+  const widgetLog = $("#widgetChatLog");
+  
+  function appendHuman(logEl) {
+    if (!logEl) return null;
+    const el = document.createElement("div");
+    el.className = "event human";
+    el.innerHTML = '<div class="event-row"><span class="actor">you</span><div class="what">' +
+      esc(msg) + '</div><span class="when">sending…</span></div>';
+    logEl.prepend(el);
+    return el;
+  }
+  
+  const homeEl = appendHuman(homeLog);
+  const widgetEl = appendHuman(widgetLog);
+  
   const { status, data } = await post("/api/chat", { message: msg });
-  el.querySelector(".when").textContent = new Date().toLocaleTimeString();
+  const timeStr = new Date().toLocaleTimeString();
+  if (homeEl) homeEl.querySelector(".when").textContent = timeStr;
+  if (widgetEl) widgetEl.querySelector(".when").textContent = timeStr;
+  
   if (status === 429) {
     setLightWave("alert");
     playEarcon("alert");
@@ -477,19 +506,62 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   setLightWave(data.blocked ? "alert" : "speaking");
   if (!data.blocked) playEarcon("success");
   const text = data.draft || data.text || data.synthesis || data.message || data.error || "Done.";
-  const row = document.createElement("div");
-  row.className = "event agent";
-  const dag = (data.dag || []).slice(0, 6).map((s) =>
-    esc(s.tool || s.id) + " → " + esc(s.status || "done")
-  ).join("  ·  ");
-  row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><div class="what">' +
-    formatMarkdown(text) + "</div></div>" +
-    (dag ? "<details open><summary>How it reasoned</summary><div class='mono' style='color:var(--t2)'>" + dag + "</div></details>" : "") +
-    (data.blocked ? "<div class='receipt' style='color:var(--bad)'>Blocked: " + esc(data.reason || "") + "</div>" : "");
-  log.prepend(row);
+  
+  function appendAgent(logEl) {
+    if (!logEl) return;
+    const row = document.createElement("div");
+    row.className = "event agent";
+    const dag = (data.dag || []).slice(0, 6).map((s) =>
+      esc(s.tool || s.id) + " → " + esc(s.status || "done")
+    ).join("  ·  ");
+    row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><div class="what">' +
+      formatMarkdown(text) + "</div></div>" +
+      (dag ? "<details open><summary>How it reasoned</summary><div class='mono' style='color:var(--t2)'>" + dag + "</div></details>" : "") +
+      (data.blocked ? "<div class='receipt' style='color:var(--bad)'>Blocked: " + esc(data.reason || "") + "</div>" : "");
+    logEl.prepend(row);
+  }
+  
+  appendAgent(homeLog);
+  appendAgent(widgetLog);
+  
   if (data.blocked) addEvent("sentinel", "Blocked: " + (data.reason || "policy"), null);
   else addEvent("agent", (data.intent || " Answered") + " — " + msg.slice(0, 60), { steps: (data.dag || []).length });
   refresh();
+}
+
+$("#cmdForm")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = $("#cmdInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  handleUserChat(msg);
+});
+
+$("#widgetCmdForm")?.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = $("#widgetCmdInput");
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = "";
+  handleUserChat(msg);
+});
+
+/* ---------- floating chat button & widget toggle ---------- */
+const floatBtn = $("#floatingChatBtn");
+const floatWidget = $("#floatingChatWidget");
+const widgetCloseBtn = $("#widgetCloseBtn");
+
+floatBtn?.addEventListener("click", () => {
+  if (!floatWidget) return;
+  floatWidget.hidden = !floatWidget.hidden;
+  if (!floatWidget.hidden) {
+    $("#widgetCmdInput")?.focus();
+  }
+});
+
+widgetCloseBtn?.addEventListener("click", () => {
+  if (floatWidget) floatWidget.hidden = true;
 });
 
 /* ---------- quick starter prompt chips (blank canvas relief) ---------- */
@@ -802,8 +874,234 @@ on("status", (s) => {
   $("#protoPill").classList.toggle("warn", !s.ok);
 });
 
+/* ---------- mode switcher (simulation vs real world) ---------- */
+let currentMode = "simulation";
+
+export async function setMode(mode) {
+  currentMode = mode === "real" ? "real" : "simulation";
+  $("#modeSimBtn")?.classList.toggle("active", currentMode === "simulation");
+  $("#modeRealBtn")?.classList.toggle("active", currentMode === "real");
+
+  const simPanel = $("#simPanel");
+  const realPanel = $("#realHubPanel");
+  if (simPanel) simPanel.hidden = (currentMode === "real");
+  if (realPanel) realPanel.hidden = (currentMode !== "real");
+
+  try {
+    await post("/api/mode", { mode: currentMode });
+    playEarcon("success");
+    toast(currentMode === "real" ? "🌐 Switched to Real World (Alexa+ Connected)" : "⚡ Switched to Simulation Mode");
+    refresh();
+    loadRealHardwareConfig();
+  } catch (e) {
+    console.error("Failed to set mode", e);
+  }
+}
+
+$("#modeSimBtn")?.addEventListener("click", () => setMode("simulation"));
+$("#modeRealBtn")?.addEventListener("click", () => setMode("real"));
+
+/* ---------- real world hardware & alexa+ integrations ---------- */
+async function loadRealHardwareConfig() {
+  try {
+    const res = await fetch("/api/real/config");
+    if (!res.ok) return;
+    const cfg = await res.json();
+
+    if (cfg.mode && cfg.mode !== currentMode) {
+      currentMode = cfg.mode;
+      $("#modeSimBtn")?.classList.toggle("active", currentMode === "simulation");
+      $("#modeRealBtn")?.classList.toggle("active", currentMode === "real");
+      const simPanel = $("#simPanel");
+      const realPanel = $("#realHubPanel");
+      if (simPanel) simPanel.hidden = (currentMode === "real");
+      if (realPanel) realPanel.hidden = (currentMode !== "real");
+    }
+
+    const alexaInput = $("#alexaSkillIdInput");
+    if (alexaInput && cfg.alexa && cfg.alexa.skill_id) {
+      alexaInput.value = cfg.alexa.skill_id;
+    }
+    const hubInput = $("#smartHubUrlInput");
+    if (hubInput && cfg.smart_hub && cfg.smart_hub.url) {
+      hubInput.value = cfg.smart_hub.url;
+    }
+
+    renderRealDevices(cfg.real_devices || []);
+  } catch (err) {
+    console.error("Failed loading real hardware config", err);
+  }
+}
+
+function renderRealDevices(devices) {
+  const homeGrid = $("#realDevicesGrid");
+  const settingsList = $("#settingsDevicesList");
+
+  const domainIcons = {
+    climate: "🌡️",
+    lock: "🔒",
+    energy: "⚡",
+    light: "💡",
+    camera: "📹",
+    switch: "🔌",
+  };
+
+  const cardsHtml = devices.map((d) => {
+    const icon = domainIcons[d.domain] || "🔌";
+    return (
+      '<div class="device-card">' +
+      '<div class="device-card-head">' +
+      '<span style="font-size:18px">' + icon + '</span>' +
+      '<span class="domain-tag">' + esc(d.protocol || d.domain) + '</span>' +
+      '</div>' +
+      '<div class="name">' + esc(d.name) + '</div>' +
+      '<div class="state">● ' + esc(d.state || "Online") + '</div>' +
+      '<div class="meta">' +
+      '<span>' + esc(d.room || "Home") + '</span>' +
+      '<span class="mono" style="color:var(--ok)">' + esc(d.status || "online") + '</span>' +
+      '</div>' +
+      '</div>'
+    );
+  }).join("");
+
+  if (homeGrid) {
+    homeGrid.innerHTML = cardsHtml || '<div class="empty">No real smart devices linked. Tap "+ Add Real Device" to link one.</div>';
+  }
+
+  if (settingsList) {
+    settingsList.innerHTML = devices.map((d) => {
+      const icon = domainIcons[d.domain] || "🔌";
+      return (
+        '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px var(--sp3);background:var(--s2);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:8px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<span style="font-size:18px">' + icon + '</span>' +
+        '<div><strong>' + esc(d.name) + '</strong><small style="display:block;color:var(--t2)">' + esc(d.room) + ' · ' + esc(d.protocol) + ' (' + esc(d.state) + ')</small></div>' +
+        '</div>' +
+        '<button class="btn btn-del-dev" data-id="' + esc(d.id) + '" style="min-height:30px;padding:2px 10px;font-size:12px;color:var(--bad)">Remove</button>' +
+        '</div>'
+      );
+    }).join("");
+
+    $$(".btn-del-dev").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const did = btn.dataset.id;
+        if (!did) return;
+        await fetch("/api/real/device/" + encodeURIComponent(did), { method: "DELETE" });
+        toast("Device removed from registry");
+        loadRealHardwareConfig();
+      });
+    });
+  }
+}
+
+function openAddDeviceDialog() {
+  openDialog(
+    "Register Real Smart Home Device",
+    '<div style="display:flex;flex-direction:column;gap:10px">' +
+    '<div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Device Name</label>' +
+    '<input type="text" id="newDevName" placeholder="e.g. Master Bedroom Thermostat" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)"/></div>' +
+    '<div style="display:flex;gap:8px">' +
+    '<div style="flex:1"><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Room</label>' +
+    '<input type="text" id="newDevRoom" placeholder="Living Room, Kitchen..." value="Living Room" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)"/></div>' +
+    '<div style="flex:1"><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Domain</label>' +
+    '<select id="newDevDomain" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)">' +
+    '<option value="climate">Climate (Thermostat)</option>' +
+    '<option value="lock">Lock (Deadbolt/Handle)</option>' +
+    '<option value="light">Light (Bulb/Strip/Switch)</option>' +
+    '<option value="energy">Energy (Inverter/Meter)</option>' +
+    '<option value="camera">Camera (Video Doorbell)</option>' +
+    '<option value="switch">Smart Plug / Switch</option>' +
+    '</select></div>' +
+    '</div>' +
+    '<div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Protocol / Hub</label>' +
+    '<select id="newDevProtocol" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)">' +
+    '<option value="Matter">Matter (Standard)</option>' +
+    '<option value="Zigbee">Zigbee / Z-Wave (Local Bridge)</option>' +
+    '<option value="Alexa AVS">Amazon Alexa (AVS / ASK Directives)</option>' +
+    '<option value="Local REST">Local REST / MQTT Webhook</option>' +
+    '</select></div>' +
+    '</div>',
+    [
+      {
+        label: "Register Device",
+        primary: true,
+        onClick: async () => {
+          const name = $("#newDevName")?.value.trim();
+          const room = $("#newDevRoom")?.value.trim() || "Living Room";
+          const domain = $("#newDevDomain")?.value || "climate";
+          const protocol = $("#newDevProtocol")?.value || "Matter";
+          if (!name) {
+            toast("Device name required", true);
+            return;
+          }
+          await post("/api/real/device", { name, room, domain, protocol, state: "Connected · Standby" });
+          playEarcon("success");
+          toast("Real device '" + name + "' registered successfully");
+          loadRealHardwareConfig();
+        }
+      },
+      { label: "Cancel" }
+    ]
+  );
+}
+
+$("#addDeviceQuickBtn")?.addEventListener("click", openAddDeviceDialog);
+$("#openAddDeviceModalBtn")?.addEventListener("click", openAddDeviceDialog);
+
+$("#testAlexaBtn")?.addEventListener("click", async () => {
+  const btn = $("#testAlexaBtn");
+  btn.disabled = true;
+  btn.textContent = "Testing…";
+  const skill_id = $("#alexaSkillIdInput")?.value.trim();
+  const { status, data } = await post("/api/real/test", { service: "alexa", creds: { skill_id } });
+  btn.disabled = false;
+  btn.textContent = "Test Handshake";
+  if (status === 200 && data.ok) {
+    playEarcon("success");
+    toast(data.message || "Alexa+ connected successfully");
+    const det = $("#alexaStatusDetail");
+    if (det) {
+      det.textContent = "● " + (data.message || "Connected");
+      det.style.color = "var(--ok)";
+    }
+  } else {
+    toast((data && data.error) || "Handshake failed", true);
+  }
+});
+
+$("#syncAlexaEndpointsBtn")?.addEventListener("click", () => {
+  $("#testAlexaBtn")?.dispatchEvent(new Event("click"));
+});
+
+$("#testHubBtn")?.addEventListener("click", async () => {
+  const btn = $("#testHubBtn");
+  btn.disabled = true;
+  btn.textContent = "Syncing…";
+  const url = $("#smartHubUrlInput")?.value.trim();
+  const { status, data } = await post("/api/real/test", { service: "smart_hub", creds: { url } });
+  btn.disabled = false;
+  btn.textContent = "Sync Entities";
+  if (status === 200 && data.ok) {
+    playEarcon("success");
+    toast(data.message || "Hub entities synced");
+    const det = $("#hubStatusDetail");
+    if (det) {
+      det.textContent = "● " + (data.message || "Connected");
+      det.style.color = "var(--ok)";
+    }
+  } else {
+    toast((data && data.error) || "Sync failed", true);
+  }
+});
+
+$("#configureRealHardwareBtn")?.addEventListener("click", () => {
+  show("settings");
+});
+
 /* ---------- boot ---------- */
 paintDial();
 const deep = new URLSearchParams(location.search).get("view");
 if (deep && views.includes(deep)) show(deep);
+else show("home");
+loadRealHardwareConfig();
 startPolling(5000);

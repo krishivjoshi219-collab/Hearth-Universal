@@ -49,7 +49,7 @@ from hearth import (
     sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
     brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
     strands_agent, agentcore, agent_skills, mcp_strands_adapter,
-    parliament, causal_twin, meta_skill, model_mesh
+    parliament, causal_twin, meta_skill, model_mesh, real_mode
 )
 
 _SERVER_START_TIME = _time.time()
@@ -1140,7 +1140,12 @@ async def api_memory(request: Request):
 @mcp.custom_route("/api/home", methods=["GET"])
 @mcp.custom_route("/api/telemetry", methods=["GET"])
 async def api_home(request: Request):
-    return JSONResponse(home_mock.get_state())
+    st = home_mock.get_state()
+    mode = real_mode.real_manager.get_mode()
+    st["operating_mode"] = mode
+    if mode == "real":
+        st["real_telemetry"] = real_mode.real_manager.get_real_telemetry()
+    return JSONResponse(st)
 
 
 @mcp.custom_route("/api/home/scene", methods=["POST"])
@@ -1910,9 +1915,81 @@ async def api_diagnostics(request: Request):
         "meta_skills": {
             "count": len(meta_skill.meta_synthesizer.list_synthesized_skills()),
         },
+        "operating_mode": real_mode.real_manager.get_mode(),
         "active_persona": ACTIVE_PERSONA.get("name"),
         "proposals_pending": len(proposals.list_proposals(status="pending")),
     })
+
+
+@mcp.custom_route("/api/mode", methods=["GET", "POST"])
+async def api_mode(request: Request):
+    """Get or switch between Simulation Mode and 100% Real World Alexa+ Mode."""
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            mode = body.get("mode", "simulation")
+        except Exception:
+            mode = "simulation"
+        res = real_mode.real_manager.set_mode(mode)
+        return JSONResponse(res)
+    return JSONResponse({
+        "mode": real_mode.real_manager.get_mode(),
+        "config": real_mode.real_manager.get_config(),
+        "telemetry": real_mode.real_manager.get_real_telemetry(),
+    })
+
+
+@mcp.custom_route("/api/real/config", methods=["GET", "POST"])
+async def api_real_config(request: Request):
+    """Retrieve or update Real World hardware and Alexa+ connections."""
+    if request.method == "POST":
+        try:
+            body = await request.json()
+        except Exception:
+            return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+        res = real_mode.real_manager.update_config(body)
+        return JSONResponse(res)
+    return JSONResponse(real_mode.real_manager.get_config())
+
+
+@mcp.custom_route("/api/real/test", methods=["POST"])
+async def api_real_test(request: Request):
+    """Test live connectivity to Alexa+, Amazon Bedrock, or Home Assistant/Matter."""
+    try:
+        body = await request.json()
+        service = body.get("service", "alexa")
+        creds = body.get("creds", {})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    res = real_mode.real_manager.test_connection(service, creds)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/real/device", methods=["POST"])
+async def api_real_add_device(request: Request):
+    """Add a real smart home device to the household registry."""
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    res = real_mode.real_manager.add_device(body)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/real/device/{did}", methods=["DELETE"])
+async def api_real_del_device(request: Request):
+    """Remove a real smart home device from the registry."""
+    did = request.path_params.get("did")
+    if not did:
+        return JSONResponse({"ok": False, "error": "Missing device id"}, status_code=400)
+    res = real_mode.real_manager.remove_device(did)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/real/telemetry", methods=["GET"])
+async def api_real_telemetry(request: Request):
+    """Get live real-world household telemetry."""
+    return JSONResponse(real_mode.real_manager.get_real_telemetry())
 
 
 WEB2_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
