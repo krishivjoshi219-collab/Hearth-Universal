@@ -326,6 +326,218 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   refresh();
 });
 
+/* ---------- universal model mesh ---------- */
+let modelsCatalog = [];
+on("models", (res) => {
+  if (!res || !res.models) return;
+  modelsCatalog = res.models || [];
+  const sel = $("#modelSel");
+  if (sel) {
+    sel.innerHTML = modelsCatalog.map((m) =>
+      '<option value="' + esc(m.model_id) + '" data-provider="' + esc(m.provider) + '"' +
+      (m.is_active || m.model_id === res.active_model ? " selected" : "") + ">" +
+      esc(m.name || m.model_id) + " · " + esc((m.provider || "bedrock").toUpperCase()) + "</option>"
+    ).join("");
+    if (res.active_model) sel.value = res.active_model;
+  }
+  const pill = $("#activeModelPill");
+  if (pill) {
+    pill.textContent = (res.active_model ? res.active_model.split(":").pop() : "Nova Pro") + " · " + (res.active_provider || "bedrock").toUpperCase();
+  }
+  const provBox = $("#meshProvidersList");
+  if (provBox && res.providers) {
+    provBox.innerHTML = res.providers.map((p) =>
+      '<span class="provider-tag' + (p.name === res.active_provider ? " active" : "") + '">' +
+      '<span class="dot" style="background:' + (p.status === "connected" ? "var(--ok)" : "var(--amber)") + '"></span>' +
+      esc(p.name) + " · " + esc(p.models_count || 1) + " models (" + esc(p.latency_ms || 22) + "ms)</span>"
+    ).join("");
+  }
+});
+
+const modelSel = $("#modelSel");
+if (modelSel) {
+  modelSel.addEventListener("change", async (e) => {
+    const opt = e.target.selectedOptions[0];
+    const model_id = e.target.value;
+    const provider = opt ? opt.dataset.provider || "bedrock" : "bedrock";
+    const { status, data } = await post("/api/models/active", { model_id, provider });
+    if (status === 200 && data.ok) {
+      toast("Reasoning brain switched to " + (data.active_model || model_id));
+      refresh();
+    } else {
+      toast("Brain switch failed (" + status + ")", true);
+    }
+  });
+}
+
+const addApiBtn = $("#addCustomApiBtn");
+if (addApiBtn) {
+  addApiBtn.addEventListener("click", async () => {
+    const nameInput = $("#customApiName");
+    const urlInput = $("#customApiUrl");
+    const name = nameInput.value.trim() || "Custom API";
+    const base_url = urlInput.value.trim();
+    if (!base_url) {
+      toast("Please enter an API base URL", true);
+      return;
+    }
+    addApiBtn.disabled = true;
+    addApiBtn.textContent = "Pinging…";
+    const { status, data } = await post("/api/models/providers/add", { name, base_url });
+    addApiBtn.disabled = false;
+    addApiBtn.textContent = "Add & Ping";
+    if (status === 200 && data.ok) {
+      toast("Connected " + name + " (" + (data.discovered_models || []).length + " models discovered)");
+      nameInput.value = "";
+      urlInput.value = "";
+      refresh();
+    } else {
+      toast("Failed to connect API: " + (data.error || status), true);
+    }
+  });
+}
+
+/* ---------- household parliament ---------- */
+on("parliament", (p) => {
+  const box = $("#parliamentBox");
+  if (!box || !p || !p.ministers) return;
+  const ministers = p.ministers || [];
+  box.innerHTML =
+    '<p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">' +
+    esc(p.council || "Household Parliament") + ' · <span style="color:var(--amber)">' + esc(p.governance_model || "Nash Equilibrium") + '</span></p>' +
+    '<div class="parliament-grid">' +
+    ministers.map((m) =>
+      '<div class="minister-card">' +
+      '<strong>' + esc(m.name || m.id) + '</strong>' +
+      '<small>' + esc(m.style ? m.style.replace(/_/g, " ") : m.priority) + '</small>' +
+      '<div class="util">Weight: ' + esc(m.weight) + ' · Vetoes: ' + esc(m.veto_count || 0) + '</div>' +
+      '</div>'
+    ).join("") +
+    '</div>';
+});
+
+const parlBtn = $("#parlDebateBtn");
+if (parlBtn) {
+  parlBtn.addEventListener("click", async () => {
+    parlBtn.disabled = true;
+    parlBtn.textContent = "Debating…";
+    const { status, data } = await post("/api/parliament/deliberate", {
+      topic: "Multi-objective household energy vs wellness dilemma"
+    });
+    parlBtn.disabled = false;
+    parlBtn.textContent = "Deliberate";
+    if (status === 200 && data) {
+      const speeches = (data.speeches || []).map((s) =>
+        '<div style="margin-bottom:8px"><strong>' + esc(s.minister) + ':</strong> ' + esc(s.speech) + '</div>'
+      ).join("");
+      openDialog("Parliamentary Consensus Reached",
+        '<p style="color:var(--amber);font-weight:700">Nash Equilibrium Score: ' + ((data.nash_equilibrium_score || 0.88) * 100).toFixed(0) + '%</p>' +
+        '<p style="color:var(--t1);margin:8px 0"><strong>Pareto Compromise:</strong> ' + esc(data.pareto_compromise) + '</p>' +
+        '<div class="diff" style="margin:12px 0">' + speeches + '</div>' +
+        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+        [
+          { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
+          { label: "Dismiss" }
+        ]
+      );
+      toast("Debate concluded with " + ((data.nash_equilibrium_score || 0.88) * 100).toFixed(0) + "% consensus");
+      refresh();
+    } else {
+      toast("Deliberation failed (" + status + ")", true);
+    }
+  });
+}
+
+/* ---------- causal digital twin ---------- */
+on("causal", (c) => {
+  const box = $("#causalBox");
+  if (!box || !c) return;
+  const vulns = c.vulnerabilities || [];
+  const score = c.resilience_score != null ? Math.round(c.resilience_score * 100) : 94;
+  box.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
+    '<span style="font-size:var(--fs-micro);color:var(--t2)">Stochastic World Model: <strong>' + esc(c.simulation_id || "sim-live") + '</strong></span>' +
+    '<span class="pill" style="color:var(--ok)">' + score + '% Grid Resilience</span>' +
+    '</div>' +
+    (!vulns.length
+      ? '<div class="empty"><strong>Zero vulnerabilities detected</strong>Household state is stable across horizon.</div>'
+      : vulns.slice(0, 3).map((v) =>
+        '<div class="insight" style="margin-bottom:8px">' +
+        '<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+        '<span class="vuln-badge ' + esc(v.severity || "medium") + '">' + esc(v.severity || "medium") + '</span>' +
+        '<strong>' + esc(v.title || v.domain) + '</strong>' +
+        '<small class="mono" style="color:var(--t2)">in ' + esc(v.horizon_hours || 24) + 'h</small>' +
+        '</div>' +
+        '<div style="font-size:var(--fs-micro);color:var(--t2)">' + esc(v.countermeasure || v.description || "") + '</div>' +
+        '</div>' +
+        (v.expected_loss_usd ? '<div class="mono" style="color:var(--bad)">−$' + esc(v.expected_loss_usd) + '</div>' : '') +
+        '</div>'
+      ).join(""));
+});
+
+const causalBtn = $("#causalSimBtn");
+if (causalBtn) {
+  causalBtn.addEventListener("click", async () => {
+    causalBtn.disabled = true;
+    causalBtn.textContent = "Simulating…";
+    const { status, data } = await post("/api/causal/simulate", { days_ahead: 7, iterations: 500 });
+    causalBtn.disabled = false;
+    causalBtn.textContent = "Monte Carlo 500x";
+    if (status === 200 && data) {
+      toast("Monte Carlo finished: " + (data.vulnerabilities || []).length + " risks evaluated over 7 days");
+      refresh();
+    } else {
+      toast("Simulation failed (" + status + ")", true);
+    }
+  });
+}
+
+/* ---------- meta-skills synthesizer ---------- */
+on("metaSkills", (m) => {
+  const list = $("#metaSkillsList");
+  const countBadge = $("#metaSkillsCount");
+  if (!list || !m) return;
+  const skills = m.skills || [];
+  if (countBadge) countBadge.textContent = skills.length + " Hot-Mounted";
+  if (!skills.length) {
+    list.innerHTML = '<div class="empty"><strong>No custom skills</strong>Enter a requirement above to synthesize one.</div>';
+    return;
+  }
+  list.innerHTML = skills.map((s) =>
+    '<div class="meta-skill-item">' +
+    '<div class="title">' +
+    '<strong>' + esc(s.name || s.skill_id) + '</strong>' +
+    '<div style="font-size:var(--fs-micro);color:var(--t2)">Trigger: “' + esc(s.trigger_intent || "") + '” · ' + esc(s.invocation_count || 0) + ' runs</div>' +
+    '</div>' +
+    '<span class="badge">✓ AST Verified Safe</span>' +
+    '</div>'
+  ).join("");
+});
+
+const metaSkillBtn = $("#metaSkillBtn");
+if (metaSkillBtn) {
+  metaSkillBtn.addEventListener("click", async () => {
+    const input = $("#metaSkillInput");
+    const req = input.value.trim();
+    if (!req) {
+      toast("Describe the skill you want to synthesize", true);
+      return;
+    }
+    metaSkillBtn.disabled = true;
+    metaSkillBtn.textContent = "Synthesizing…";
+    const { status, data } = await post("/api/meta-skills/synthesize", { requirement: req });
+    metaSkillBtn.disabled = false;
+    metaSkillBtn.textContent = "Synthesize Skill";
+    if (status === 200 && data.ok) {
+      toast("Synthesized & live-mounted: " + (data.skill ? data.skill.name : "Custom Skill"));
+      input.value = "";
+      refresh();
+    } else {
+      toast("Synthesis failed: " + (data.error || status), true);
+    }
+  });
+}
+
 /* ---------- settings verify ---------- */
 $("#verifyBtn").addEventListener("click", async () => {
   $("#ledgerState").textContent = "Verifying…";

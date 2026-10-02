@@ -458,3 +458,119 @@
 .dialog .row .btn {
   flex: 1;
 }
+
+/* ---- Parliament, Causal Twin & Meta-Skill Cards ---- */
+.parliament-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp2);
+  margin-bottom: var(--sp3);
+}
+
+@media (max-width: 900px) {
+  .parliament-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.minister-card {
+  background: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  padding: var(--sp2) var(--sp3);
+}
+
+.minister-card strong {
+  display: block;
+  font-size: var(--fs-title);
+  color: var(--t1);
+}
+
+.minister-card small {
+  display: block;
+  font-size: var(--fs-micro);
+  color: var(--t2);
+  margin-top: 2px;
+}
+
+.minister-card .util {
+  display: inline-block;
+  margin-top: var(--sp1);
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  color: var(--amber);
+}
+
+.vuln-badge {
+  display: inline-block;
+  font-size: var(--fs-micro);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--r-pill);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.vuln-badge.critical {
+  background: var(--bad-dim);
+  color: var(--bad);
+}
+
+.vuln-badge.high {
+  background: var(--amber-dim);
+  color: var(--amber);
+}
+
+.vuln-badge.medium {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.meta-skill-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp2);
+  padding: var(--sp2) var(--sp3);
+  background: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  margin-bottom: var(--sp1);
+}
+
+.meta-skill-item .title {
+  flex: 1;
+  font-size: var(--fs-body);
+}
+
+.meta-skill-item .badge {
+  font-size: var(--fs-micro);
+  color: var(--ok);
+}
+
+.setrow input[type="text"] {
+  background: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--t1);
+  font-size: var(--fs-micro);
+}
+
+.provider-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-micro);
+  background: var(--s2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  padding: 3px 10px;
+  margin-right: 6px;
+  margin-top: 6px;
+}
+.provider-tag.active {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+

@@ -21,6 +21,9 @@
       <div class="topbar-right">
         <span class="pill" id="protoPill"><span class="dot"></span><span id="protoText">Connecting…</span></span>
         <span class="pill" id="dialPill" title="Autonomy level">Propose</span>
+        <select class="persona" id="modelSel" aria-label="Universal Model Mesh Brain" title="Active Reasoning Brain">
+          <option value="us.amazon.nova-pro-v1:0">Amazon Nova Pro · Bedrock</option>
+        </select>
         <select class="persona" id="personaSel" aria-label="Household member">
           <option value="admin">Krishiv · Admin</option>
           <option value="partner">Sarah · Partner</option>
@@ -81,6 +84,28 @@
           <div class="panel-body" id="pantryBox"><div class="skel" style="height:120px"></div></div>
         </div>
       </div>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Household Parliament</h3>
+            <span class="spacer"></span>
+            <button class="btn" id="parlDebateBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Deliberate</button>
+          </div>
+          <div class="panel-body" id="parliamentBox">
+            <div class="skel" style="height:120px"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Causal Digital Twin (7-Day Forecast)</h3>
+            <span class="spacer"></span>
+            <button class="btn" id="causalSimBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Monte Carlo 500x</button>
+          </div>
+          <div class="panel-body" id="causalBox">
+            <div class="skel" style="height:120px"></div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- SETTINGS -->
@@ -95,6 +120,42 @@
         </div>
         <p class="mono" id="dialRecord" style="margin-top:12px;color:var(--t2)">Record: 0 proceedings · auto-mode locked</p>
       </div></div>
+
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-head"><h3>Universal Model Mesh · Bedrock Default + Any API</h3></div>
+        <div class="panel-body">
+          <div class="setrow">
+            <div class="lab">Default Brain<small>Amazon Bedrock with Amazon Nova Pro (300k context, zero cold-start)</small></div>
+            <span class="pill" id="activeModelPill" style="border-color:var(--amber);color:var(--amber)">Nova Pro · Bedrock</span>
+          </div>
+          <div class="setrow">
+            <div class="lab">Connect Custom API<small>Connect any remote LLM or local endpoint (Ollama, vLLM, OpenAI, custom base URL)</small></div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <input type="text" id="customApiName" placeholder="Provider Name" style="width:130px"/>
+              <input type="text" id="customApiUrl" placeholder="https://api... or http://localhost:11434" style="width:230px"/>
+              <button class="btn btn-primary" id="addCustomApiBtn" style="min-height:36px;padding:0 14px;font-size:var(--fs-micro)">Add &amp; Ping</button>
+            </div>
+          </div>
+          <div id="meshProvidersList" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom:16px">
+        <div class="panel-head">
+          <h3>Self-Evolving Meta-Skills</h3>
+          <span class="spacer"></span>
+          <span class="pill" id="metaSkillsCount" style="color:var(--ok)">Runtime Hot-Mounted</span>
+        </div>
+        <div class="panel-body">
+          <p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">Natural language to AST-validated agent skills. Compiles, runs Sentinel AST safety checks, and mounts live into FastMCP without restarts.</p>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <input type="text" id="metaSkillInput" placeholder="e.g. When solar generation &gt; 3kW, pre-cool living room to 20°C" style="flex:1;background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--t1)"/>
+            <button class="btn btn-primary" id="metaSkillBtn" style="min-height:38px;padding:0 16px;white-space:nowrap">Synthesize Skill</button>
+          </div>
+          <div id="metaSkillsList"><div class="skel" style="height:60px"></div></div>
+        </div>
+      </div>
+
       <div class="panel"><div class="panel-body">
         <div class="setrow"><div class="lab">Adult PIN<small>Required for money, unlocks and resets. Set via HEARTH_ADULT_PIN.</small></div><input type="password" id="pinInput" placeholder="••••" autocomplete="off"/></div>
         <div class="setrow"><div class="lab">Ledger<small id="ledgerState">Checking chain…</small></div><button class="btn" id="verifyBtn" style="min-height:40px">Verify now</button></div>

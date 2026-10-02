@@ -46,6 +46,22 @@ export async function refresh() {
       const roi = await get("/api/renewals").catch(() => null);
       if (roi) emit("roi", roi);
     } catch {}
+    try {
+      const models = await get("/api/models").catch(() => null);
+      if (models) emit("models", models);
+    } catch {}
+    try {
+      const parl = await get("/api/parliament/ministers").catch(() => null);
+      if (parl) emit("parliament", parl);
+    } catch {}
+    try {
+      const causal = await get("/api/causal/vulnerabilities").catch(() => null);
+      if (causal) emit("causal", causal);
+    } catch {}
+    try {
+      const meta = await get("/api/meta-skills").catch(() => null);
+      if (meta) emit("metaSkills", meta);
+    } catch {}
   } catch (e) {
     failures++;
     emit("status", { ok: false, failures });
