@@ -84,7 +84,44 @@
         </div>
       </div>
 
-      <!-- Real World Alexa+ & Smart Home Hub Panel (Shown when mode == real) -->
+      <!-- Real World Alexa+ Authentication Portal (Shown when mode == real and !alexa_logged_in) -->
+      <div class="panel" id="realAuthPortal" style="margin-top:16px;background:linear-gradient(135deg, #18181b, #09090b);border:1px solid rgba(245, 158, 11, 0.4);box-shadow:0 8px 32px rgba(0,0,0,0.5)" hidden>
+        <div class="panel-body" style="padding:28px 24px;text-align:center">
+          <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:rgba(245,158,11,0.15);border:1px solid var(--amber);margin-bottom:14px;font-size:28px">
+            🌐
+          </div>
+          <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Connect to Amazon Alexa+ Account</h2>
+          <p style="font-size:13px;color:var(--t2);max-width:540px;margin:0 auto 20px;line-height:1.5">
+            Real World mode connects to physical smart devices and live Amazon services. In Real World mode, <strong>everything starts clean at zero</strong> (0 pending proposals, 0 synthetic events, 0 virtual devices). Link your Amazon Alexa+ account to discover your live Echo hardware, Matter endpoints, and Subscribe &amp; Save replenishment.
+          </p>
+
+          <div style="display:inline-flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:20px">
+            <button class="btn btn-primary" id="loginAlexaBtn" style="min-height:44px;padding:0 24px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(245,158,11,0.3)">
+              <span style="font-size:18px">🔑</span> Log in with Amazon (Alexa+)
+            </button>
+            <button class="btn" id="demoAuthAlexaBtn" style="min-height:44px;padding:0 18px;font-size:13px">
+              ⚡ 1-Tap Instant Auth
+            </button>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;max-width:620px;margin:16px auto 0;text-align:left">
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
+              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">0 Pending Approvals</strong>
+              <small style="color:var(--t3);font-size:11px">Clean slate. Only real resident proposals appear here.</small>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
+              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">Alexa.Discovery Sync</strong>
+              <small style="color:var(--t3);font-size:11px">Syncs Echo devices &amp; Matter/Zigbee appliances.</small>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
+              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">Live Transit Tracking</strong>
+              <small style="color:var(--t3);font-size:11px">Active Subscribe &amp; Save delivery van radar.</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real World Alexa+ & Smart Home Hub Panel (Shown when mode == real and alexa_logged_in) -->
       <div class="panel" id="realHubPanel" style="margin-top:16px" hidden>
         <div class="panel-head">
           <div style="display:flex;align-items:center;gap:8px">
@@ -92,11 +129,21 @@
             <h3>Real World Alexa+ &amp; Smart Home Hub</h3>
           </div>
           <span class="spacer"></span>
-          <span class="real-badge" id="realHubStatusBadge">● Connected to Alexa+ &amp; Local Hub</span>
+          <span class="real-badge online" id="realHubStatusBadge">● Connected to Alexa+ &amp; Local Hub</span>
           <button class="btn btn-primary" id="addDeviceQuickBtn" style="min-height:30px;padding:2px 12px;font-size:var(--fs-micro);margin-left:8px">+ Add Real Device</button>
+          <button class="btn" id="resetRealZeroQuickBtn" style="min-height:30px;padding:2px 10px;font-size:var(--fs-micro);color:var(--bad);margin-left:6px" title="Reset Real World to clean-slate 0 state">Reset to 0</button>
         </div>
         <div class="panel-body">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div id="echoHardwareBox">
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);margin-bottom:6px">
+              <strong>Synchronized Echo Hardware:</strong>
+              <span id="echoCountPill" class="pill" style="font-size:10px">3 Online</span>
+            </div>
+            <div class="echo-hardware-strip" id="echoHardwareStrip">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px;flex-wrap:wrap;gap:8px">
             <p style="font-size:var(--fs-micro);color:var(--t2);margin:0">Active smart home endpoints verified via Matter, Zigbee, and Amazon Alexa Smart Home Skills API v3 directives.</p>
             <div style="display:flex;gap:6px">
               <button class="btn" id="syncAlexaEndpointsBtn" style="min-height:28px;padding:2px 10px;font-size:var(--fs-micro)">Sync Alexa+ (AVS)</button>
@@ -269,7 +316,10 @@
           <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
               <strong>Registered Physical Devices</strong>
-              <button class="btn btn-primary" id="openAddDeviceModalBtn" style="min-height:32px;padding:0 12px;font-size:var(--fs-micro)">+ Register New Device</button>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-primary" id="openAddDeviceModalBtn" style="min-height:32px;padding:0 12px;font-size:var(--fs-micro)">+ Register New Device</button>
+                <button class="btn" id="resetRealZeroSettingsBtn" style="min-height:32px;padding:0 10px;font-size:var(--fs-micro);color:var(--bad)">Reset Real to 0</button>
+              </div>
             </div>
             <div id="settingsDevicesList">
               <!-- Dynamically populated -->

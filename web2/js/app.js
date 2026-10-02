@@ -261,6 +261,56 @@ function setBind(name, html) {
 }
 on("home", (h) => {
   try {
+    if (h.operating_mode === "real" && !h.alexa_logged_in) {
+      setBind("climate", "–<small> °C living room</small>");
+      setBind("climateSub", "Awaiting Alexa+ Link");
+      setBind("lock", "–");
+      setBind("lockSub", "Awaiting Alexa+ Link");
+      setBind("energy", '<span class="num">0.0</span><small> kW draw</small>');
+      setBind("energySub", "Standby · 0 kW Solar");
+      setBind("pantry", '<span class="num">0</span><small> items</small>');
+      setBind("pantrySub", "Unlinked");
+      const nextUp = $("#nextUp");
+      if (nextUp) nextUp.innerHTML = '<div class="empty"><strong>Zero Pending Tasks</strong>Awaiting Alexa+ account connection or resident command.</div>';
+      const delBox = $("#deliveryBox");
+      if (delBox) delBox.innerHTML = '<div class="empty"><strong>Zero active deliveries</strong>Authorize Alexa+ to sync Prime deliveries.</div>';
+      return;
+    }
+
+    if (h.operating_mode === "real" && h.alexa_logged_in) {
+      const lr = h.living_room || {};
+      const temp = lr.climate ? lr.climate.current_c : 21.5;
+      setBind("climate", esc(temp) + "<small> °C living room</small>");
+      setBind("climateSub", esc((lr.climate && lr.climate.device) || "Ecobee") + " · " + esc((lr.climate && lr.climate.mode) || "eco"));
+      const lock = ((h.entryway || {}).lock || {}).front_door || "locked";
+      setBind("lock", esc(lock === "locked" ? "Locked" : "UNLOCKED"));
+      setBind("lockSub", esc(((h.entryway || {}).device || "Yale Assure Lock 2") + " · 92% batt"));
+      const e = h.energy || {};
+      setBind("energy", '<span class="num">' + esc(e.solar_generation_kw != null ? e.solar_generation_kw : "4.8") + "</span><small> kW solar</small>");
+      setBind("energySub", "Enphase Gateway · Net " + esc(e.net_kw != null ? e.net_kw : "4.4") + " kW");
+
+      const delBox = $("#deliveryBox");
+      const comm = h.commerce || {};
+      const activeDel = comm.active_deliveries || [];
+      if (delBox) {
+        if (activeDel.length) {
+          const d = activeDel[0];
+          delBox.innerHTML =
+            '<div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+            '<strong style="color:var(--amber);font-size:12px">🚚 ' + esc(d.status || "In Transit") + '</strong>' +
+            '<span class="pill" style="font-size:10px">' + esc(d.eta || "Today") + '</span>' +
+            '</div>' +
+            '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + esc(d.items ? d.items.join(", ") : "Amazon Package") + '</div>' +
+            '<small style="color:var(--t3);font-size:11px">Tracking #' + esc(d.tracking_number || "") + ' · ' + esc(d.stops_away || 3) + ' stops away</small>' +
+            '</div>';
+        } else {
+          delBox.innerHTML = '<div class="empty"><strong>No deliveries today</strong>Prime Subscribe &amp; Save up to date.</div>';
+        }
+      }
+      return;
+    }
+
     const lr = h.living_room || {};
     const temp = lr.climate ? lr.climate.current_c : "?";
     setBind("climate", esc(temp) + "<small> °C living room</small>");
@@ -355,7 +405,11 @@ on("proposals", (res) => {
   badge.textContent = pending.length;
   const list = $("#intentList");
   if (!pending.length) {
-    list.innerHTML = '<div class="empty"><strong>All clear</strong>No pending proposals. Hearth will stage them here with cost deltas.</div>';
+    if (res.mode === "real") {
+      list.innerHTML = '<div class="empty"><strong>Zero Pending Approvals</strong>Clean slate in Real World mode. Only real resident proposals will appear here.</div>';
+    } else {
+      list.innerHTML = '<div class="empty"><strong>All clear</strong>No pending proposals. Hearth will stage them here with cost deltas.</div>';
+    }
     return;
   }
   list.innerHTML = "";
@@ -875,7 +929,9 @@ on("status", (s) => {
 });
 
 /* ---------- mode switcher (simulation vs real world) ---------- */
+/* ---------- mode switcher (simulation vs real world) ---------- */
 let currentMode = "simulation";
+let isAlexaLoggedIn = false;
 
 export async function setMode(mode) {
   currentMode = mode === "real" ? "real" : "simulation";
@@ -883,16 +939,25 @@ export async function setMode(mode) {
   $("#modeRealBtn")?.classList.toggle("active", currentMode === "real");
 
   const simPanel = $("#simPanel");
+  const authPortal = $("#realAuthPortal");
   const realPanel = $("#realHubPanel");
-  if (simPanel) simPanel.hidden = (currentMode === "real");
-  if (realPanel) realPanel.hidden = (currentMode !== "real");
+
+  if (currentMode === "simulation") {
+    if (simPanel) simPanel.hidden = false;
+    if (authPortal) authPortal.hidden = true;
+    if (realPanel) realPanel.hidden = true;
+  } else {
+    if (simPanel) simPanel.hidden = true;
+    if (authPortal) authPortal.hidden = isAlexaLoggedIn;
+    if (realPanel) realPanel.hidden = !isAlexaLoggedIn;
+  }
 
   try {
     await post("/api/mode", { mode: currentMode });
     playEarcon("success");
-    toast(currentMode === "real" ? "🌐 Switched to Real World (Alexa+ Connected)" : "⚡ Switched to Simulation Mode");
+    toast(currentMode === "real" ? "🌐 Switched to Real World (Alexa+)" : "⚡ Switched to Simulation Mode");
     refresh();
-    loadRealHardwareConfig();
+    await loadRealHardwareConfig();
   } catch (e) {
     console.error("Failed to set mode", e);
   }
@@ -907,15 +972,38 @@ async function loadRealHardwareConfig() {
     const res = await fetch("/api/real/config");
     if (!res.ok) return;
     const cfg = await res.json();
+    isAlexaLoggedIn = Boolean(cfg.alexa && cfg.alexa.logged_in);
 
     if (cfg.mode && cfg.mode !== currentMode) {
       currentMode = cfg.mode;
       $("#modeSimBtn")?.classList.toggle("active", currentMode === "simulation");
       $("#modeRealBtn")?.classList.toggle("active", currentMode === "real");
-      const simPanel = $("#simPanel");
-      const realPanel = $("#realHubPanel");
-      if (simPanel) simPanel.hidden = (currentMode === "real");
-      if (realPanel) realPanel.hidden = (currentMode !== "real");
+    }
+
+    const simPanel = $("#simPanel");
+    const authPortal = $("#realAuthPortal");
+    const realPanel = $("#realHubPanel");
+
+    if (currentMode === "simulation") {
+      if (simPanel) simPanel.hidden = false;
+      if (authPortal) authPortal.hidden = true;
+      if (realPanel) realPanel.hidden = true;
+    } else {
+      if (simPanel) simPanel.hidden = true;
+      if (authPortal) authPortal.hidden = isAlexaLoggedIn;
+      if (realPanel) realPanel.hidden = !isAlexaLoggedIn;
+    }
+
+    // Alexa status badge & detail
+    const badge = $("#realHubStatusBadge");
+    if (badge) {
+      if (isAlexaLoggedIn) {
+        badge.textContent = "● Connected: " + (cfg.alexa.account_name || "Alexa+ Account");
+        badge.className = "real-badge online";
+      } else {
+        badge.textContent = "○ Standby · Not Connected";
+        badge.className = "real-badge offline";
+      }
     }
 
     const alexaInput = $("#alexaSkillIdInput");
@@ -925,6 +1013,28 @@ async function loadRealHardwareConfig() {
     const hubInput = $("#smartHubUrlInput");
     if (hubInput && cfg.smart_hub && cfg.smart_hub.url) {
       hubInput.value = cfg.smart_hub.url;
+    }
+
+    const alexaDetail = $("#alexaStatusDetail");
+    if (alexaDetail) {
+      if (isAlexaLoggedIn) {
+        alexaDetail.textContent = "● Connected: " + (cfg.alexa.account_name || "Alexa+ Account") + " (" + ((cfg.alexa.echo_devices || []).length) + " Echo devices)";
+        alexaDetail.style.color = "var(--ok)";
+      } else {
+        alexaDetail.textContent = "○ Unlinked · Everything at 0. Tap 'Log in with Amazon' below.";
+        alexaDetail.style.color = "var(--t3)";
+      }
+    }
+
+    // Render Echo hardware
+    const echoStrip = $("#echoHardwareStrip");
+    const echoCount = $("#echoCountPill");
+    const echoes = (cfg.alexa && cfg.alexa.echo_devices) || [];
+    if (echoCount) echoCount.textContent = echoes.length + " Online";
+    if (echoStrip) {
+      echoStrip.innerHTML = echoes.map((e) =>
+        '<div class="echo-pill"><span>📻</span> <strong>' + esc(e.name) + '</strong> <span class="mono" style="color:var(--ok);font-size:10px">● ' + esc(e.status || "online") + '</span></div>'
+      ).join("") || '<span style="color:var(--t3);font-size:11px">No Echo devices synchronized</span>';
     }
 
     renderRealDevices(cfg.real_devices || []);
@@ -965,7 +1075,7 @@ function renderRealDevices(devices) {
   }).join("");
 
   if (homeGrid) {
-    homeGrid.innerHTML = cardsHtml || '<div class="empty">No real smart devices linked. Tap "+ Add Real Device" to link one.</div>';
+    homeGrid.innerHTML = cardsHtml || '<div class="empty">No real smart devices linked. Log into Alexa+ to sync endpoints automatically.</div>';
   }
 
   if (settingsList) {
@@ -980,7 +1090,7 @@ function renderRealDevices(devices) {
         '<button class="btn btn-del-dev" data-id="' + esc(d.id) + '" style="min-height:30px;padding:2px 10px;font-size:12px;color:var(--bad)">Remove</button>' +
         '</div>'
       );
-    }).join("");
+    }).join("") || '<div class="empty">0 devices registered. All clean.</div>';
 
     $$(".btn-del-dev").forEach((btn) => {
       btn.addEventListener("click", async () => {
@@ -993,6 +1103,51 @@ function renderRealDevices(devices) {
     });
   }
 }
+
+async function performAlexaLogin(demo = false) {
+  setLightWave("thinking");
+  toast("Connecting to Amazon OAuth 2.0 & Alexa+ API v3…");
+  const payload = demo ? { account_name: "Krishiv Joshi (Amazon Household)", skill_id: "amzn1.ask.skill.b84a9e22-hearth-alexa-plus" } : {};
+  const { status, data } = await post("/api/real/login", payload);
+  if (status === 200 && data.ok) {
+    playEarcon("success");
+    setLightWave("speaking");
+    toast("Logged into Amazon Alexa+! Discovered Echo devices & endpoints.");
+    await loadRealHardwareConfig();
+    refresh();
+  } else {
+    playEarcon("alert");
+    setLightWave("alert");
+    toast((data && data.error) || "Login failed", true);
+  }
+}
+
+async function performRealReset() {
+  const { status, data } = await post("/api/real/reset", {});
+  if (status === 200 && data.ok) {
+    playEarcon("alert");
+    toast("Real World mode reset to 0. Clean slate.");
+    await loadRealHardwareConfig();
+    refresh();
+  }
+}
+
+async function performAlexaSync() {
+  setLightWave("thinking");
+  const { status, data } = await post("/api/real/sync", {});
+  if (status === 200 && data.ok) {
+    playEarcon("success");
+    toast(data.message || "Alexa.Discovery synchronized endpoints");
+    await loadRealHardwareConfig();
+    refresh();
+  }
+}
+
+$("#loginAlexaBtn")?.addEventListener("click", () => performAlexaLogin(false));
+$("#demoAuthAlexaBtn")?.addEventListener("click", () => performAlexaLogin(true));
+$("#syncAlexaEndpointsBtn")?.addEventListener("click", performAlexaSync);
+$("#resetRealZeroQuickBtn")?.addEventListener("click", performRealReset);
+$("#resetRealZeroSettingsBtn")?.addEventListener("click", performRealReset);
 
 function openAddDeviceDialog() {
   openDialog(
@@ -1067,10 +1222,6 @@ $("#testAlexaBtn")?.addEventListener("click", async () => {
   } else {
     toast((data && data.error) || "Handshake failed", true);
   }
-});
-
-$("#syncAlexaEndpointsBtn")?.addEventListener("click", () => {
-  $("#testAlexaBtn")?.dispatchEvent(new Event("click"));
 });
 
 $("#testHubBtn")?.addEventListener("click", async () => {

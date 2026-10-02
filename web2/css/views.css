@@ -815,5 +815,51 @@
   margin-top: auto;
 }
 
+.real-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.real-badge.online {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.real-badge.offline {
+  background: rgba(245, 158, 11, 0.12);
+  color: var(--amber);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.echo-hardware-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+  padding: 8px 12px;
+  background: var(--s2);
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  align-items: center;
+}
+
+.echo-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--s1);
+  border: 1px solid var(--line);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--t1);
+}
+
 
 

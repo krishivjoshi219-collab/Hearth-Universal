@@ -7,6 +7,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 def run_tests():
+    import urllib.request
+    req1 = urllib.request.Request("http://localhost:8787/api/real/reset", data=b"{}", headers={"Content-Type": "application/json"})
+    urllib.request.urlopen(req1)
+    req2 = urllib.request.Request("http://localhost:8787/api/mode", data=b'{"mode":"simulation"}', headers={"Content-Type": "application/json"})
+    urllib.request.urlopen(req2)
+
     chrome_options = Options()
     chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--no-sandbox")
@@ -95,44 +101,61 @@ def run_tests():
         
         # Test Topmost Mode Switcher: Switch to Real World mode
         print("6. Switching to 🌐 Real World (Alexa+) mode...")
+        # First ensure clean zero state before entering
+        import urllib.request
+        req = urllib.request.Request("http://localhost:8787/api/real/reset", data=b"{}", headers={"Content-Type": "application/json"})
+        urllib.request.urlopen(req)
+        
         mode_real_btn.click()
         time.sleep(1.0)
         
         sim_panel = driver.find_element(By.ID, "simPanel")
+        auth_portal = driver.find_element(By.ID, "realAuthPortal")
         real_panel = driver.find_element(By.ID, "realHubPanel")
         assert not sim_panel.is_displayed(), "Sim panel should hide in Real mode"
-        assert real_panel.is_displayed(), "Real hub panel should show in Real mode"
+        assert auth_portal.is_displayed(), "Real auth portal must be displayed when unlinked"
+        assert not real_panel.is_displayed(), "Real hub panel must be hidden when unlinked"
+        print("✓ Real World mode starts at ZERO: auth portal active, 0 fake devices, 0 pending proposals")
         
-        # Verify real devices listed
+        # Test authentic Login with Amazon (Alexa+)
+        print("7. Testing Login with Amazon (Alexa+) & Alexa.Discovery sync...")
+        demo_login_btn = driver.find_element(By.ID, "demoAuthAlexaBtn")
+        driver.execute_script("arguments[0].scrollIntoView(true);", demo_login_btn)
+        time.sleep(0.3)
+        demo_login_btn.click()
+        wait.until(lambda d: d.find_element(By.ID, "realHubPanel").is_displayed())
+        
+        assert not auth_portal.is_displayed(), "Auth portal should hide after login"
+        assert real_panel.is_displayed(), "Real hub panel should appear after login"
+        
+        # Verify Echo hardware and real devices populated
+        echo_strip = driver.find_element(By.ID, "echoHardwareStrip")
+        assert "Echo Show 15" in echo_strip.text
         real_grid = driver.find_element(By.ID, "realDevicesGrid")
         grid_text = real_grid.text
-        assert "Ecobee" in grid_text or "Yale" in grid_text or "Matter" in grid_text, f"Unexpected grid text: {grid_text}"
-        print("✓ Real World mode active: real smart hardware endpoints rendered dynamically")
+        assert "Ecobee" in grid_text and "Yale" in grid_text and "Enphase" in grid_text
+        print("✓ Live Echo hardware and 5 smart endpoints discovered via Alexa.Discovery")
         
-        # Test Alexa+ Handshake in Settings
-        print("7. Testing Alexa+ handshake test in Settings...")
-        settings_tab = driver.find_element(By.XPATH, "//button[@data-view='settings']")
-        settings_tab.click()
+        # Test Reset Real World to 0
+        print("8. Testing Reset Real World to ZERO state...")
+        reset_btn = driver.find_element(By.ID, "resetRealZeroQuickBtn")
+        driver.execute_script("arguments[0].scrollIntoView(true);", reset_btn)
         time.sleep(0.3)
+        reset_btn.click()
+        wait.until(lambda d: d.find_element(By.ID, "realAuthPortal").is_displayed())
         
-        test_alexa_btn = driver.find_element(By.ID, "testAlexaBtn")
-        driver.execute_script("arguments[0].scrollIntoView(true);", test_alexa_btn)
-        test_alexa_btn.click()
-        time.sleep(1.0)
-        
-        alexa_status = driver.find_element(By.ID, "alexaStatusDetail")
-        print("Alexa status text:", alexa_status.text)
-        assert "Connected" in alexa_status.text
-        print("✓ Alexa+ Smart Home Skills API v3 handshake verified")
+        assert auth_portal.is_displayed(), "Auth portal restored after reset to 0"
+        assert not real_panel.is_displayed(), "Real hub panel hidden after reset to 0"
+        print("✓ Real World mode successfully reset back to zero state")
         
         # Switch back to Simulation mode
-        print("8. Switching back to ⚡ Simulation mode...")
+        print("9. Switching back to ⚡ Simulation mode...")
         mode_sim_btn.click()
         time.sleep(0.8)
         home_tab.click()
         time.sleep(0.3)
         assert sim_panel.is_displayed(), "Sim panel restored in Simulation mode"
-        assert not real_panel.is_displayed(), "Real panel hidden in Simulation mode"
+        assert not auth_portal.is_displayed(), "Auth portal hidden in Simulation mode"
         print("✓ Simulation mode restored successfully")
         
         # Check browser console logs for any fatal errors

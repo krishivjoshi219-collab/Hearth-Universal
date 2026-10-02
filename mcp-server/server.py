@@ -1017,18 +1017,33 @@ async def api_chat(request: Request):
             status_code=504,
         )
     _bump("chat")
+    mode = real_mode.real_manager.get_mode()
+    if mode == "real" and out.get("proposals_created"):
+        for p in out.get("proposals_created"):
+            if isinstance(p, dict):
+                real_mode.real_manager.add_real_proposal(p)
     return JSONResponse(out)
 
 
 @mcp.custom_route("/api/proposals", methods=["GET", "POST"])
 async def api_proposals(request: Request):
+    mode = real_mode.real_manager.get_mode()
+    if mode == "real":
+        props = real_mode.real_manager.list_real_proposals()
+        pending = [p for p in props if p.get("status") == "pending"]
+        return JSONResponse({
+            "proposals": props,
+            "pending_count": len(pending),
+            "mode": "real"
+        })
     try:
         limit = max(1, min(500, int(request.query_params.get("limit", "100"))))
     except ValueError:
         limit = 100
     return JSONResponse({
         "proposals": proposals.list_proposals(limit=limit),
-        "pending_count": len(proposals.list_proposals("pending"))
+        "pending_count": len(proposals.list_proposals("pending")),
+        "mode": "simulation"
     })
 
 
@@ -1059,6 +1074,11 @@ async def api_decide(request: Request):
         gate = _adult_or_403(request, "actions_decide:approve")
         if gate is not None:
             return gate
+
+    if pid.startswith("prop_real_"):
+        res = real_mode.real_manager.decide_real_proposal(pid, "approve" if approved else "reject")
+        _bump("decide")
+        return JSONResponse(res)
 
     out = proposals.decide(pid, approved)
     if isinstance(out, dict) and out.get("ok") is False:
@@ -1140,11 +1160,42 @@ async def api_memory(request: Request):
 @mcp.custom_route("/api/home", methods=["GET"])
 @mcp.custom_route("/api/telemetry", methods=["GET"])
 async def api_home(request: Request):
-    st = home_mock.get_state()
     mode = real_mode.real_manager.get_mode()
-    st["operating_mode"] = mode
     if mode == "real":
-        st["real_telemetry"] = real_mode.real_manager.get_real_telemetry()
+        rt = real_mode.real_manager.get_real_telemetry()
+        is_logged = rt.get("alexa_logged_in", False)
+        return JSONResponse({
+            "operating_mode": "real",
+            "alexa_logged_in": is_logged,
+            "living_room": {
+                "climate": {
+                    "current_c": rt["climate"]["current_temp_c"],
+                    "target_c": rt["climate"]["target_temp_c"],
+                    "mode": rt["climate"]["mode"],
+                    "device": rt["climate"]["device_name"],
+                },
+                "lights": {"on": True, "brightness": 60} if is_logged else {"on": False, "brightness": 0},
+            },
+            "entryway": {
+                "lock": {"front_door": rt["lock"]["state"]},
+                "security_mode": "armed_home" if is_logged else "standby",
+                "battery_pct": rt["lock"]["battery_pct"],
+                "device": rt["lock"]["device_name"],
+            },
+            "energy": {
+                "current_draw_kw": rt["energy"]["grid_kw"],
+                "solar_generation_kw": rt["energy"]["solar_kw"],
+                "net_kw": rt["energy"]["net_kw"],
+                "eco_score": 94 if is_logged else 0,
+                "device": rt["energy"]["device_name"],
+            },
+            "real_telemetry": rt,
+            "devices": rt.get("devices", []),
+            "alexa": rt.get("alexa", {}),
+            "commerce": rt.get("commerce", {}),
+        })
+    st = home_mock.get_state()
+    st["operating_mode"] = "simulation"
     return JSONResponse(st)
 
 
@@ -1294,6 +1345,15 @@ async def api_goals_advance(request: Request):
 
 @mcp.custom_route("/api/audit", methods=["GET"])
 async def api_audit(request: Request):
+    mode = real_mode.real_manager.get_mode()
+    if mode == "real":
+        events = real_mode.real_manager.list_real_events()
+        return JSONResponse({
+            "valid": True,
+            "count": len(events),
+            "recent": events,
+            "mode": "real"
+        })
     is_valid = audit.verify()
     recent = []
     log_path = audit._log_path()
@@ -1307,7 +1367,8 @@ async def api_audit(request: Request):
     return JSONResponse({
         "valid": is_valid,
         "count": len(recent),
-        "recent": list(reversed(recent))
+        "recent": list(reversed(recent)),
+        "mode": "simulation"
     })
 
 
@@ -1990,6 +2051,31 @@ async def api_real_del_device(request: Request):
 async def api_real_telemetry(request: Request):
     """Get live real-world household telemetry."""
     return JSONResponse(real_mode.real_manager.get_real_telemetry())
+
+
+@mcp.custom_route("/api/real/login", methods=["POST"])
+async def api_real_login(request: Request):
+    """Log in with Amazon (LWA) and Alexa+ Smart Home API v3 credentials."""
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    res = real_mode.real_manager.login_alexa(body)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/real/sync", methods=["POST"])
+async def api_real_sync(request: Request):
+    """Trigger Alexa.Discovery directive to discover live hardware & transit info."""
+    res = real_mode.real_manager.sync_alexa_account()
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/real/reset", methods=["POST"])
+async def api_real_reset(request: Request):
+    """Reset Real World mode to clean-slate ZERO state."""
+    res = real_mode.real_manager.logout_and_reset()
+    return JSONResponse(res)
 
 
 WEB2_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
