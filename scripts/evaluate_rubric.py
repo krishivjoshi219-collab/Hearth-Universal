@@ -92,9 +92,12 @@ def main():
         # Test Tier 1 client credentials grant
         s1, t1 = alexaplus_engine.exchange_token("client_credentials")
         assert s1 == 200 and t1["scope"] == "mcp:service"
-        # Test Tier 2 PKCE authorization code grant
-        code = alexaplus_engine.create_authorization_code("test_client", "", "test_chal", "plain")
-        s2, t2 = alexaplus_engine.exchange_token("authorization_code", code=code, code_verifier="test_chal")
+        # Test Tier 2 PKCE authorization code grant (S256 required by OAuth 2.1)
+        import hashlib, base64
+        verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk_TEST_SUITE"
+        challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("utf-8")).digest()).decode("utf-8").rstrip("=")
+        code = alexaplus_engine.create_authorization_code("test_client", "", challenge, "S256")
+        s2, t2 = alexaplus_engine.exchange_token("authorization_code", code=code, code_verifier=verifier, client_id="test_client")
         assert s2 == 200 and "mcp:tools" in t2["scope"]
         ok("RFC 9728 metadata and PKCE S256 two-tier authentication verified")
     except Exception as e:

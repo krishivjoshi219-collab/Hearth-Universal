@@ -16,3 +16,6 @@ config.yaml
 *.log
 .DS_Store
 web/
+.coverage
+.coverage.*
+htmlcov/
