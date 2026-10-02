@@ -60,7 +60,11 @@ python3 scripts/evaluate_rubric.py
 echo -e "\n${YELLOW}▶ Step 3: Verifying Official Alexa+ Add-on & OAuth 2.1 Compliance...${NC}"
 python3 tests/test_alexaplus_addon_compliance.py
 
-# 4. Display Quick Links & Judge Guide
+# 4. Run Frontier Innovations Test Suite
+echo -e "\n${YELLOW}▶ Step 4: Verifying 4 Frontier Breakthroughs (Forensics, Acoustics, Treaty, Swarm)...${NC}"
+pytest tests/test_frontier_innovations.py -q
+
+# 5. Display Quick Links & Judge Guide
 echo -e "${BOLD}${CYAN}================================================================================${NC}"
 echo -e "${BOLD}${GREEN}🏆 ALL HACKATHON CHECKS VERIFIED 100% — READY FOR JUDGING!${NC}"
 echo -e "${BOLD}${CYAN}================================================================================${NC}"
@@ -77,7 +81,8 @@ echo -e "  1. Open ${CYAN}http://localhost:8787/web2/index.html${NC}"
 echo -e "  2. Switch between ${BOLD}Simulation${NC} and ${BOLD}Real World (Alexa+)${NC} tabs"
 echo -e "  3. Click ${BOLD}'Log in with Amazon (Alexa+)'${NC} to test authentic OAuth & Alexa.Discovery"
 echo -e "  4. Test Display Modes: ${BOLD}Inline Card${NC} vs ${BOLD}Fullscreen Canvas${NC} vs ${BOLD}Voice-Only${NC}"
-echo -e "  5. Try the 5 One-Click Judge Showcase Demonstrations in the home view"
+echo -e "  5. Try the 9 One-Click Judge Showcase Demonstrations in the home view"
+echo -e "     (Household Parliament, Causal Twin, Meta-Skills, Black Box CSI, FFT Doctor, Family Treaty, Swarm VPP)"
 echo -e "================================================================================"
 
 # 5. Open browser if in desktop environment

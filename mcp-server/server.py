@@ -49,7 +49,8 @@ from hearth import (
     sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
     brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
     strands_agent, agentcore, agent_skills, mcp_strands_adapter,
-    parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon
+    parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon,
+    forensics, acoustic, mediation, swarm
 )
 
 _SERVER_START_TIME = _time.time()
@@ -867,6 +868,40 @@ def brains_add_custom_provider(
 ) -> dict:
     """Connect Hearth Universal to ANY custom API or base URL in the world."""
     return model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)
+
+
+@mcp.tool()
+def forensic_incident_reconstruct(
+    incident_type: Annotated[str, Field(description="Incident category: 'perimeter_anomaly', 'freezer_thaw', or 'general'")] = "perimeter_anomaly",
+    lookback_seconds: Annotated[int, Field(description="Lookback window in seconds")] = 3600
+) -> dict:
+    """Run Black Box Forensic Incident Reconstruction using reverse causal walk across household telemetry."""
+    return forensics.forensics_engine.reconstruct_incident(incident_type=incident_type, lookback_seconds=lookback_seconds)
+
+
+@mcp.tool()
+def acoustic_diagnostics_scan(
+    target_appliance: Annotated[str, Field(description="Target appliance name or 'all'")] = "all",
+    stage_remedy: Annotated[bool, Field(description="Automatically stage 15% Subscribe & Save replacement part proposal if wear > 75%")] = True
+) -> dict:
+    """Perform ambient FFT harmonic acoustic scan on appliances to detect physical bearing wear before failure."""
+    return acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target_appliance, stage_remedy=stage_remedy)
+
+
+@mcp.tool()
+def family_mediation_treaty(
+    topic: Annotated[str, Field(description="Household dispute topic")] = "monthly_household_equilibrium"
+) -> dict:
+    """Synthesize a balanced Pareto-Optimal Family Treaty without exposing raw private resident grievances."""
+    return mediation.family_mediator.draft_household_treaty(topic=topic)
+
+
+@mcp.tool()
+def grid_swarm_coordinate(
+    export_kw: Annotated[float, Field(description="Available solar kilowatt surplus to export to neighborhood")] = 3.8
+) -> dict:
+    """Arbitrate peer-to-peer energy trades across neighborhood Hearth nodes in a virtual power plant."""
+    return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw)
 
 
 # ==============================================================================
@@ -2194,10 +2229,100 @@ async def api_diagnostics(request: Request):
         "meta_skills": {
             "count": len(meta_skill.meta_synthesizer.list_synthesized_skills()),
         },
+        "forensics": {
+            "ready": True,
+            "engine": "Black Box Spatial CSI",
+        },
+        "acoustic": {
+            "ready": True,
+            "engine": "Acoustic FFT Mechanical Doctor",
+        },
+        "mediation": {
+            "ready": True,
+            "engine": "Zero-Knowledge Family Treaty",
+        },
+        "swarm_grid": {
+            "ready": True,
+            "engine": "P2P Virtual Power Plant",
+        },
         "operating_mode": real_mode.real_manager.get_mode(),
         "active_persona": ACTIVE_PERSONA.get("name"),
         "proposals_pending": len(proposals.list_proposals(status="pending")),
     })
+
+
+@mcp.custom_route("/api/forensics/reconstruct", methods=["GET", "POST"])
+async def api_forensics_reconstruct(request: Request):
+    """Run Black Box Forensic Incident Reconstruction."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    inc_type = "perimeter_anomaly"
+    lookback = 3600
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            inc_type = body.get("incident_type", "perimeter_anomaly")
+            lookback = int(body.get("lookback_seconds", 3600))
+        except Exception:
+            pass
+    res = forensics.forensics_engine.reconstruct_incident(incident_type=inc_type, lookback_seconds=lookback)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/acoustic/scan", methods=["GET", "POST"])
+async def api_acoustic_scan(request: Request):
+    """Perform ambient FFT harmonic acoustic scan on appliances."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    target = "all"
+    stage_remedy = True
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            target = body.get("target_appliance", "all")
+            stage_remedy = bool(body.get("stage_remedy", True))
+        except Exception:
+            pass
+    res = acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target, stage_remedy=stage_remedy)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/mediation/treaty", methods=["GET", "POST"])
+async def api_mediation_treaty(request: Request):
+    """Draft or retrieve confidential Pareto-optimal family treaty."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    topic = "monthly_household_equilibrium"
+    statements = None
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            topic = body.get("topic", "monthly_household_equilibrium")
+            statements = body.get("statements")
+        except Exception:
+            pass
+    res = mediation.family_mediator.draft_household_treaty(private_statements=statements, topic=topic)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/swarm/grid", methods=["GET", "POST"])
+async def api_swarm_grid(request: Request):
+    """Coordinate neighborhood P2P virtual power plant microgrid."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    export_kw = 3.8
+    if request.method == "POST":
+        try:
+            body = await request.json()
+            export_kw = float(body.get("export_kw", 3.8))
+        except Exception:
+            pass
+    res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw)
+    return JSONResponse(res)
 
 
 @mcp.custom_route("/api/mode", methods=["GET", "POST"])

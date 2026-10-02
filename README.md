@@ -10,7 +10,7 @@
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP-00d2ff)](https://modelcontextprotocol.io)
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet)](https://oauth.net/2.1/)
-[![Tests: 186 Passed](https://img.shields.io/badge/Tests-186%20Passed%20(100%25)-emerald)](tests/)
+[![Tests: 199 Passed](https://img.shields.io/badge/Tests-199%20Passed%20(100%25)-emerald)](tests/)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -37,7 +37,8 @@ cd Hearth-Universal
 1. Starts or validates the background **FastMCP 2025-11-25 Streamable HTTP Server** on port `8787`.
 2. Runs the official **Hackathon Rubric Evaluator** across all tracks (**100 / 100 points**).
 3. Executes the automated **Alexa+ Add-on & OAuth 2.1 RFC 9728 Compliance Test Suite** (7/7 tests passed).
-4. Launches the **Hearth Universal Web App** at `http://localhost:8787/web2/index.html` with 5 one-click hackathon showcase demonstrations.
+4. Verifies the **Frontier Breakthrough Innovations Test Suite** (13/13 tests passed).
+5. Launches the **Hearth Universal Web App** at `http://localhost:8787/web2/index.html` with 9 one-click hackathon showcase demonstrations.
 
 ---
 
@@ -49,6 +50,10 @@ cd Hearth-Universal
 | **Innovation 1: Household Parliament** | Multi-agent game-theoretic dialectic council. Three autonomous ministers (**FrugalMind**, **BioComfort**, **EcoSovereign**) debate conflicting resident priorities (e.g. 5 PM peak tariff vs 68°F climate) and compute a Nash Equilibrium Pareto consensus with full transcripts. | `src/hearth/parliament.py`<br>`tests/test_innovations.py`<br>Showcase Card 1 |
 | **Innovation 2: Causal Digital Twin** | 7-day stochastic forward simulation using 150–500 Monte Carlo trajectories. Identifies pre-emptive household failure modes (heatwaves, rolling brownouts, battery depletion) 72 hours before they strike and stages mitigation proposals. | `src/hearth/causal_twin.py`<br>`tests/test_innovations.py`<br>Showcase Card 2 |
 | **Innovation 3: Meta-Skill Synthesizer** | Autonomous self-evolving Python compiler for agent capabilities. When encountering novel household requests (e.g. EV solar charging), dynamically writes, AST-validates, and hot-mounts new FastMCP skills into the server at runtime without restarts. | `src/hearth/meta_skill.py`<br>`tests/test_innovations.py`<br>Showcase Card 3 |
+| **Frontier Breakthrough 1: Black Box Forensic CSI Replay** | Reverse causal physical walk across Ring IR, HVAC delta-P drafts, and door latch switches to disprove intruder hypotheses and isolate atmospheric/structural causality with SHA-256 Merkle audit proof. | `src/hearth/forensics.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 6 |
+| **Frontier Breakthrough 2: Acoustic Mechanical Doctor** | Echo microphone array ambient FFT frequency decomposition detecting appliance bearing wear (124.5 Hz compressor wobble) 14 days before failure, automatically staging 15% Subscribe & Save replacement parts. | `src/hearth/acoustic.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 7 |
+| **Frontier Breakthrough 3: Confidential Family Treaty Synthesizer** | Impartial, zero-knowledge domestic diplomat gathering private resident complaints and computing Pareto-optimal treaties without disclosing raw grievances (9.37/10 fairness score). | `src/hearth/mediation.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 8 |
+| **Frontier Breakthrough 4: Neighborhood Swarm Grid (VPP)** | Peer-to-peer microgrid federation over FastMCP streamable HTTP, trading excess solar kW locally at $0.18/kWh instead of dumping to utility at $0.035/kWh (+414% revenue capture). | `src/hearth/swarm.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 9 |
 | **Track 5: Commerce & Replenishment** | 15% Subscribe & Save replenishment engine with consumable depletion radar, delivery van tracking, UPC barcode scanning, and bulk bundling that recovers over $803.76/year in dormant subscriptions. | `src/hearth/commerce.py`<br>`delivery.py`<br>Showcase Card 4 |
 | **Safety & Trust: Sentinel Barrier** | Uncompromising **Propose-Never-Execute** contract. Adults require explicit approval; Children (Leo persona) trigger immediate guardrails; all proposals produce single-use execution receipts cryptographically bound into a SHA-256 Merkle ledger. | `src/hearth/sentinel.py`<br>`audit.py`<br>Showcase Card 5 |
 | **AWS Builder Mini Challenge ($5,000)** | **Universal Model Mesh**: Zero-lockin architecture running on **ANY API** (Amazon Bedrock, Ollama, OpenAI, vLLM, custom base URL) with **Amazon Nova Pro** (300k context) as the premier default. Bedrock AgentCore long-term memory sync + AWS Strands supervisor multi-agent SDK. | `src/hearth/model_mesh.py`<br>`src/hearth/strands_agent.py`<br>`agentcore.py`<br>`docs/aws_builder_integration.md` |
@@ -72,12 +77,19 @@ flowchart TD
     end
 
     subgraph FastMCP_Core ["Hearth FastMCP Server (Protocol: 2025-11-25 · Streamable HTTP :8787)"]
-        StreamRouter["Streamable HTTP Transport Router\n44 Tools · 4 Resources · 3 Prompts"]
+        StreamRouter["Streamable HTTP Transport Router\n48 Tools · 4 Resources · 3 Prompts"]
         
         subgraph Tri_Pillar ["Tri-Pillar AI Innovations"]
             Parliament["🏛️ Household Parliament\nGame-Theoretic Multi-Minister Council\n(FrugalMind · BioComfort · EcoSovereign)"]
             CausalTwin["🔮 Causal Digital Twin\n7-Day Stochastic Monte Carlo Simulator\n(Heatwave, Brownout, Battery Depletion)"]
             MetaSkill["🧬 Meta-Skill Synthesizer\nSelf-Evolving Runtime Python Compiler\nAST-Validated Hot-Mounted Agent Skills"]
+        end
+
+        subgraph Frontier_Breakthroughs ["4 Frontier Breakthrough Innovations"]
+            Forensics["🔍 Black Box CSI Replay\nPhysical Causal Reverse Walk\nMerkle Proof & Intruder Disproof"]
+            Acoustic["🩺 Appliance FFT Doctor\nEcho Ambient Harmonics (124.5 Hz)\nAutomated 15% S&S Part Staging"]
+            Mediation["🤝 Confidential Family Treaty\nZero-Knowledge Domestic Diplomat\nPareto Covenants (9.37/10 Fairness)"]
+            Swarm["⚡ Neighborhood Swarm Grid\nP2P Solar VPP Trading ($0.18/kWh)\nAvoided Peaker Carbon Offset"]
         end
 
         subgraph Core_Subsystems ["Household Operations Engines"]
@@ -103,6 +115,7 @@ flowchart TD
     DisplayEng <--> AuthHandler
     AuthHandler <--> StreamRouter
     StreamRouter --> Tri_Pillar
+    StreamRouter --> Frontier_Breakthroughs
     StreamRouter --> Core_Subsystems
     Core_Subsystems --> Sentinel
     Sentinel -->|Safe Read Operations| DigitalTwin
@@ -173,20 +186,24 @@ Hearth features a state-of-the-art dual-mode web experience engineered for hacka
 ### 2. Dual Canvas & Display Mode Selector
 Select between **Inline Card**, **Fullscreen Canvas** (`@modelcontextprotocol/ext-apps`), and **Voice-Only (TTS)**. When Voice-Only is active, the Web Speech API voice synthesis triggers with real-time CSS audio waveform animations.
 
-### 3. 5 One-Click Judge Showcase Demonstrations
+### 3. 9 One-Click Judge Showcase Demonstrations
 Click any card in the Home view to trigger a full end-to-end demonstration:
 1. **Option 1 · Household Parliament:** Convenes FrugalMind, BioComfort, and EcoSovereign to resolve a 5 PM peak tariff clash and achieve Nash Equilibrium.
 2. **Option 2 · Causal Digital Twin:** Executes 150 Monte Carlo forward simulations predicting a 72-hour severe heatwave and battery brownout.
 3. **Option 3 · Meta-Skill Synthesizer:** Compiles, validates, and hot-mounts a brand-new EV solar charging skill at runtime without restarting.
 4. **Track 5 · 15% Subscribe & Save:** Scans pantry depletion velocity and stages a bulk replenishment order with active delivery van radar.
 5. **Safety · Sentinel Child Barrier:** Simulates a child persona attempting to unlock perimeter deadbolts and purchase a gaming drone, showing Propose-Never-Execute gating in action.
+6. **Breakthrough 1 · Black Box CSI Replay:** Traces physical sensor telemetry backward from a 3 AM perimeter alarm, disproving intrusion and isolating structural draft causality with SHA-256 Merkle audit proof.
+7. **Breakthrough 2 · Appliance FFT Doctor:** Performs ambient Echo audio FFT vibration analysis detecting a 124.5 Hz compressor bearing wobble and staging 15% Subscribe & Save replacement parts 14 days before failure.
+8. **Breakthrough 3 · Confidential Family Treaty:** Impartial zero-knowledge mediator synthesizing a domestic peace treaty between Mom, Dad, and Leo (9.37/10 fairness) without leaking private grievances.
+9. **Breakthrough 4 · Neighborhood Microgrid (VPP):** Coordinates peer-to-peer microgrid power routing, trading 3.8 kW excess solar locally at $0.18/kWh instead of dumping to utility at $0.035/kWh (+414% revenue gain).
 
 ### 4. Human Trust & Reversibility Engine
 Every approved proposal generates an execution receipt and can be undone with **1-Tap Reversibility** (`POST /api/undo`), restoring hardware locks, thermostats, or staged orders to their prior safe state.
 
 ---
 
-## 🛠️ Complete MCP Tool Surface (44 FastMCP Tools)
+## 🛠️ Complete MCP Tool Surface (48 FastMCP Tools)
 
 All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP protocol version `2025-11-25`:
 
@@ -250,6 +267,12 @@ All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP proto
 ### 10. Cryptographic Trust
 - `audit_verify`: Cryptographically verify the SHA-256 Merkle audit trail for zero tampering.
 
+### 11. Frontier Breakthrough Innovations
+- `forensic_incident_reconstruct`: Reconstruct physical causal timelines from sensor telemetry and disprove intrusion hypotheses.
+- `acoustic_diagnostics_scan`: Analyze appliance FFT spectral harmonics and stage 15% Subscribe & Save bearing replacement proposals.
+- `family_mediation_treaty`: Synthesize a zero-knowledge, Pareto-optimal household treaty from confidential resident inputs.
+- `grid_swarm_coordinate`: Coordinate peer-to-peer neighborhood solar microgrid energy dispatch and calculate localized economic dividends.
+
 ### MCP Resources & Prompts
 - **Resources:** `household://profile`, `home://state`, `commerce://inventory`, `audit://chain`
 - **Prompts:** `prepare_family_weekend`, `audit_monthly_finances`, `emergency_lockdown`
@@ -269,7 +292,7 @@ Hearth's **Universal Model Mesh** (`/api/models/mesh`) provides complete model s
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite (186 / 186 PASSED)
+## 🧪 Comprehensive Automated Test Suite (199 / 199 PASSED)
 
 The test suite validates every layer of the architecture, from low-level protocol transports to high-level multi-agent game theory.
 
@@ -283,6 +306,7 @@ tests/test_alexaplus_addon_compliance.py ......................... [  7 passed ]
 tests/test_audit.py .............................................. [ 12 passed ]
 tests/test_auth.py ............................................... [  9 passed ]
 tests/test_family.py ............................................. [ 11 passed ]
+tests/test_frontier_innovations.py ............................... [ 13 passed ]
 tests/test_fuzz_http.py .......................................... [ 18 passed ]
 tests/test_goals.py .............................................. [  8 passed ]
 tests/test_home.py ............................................... [ 14 passed ]
@@ -293,7 +317,8 @@ tests/test_product_experience.py ................................. [ 13 passed ]
 tests/test_sentinel.py ........................................... [ 24 passed ]
 tests/test_strands.py ............................................ [ 20 passed ]
 
-========================= 186 passed in 57.2s (100%) ==========================
+========================= 199 passed in 74.4s (100%) ==========================
+Total coverage: 72.03% (Enforced threshold: >= 70%)
 ```
 
 - **In-Memory Starlette `TestClient` Execution:** Tests require no live ports, background daemons, or socket bindings, ensuring 100% green execution across GitHub Actions runners on Python 3.11 and 3.12.

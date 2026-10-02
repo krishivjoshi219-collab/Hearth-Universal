@@ -72,6 +72,22 @@ export async function refresh() {
       if (meta) emit("metaSkills", meta);
     } catch {}
     try {
+      const forensics = await get("/api/forensics/reconstruct").catch(() => null);
+      if (forensics) emit("forensics", forensics);
+    } catch {}
+    try {
+      const acoustic = await get("/api/acoustic/scan").catch(() => null);
+      if (acoustic) emit("acoustic", acoustic);
+    } catch {}
+    try {
+      const mediation = await get("/api/mediation/treaty").catch(() => null);
+      if (mediation) emit("mediation", mediation);
+    } catch {}
+    try {
+      const swarm = await get("/api/swarm/grid").catch(() => null);
+      if (swarm) emit("swarm", swarm);
+    } catch {}
+    try {
       const diag = await get("/api/diagnostics").catch(() => null);
       if (diag) emit("diagnostics", diag);
     } catch {}
