@@ -8,6 +8,56 @@ const esc = (s) =>
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
 
+export function formatMarkdown(text) {
+  if (!text) return "";
+  let s = esc(text);
+
+  // Code blocks (```...```)
+  s = s.replace(/```([\s\S]*?)```/g, (_, code) =>
+    '<pre class="mono" style="background:var(--s3);padding:8px 12px;border-radius:6px;overflow-x:auto;margin:6px 0;font-size:var(--fs-micro);line-height:1.4;">' +
+    code.trim() +
+    '</pre>'
+  );
+
+  // Inline code (`...`)
+  s = s.replace(/`([^`]+)`/g, '<code class="mono" style="background:var(--s3);padding:2px 5px;border-radius:4px;font-size:0.9em;color:var(--amber);">$1</code>');
+
+  // Bold (**...**)
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--t1);font-weight:700;">$1</strong>');
+
+  // Italic (*...*)
+  s = s.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em style="color:var(--t2);">$2</em>$3');
+
+  // Process lines for bullet items and spacing
+  const lines = s.split(/\r?\n/);
+  const formatted = [];
+
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i];
+    const trimmed = raw.trim();
+
+    if (!trimmed) {
+      formatted.push('<div style="height:6px;"></div>');
+      continue;
+    }
+
+    if (trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
+      const content = trimmed.replace(/^[•\-\*]\s+/, "");
+      formatted.push(
+        '<div class="chat-bullet">' +
+        '<span class="bullet-dot">•</span>' +
+        '<span class="bullet-content">' + content + '</span>' +
+        '</div>'
+      );
+      continue;
+    }
+
+    formatted.push('<div style="margin:2px 0;">' + raw + '</div>');
+  }
+
+  return formatted.join("");
+}
+
 /* ---------- toasts ---------- */
 export function toast(msg, err) {
   const box = $("#toasts");
@@ -407,8 +457,8 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   const log = $("#chatLog");
   const el = document.createElement("div");
   el.className = "event human";
-  el.innerHTML = '<div class="event-row"><span class="actor">you</span><span class="what">' +
-    esc(msg) + '</span><span class="when">sending…</span></div>';
+  el.innerHTML = '<div class="event-row"><span class="actor">you</span><div class="what">' +
+    esc(msg) + '</div><span class="when">sending…</span></div>';
   log.prepend(el);
   const { status, data } = await post("/api/chat", { message: msg });
   el.querySelector(".when").textContent = new Date().toLocaleTimeString();
@@ -432,8 +482,8 @@ $("#cmdForm").addEventListener("submit", async (e) => {
   const dag = (data.dag || []).slice(0, 6).map((s) =>
     esc(s.tool || s.id) + " → " + esc(s.status || "done")
   ).join("  ·  ");
-  row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><span class="what">' +
-    esc(text).slice(0, 600) + "</span></div>" +
+  row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><div class="what">' +
+    formatMarkdown(text) + "</div></div>" +
     (dag ? "<details open><summary>How it reasoned</summary><div class='mono' style='color:var(--t2)'>" + dag + "</div></details>" : "") +
     (data.blocked ? "<div class='receipt' style='color:var(--bad)'>Blocked: " + esc(data.reason || "") + "</div>" : "");
   log.prepend(row);
