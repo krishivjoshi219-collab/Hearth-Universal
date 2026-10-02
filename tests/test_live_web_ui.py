@@ -118,13 +118,45 @@ def run_tests():
         print("✓ Real World mode starts at ZERO: auth portal active, 0 fake devices, 0 pending proposals")
         
         # Test authentic Login with Amazon (Alexa+)
-        print("7. Testing Login with Amazon (Alexa+) & Alexa.Discovery sync...")
-        demo_login_btn = driver.find_element(By.ID, "demoAuthAlexaBtn")
-        driver.execute_script("arguments[0].scrollIntoView(true);", demo_login_btn)
+        print("7. Testing Login with Amazon (Alexa+) Modal Screen & Alexa.Discovery sync...")
+        login_btn = driver.find_element(By.ID, "loginAlexaBtn")
+        driver.execute_script("arguments[0].scrollIntoView(true);", login_btn)
         time.sleep(0.3)
-        demo_login_btn.click()
-        wait.until(lambda d: d.find_element(By.ID, "realHubPanel").is_displayed())
+        login_btn.click()
         
+        amazon_modal = driver.find_element(By.ID, "amazonLoginModal")
+        wait.until(lambda d: amazon_modal.is_displayed())
+        assert amazon_modal.is_displayed(), "Amazon Login Modal must open when clicking Log in with Amazon"
+        print("✓ Authentic Amazon OAuth login screen opened successfully")
+        
+        # Verify inputs and scopes inside the Amazon login modal
+        email_input = driver.find_element(By.ID, "lwaEmail")
+        pwd_input = driver.find_element(By.ID, "lwaPassword")
+        submit_btn = driver.find_element(By.ID, "lwaSubmitBtn")
+        assert email_input.is_displayed()
+        assert pwd_input.is_displayed()
+        assert "Sign in & Authorize Alexa+" in submit_btn.text
+        assert "Alexa Smart Home API v3" in amazon_modal.text
+        assert "Echo Devices & AVS Directives" in amazon_modal.text
+        assert "Amazon Subscribe & Save" in amazon_modal.text
+        print("✓ Verified Amazon Sign-in form fields and requested permissions scope")
+        
+        # Test closing the modal
+        close_btn = driver.find_element(By.ID, "amazonLoginCloseBtn")
+        close_btn.click()
+        time.sleep(0.3)
+        assert not amazon_modal.is_displayed(), "Modal should close on cancel/close button"
+        print("✓ Amazon Login Modal close/cancel works properly")
+        
+        # Reopen and submit credentials
+        login_btn.click()
+        wait.until(lambda d: amazon_modal.is_displayed())
+        submit_btn = driver.find_element(By.ID, "lwaSubmitBtn")
+        submit_btn.click()
+        print("✓ Submitted Amazon credentials, awaiting OAuth handshake & discovery...")
+        
+        wait.until(lambda d: d.find_element(By.ID, "realHubPanel").is_displayed())
+        assert not amazon_modal.is_displayed(), "Amazon modal should close after successful auth"
         assert not auth_portal.is_displayed(), "Auth portal should hide after login"
         assert real_panel.is_displayed(), "Real hub panel should appear after login"
         

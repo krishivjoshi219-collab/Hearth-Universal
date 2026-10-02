@@ -382,6 +382,74 @@
     </div>
   </div>
 
+  <!-- Dedicated Amazon Alexa+ OAuth Login Screen / Modal -->
+  <div class="scrim" id="amazonLoginModal" hidden>
+    <div class="amazon-auth-card" role="dialog" aria-modal="true" aria-labelledby="lwaTitle">
+      <div class="amazon-card-header">
+        <div class="amazon-logo-wrap">
+          <svg class="amazon-logo" viewBox="0 0 100 30" width="90" height="26" fill="currentColor">
+            <path d="M57.6 14.5c0-1.8.1-3.3.4-4.5h-3.4c-.2.8-.3 1.8-.3 2.9-.8-1.7-2.4-3.2-5-3.2-3.8 0-6.7 3-6.7 7.7 0 4.6 2.7 7.6 6.5 7.6 2.7 0 4.4-1.5 5.1-3.1v2.8h3.4c-.3-1.1-.4-2.5-.4-4.2v-6zm-7.6 7.7c-2.3 0-4-1.9-4-5s1.7-5 4-5 4 1.9 4 5-1.7 5-4 5zm31.3-12.4h-3.6v9.3c0 2.4-.9 3.6-2.5 3.6-1.5 0-2.2-1-2.2-3.1V9.8h-3.6v9.7c0 3.7 1.8 5.5 4.8 5.5 2.5 0 4.2-1.3 5-3.2v2.9h3.6v-15.1h-1.5zm-38-6.1c-1.3 0-2.3 1-2.3 2.3 0 1.2 1 2.2 2.3 2.2 1.2 0 2.2-1 2.2-2.2 0-1.3-1-2.3-2.2-2.3zm-1.8 6.1h3.6v15.1h-3.6V9.8zm-9.3 0c-.8 0-1.7.1-2.5.4l.6 2.9c.6-.2 1.3-.3 1.8-.3 1.5 0 2.2.8 2.2 2.3v.8c-.8-.2-1.8-.3-2.8-.3-3.7 0-6 1.8-6 5.1 0 3.1 2 4.9 4.9 4.9 2.2 0 3.6-1.1 4.2-2.5v2.2h3.4v-9.6c0-3.9-2.1-5.9-5.8-5.9zm.6 12.7c-1.6 0-2.7-.9-2.7-2.4 0-1.7 1.3-2.6 3.4-2.6.7 0 1.4.1 2 .2v1.4c-.5 2.1-1.6 3.4-2.7 3.4zm60.1-6.9c-3.7 0-6.6 3-6.6 7.6 0 4.7 2.9 7.6 6.8 7.6 3.8 0 6.6-3 6.6-7.6 0-4.6-2.9-7.6-6.8-7.6zm.1 12.3c-2.3 0-4-1.9-4-4.8 0-2.9 1.7-4.8 4-4.8 2.3 0 4 1.9 4 4.8 0 2.9-1.7 4.8-4 4.8zM24.7 9.8l-4.7 11.7-4.6-11.7h-4.2l6.8 15.6-2.5 5.5h3.9l10-21.1h-4.7z"/>
+            <path fill="#f59e0b" d="M20.2 24.3c15.8 7.5 38.6 3.5 52.8-5.2.7-.4 1.2.3.6.9-14.7 11.2-39.7 14.7-54.2 5.5-.9-.6-.2-1.7.8-1.2z"/>
+          </svg>
+        </div>
+        <button type="button" class="amazon-close-btn" id="amazonLoginCloseBtn" aria-label="Close">✕</button>
+      </div>
+
+      <div class="amazon-card-body">
+        <h2 id="lwaTitle" class="amazon-signin-title">Sign-In with Amazon</h2>
+        <p class="amazon-signin-sub">Authorize <strong>Hearth Universal</strong> to connect with your Alexa+ smart home ecosystem.</p>
+
+        <form id="amazonAuthForm" autocomplete="on">
+          <div class="amazon-form-group">
+            <label for="lwaEmail">Email or mobile phone number</label>
+            <input type="text" id="lwaEmail" value="krishiv.joshi@amazon-developer.net" required autocomplete="username"/>
+          </div>
+
+          <div class="amazon-form-group">
+            <div style="display:flex;justify-content:space-between">
+              <label for="lwaPassword">Password</label>
+              <a href="#" class="amazon-link" tabindex="-1">Forgot password?</a>
+            </div>
+            <input type="password" id="lwaPassword" value="••••••••••••" required autocomplete="current-password"/>
+          </div>
+
+          <div class="amazon-consent-box">
+            <div class="amazon-consent-header">
+              <span style="font-size:16px">🛡️</span>
+              <strong>Permissions Requested by Hearth:</strong>
+            </div>
+            <ul class="amazon-scopes-list">
+              <li><span>✓</span> <div><strong>Alexa Smart Home API v3</strong><br><small style="color:var(--t2)">Control Matter, Zigbee, &amp; Alexa devices</small></div></li>
+              <li><span>✓</span> <div><strong>Echo Devices &amp; AVS Directives</strong><br><small style="color:var(--t2)">Discover Echo Show 15, Studio, &amp; Dot units</small></div></li>
+              <li><span>✓</span> <div><strong>Amazon Subscribe &amp; Save</strong><br><small style="color:var(--t2)">Replenishment radar &amp; van delivery tracking</small></div></li>
+            </ul>
+          </div>
+
+          <div style="margin:14px 0 10px;display:flex;align-items:center;gap:8px">
+            <input type="checkbox" id="lwaKeepSignedIn" checked style="accent-color:#f59e0b;cursor:pointer"/>
+            <label for="lwaKeepSignedIn" style="font-size:12px;color:var(--t2);cursor:pointer">Keep me signed in on this household hub</label>
+          </div>
+
+          <button type="submit" class="amazon-signin-btn" id="lwaSubmitBtn">
+            <span id="lwaSubmitText">Sign in &amp; Authorize Alexa+</span>
+            <span class="amazon-spinner" id="lwaSpinner" hidden></span>
+          </button>
+        </form>
+
+        <div class="amazon-login-steps" id="amazonLoginProgress" hidden>
+          <div class="step-line" id="stepLine1">● Verifying Amazon OAuth 2.0 Credentials…</div>
+          <div class="step-line" id="stepLine2">● Exchanging LWA Bearer Token…</div>
+          <div class="step-line" id="stepLine3">● Querying Alexa.Discovery Smart Home endpoints…</div>
+          <div class="step-line" id="stepLine4">● Mounting 3 Echo hardware units and 5 devices…</div>
+        </div>
+
+        <div class="amazon-legal-footer">
+          By signing in, you agree to Amazon's <a href="#" class="amazon-link">Conditions of Use</a> and <a href="#" class="amazon-link">Privacy Notice</a>.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script type="module" src="/web2/js/app.js"></script>
