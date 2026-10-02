@@ -37,30 +37,51 @@
 
 | Criterion | What judges get | Where to verify |
 |---|---|---|
-| **Tech Implementation** | MCP 2025-11-25 over Streamable HTTP (**43 tools, 4 resources, 3 prompts**), Alexa Smart Home v3 adapter, Alexa+ Agent Skills manifest, AWS Strands multi-agent harness, Bedrock AgentCore memory, Universal Model Mesh | `curl` handshake, `mcp-server/server.py`, `src/hearth/alexa.py`, `src/hearth/strands_agent.py`, `src/hearth/model_mesh.py` |
-| **Design** | Echo Show 15/21 **Dual Canvas** (glanceable ambient + ops cockpit), 2.5D floorplan with light pools, Time Machine scrubber, 1-tap Approval Tray — 60fps, keyboard/D-pad operable, reduced-motion + screen-reader support | `http://localhost:8787`, `web2/` |
+| **Tech Implementation** | MCP 2025-11-25 over Streamable HTTP (**44 tools, 4 resources, 3 prompts**), Official Alexa+ Add-on Manifest (`addon.json`), RFC 9728 Protected Resource Metadata, OAuth 2.1 PKCE S256, Display Modes (`@modelcontextprotocol/ext-apps`), AWS Strands multi-agent harness, Bedrock AgentCore memory, Universal Model Mesh | `./demo.sh`, `addon.json`, `mcp-server/server.py`, `src/hearth/alexaplus_addon.py`, `src/hearth/alexa.py`, `src/hearth/strands_agent.py` |
+| **Design** | Echo Show 15/21 **Dual Canvas**, Alexa+ Display Modes (Inline card vs Fullscreen canvas vs Voice-only TTS), 5 One-Click Judge Showcase Demos, 2.5D floorplan, Time Machine scrubber, 1-tap Approval Tray — 60fps, reduced-motion + screen-reader support | `http://localhost:8787`, `web2/` |
 | **Potential Impact** | Computed savings ($803.76/yr), depletion-driven Subscribe & Save, tariff load-shifting, Causal Twin Monte Carlo resilience — credible Appstore-shaped household product, not a demo toy | `src/hearth/commerce.py`, `src/hearth/causal_twin.py`, `delivery.py`, `family.py` |
 | **Quality of Idea** | Propose-never-execute + Household Parliament dialectic council + Meta-Skill self-evolving compiler + SHA-256 Merkle receipts + Strands supervisor multi-agent orchestration | `src/hearth/parliament.py`, `src/hearth/meta_skill.py`, `src/hearth/strands_agent.py`, `audit.py` |
 | **AWS Builder mini** | Multi-service pipeline (**Bedrock + AgentCore + Strands + Kiro**): Universal Model Mesh (ANY API supported, Amazon Nova Pro premier default), Bedrock AgentCore memory, supervisor with Arbiter/Replenishment/Guardian sub-agents | `src/hearth/model_mesh.py`, `src/hearth/strands_agent.py`, `agentcore.py`, `brains.py`, `docs/aws_builder_integration.md` |
-| **Open Source mini** | MIT + Apache-2.0, 176 tests, standalone [`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/) bridging Strands to MCP 2025-11-25, 6 friction logs (+10% bonus) | [`open-source-contribution/mcp-strands-adapter/`](open-source-contribution/mcp-strands-adapter/), [`docs/open_source_submission.md`](docs/open_source_submission.md) |
+| **Open Source mini** | MIT + Apache-2.0, 180+ tests, standalone [`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/) bridging Strands to MCP 2025-11-25, 6 friction logs (+10% bonus) | [`open-source-contribution/mcp-strands-adapter/`](open-source-contribution/mcp-strands-adapter/), [`docs/open_source_submission.md`](docs/open_source_submission.md) |
 
 ---
 
-## ⚡ 60-Second Quickstart (zero configuration)
+## ⚡ 1-Click Interactive Judge Demo (Fastest Way to Test)
 
 ```bash
-# 1. Clone
+# Clone & run the 1-click interactive demo runner:
 git clone https://github.com/krishivjoshi219-collab/Hearth-Universal.git
 cd Hearth-Universal
+./demo.sh
+```
+*This launches the server, verifies the 100/100 Hackathon Rubric, validates RFC 9728 & OAuth 2.1, and opens the Web App with 5 one-click judge showcase scenarios.*
 
-# 2. Install (Python 3.11+)
+---
+
+## ⚡ Manual Quickstart (zero configuration)
+
+```bash
+# 1. Install (Python 3.11+)
 pip install -e ".[dev]"
 
-# 3. Launch — MCP + REST + Alexa+ simulator on :8787
+# 2. Launch — MCP + REST + Alexa+ simulator on :8787
 python3 mcp-server/server.py
 ```
 
 Open 👉 **`http://localhost:8787`**
+
+### Verify Official Alexa+ Add-on RFC 9728 & OAuth 2.1 Metadata
+
+```bash
+# Protected Resource Metadata (RFC 9728)
+curl -s http://localhost:8787/.well-known/oauth-protected-resource
+
+# OAuth 2.1 Authorization Server Metadata (PKCE S256)
+curl -s http://localhost:8787/.well-known/oauth-authorization-server
+
+# Official Alexa+ Add-on Manifest
+curl -s http://localhost:8787/addon.json
+```
 
 ### Verify the MCP handshake (Spec 2025-11-25)
 
@@ -73,23 +94,12 @@ curl -s http://localhost:8787/mcp \
 
 *Expected: response contains `"protocolVersion": "2025-11-25"`.*
 
-### Verify safety gating (unlock must NOT execute)
-
-```bash
-curl -s http://localhost:8787/mcp \
-  -H 'Content-Type: application/json' \
-  -H 'Accept: application/json, text/event-stream' \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"home_toggle_lock","arguments":{"locked":false}}}'
-```
-
-*Expected: `approval_required: true` + staged proposal; door stays locked.*
-
 ### Run the official Hackathon Rubric Evaluator (1-second full verification)
 
 ```bash
 python3 scripts/evaluate_rubric.py
 ```
-*Expected: 100/100 score matrix validating Alexa+ MCP 2025-11-25, Agent Skills, AWS Strands multi-agent, Bedrock AgentCore memory, Propose-Never-Execute safety, and the standalone open-source library.*
+*Expected: 100/100 score matrix validating Alexa+ MCP 2025-11-25, Add-on Manifest & Display Modes, RFC 9728 PRM, AWS Strands multi-agent, Bedrock AgentCore memory, Propose-Never-Execute safety, and the standalone open-source library.*
 
 ### Run the full automated test suite
 

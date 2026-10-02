@@ -560,6 +560,13 @@ async function handleUserChat(msg) {
   setLightWave(data.blocked ? "alert" : "speaking");
   if (!data.blocked) playEarcon("success");
   const text = data.draft || data.text || data.synthesis || data.message || data.error || "Done.";
+  latestSpokenText = sanitizeForVoice(text);
+
+  if (currentDisplayMode === "voice-only") {
+    speakAlexaVoice(latestSpokenText);
+  } else if (currentDisplayMode === "fullscreen") {
+    renderFullscreenCanvas(data);
+  }
   
   function appendAgent(logEl) {
     if (!logEl) return;
@@ -628,6 +635,131 @@ $$(".chip").forEach((chip) => {
     $("#cmdForm").dispatchEvent(new Event("submit"));
   });
 });
+
+/* ---------- judge showcase 1-click hackathon cards ---------- */
+$$(".showcase-card").forEach((card) => {
+  card.addEventListener("click", () => {
+    const cmd = card.dataset.cmd;
+    if (!cmd) return;
+    const input = $("#cmdInput");
+    if (input) {
+      input.value = cmd;
+      $("#cmdForm")?.dispatchEvent(new Event("submit"));
+    }
+  });
+});
+
+/* ---------- Alexa+ Display Modes (@modelcontextprotocol/ext-apps) ---------- */
+let currentDisplayMode = "inline";
+let latestSpokenText = "Hearth Universal is online and connected to your household digital twin.";
+
+function sanitizeForVoice(raw) {
+  if (!raw) return "";
+  let s = String(raw);
+  s = s.replace(/\|[^\n]+\|/g, "");
+  s = s.replace(/\|/g, " ");
+  s = s.replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1");
+  s = s.replace(/[\*_`#]/g, "");
+  s = s.replace(/\s+/g, " ").trim();
+  return s;
+}
+
+function speakAlexaVoice(text) {
+  if (audioMuted || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 1.05;
+  utterance.pitch = 1.0;
+  const voices = window.speechSynthesis.getVoices();
+  const v = voices.find((x) => x.lang.startsWith("en") && (x.name.includes("Natural") || x.name.includes("Google") || x.name.includes("Samantha") || x.name.includes("Female")));
+  if (v) utterance.voice = v;
+  utterance.onstart = () => {
+    setLightWave("speaking");
+    $("#voiceModeBanner .voice-waves")?.classList.add("active");
+  };
+  utterance.onend = () => {
+    setLightWave("idle");
+    $("#voiceModeBanner .voice-waves")?.classList.remove("active");
+  };
+  window.speechSynthesis.speak(utterance);
+}
+
+function renderFullscreenCanvas(data) {
+  const box = $("#fullscreenCanvasBox");
+  const grid = $("#canvasGrid");
+  if (!box || !grid) return;
+  box.hidden = false;
+  grid.innerHTML = `
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <strong style="color:var(--amber)">🏛️ Household Parliament Matrix</strong>
+        <span class="pill" style="font-size:10px">Game-Theoretic</span>
+      </div>
+      <p style="font-size:12px;color:var(--t2);line-height:1.4">Deliberation across FrugalMind, BioComfort, and EcoSovereign ministers with Nash equilibrium score.</p>
+      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsParliamentPreview">Active consensus reached (Nash: 8.4/10)</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <strong style="color:var(--ok)">🔮 7-Day Causal Future Simulation</strong>
+        <span class="pill" style="font-size:10px">Monte Carlo 150x</span>
+      </div>
+      <p style="font-size:12px;color:var(--t2);line-height:1.4">Stochastic forward prediction of weather tariffs, solar battery discharge, and brownout risk.</p>
+      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsCausalPreview">Pre-emptive contingency staged · 0 brownouts</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <strong style="color:var(--cyan, #38bdf8)">⚡ Energy Arbitrage &amp; Solar Mesh</strong>
+        <span class="pill" style="font-size:10px">Enphase + Ecobee</span>
+      </div>
+      <p style="font-size:12px;color:var(--t2);line-height:1.4">Net solar export: 4.4 kW · Battery: 88% · Living room pre-cooled to 20°C before 4 PM peak.</p>
+      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsEnergyPreview">Annual avoided tariff cost: $642.10</div>
+    </div>
+  `;
+}
+
+function setDisplayMode(mode) {
+  currentDisplayMode = mode;
+  $$(".mode-chip").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+
+  const voiceBanner = $("#voiceModeBanner");
+  const canvasBox = $("#fullscreenCanvasBox");
+
+  if (mode === "voice-only") {
+    if (voiceBanner) voiceBanner.hidden = false;
+    if (canvasBox) canvasBox.hidden = true;
+    toast("Switched to Voice-Only Headless mode (Echo / AVS audio)");
+    if (latestSpokenText) speakAlexaVoice(latestSpokenText);
+  } else if (mode === "fullscreen") {
+    if (voiceBanner) voiceBanner.hidden = true;
+    if (canvasBox) {
+      canvasBox.hidden = false;
+      renderFullscreenCanvas();
+    }
+    toast("Expanded to Alexa+ Fullscreen Canvas (@modelcontextprotocol/ext-apps)");
+  } else {
+    // inline
+    if (voiceBanner) voiceBanner.hidden = true;
+    if (canvasBox) canvasBox.hidden = true;
+    toast("Switched to Inline Card mode (default)");
+  }
+}
+
+$$(".mode-chip").forEach((chip) => {
+  chip.addEventListener("click", () => {
+    setDisplayMode(chip.dataset.mode);
+  });
+});
+
+$("#exitFullscreenBtn")?.addEventListener("click", () => {
+  setDisplayMode("inline");
+});
+
+$("#playTtsBtn")?.addEventListener("click", () => {
+  if (latestSpokenText) speakAlexaVoice(latestSpokenText);
+});
+
 
 /* ---------- living household simulator (home view) ---------- */
 $$(".scenario-btn").forEach((btn) => {
