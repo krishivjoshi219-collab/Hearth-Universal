@@ -19,6 +19,10 @@ server:
   stateless: true
   protocol_version: "2025-11-25"
 
+# Set HEARTH_ENV=production in a deployed environment. Production startup
+# fails closed unless auth, audit, and HTTPS public URL settings are present.
+# Leave unset (demo) for the zero-config local judge experience.
+
 # AWS Builder mini (optional, Week 3): fill to swap one call to Bedrock.
 # Leave empty for hackathon primary win — local/mock still eligible.
 aws:
