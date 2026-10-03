@@ -65,5 +65,5 @@ Two tiers, enforced in code (not just documented):
 
 ## B1: DAG Orchestration + MCP Apps Media Cards
 - `planner_orchestrate(goal, session_id?)` / `planner_orchestrate_dag(goal, session_id?)`: decomposes goals into an explicit multi-step DAG (`dag[{id,tool,depends_on,status}]` + `edges`), executes Tier-1 steps, persists `session_id` state to `state/orchestrations.json` for cross-session resume via `planner_get_session(session_id)`.
-- `mcp_apps_media_card(kind)`: emits rich `media-card` JSON `{type:"media-card", title, carousel:{items[{title,image,meta,action}]}, purchase_action{label,tool,args,gated}}` for kinds `lighting_designer`, `subscription_roi`, `pantry_restock`. Render with `web/js/mcp-apps.js` `McpAppsManager.renderMediaCard(el, card, {onAction})`.
+- `mcp_apps_media_card(kind)`: emits rich `media-card` JSON `{type:"media-card", title, carousel:{items[{title,image,meta,action}]}, purchase_action{label,tool,args,gated}}` for kinds `lighting_designer`, `subscription_roi`, `pantry_restock`. Render with `web2/js/app.js` carousel renderer.
 - Gating intact: `unlock` / `order` DAG nodes return `approval_required` + staged proposal; never auto-execute. `purchase_action.gated=true` always routes to the Approval Tray.

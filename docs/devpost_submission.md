@@ -50,7 +50,7 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
   - `ReplenishmentDepletionAgent`: Evaluates consumable depletion velocities and maximizes 15% Subscribe & Save discounts.
   - `SentinelGuardianAgent`: Enforces 3-tier risk gating, child guardrails, and cryptographic audits.
 - **AWS Bedrock AgentCore Memory**: Emulates the serverless AgentCore Memory architecture for persistent session turns and cross-session episodic memory retrieval.
-- **Amazon Bedrock Converse Multi-Model Router**: Dynamic routing between **Claude 3.5 Sonnet** (deep reasoning) and **Amazon Nova Pro** (structured fast planning) with adaptive retries and `system=[]` prompt isolation.
+- **Amazon Bedrock Converse Multi-Model Router (optional, emulated by default)**: Dynamic routing between **Claude 3.5 Sonnet** (deep reasoning) and **Amazon Nova Pro** (structured fast planning) with adaptive retries and `system=[]` prompt isolation when `AWS_BEDROCK_ENABLED=1`; honest `aws-bedrock-simulated` offline fallback otherwise.
 
 ### 3. Autonomous Subscription & Financial Hygiene (Saves $803.76/yr)
 - Scans active household subscriptions and analyzes real usage telemetry.
@@ -82,19 +82,19 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 
 ## ⚙️ How We Built It
 
-- **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 35 tools, 4 resources, and 3 prompt templates.
+- **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 49 tools, 8 resources, and 3 prompt templates.
 - **AWS Strands Agents SDK (`src/hearth/strands_agent.py`)**: Multi-agent supervisor pattern delegating to Arbiter, Replenishment, and Sentinel agents.
 - **Bedrock AgentCore (`src/hearth/agentcore.py`)**: Persistent session turns and cross-session episodic context retrieval.
 - **Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers.
 - **Official Rubric Evaluator (`scripts/evaluate_rubric.py`)**: 1-second automated verification across all competition rubrics.
-- **Testing & Verification**: 159 automated unit, regression, contract, auth, and smoke tests passing in ~24s.
+- **Testing & Verification**: 199 automated unit, regression, contract, auth, and smoke tests passing.
 
 ---
 
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **159 Automated Tests**: 100% pass rate in ~24 seconds.
+- **199 Automated Tests**: 100% pass rate.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Open Source Contribution**: Creating the first turnkey bridge between AWS Strands and FastMCP 2025-11-25.

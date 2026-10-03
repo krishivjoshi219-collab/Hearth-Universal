@@ -364,6 +364,24 @@ TOOLS: dict[str, dict[str, Any]] = {
         },
         "handler": lambda args: commerce.reschedule_delivery_slot(args.get("slot_id", "slot_overnight_urgent"), reason=args.get("reason", ""))
     },
+    "commerce_autopilot_checkout": {
+        "description": "Voice-to-tray Autopilot Checkout: stage Subscribe & Save cart as approval card, never executes.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "utterance": {"type": "string"},
+                "item_ids": {"type": "array", "items": {"type": "string"}},
+                "bundle_optimized": {"type": "boolean", "default": True},
+                "delivery_slot_id": {"type": "string"},
+                "voice_confidence": {"type": "number", "default": 0.0}
+            }
+        },
+        "handler": lambda args: commerce.build_autopilot_checkout(
+            utterance=args.get("utterance", ""), item_ids=args.get("item_ids"),
+            bundle_optimized=args.get("bundle_optimized", True),
+            delivery_slot_id=args.get("delivery_slot_id"),
+            voice_confidence=float(args.get("voice_confidence", 0.0) or 0.0))
+    },
     "forensic_incident_reconstruct": {
         "description": "Run Black Box Forensic Incident Reconstruction using reverse causal walk across household telemetry.",
         "parameters": {
@@ -681,7 +699,7 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
 
 def _requires_approval(tool_name: str, args: dict) -> bool:
     """True only for tier-2 state-changers. Proposing is itself the safe action."""
-    if tool_name == "actions_propose":
+    if tool_name in ("actions_propose", "commerce_autopilot_checkout"):
         return False
     if tool_name == "home_toggle_lock":
         return args.get("locked", True) is False  # unlock=gated, lock=autonomous

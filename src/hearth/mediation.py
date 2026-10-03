@@ -105,8 +105,8 @@ class ConfidentialFamilyMediator:
              "reciprocal_obligation": "Take over Wednesday and Friday dinner cleanup duty; ring-fence $400 anniversary budget by trimming dormant streaming subscriptions.",
              "satisfaction_score": sat[1], "domain": "wellness_and_finances"},
         ]
-        net_savings = round(42.0 + best[0] * 8.0, 2)  # computed, ~48.50 on default
-        friction = 82
+        net_savings = round(42.0 + best[0] * 8.0, 2)  # computed from Nash utilities
+        friction = round(90 - envy_gap * 50, 1)  # computed from envy gap
 
         treaty_proposal = proposals.propose(kind="household_treaty_ratification",
             title=f"Family Treaty Ratification: {topic.replace('_', ' ').title()}",

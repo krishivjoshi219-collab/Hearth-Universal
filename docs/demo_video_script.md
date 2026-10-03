@@ -18,12 +18,12 @@
 
 ### [0:25 - 0:50] 60-Second Setup & MCP Spec Verification
 - **Visual**: Screen capture of terminal.
-  - Run: `python3 mcp-server/server.py` (shows FastMCP starting on port `8787` with 35 tools).
+  - Run: `python3 mcp-server/server.py` (shows FastMCP starting on port `8787` with 49 tools).
   - Run: `curl POST /mcp` initialize request. Output displays `"protocolVersion": "2025-11-25"`.
-  - Run: `pytest -q` (**159 passing tests** in ~24s).
+  - Run: `pytest -q` (**199 passing tests**).
   - Run: `python3 scripts/evaluate_rubric.py` (shows 100/100 all criteria passing).
 - **Narrator**:
-  > *"Hearth is completely zero-friction and zero-build. It requires no closed API keys, Node.js, or cloud hardware to evaluate. Our server exposes a fully compliant MCP 2025-11-25 Streamable HTTP endpoint. As you can see, our official rubric evaluator verifies all 159 tests and protocol handshakes across Alexa+, AWS Builder, and Open Source."*
+  > *"Hearth is completely zero-friction and zero-build. It requires no closed API keys, Node.js, or cloud hardware to evaluate. Our server exposes a fully compliant MCP 2025-11-25 Streamable HTTP endpoint. As you can see, our official rubric evaluator verifies all 199 tests and protocol handshakes across Alexa+, AWS Builder, and Open Source."*
 
 ---
 

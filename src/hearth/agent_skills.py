@@ -57,8 +57,8 @@ class AgentSkillsRuntime:
             name="Hearth Pantry & Commerce Optimizer",
             version="2026.1",
             description="Predictive consumable depletion radar, 15% Subscribe & Save bulk discounts, and Prime transit tracking.",
-            capabilities=["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling"],
-            tools_exposed=["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery"],
+            capabilities=["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling", "voice_to_tray_checkout"],
+            tools_exposed=["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery", "commerce_autopilot_checkout"],
             requires_human_approval=True,
             handler=self._handle_commerce_ops,
         ))
@@ -147,6 +147,11 @@ class AgentSkillsRuntime:
     def _handle_commerce_ops(self, action: str, params: dict[str, Any]) -> dict[str, Any]:
         if action == "optimize_bundles":
             return commerce.optimize_bundles(auto_fill_tier=True)
+        if action == "autopilot_checkout":
+            return commerce.build_autopilot_checkout(utterance=params.get("utterance", ""),
+                item_ids=params.get("item_ids"), bundle_optimized=params.get("bundle_optimized", True),
+                delivery_slot_id=params.get("delivery_slot_id"),
+                voice_confidence=float(params.get("voice_confidence", 0.0) or 0.0))
         return commerce.get_depletion_forecast()
 
     def _handle_arbiter_ops(self, action: str, params: dict[str, Any]) -> dict[str, Any]:

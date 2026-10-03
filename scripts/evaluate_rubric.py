@@ -79,7 +79,18 @@ def main():
         assert addon_manifest["addon"]["id"] == "amzn1.ask.addon.hearth.operations"
         assert "inline" in addon_manifest["display"]["supportedModes"]
         assert "fullscreen" in addon_manifest["display"]["supportedModes"]
-        ok("addon.json compliant with Alexa AI CLI; Inline & Fullscreen display modes active")
+        assert "hydrated" in addon_manifest["display"]["supportedModes"]
+        assert "voice-only" in addon_manifest["display"]["supportedModes"]
+        assert "checkout" in addon_manifest["display"]["views"]
+        assert "receipt" in addon_manifest["display"]["views"]
+        # PUBLIC_BASE_URL override honored for deploy
+        import os as _os
+        _os.environ["PUBLIC_BASE_URL"] = "https://hearth-demo.example.com"
+        from hearth import alexaplus_addon as _apl
+        eng2 = _apl.AlexaPlusAddonEngine()
+        assert eng2.base_url == "https://hearth-demo.example.com", eng2.base_url
+        del _os.environ["PUBLIC_BASE_URL"]
+        ok("addon.json compliant; all 4 display modes + checkout/receipt views + PUBLIC_BASE_URL override")
     except Exception as e:
         traceback.print_exc()
         fail(str(e))
@@ -362,6 +373,36 @@ def main():
         traceback.print_exc()
         fail(str(e))
 
+    # 11. 8th Innovation: Autopilot Checkout (voice-to-tray + glass receipt)
+    header("11. Autopilot Checkout: Voice-to-Tray + Proactive + Glass Receipt")
+    step("Staging voice cart, approving to glass receipt, undoing")
+    try:
+        from hearth import commerce, proposals as _props, heartbeat as _hb
+        _props.clear_proposals()
+        staged = commerce.build_autopilot_checkout(utterance="reorder coffee and detergent")
+        assert staged["ok"] is True and staged["staged_only"] is True
+        pid = staged["proposal"]["id"]
+        # Proactive tick is idempotent on its own title (no duplicate cards)
+        t1 = _hb.tick_proactive("autopilot_checkout")
+        t2 = _hb.tick_proactive("autopilot_checkout")
+        assert t1["proposals"] and t2["proposals"]
+        assert t1["proposals"][0]["id"] == t2["proposals"][0]["id"]
+        decided = _props.decide(pid, True)
+        ex = decided.get("execution", {})
+        assert ex.get("receipt_code", "").startswith("HEARTH-RC-")
+        assert ex.get("qr_payload", "").startswith("hearth://receipt/")
+        undone = _props.undo(pid)
+        assert undone["ok"] is True
+        # Low-confidence clarifies without staging
+        _props.clear_proposals()
+        amb = commerce.build_autopilot_checkout(utterance="blorpt flibber xyzzy", voice_confidence=0.2)
+        assert amb.get("clarification_required") is True
+        assert _props.list_proposals("pending") == []
+        ok(f"Voice staged {pid}, receipt {ex.get('receipt_code')}, undo ok, ambiguous clarifies")
+    except Exception as e:
+        traceback.print_exc()
+        fail(str(e))
+
     # Summary
     print(f"\n{BOLD}{GREEN}{'='*60}{RESET}")
     print(f"{BOLD}{GREEN}  🏆 ALL HACKATHON CRITERIA PASSED (100 / 100){RESET}")
@@ -376,9 +417,10 @@ def main():
     print(f"      - Acoustic Doctor (Echo FFT vibration diagnostics & S&S parts)")
     print(f"      - Confidential Family Mediator (Zero-knowledge domestic treaty)")
     print(f"      - Neighborhood Swarm Grid (P2P solar trading at $0.18/kWh)")
+    print(f"  • {GREEN}✓{RESET} {BOLD}8th Innovation: Autopilot Checkout{RESET} (voice-to-tray + proactive + glass receipt/undo)")
     print(f"  • {GREEN}✓{RESET} {BOLD}AWS Builder Mini Challenge{RESET} ($5,000):")
-    print(f"      - Universal Model Mesh (Runs on ANY API, Amazon Nova Pro premier default)")
-    print(f"      - Bedrock + AgentCore Memory + AWS Strands Supervisor Multi-Agent SDK")
+    print(f"      - Universal Model Mesh (offline-first, Bedrock-optional, any API)")
+    print(f"      - AgentCore-compatible memory + Strands-pattern supervisor SDK")
     print(f"  • {GREEN}✓{RESET} {BOLD}Open Source Mini Challenge{RESET} ($5,000):")
     print(f"      - Standalone mcp-strands-adapter package (Apache-2.0, tests, quickstart)")
     print(f"  • {GREEN}✓{RESET} {BOLD}Friction Logs Bonus{RESET} (10% Bonus): 6 thorough logs across AWS & Alexa+ tools")

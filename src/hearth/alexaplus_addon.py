@@ -114,7 +114,16 @@ def _sha256_pkce(verifier: str) -> str:
 class AlexaPlusAddonEngine:
     """Core Alexa+ Add-on manager implementing OAuth 2.1, RFC 9728, and display modes."""
 
-    def __init__(self, canonical_uri: str = "http://localhost:8787/mcp") -> None:
+    def __init__(self, canonical_uri: str | None = None) -> None:
+        # PUBLIC_BASE_URL / HEARTH_PUBLIC_URL override for deploy (manifest + PRM + OAuth);
+        # localhost default preserves zero-config judge flow.
+        import os as _os
+        canonical_uri = (
+            canonical_uri
+            or _os.environ.get("PUBLIC_BASE_URL")
+            or _os.environ.get("HEARTH_PUBLIC_URL")
+            or "http://localhost:8787/mcp"
+        )
         self.canonical_uri = canonical_uri
         self.base_url = canonical_uri.rsplit("/mcp", 1)[0] or "http://localhost:8787"
 
@@ -399,7 +408,7 @@ class AlexaPlusAddonEngine:
 
         payload = {
             "display_mode": valid_mode,
-            "supported_modes": ["inline", "fullscreen", "voice-only"],
+            "supported_modes": ["inline", "fullscreen", "hydrated", "voice-only"],
             "speech": {
                 "type": "PlainText",
                 "text": speech_text,
@@ -436,7 +445,8 @@ class AlexaPlusAddonEngine:
                     "Alexa, ask Hearth to run an energy audit",
                     "Alexa, ask Hearth to check the pantry replenishment radar",
                     "Alexa, ask Hearth what the Family Arbiter recommends for the thermostat",
-                    "Alexa, ask Hearth to stage a 7-day weather resilience plan"
+                    "Alexa, ask Hearth to stage a 7-day weather resilience plan",
+                    "Alexa, ask Hearth to checkout coffee and detergent"
                 ],
                 "locales": ["en-US"],
                 "categories": ["SMART_HOME", "PRODUCTIVITY", "SHOPPING"],
@@ -455,7 +465,9 @@ class AlexaPlusAddonEngine:
                     "timeline": "ui://hearth/views/timeline",
                     "energy_mesh": "ui://hearth/views/energy_mesh",
                     "parliament": "ui://hearth/views/parliament",
-                    "resilience": "ui://hearth/views/resilience"
+                    "resilience": "ui://hearth/views/resilience",
+                    "checkout": "ui://hearth/views/checkout",
+                    "receipt": "ui://hearth/views/receipt"
                 }
             },
             "authentication": {

@@ -28,8 +28,8 @@
     {
       "id": "amzn1.ask.skill.hearth.commerce_replenish",
       "name": "Pantry & Subscribe & Save Optimizer",
-      "capabilities": ["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling"],
-      "tools": ["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery"],
+      "capabilities": ["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling", "voice_to_tray_checkout"],
+      "tools": ["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery", "commerce_autopilot_checkout"],
       "requires_human_approval": true
     },
     {

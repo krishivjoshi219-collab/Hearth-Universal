@@ -318,9 +318,7 @@ class MetaSkillSynthesizer:
                                 "parameters": params, "result": out}
             except Exception as e:
                 return {"ok": False, "error": str(e)}
-            return {"ok": True, "executed_skill": skill.skill_id, "action": action,
-                    "parameters": params, "result": "Dynamic execution completed successfully",
-                    "savings_usd": 4.25}
+            return {"ok": False, "error": "handler missing or returned non-dict (no fallback — re-synthesize)"}
 
         skill_def = agent_skills.AgentSkillDefinition(
             skill_id=skill.skill_id, name=skill.name, version=skill.version,

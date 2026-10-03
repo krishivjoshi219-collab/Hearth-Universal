@@ -278,8 +278,18 @@ def _execute_approved_action(proposal: dict) -> dict:
         return {"applied": True, "at": now,
                 "note": f"recorded {kind} for '{proposal.get('title')}' saving ${proposal.get('cost_delta_yr', 0):.2f}/yr (provider call simulated — no live billing API in sandbox)"}
     elif kind == "commerce_order":
+        cart = (meta.get("cart_preview") or {})
+        receipt_code = f"HEARTH-RC-{str(proposal.get('id', 'p?')).upper()}-{now:X}"
+        qr_payload = (f"hearth://receipt/{receipt_code}?pid={proposal.get('id')}"
+                      f"&total={abs(proposal.get('cost_delta_yr', 0)):.2f}")
         return {"applied": True, "at": now,
-                "note": f"order staged for '{proposal.get('title')}' at ${abs(proposal.get('cost_delta_yr', 0)):.2f} (checkout simulated — no live payment in sandbox)"}
+                "note": f"order staged for '{proposal.get('title')}' at ${abs(proposal.get('cost_delta_yr', 0)):.2f} (checkout simulated — no live payment in sandbox)",
+                "receipt_code": receipt_code, "qr_payload": qr_payload,
+                "items": cart.get("items", []), "final_total": cart.get("final_total"),
+                "savings": cart.get("savings"), "delivery_schedule": cart.get("delivery_schedule"),
+                "glass": True, "undo_before": "dispatch",
+                "undo_via": f"/api/undo {proposal.get('id')} | actions_undo",
+                "sandbox": True}
     elif kind == "arbiter_compromise":
         from . import home_mock
         action_data = meta.get("proposed_action", {})

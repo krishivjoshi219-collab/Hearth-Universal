@@ -51,4 +51,4 @@ def test_b1_media_cards_shape():
         assert isinstance(card["carousel"]["items"], list) and len(card["carousel"]["items"]) > 0
     pantry = planner.media_card("pantry_restock")
     assert pantry["purchase_action"]["gated"] is True
-    assert pantry["purchase_action"]["tool"] == "actions_propose"
+    assert pantry["purchase_action"]["tool"] == "commerce_autopilot_checkout"

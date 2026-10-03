@@ -97,10 +97,7 @@ class BlackBoxForensics:
             verdict_map = {"benign": "BENIGN_PHYSICAL_DISPLACEMENT", "equipment": "EQUIPMENT_POWER_STARVATION",
                            "intruder": "INTRUDER_LIKELY_ENTRY"}
             verdict = verdict_map[best]
-            conf = round(post[best], 4)
-            # keep >=0.90 on canonical fixture: canonical strongly benign
-            if not sr and conf < 0.90:
-                conf = 0.97
+            conf = round(post[best], 4)  # measured posterior — no floor
 
             events = [
                 {"t_offset_s": -240, "timestamp": time.strftime("%H:%M:%S", time.localtime(t_event - 240)),
@@ -147,7 +144,7 @@ class BlackBoxForensics:
             pe = 1 / (1 + math.exp(-(ll_eq - ll_b + math.log(0.6 / 0.4))))
             pe = min(0.99, max(0.5, pe))
             verdict = "EQUIPMENT_POWER_STARVATION"
-            conf = round(pe, 4) if pe >= 0.90 else 0.94
+            conf = round(pe, 4)  # measured posterior — no floor
             events = [
                 {"t_offset_s": -1800, "timestamp": time.strftime("%H:%M:%S", time.localtime(t_event - 1800)),
                  "subsystem": "energy_mesh", "event": f"Kitchen branch {amps:.1f}A inrush.",

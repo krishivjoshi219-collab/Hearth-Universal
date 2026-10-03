@@ -115,10 +115,57 @@ def emit_event(event_type: str, icon: str, title: str, detail: str, status: str 
     return evt
 
 
+def _autopilot_due() -> bool:
+    """True when any consumable has <=3 days left and no pending commerce_order exists."""
+    try:
+        forecast = commerce.get_depletion_forecast()
+    except Exception:
+        return False
+    urgent = any(float(it.get("days_until_empty", 99) or 99) <= 3.0 for it in forecast)
+    if not urgent:
+        return False
+    try:
+        pending = proposals.list_proposals("pending")
+    except Exception:
+        return True
+    return not any(p.get("kind") == "commerce_order" for p in pending if isinstance(p, dict))
+
+
 def tick_proactive(scenario: str = "auto") -> dict[str, Any]:
     """Simulate a proactive autonomous household event."""
     now_str = time.strftime("%I:%M %p")
     proposals_created = []
+
+    if scenario in ("autopilot_checkout", "checkout", "voice_tray") or (scenario == "auto" and _autopilot_due()):
+        # Bundle-aware autopilot: stage S&S cart once (idempotent via build_autopilot_checkout)
+        try:
+            urgent_ids = [it.get("id") for it in commerce.get_depletion_forecast()
+                          if float(it.get("days_until_empty", 99) or 99) <= 3.0 and it.get("id")]
+        except Exception:
+            urgent_ids = []
+        res = commerce.build_autopilot_checkout(utterance="proactive restock of critical pantry items",
+                                                item_ids=urgent_ids or None,
+                                                bundle_optimized=True)
+        if res.get("clarification_required"):
+            evt = emit_event("commerce", "🛒", "Autopilot Checkout Watch",
+                             f"Pantry low at {now_str} but request ambiguous — awaiting voice clarification.",
+                             "active")
+            return {"ok": True, "event": evt, "proposals": []}
+        p = res.get("proposal", {})
+        if p:
+            proposals_created.append(p)
+        cart = res.get("cart_preview", {})
+        evt = emit_event(
+            "commerce",
+            "🛒",
+            "Autopilot Checkout Staged",
+            f"Tray card #{p.get('id', '?')}: {cart.get('item_count', '?')} items "
+            f"${cart.get('final_total', 0):.2f} (save ${cart.get('savings', 0):.2f}) — tap Approve. Undo anytime."
+            + (" (already pending — no duplicate)" if res.get("deduplicated") else ""),
+            "active"
+        )
+        return {"ok": True, "event": evt, "proposals": proposals_created,
+                "receipt_preview": {"proposal_id": p.get("id"), "cart_preview": cart}}
 
     if scenario in ("energy_peak", "energy") or (scenario == "auto" and len(_events) % 3 == 0):
         # Peak tariff detected

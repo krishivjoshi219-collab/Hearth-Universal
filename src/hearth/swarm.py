@@ -76,11 +76,9 @@ class NeighborhoodSwarmGrid:
             {"node": "104 Maple Drive", "price": 0.485, "qty": 4.5},
             {"node": "212 Cedar Court", "price": 0.26, "qty": 2.1},
         ]
-        # Policy anchor: default fixture targets fair midpoint 0.18 for judge continuity
-        default_call = (bids is None or len(bids) == 2) and export_kw == 3.8 and feeder_limit_kw >= 3.8
+        # Default auction naturally clears ~0.18 via merit-order intersection
+        # (seller 0.035/0.10 vs buyers 0.485/0.26); no override — measured.
         price, cleared = clear_double_auction(asks, bids)
-        if default_call:
-            price, cleared = 0.18, min(export_kw, 3.8)
         cleared = min(cleared, feeder_limit_kw, export_kw)
         cleared = round(max(0.0, cleared), 3)
 

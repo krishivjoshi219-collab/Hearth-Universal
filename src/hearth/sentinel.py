@@ -55,6 +55,7 @@ ALLOW_TOOLS = {
     "commerce_reschedule_delivery",
     "commerce_delivery_tracker",
     "commerce_scan_barcode",
+    "commerce_autopilot_checkout",
     "family_arbiter_resolve",
     "timemachine_forecast",
     "mcp_app_subscription_roi",

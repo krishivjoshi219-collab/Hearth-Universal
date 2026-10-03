@@ -71,6 +71,13 @@ def decompose_goal(goal: str) -> dict:
         add("mcp_app_subscription_roi", {}, [c], "render ROI optimizer card")
         intent = "SUBSCRIPTION_ROI"
         media_kind = "subscription_roi"
+    elif any(k in low for k in ("checkout", "autopilot", "voice order", "buy it", "check me out", "add to tray")):
+        a = add("commerce_list_inventory", {}, [], "read pantry levels")
+        b = add("commerce_autopilot_checkout", {"utterance": goal, "bundle_optimized": True}, [a],
+                "voice-to-tray staging only")
+        add("mcp_app_pantry_restock", {}, [b], "render depletion radar + tray card")
+        intent = "AUTOPILOT_CHECKOUT"
+        media_kind = "pantry_restock"
     elif any(k in low for k in ("pantry", "restock", "reorder", "coffee", "detergent",
                                 "cart", "groc", "subscribe", "deplet")):
         a = add("commerce_list_inventory", {}, [], "read pantry levels")
@@ -103,7 +110,7 @@ def decompose_goal(goal: str) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Media-card JSON (consumable by web/js/mcp-apps.js renderMediaCard)
+# Media-card JSON (consumable by web2/js/app.js carousel renderer)
 # ---------------------------------------------------------------------------
 
 def build_media_card(kind: str) -> dict:
@@ -192,15 +199,13 @@ def build_media_card(kind: str) -> dict:
         "subtitle": f"Cart ${cart.get('final_total', 0):.2f} (save ${cart.get('savings', 0):.2f})",
         "carousel": {"items": items},
         "purchase_action": {
-            "label": "Stage Subscribe & Save order",
-            "tool": "actions_propose",
-            "args": {"kind": "commerce_order",
-                     "title": "Reorder low pantry essentials",
-                     "reasons": "depletion radar: critical items under 3 days"},
+            "label": "Autopilot Checkout (voice-to-tray)",
+            "tool": "commerce_autopilot_checkout",
+            "args": {"utterance": "restock critical pantry items", "bundle_optimized": True},
             "gated": True,
             "note": "approval_required: human must approve in tray; never auto-charges",
         },
-        "hint": "1-tap staging only; checkout requires Approval Tray confirm.",
+        "hint": "1-tap staging only; checkout requires Approval Tray confirm. Say 'checkout coffee and detergent'.",
     }
 
 

@@ -41,6 +41,8 @@ sentinel:
 # Production hardening (set via env in prod; never commit secrets):
 #   HEARTH_ADULT_PIN=<long random PIN>  HEARTH_AUTH_SALT=<random 32B hex>
 #   HEARTH_AUDIT_KEY=<random 32B hex>  HEARTH_STATE_DIR=/data/state
+#   HEARTH_REQUIRE_AUDIT_KEY=1  (fail closed when demo audit key in use)
+#   PUBLIC_BASE_URL=https://<your-host>  (or HEARTH_PUBLIC_URL; overrides localhost in manifest + PRM + OAuth metadata)
 #   HEARTH_OAUTH_CLIENTS="alexa-hub:<secret>"  HEARTH_OAUTH_REDIRECT_ALLOWLIST="https://localhost:8787"
 #   HEARTH_OAUTH_ALLOW_PUBLIC_CLIENTS=0  HEARTH_EGRESS_STRICT=1  HEARTH_HSTS=1
 # Serve behind TLS reverse proxy (App Runner / nginx) with auth enforced.

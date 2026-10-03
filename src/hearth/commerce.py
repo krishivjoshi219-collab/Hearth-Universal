@@ -1068,3 +1068,109 @@ def build_cart_proposal(
         "message": f"Cart staged as proposal {proposal.get('id')} — awaiting human Approve (single-use). No order executed.",
         **sandbox_disclaimer(),
     }
+
+
+# ---------------------------------------------------------------------------
+# Autopilot Checkout: voice-to-tray (8th innovation)
+# ---------------------------------------------------------------------------
+
+VOICE_ALIASES: dict[str, str] = {
+    "coffee": "item_coffee", "arabica": "item_coffee", "bean": "item_coffee",
+    "detergent": "item_detergent", "laundry pods": "item_detergent", "pods": "item_detergent",
+    "filter": "item_filters", "hepa": "item_filters",
+    "dishwasher": "item_dishwasher_tabs", "dish tabs": "item_dishwasher_tabs",
+    "olive oil": "item_olive_oil",
+    "hand soap": "item_hand_soap", "soap": "item_hand_soap",
+    "paper": "item_paper", "tissue": "item_paper", "towel": "item_paper",
+}
+
+
+def parse_voice_utterance(utterance: str) -> dict:
+    """Deterministic voice parse: alias match -> item_ids; unknown words -> unmapped."""
+    low = (utterance or "").lower()
+    found: list[str] = []
+    for alias, iid in VOICE_ALIASES.items():
+        if alias in low and iid not in found:
+            found.append(iid)
+    words = [w.strip(".,!?") for w in low.split()]
+    stop = {"reorder", "order", "add", "buy", "checkout", "please", "and", "the", "for",
+            "tuesday", "tomorrow", "my", "kitchen", "restock", "a", "an", "some", "to", "tray"}
+    unmapped = [w for w in words if len(w) > 2 and w not in stop
+                and not any(w in a or a in w for a in VOICE_ALIASES)]
+    return {"item_ids": found, "unmapped": sorted(set(unmapped)),
+            "confidence_notes": f"matched {len(found)}, unmapped {len(set(unmapped))}"}
+
+
+def build_autopilot_checkout(
+    utterance: str = "",
+    item_ids: list[str] | None = None,
+    bundle_optimized: bool = True,
+    delivery_slot_id: str | None = None,
+    voice_confidence: float = 0.0,
+    title: str = "Autopilot Checkout (voice-to-tray)",
+) -> dict:
+    """Voice-to-tray staging: parse voice, stage S&S cart as Tier-2 proposal.
+
+    Never charges: delegates to build_cart_proposal (propose-never-execute).
+    Low-confidence (<0.6 with unmapped words) or empty resolution returns
+    clarification_required instead of guessing. Idempotent on pending tray.
+    """
+    from . import proposals as _proposals
+
+    ids = list(item_ids or [])
+    parsed = parse_voice_utterance(utterance) if utterance else {"item_ids": [], "unmapped": []}
+    parsed_ids = not ids  # True when relying on voice parse (no explicit ids)
+    if not ids:
+        ids = parsed["item_ids"]
+    # Validate against inventory
+    valid_ids = {it["id"] for it in HOUSEHOLD_ESSENTIALS}
+    ids = [i for i in ids if i in valid_ids]
+    low_conf = parsed_ids and voice_confidence < 0.6 and bool(parsed.get("unmapped"))
+    if not ids or low_conf:
+        return {"ok": False, "gated": False, "clarification_required": True,
+                "parsed_ids": parsed["item_ids"], "unmapped": parsed.get("unmapped", []),
+                "candidates": [{"id": it["id"], "name": it["name"]} for it in HOUSEHOLD_ESSENTIALS],
+                "message": "Ambiguous request — which items? (no proposal staged, nothing guessed)",
+                **sandbox_disclaimer()}
+    # Idempotency: same item set already pending -> return it
+    try:
+        pending = _proposals.list_proposals("pending")
+    except Exception:
+        pending = []
+    want = set(ids)
+    by_asin = {it.get("asin"): it["id"] for it in HOUSEHOLD_ESSENTIALS}
+    want_title = f"Autopilot Checkout: {(utterance or '').strip()[:80] or ', '.join(ids)}"
+    for p in pending:
+        if not isinstance(p, dict) or p.get("kind") != "commerce_order":
+            continue
+        meta = (p.get("meta") or {})
+        cart = (meta.get("cart_preview") or {})
+        items = cart.get("items") or []
+        have = {by_asin.get(it.get("asin")) for it in items if isinstance(it, dict)}
+        have.discard(None)
+        # Idempotent: same voice request (title) whose cart already covers wanted ids
+        if p.get("title") == want_title and want <= have:
+            return {"ok": True, "gated": True, "tier": "tier-2-ask", "single_use": True,
+                    "via": "actions_propose", "proposal": p, "cart_preview": cart,
+                    "deduplicated": True,
+                    "message": f"Same cart already pending as {p.get('id')} — no duplicate staged.",
+                    **sandbox_disclaimer()}
+    res = build_cart_proposal(item_ids=ids, subscribe_and_save=True,
+                              delivery_slot_id=delivery_slot_id,
+                              bundle_optimized=bundle_optimized,
+                              title=(f"Autopilot Checkout: {(utterance or '').strip()[:80] or ', '.join(ids)}"))
+    prop = res.get("proposal", {})
+    try:
+        meta = prop.get("meta") or {}
+        meta.update({"via": "autopilot_checkout",
+                     "voice": {"utterance": (utterance or "")[:200],
+                               "voice_confidence": voice_confidence,
+                               "parsed_ids": parsed["item_ids"]},
+                     "staged_only": True})
+    except Exception:
+        pass
+    res["via"] = "autopilot_checkout"
+    res["voice"] = {"utterance": (utterance or "")[:200], "voice_confidence": voice_confidence,
+                    "parsed_ids": parsed["item_ids"]}
+    res["staged_only"] = True
+    return res

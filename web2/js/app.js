@@ -566,6 +566,8 @@ async function handleUserChat(msg) {
     speakAlexaVoice(latestSpokenText);
   } else if (currentDisplayMode === "fullscreen") {
     renderFullscreenCanvas(data);
+  } else if (currentDisplayMode === "hydrated") {
+    renderFullscreenCanvas(data); // hydrated: live streaming UI over inline card
   }
   
   function appendAgent(logEl) {
@@ -738,6 +740,13 @@ function setDisplayMode(mode) {
       renderFullscreenCanvas();
     }
     toast("Expanded to Alexa+ Fullscreen Canvas (@modelcontextprotocol/ext-apps)");
+  } else if (mode === "hydrated") {
+    if (voiceBanner) voiceBanner.hidden = true;
+    if (canvasBox) {
+      canvasBox.hidden = false;
+      renderFullscreenCanvas();
+    }
+    toast("Hydrated UI: live streaming status + inline card (@ext-apps)");
   } else {
     // inline
     if (voiceBanner) voiceBanner.hidden = true;

@@ -130,9 +130,11 @@ class AcousticDiagnosticDoctor:
             freqs, mags = fft_spectrum(x)
             if p["id"] == "app_fridge_01":
                 bins_src = (freqs, mags)
-            # fault-band peak vs fundamental
+            # fault-band peak vs fundamental (healthy units: report fundamental)
             fpk, mpk = peak_interp(freqs, mags, 100.0, 150.0)
             ff0, mf0 = peak_interp(freqs, mags, p["f0"] - 5, p["f0"] + 5)
+            if not p["fault_hz"]:
+                fpk, mpk = ff0, mf0
             delta_db = mpk - mf0
             kurt = kurtosis(x)
             crest = max(abs(v) for v in x) / (math.sqrt(sum(v * v for v in x) / len(x)) + 1e-9)
@@ -140,17 +142,11 @@ class AcousticDiagnosticDoctor:
             deg = max(0.0, delta_db / 14.0) * 0.6 + max(0.0, (kurt - 3.0) / 3.0) * 0.25 + max(0.0, (crest - 3.0) / 4.0) * 0.15
             deg = min(1.0, deg + (0.55 if p["fault_hz"] else 0.0))
             health = round(max(0.0, 100 * (1 - deg)), 1)
-            mtbf_days = 900.0
-            p14 = round(1 - math.exp(-14 / max(1.0, mtbf_days * (1 - deg * 0.97))), 4)
-            rul = round(720 * math.exp(-3.2 * deg) + 2, 1)
+            # 14-day failure probability from degradation (no snap — measured):
+            # p14 = 1-exp(-5*max(0,deg-0.2)): degraded ~0.83, healthy ~0.
+            p14 = round(1 - math.exp(-5.0 * max(0.0, deg - 0.2)), 4)
+            rul = round(720 * math.exp(-5.5 * deg) + 2, 1)
             status = "DEGRADED_BEARING_WEAR" if (p["fault_hz"] and deg > 0.45) else "HEALTHY"
-            # Snap canonical demo numbers on default seed for judge continuity
-            if synth_seed == 42 and p["id"] == "app_fridge_01":
-                fpk, health, p14, rul, status, delta_db = 124.5, 38.0, 0.84, 13.5, "DEGRADED_BEARING_WEAR", 14.4
-            elif synth_seed == 42:
-                p14 = 0.02 if "hvac" in p["id"] else 0.03
-                rul = 720.0 if "hvac" in p["id"] else 540.0
-                health = 98.0 if "hvac" in p["id"] else 96.0
             remedy = None
             if p["part"] and status != "HEALTHY":
                 name, asin, price = p["part"]

@@ -178,7 +178,7 @@ def _adult_or_403(request: Request, action: str):
     )
 
 PROTOCOL = "2025-11-25"
-HEARTH_VERSION = "1.31.0"
+HEARTH_VERSION = "1.32.0"
 START_TIME = _time.time()
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
 _PORT = int(os.environ.get("PORT", "8787"))
@@ -475,7 +475,7 @@ def mcp_apps_media_card(
 ) -> dict:
     """Emit a rich media-card JSON (title, carousel items, purchase action) for the web UI.
 
-    Consumable by web/js/mcp-apps.js renderMediaCard(). Purchase actions are
+    Consumable by web2/js/app.js carousel renderer. Purchase actions are
     propose-never-execute: they stage Approval Tray proposals (approval_required).
     """
     return planner.media_card(kind if kind in ("lighting_designer", "subscription_roi", "pantry_restock") else "pantry_restock")
@@ -735,6 +735,27 @@ def commerce_scan_barcode(
 
 
 @mcp.tool()
+def commerce_autopilot_checkout(
+    utterance: Annotated[str, Field(description="Voice utterance e.g. 'reorder coffee and detergent for Tuesday'")] = "",
+    item_ids: Annotated[list[str] | None, Field(description="Explicit item IDs/ASINs/UPCs; overrides voice parse when set")] = None,
+    bundle_optimized: Annotated[bool, Field(description="Auto-fill to 5+ Prime Max tier (default True)")] = True,
+    delivery_slot_id: Annotated[str | None, Field(description="Delivery slot ID; omit for scheduled default")] = None,
+    voice_confidence: Annotated[float, Field(description="STT confidence 0.0-1.0; <0.6 forces clarification, never stages")] = 0.0
+) -> dict:
+    """Voice-to-tray Autopilot Checkout: parse voice, stage Subscribe & Save cart as Tier-2 tray card.
+
+    Propose-never-execute: stages only, never charges. Low-confidence/ambiguous maps return clarification_required.
+    Tier-1 staging + Tier-2 human Approve (single-use glass receipt).
+    """
+    res = commerce.build_autopilot_checkout(utterance=utterance, item_ids=item_ids,
+        bundle_optimized=bundle_optimized, delivery_slot_id=delivery_slot_id,
+        voice_confidence=voice_confidence)
+    audit.append("agent", "commerce_autopilot_checkout", {"utterance": utterance[:200],
+        "gated": res.get("gated"), "clarification": res.get("clarification_required", False)})
+    return res
+
+
+@mcp.tool()
 def strands_agent_orchestrate(
     goal: Annotated[str, Field(description="Complex multi-domain household goal for AWS Strands multi-agent supervisor")],
     session_id: Annotated[str, Field(description="Optional session ID for conversational context tracking")] = ""
@@ -941,6 +962,52 @@ def audit_chain() -> str:
         "audit_valid": audit.verify(),
         "protocol": PROTOCOL,
         "hash": "SHA-256-Merkle-Chain"
+    })
+
+
+@mcp.resource("commerce://checkout/tray", mime_type="application/json")
+def checkout_tray() -> str:
+    """Pending Autopilot Checkout tray cards + last glass receipt."""
+    all_items = proposals.list_proposals(limit=100)
+    last_receipt = None
+    for p in reversed(all_items):
+        if isinstance(p, dict) and p.get("execution"):
+            last_receipt = p.get("execution")
+            break
+    return json.dumps({
+        "pending": proposals.list_proposals("pending"),
+        "last_receipt": last_receipt,
+    })
+
+
+@mcp.resource("commerce://receipt/last", mime_type="application/json")
+def receipt_last() -> str:
+    """Most recent glass-box execution receipt (receipt_code + qr_payload)."""
+    for p in reversed(proposals.list_proposals(limit=100)):
+        if isinstance(p, dict) and p.get("execution"):
+            return json.dumps({"proposal_id": p.get("id"), **p.get("execution")})
+    return json.dumps({"ok": False, "error": "no receipts yet"})
+
+
+@mcp.resource("ui://hearth/views/checkout", mime_type="application/json")
+def ui_checkout_view() -> str:
+    """MCP Apps checkout canvas descriptor for Alexa+ ext-apps rendering."""
+    return json.dumps({
+        "view": "checkout",
+        "resourceUri": "ui://hearth/views/checkout",
+        "tray": "commerce://checkout/tray",
+        "hint": "Render pending tray cards with Approve/Undo; voice: 'checkout coffee and detergent'",
+    })
+
+
+@mcp.resource("ui://hearth/views/receipt", mime_type="application/json")
+def ui_receipt_view() -> str:
+    """MCP Apps receipt canvas descriptor for Alexa+ ext-apps rendering."""
+    return json.dumps({
+        "view": "receipt",
+        "resourceUri": "ui://hearth/views/receipt",
+        "receipt": "commerce://receipt/last",
+        "hint": "Render receipt_code + qr_payload with Undo; voice: 'undo that order'",
     })
 
 
@@ -2495,7 +2562,7 @@ async def js_static(request: Request):
 
 @mcp.custom_route("/app.js", methods=["GET"])
 async def app_js(request: Request):
-    # Support both web/js/app.js and web/app.js
+    # Live UI is web2/js/app.js (modular); fallback web2/app.js
     modular_js = os.path.join(WEB_DIR, "js", "app.js")
     if os.path.exists(modular_js):
         return FileResponse(modular_js, headers={"Cache-Control": "no-store", "Content-Type": "application/javascript"})
@@ -2543,6 +2610,11 @@ if __name__ == "__main__":
                         nxt = min(actives, key=lambda g: g["id"])
                         out = memory.advance_goal(nxt["id"])
                         audit.append("scheduler", "goals_tick", out)
+                except Exception:
+                    pass
+                try:
+                    from hearth import heartbeat as _hb
+                    _hb.tick_proactive("auto")  # autopilot branch no-ops unless _autopilot_due()
                 except Exception:
                     pass
 

@@ -14,7 +14,11 @@ def _hmac_key() -> bytes:
     # HMAC key binds the chain to a server secret so stolen files can't be
     # rewritten with a valid chain. Zero-config fallback keeps demos working;
     # operators MUST set HEARTH_AUDIT_KEY (32+ random bytes hex) in prod.
-    return os.environ.get("HEARTH_AUDIT_KEY", "hearth-demo-audit-key-v1").encode("utf-8")
+    # Set HEARTH_REQUIRE_AUDIT_KEY=1 to fail closed when the demo key is in use.
+    key = os.environ.get("HEARTH_AUDIT_KEY", "hearth-demo-audit-key-v1")
+    if key == "hearth-demo-audit-key-v1" and os.environ.get("HEARTH_REQUIRE_AUDIT_KEY") == "1":
+        raise RuntimeError("HEARTH_REQUIRE_AUDIT_KEY=1 but HEARTH_AUDIT_KEY is unset (demo key refused)")
+    return key.encode("utf-8")
 
 
 def _chain_hash(body: str) -> str:
