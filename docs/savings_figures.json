@@ -1,0 +1,34 @@
+{
+  "subscriptions": {
+    "total_annual_spend_usd": 1547.52,
+    "potential_annual_savings_usd": 803.76,
+    "formula": "sum(savings_yr where recommendation in (cancel, downgrade))"
+  },
+  "cart_bundle": {
+    "regular_subtotal_usd": 148.46,
+    "final_total_usd": 126.18,
+    "savings_usd": 22.28,
+    "item_count": 7,
+    "formula": "regular_subtotal - final_total at 15% Subscribe & Save tier"
+  },
+  "swarm_vpp": {
+    "allocated_kw": 3.8,
+    "clearing_price_kwh": 0.18,
+    "utility_buyback_kwh": 0.035,
+    "utility_peak_kwh": 0.485,
+    "seller_gain_hr_usd": 0.55,
+    "buyer_save_hr_usd": 1.16,
+    "community_dividend_hr_usd": 1.71,
+    "annualized_retention_usd": 2496.6,
+    "carbon_kg_hr": 3.23,
+    "formula": "seller_gain = kW*(clearing - 0.035); buyer_save = kW*(0.485 - clearing); annualized = hourly_dividend * 4h/day * 365d"
+  },
+  "acoustic_part": {
+    "detected_peak_hz": 124.5,
+    "failure_probability_14d": 0.8355,
+    "regular_price_usd": 14.99,
+    "final_price_usd": 12.74,
+    "formula": "final = regular * (1 - 0.15 Subscribe & Save)"
+  },
+  "data_source": "sandbox fixture (see commerce.sandbox_disclaimer); arithmetic is real, inputs are declared synthetic"
+}

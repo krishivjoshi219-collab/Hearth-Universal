@@ -1,0 +1,6 @@
+service,annual_cost_usd,usage_evidence,recommendation,savings_yr_usd
+StreamBox 4K Family Plan,239.88,Dormant (0 streams in 60d),cancel,239.88
+Metro Fitness All-Access Plus,780.00,Low (1 visit in 45d),downgrade,360.00
+Ultra Cloud Gaming Ultimate,203.88,Inactive (no sessions),cancel,203.88
+Echo Music HD Family,203.88,Active (daily across 4 Echo devices),keep,0.00
+Secure Vault Cloud Storage 2TB,119.88,Active (1.82 TB utilized / 91%),keep,0.00
