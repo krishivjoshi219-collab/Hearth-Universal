@@ -76,3 +76,31 @@ def test_export_is_capped(client):
     body = r.json()
     assert len(body.get("proposals", [])) <= 100
     assert len(body.get("goals", [])) <= 100
+
+
+def test_production_validation_fails_closed_without_secrets(monkeypatch):
+    monkeypatch.setenv("HEARTH_ENV", "production")
+    for name in (
+        "HEARTH_ADULT_PIN",
+        "HEARTH_AUTH_SALT",
+        "HEARTH_AUDIT_KEY",
+        "PUBLIC_BASE_URL",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    with pytest.raises(RuntimeError, match="missing required settings"):
+        server._validate_env()
+
+
+def test_production_validation_enables_strict_controls(monkeypatch):
+    monkeypatch.setenv("HEARTH_ENV", "production")
+    monkeypatch.setenv("HEARTH_ADULT_PIN", "a-long-production-pin")
+    monkeypatch.setenv("HEARTH_AUTH_SALT", "a" * 32)
+    monkeypatch.setenv("HEARTH_AUDIT_KEY", "b" * 32)
+    monkeypatch.setenv("PUBLIC_BASE_URL", "https://hearth.example.com")
+    monkeypatch.delenv("HEARTH_REQUIRE_AUDIT_KEY", raising=False)
+    monkeypatch.delenv("HEARTH_EGRESS_STRICT", raising=False)
+
+    server._validate_env()
+
+    assert os.environ["HEARTH_REQUIRE_AUDIT_KEY"] == "1"
+    assert os.environ["HEARTH_EGRESS_STRICT"] == "1"

@@ -131,7 +131,7 @@ def _bump(key: str) -> None:
 
 
 def _validate_env() -> None:
-    """Fail-safe boot validation: clamp nonsense, never crash a judge demo."""
+    """Validate runtime settings while keeping the local demo zero-config."""
     try:
         port = int(os.environ.get("PORT", "8787"))
         if not 1 <= port <= 65535:
@@ -148,6 +148,27 @@ def _validate_env() -> None:
         except ValueError:
             print(f"config warn: bad {var}, falling back to {default}")
             os.environ[var] = default
+    if os.environ.get("HEARTH_ENV", "demo").strip().lower() == "production":
+        required = {
+            "HEARTH_ADULT_PIN": os.environ.get("HEARTH_ADULT_PIN", "").strip(),
+            "HEARTH_AUTH_SALT": os.environ.get("HEARTH_AUTH_SALT", "").strip(),
+            "HEARTH_AUDIT_KEY": os.environ.get("HEARTH_AUDIT_KEY", "").strip(),
+            "PUBLIC_BASE_URL": os.environ.get("PUBLIC_BASE_URL", "").strip(),
+        }
+        missing = [name for name, value in required.items() if not value]
+        if missing:
+            raise RuntimeError(
+                "Production startup refused: missing required settings: " + ", ".join(missing)
+            )
+        if len(required["HEARTH_AUTH_SALT"]) < 32 or len(required["HEARTH_AUDIT_KEY"]) < 32:
+            raise RuntimeError(
+                "Production startup refused: HEARTH_AUTH_SALT and HEARTH_AUDIT_KEY "
+                "must each be at least 32 characters"
+            )
+        if not required["PUBLIC_BASE_URL"].startswith("https://"):
+            raise RuntimeError("Production startup refused: PUBLIC_BASE_URL must use https://")
+        os.environ.setdefault("HEARTH_REQUIRE_AUDIT_KEY", "1")
+        os.environ.setdefault("HEARTH_EGRESS_STRICT", "1")
 
 
 _validate_env()
