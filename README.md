@@ -12,11 +12,11 @@
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange?style=flat-square)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet?style=flat-square)](https://oauth.net/2.1/)
 [![Tests: 222 Passed](https://img.shields.io/badge/Tests-222%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
-[![Coverage](https://img.shields.io/badge/Coverage-72.03%25-brightgreen?style=flat-square)](pyproject.toml)
+[![Coverage](https://img.shields.io/badge/Coverage-73.56%25-brightgreen?style=flat-square)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776ab?style=flat-square&logo=python)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Rubric Mapping (100/100)](#-hackathon-track--rubric-mapping-100--100) · [🏗️ Architecture](#-system-architecture) · [🌟 7 Master Innovations](#-the-7-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (50 Tools)](#-complete-fastmcp-tool-catalog-50-tools)
+[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Rubric Mapping (100/100)](#-hackathon-track--rubric-mapping-100--100) · [🏗️ Architecture](#-system-architecture) · [🌟 9 Master Innovations](#-the-9-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (50 Tools)](#-complete-fastmcp-tool-catalog-50-tools)
 
 </div>
 
@@ -99,7 +99,7 @@ flowchart TD
     subgraph FastMCP_Core ["Hearth FastMCP Server (Protocol: 2025-11-25 · Streamable HTTP :8787)"]
         StreamRouter["Streamable HTTP Transport Router\n50 Tools · 8 Resources · 3 Prompts"]
         
-        subgraph Master_Innovations ["7 Master AI & Frontier Innovations"]
+        subgraph Master_Innovations ["9 Master AI & Frontier Innovations"]
             Parliament["🏛️ Household Parliament\nGame-Theoretic Multi-Minister Council\n(FrugalMind · BioComfort · EcoSovereign)"]
             CausalTwin["🔮 Causal Digital Twin\n7-Day Stochastic Monte Carlo Simulator\n(Heatwave, Brownout, Battery Depletion)"]
             MetaSkill["🧬 Meta-Skill Synthesizer\nSelf-Evolving Runtime Python Compiler\nAST-Validated Hot-Mounted Agent Skills"]
@@ -107,6 +107,8 @@ flowchart TD
             Acoustic["🩺 Appliance FFT Doctor\nEcho Ambient Harmonics (124.5 Hz)\nAutomated 15% S&S Part Staging"]
             Mediation["🤝 Confidential Family Treaty\nZero-Knowledge Domestic Diplomat\nPareto Covenants (9.37/10 Fairness)"]
             Swarm["⚡ Neighborhood Swarm Grid\nP2P Solar VPP Trading ($0.18/kWh)\nAvoided Peaker Carbon Offset"]
+            Checkout["🛒 Autopilot Checkout\nVoice-to-Tray Commerce\nGlass Receipt & 1-Tap Undo"]
+            TimeTravel["⏱️ Time-Travel Debugger\nRead-Only Decision Replay\nAudit Chain & State Verifier"]
         end
 
         subgraph Core_Subsystems ["Household Operations Engines"]
@@ -147,9 +149,9 @@ flowchart TD
 
 ---
 
-## 🌟 The 7 Master Innovations
+## 🌟 The 9 Master Innovations
 
-Hearth Universal introduces 7 unprecedented capabilities designed specifically for the next era of ambient computing with Amazon Alexa+:
+Hearth Universal introduces 9 unprecedented capabilities designed specifically for the next era of ambient computing with Amazon Alexa+:
 
 ### 1. 🔍 Black Box Forensic Incident Reconstruction Engine (Home CSI)
 * **Problem**: A 3:00 AM perimeter breach alarm terrifies the household. Is an intruder breaking in, or is it a false alarm? Conventional security systems only report "Contact Sensor Open".
@@ -224,6 +226,27 @@ Hearth Universal introduces 7 unprecedented capabilities designed specifically f
   3. Passes the code through the **Sentinel AST Safety Validator** to prevent sandbox escapes, subprocess execution, or arbitrary network access.
   4. Hot-mounts the skill into the live running server—**zero downtime, zero restarts**.
 * **Implementation**: [`src/hearth/meta_skill.py`](src/hearth/meta_skill.py) · Tool: `meta_skill_synthesize`.
+
+---
+
+### 8. 🛒 Autopilot Checkout: Voice-to-Tray Commerce & Glass Receipt/Undo
+* **Problem**: Voice commerce usually either charges credit cards immediately without user visual confirmation (leading to accidental buys/returns) or gets stalled in tedious multi-turn confirmation loops.
+* **Solution**: A seamless voice-to-tray architecture governed by strict Propose-Never-Execute semantics:
+  1. Resident issues a natural voice order (e.g. *"Alexa, restock paper towels and dish soap"*).
+  2. Hearth parses consumable quantities, queries Amazon product catalogs for optimal 15% Subscribe & Save discounts, and stages a Tier-2 approval tray proposal (`POST /api/commerce/checkout/stage`).
+  3. No credit card is charged autonomously. The resident reviews an itemized **Glass Receipt** on their Echo Show or phone (`POST /api/commerce/checkout/approve`).
+  4. Features **1-Tap Undo Reversibility** (`POST /api/commerce/checkout/undo`): instantly cancels the order and restores prior inventory state before fulfillment dispatch.
+* **Implementation**: [`src/hearth/commerce.py`](src/hearth/commerce.py) · Tool: `commerce_autopilot_checkout` · REST: `/api/commerce/checkout/*`.
+
+---
+
+### 9. ⏱️ Time-Travel Decision Debugger: Read-Only Audit Replay
+* **Problem**: Autonomous agents act like opaque black boxes. When actions take place, homeowners cannot inspect why the agent made a specific trade-off or reconstruct the exact state of the home when a proposal was approved.
+* **Solution**: A deterministic time-travel debugger that provides read-only state replay across pending, approved, and undone decisions:
+  1. Interrogates the SHA-256 Merkle audit trail (`GET /api/audit/replay?proposal_id=...`).
+  2. Replays the exact resident votes, Parliament minister dialectic rationale, Monte Carlo risk quantiles, and cost deltas at that historical point in time.
+  3. Guarantees **zero state mutations**: executes entirely in read-only mode to verify cryptographic hash integrity and prove 1-tap undo reversibility.
+* **Implementation**: [`src/hearth/replay.py`](src/hearth/replay.py) · Tool: `audit_replay_decision` · REST: `/api/audit/replay`.
 
 ---
 

@@ -65,6 +65,6 @@ that avoided cost, not the $2.25 discount, is the headline.
 ## 5. Honesty appendix
 
 - Fixture inputs are synthetic (sandbox twin, no real bills/utility API).
-- Every formula above executes in code paths covered by the 213-test suite.
+- Every formula above executes in code paths covered by the 222-test suite.
 - Reproduce everything: `python3 scripts/export_savings_figures.py`
   then `git diff --stat docs/savings_figures.*` — empty diff means docs == code.
