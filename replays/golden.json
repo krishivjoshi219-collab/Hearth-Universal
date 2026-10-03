@@ -1,0 +1,85 @@
+{
+  "git_sha": "367f7b1",
+  "protocol": "2025-11-25",
+  "seed": 42,
+  "values": {
+    "acoustic": {
+      "degradation": 0.561,
+      "health": 43.9,
+      "p14": 0.8355,
+      "peak_hz": 124.5,
+      "rul": 34.9,
+      "status": "DEGRADED_BEARING_WEAR"
+    },
+    "causal_twin": {
+      "cvar95": 187.46,
+      "days": 7,
+      "iterations": 150,
+      "p50": 172.54,
+      "resilience": 40.0,
+      "savings": 106.36,
+      "vulns": [
+        [
+          "energy_tariff_spike",
+          100.0
+        ],
+        [
+          "brownout_risk",
+          40.0
+        ],
+        [
+          "pantry_depletion",
+          80.3
+        ],
+        [
+          "pantry_depletion",
+          75.4
+        ],
+        [
+          "pantry_depletion",
+          50.0
+        ]
+      ]
+    },
+    "forensics": {
+      "confidence": 0.9802,
+      "posteriors": {
+        "benign": 0.9802,
+        "equipment": 0.0099,
+        "intruder": 0.0099
+      },
+      "timeline_len": 4,
+      "verdict": "BENIGN_PHYSICAL_DISPLACEMENT"
+    },
+    "mediation": {
+      "covenants": 3,
+      "envy_gap": 0.023,
+      "fairness": 9.76,
+      "nash": 0.6994,
+      "savings_mo": 48.8
+    },
+    "parliament": {
+      "candidates": 150,
+      "frontier_size": 6,
+      "nash": 10.0,
+      "speeches": 3,
+      "utilities": {
+        "bio": 10.0,
+        "eco": 10.0,
+        "frugal": 10.0
+      },
+      "vote": "2-1 majority"
+    },
+    "swarm": {
+      "carbon": 3.23,
+      "cleared": 3.8,
+      "econ": {
+        "annualized_neighborhood_wealth_retention_usd": 2496.6,
+        "buyer_hourly_savings_usd": 1.16,
+        "seller_hourly_gain_usd": 0.55,
+        "total_community_dividend_hourly_usd": 1.71
+      },
+      "price": 0.18
+    }
+  }
+}
