@@ -1,0 +1,2493 @@
+{
+  "errors": [],
+  "generated_at": "2026-10-03T14:20:44Z",
+  "metrics": {
+    "_totals": {
+      "CONFIDENCE.HIGH": 63,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 19,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 74,
+      "SEVERITY.MEDIUM": 8,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 12345,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "mcp-server/server.py": {
+      "CONFIDENCE.HIGH": 17,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 2,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 18,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 2199,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/__init__.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 0,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/acoustic.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 183,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/agent_skills.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 139,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/agentcore.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 168,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/alexa.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 3,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 3,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 972,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/alexaplus_addon.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 4,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 4,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 391,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/arbiter.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 427,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/atomic.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 33,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/audit.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 118,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/auth.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 85,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/brains.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 425,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/causal_twin.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 250,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/commerce.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 1032,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/delivery.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 37,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/family.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 164,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/forensics.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 163,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/goals.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 57,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/heartbeat.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 188,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/home_mock.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 3,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 269,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/inbox.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 24,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/mcp_strands_adapter.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 70,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/mediation.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 124,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/memory.py": {
+      "CONFIDENCE.HIGH": 11,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 11,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 623,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/meta_skill.py": {
+      "CONFIDENCE.HIGH": 3,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 284,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/model_mesh.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 253,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/parliament.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 1,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 332,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/planner.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 1317,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/planner_dag.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 305,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/proposals.py": {
+      "CONFIDENCE.HIGH": 5,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 5,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 349,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/real_mode.py": {
+      "CONFIDENCE.HIGH": 1,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 9,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 10,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 493,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/sandbox.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 1,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 2,
+      "SEVERITY.MEDIUM": 1,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 136,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/sentinel.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 121,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/strands_agent.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 224,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/swarm.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 115,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/timemachine.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 90,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/vault.py": {
+      "CONFIDENCE.HIGH": 0,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 0,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 36,
+      "nosec": 0,
+      "skipped_tests": 0
+    },
+    "src/hearth/webtools.py": {
+      "CONFIDENCE.HIGH": 2,
+      "CONFIDENCE.LOW": 0,
+      "CONFIDENCE.MEDIUM": 0,
+      "CONFIDENCE.UNDEFINED": 0,
+      "SEVERITY.HIGH": 0,
+      "SEVERITY.LOW": 0,
+      "SEVERITY.MEDIUM": 2,
+      "SEVERITY.UNDEFINED": 0,
+      "loc": 149,
+      "nosec": 0,
+      "skipped_tests": 0
+    }
+  },
+  "results": [
+    {
+      "code": "128         _COUNTERS[key] = _COUNTERS.get(key, 0) + 1\n129     except Exception:\n130         pass\n131 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 129,
+      "line_range": [
+        129,
+        130
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "211     json_response=True,\n212     host=\"0.0.0.0\",\n213     port=_PORT,\n",
+      "col_offset": 9,
+      "end_col_offset": 18,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 605,
+        "link": "https://cwe.mitre.org/data/definitions/605.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Possible binding to all interfaces.",
+      "line_number": 212,
+      "line_range": [
+        212
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b104_hardcoded_bind_all_interfaces.html",
+      "test_id": "B104",
+      "test_name": "hardcoded_bind_all_interfaces"
+    },
+    {
+      "code": "1091         db_ok = True\n1092     except Exception:\n1093         pass\n1094     return JSONResponse({\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1092,
+      "line_range": [
+        1092,
+        1093
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1192     client_id = \"\"\n1193     client_secret = \"\"\n1194     if auth_header.lower().startswith(\"basic \"):\n",
+      "col_offset": 20,
+      "end_col_offset": 22,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 1193,
+      "line_range": [
+        1193
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "1199                 client_id, client_secret = decoded.split(\":\", 1)\n1200         except Exception:\n1201             pass\n1202 \n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1200,
+      "line_range": [
+        1200,
+        1201
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1537                     proposals.mark_consumed(proposal_id, \"home_toggle_lock:unlock\")\n1538                 except Exception:\n1539                     pass\n1540                 audit.append(\"human\", \"home_toggle_lock\", {\"locked\": False, \"via\": proposal_id})\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1538,
+      "line_range": [
+        1538,
+        1539
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1586                 return JSONResponse({\"ok\": False, \"error\": \"patch contains non-finite number\"}, status_code=400)\n1587     except Exception:\n1588         pass\n1589     res = home_mock.update_device(room, device, patch)\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1587,
+      "line_range": [
+        1587,
+        1588
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1674                 recent.append(json.loads(line))\n1675         except Exception:\n1676             pass\n1677     return JSONResponse({\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1675,
+      "line_range": [
+        1675,
+        1676
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1799         res = dict(res, hearth=companion)\n1800     except Exception:\n1801         pass\n1802     return JSONResponse(res)\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1800,
+      "line_range": [
+        1800,
+        1801
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1922             return p\n1923     except Exception:\n1924         pass\n1925     return _PERSONAS_MAP[\"admin\"]\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1923,
+      "line_range": [
+        1923,
+        1924
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1936             _atomic.atomic_write_text(target, _json.dumps(p))\n1937     except Exception:\n1938         pass\n1939 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1937,
+      "line_range": [
+        1937,
+        1938
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2033             auto_fill = bool(body.get(\"auto_fill_tier\", True))\n2034         except Exception:\n2035             pass\n2036     res = commerce.optimize_bundles(item_ids=item_ids, auto_fill_tier=auto_fill)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2034,
+      "line_range": [
+        2034,
+        2035
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2274             return JSONResponse({\"ok\": False, \"error\": f\"blocked provider host: {_reason}\"}, status_code=400)\n2275     except Exception:\n2276         pass\n2277     res = model_mesh.model_mesh.register_custom_provider(name=name, base_url=base_url, api_key=api_key)\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2275,
+      "line_range": [
+        2275,
+        2276
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2350             lookback = int(body.get(\"lookback_seconds\", 3600))\n2351         except Exception:\n2352             pass\n2353     res = forensics.forensics_engine.reconstruct_incident(incident_type=inc_type, lookback_seconds=lookback)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2351,
+      "line_range": [
+        2351,
+        2352
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2369             stage_remedy = bool(body.get(\"stage_remedy\", True))\n2370         except Exception:\n2371             pass\n2372     res = acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target, stage_remedy=stage_remedy)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2370,
+      "line_range": [
+        2370,
+        2371
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2388             statements = body.get(\"statements\")\n2389         except Exception:\n2390             pass\n2391     res = mediation.family_mediator.draft_household_treaty(private_statements=statements, topic=topic)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2389,
+      "line_range": [
+        2389,
+        2390
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2405             export_kw = float(body.get(\"export_kw\", 3.8))\n2406         except Exception:\n2407             pass\n2408     res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2406,
+      "line_range": [
+        2406,
+        2407
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2629                         audit.append(\"scheduler\", \"goals_tick\", out)\n2630                 except Exception:\n2631                     pass\n2632                 try:\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2630,
+      "line_range": [
+        2630,
+        2631
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "2634                     _hb.tick_proactive(\"auto\")  # autopilot branch no-ops unless _autopilot_due()\n2635                 except Exception:\n2636                     pass\n2637 \n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "mcp-server/server.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 2635,
+      "line_range": [
+        2635,
+        2636
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "29     \"\"\"Seeded synthesis: harmonics + fault sidebands + white noise.\"\"\"\n30     rnd = random.Random(seed)\n31     n = int(FS * DUR)\n",
+      "col_offset": 10,
+      "end_col_offset": 29,
+      "filename": "src/hearth/acoustic.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 330,
+        "link": "https://cwe.mitre.org/data/definitions/330.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+      "line_number": 30,
+      "line_range": [
+        30
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+      "test_id": "B311",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "21 \n22 def _make_header(namespace: str, name: str, correlation_token: str = \"\") -> dict[str, Any]:\n23     header = {\n24         \"namespace\": namespace,\n25         \"name\": name,\n26         \"payloadVersion\": \"3\",\n27         \"messageId\": str(uuid.uuid4())\n28     }\n29     header[\"correlationToken\"] = correlation_token\n30     return header\n31 \n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "src/hearth/alexa.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 22,
+      "line_range": [
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b107_hardcoded_password_default.html",
+      "test_id": "B107",
+      "test_name": "hardcoded_password_default"
+    },
+    {
+      "code": "902 \n903 def build_apl_render_directive(token: str = \"hearth-smart-canvas\",\n904                                datasources: dict[str, Any] | None = None) -> dict[str, Any]:\n905     \"\"\"Return an Alexa.Presentation.APL RenderDocument directive (visual card).\"\"\"\n906     return {\n907         \"type\": \"Alexa.Presentation.APL.RenderDocument\",\n908         \"token\": token,\n909         \"document\": {\"src\": \"skill/apl_smart_canvas.json\", \"version\": \"2024.1\"},\n910         \"datasources\": datasources or {\"payload\": get_apl_payload()},\n911     }\n912 \n",
+      "col_offset": 0,
+      "end_col_offset": 5,
+      "filename": "src/hearth/alexa.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'hearth-smart-canvas'",
+      "line_number": 903,
+      "line_range": [
+        903,
+        904,
+        905,
+        906,
+        907,
+        908,
+        909,
+        910,
+        911
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b107_hardcoded_password_default.html",
+      "test_id": "B107",
+      "test_name": "hardcoded_password_default"
+    },
+    {
+      "code": "1036 \n1037 def simulate_voice_turn(utterance: str, correlation_token: str = \"\") -> dict[str, Any]:\n1038     \"\"\"No-device simulator: voice utterance -> directive round-trip + multimodal envelope.\n1039 \n1040     Emits the full ReAct trace (thought -> action -> observation -> speak/show)\n1041     so the web ReAct visualizer can render the turn without hardware.\n1042     \"\"\"\n1043     emit_light_wave(\"listening\")\n1044     emit_chime(\"wake\")\n1045     _emit_react(\"thought\", f\"Heard: {utterance[:140]}\", {\"utterance\": utterance})\n1046     directive = _parse_utterance_to_directive(utterance)\n1047     if correlation_token:\n1048         try:\n1049             directive[\"directive\"][\"header\"][\"correlationToken\"] = correlation_token\n1050         except (KeyError, TypeError):\n1051             pass\n1052     emit_light_wave(\"thinking\")\n1053     header = directive.get(\"directive\", {}).get(\"header\", {})\n1054     _emit_react(\"action\", f\"{header.get('namespace')}.{header.get('name')}\",\n1055                 {\"directive\": directive})\n1056     response = handle_directive(directive)\n1057     evt_name = response.get(\"event\", {}).get(\"header\", {}).get(\"name\", \"Response\")\n1058     payload = response.get(\"event\", {}).get(\"payload\", {})\n1059     if evt_name == \"ErrorResponse\" and payload.get(\"type\") == \"AUTHORIZATION_REQUIRED\":\n1060         speak = \"That needs your approval. I staged an approval card for you.\"\n1061         emit_chime(\"warning\")\n1062         wave = \"alert\"\n1063     elif evt_name == \"ErrorResponse\":\n1064         speak = f\"Sorry, {payload.get('message', 'that did not work.')}\"\n1065         emit_chime(\"warning\")\n1066         wave = \"alert\"\n1067     else:\n1068         wave = \"speaking\"\n1069         ns, nm = header.get(\"namespace\", \"\"), header.get(\"name\", \"\")\n1070         if ns == \"Alexa.Discovery\":\n1071             n = len(response.get(\"event\", {}).get(\"payload\", {}).get(\"endpoints\", []))\n1072             speak = f\"Discovered {n} devices.\"\n1073         elif nm in (\"TurnOn\", \"TurnOff\"):\n1074             speak = \"Lights updated.\"\n1075         elif \"TargetTemperature\" in nm or \"ThermostatMode\" in nm:\n1076             speak = \"Thermostat updated.\"\n1077         elif nm in (\"Lock\", \"Unlock\"):\n1078             speak = \"Front door locked.\"\n1079         else:\n1080             speak = \"Done.\"\n1081     _emit_react(\"observation\", f\"{evt_name}: {speak[:120]}\", {\"response\": evt_name})\n1082     multimodal = build_multimodal_response(speak_text=speak, chime=\"\", light_wave=wave)\n1083     return {\"ok\": True, \"utterance\": utterance, \"directive\": directive,\n1084             \"directive_response\": response, \"multimodal\": multimodal,\n1085             \"react\": get_react_events(20)}\n",
+      "col_offset": 0,
+      "end_col_offset": 42,
+      "filename": "src/hearth/alexa.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 1037,
+      "line_range": [
+        1037,
+        1038,
+        1039,
+        1040,
+        1041,
+        1042,
+        1043,
+        1044,
+        1045,
+        1046,
+        1047,
+        1048,
+        1049,
+        1050,
+        1051,
+        1052,
+        1053,
+        1054,
+        1055,
+        1056,
+        1057,
+        1058,
+        1059,
+        1060,
+        1061,
+        1062,
+        1063,
+        1064,
+        1065,
+        1066,
+        1067,
+        1068,
+        1069,
+        1070,
+        1071,
+        1072,
+        1073,
+        1074,
+        1075,
+        1076,
+        1077,
+        1078,
+        1079,
+        1080,
+        1081,
+        1082,
+        1083,
+        1084,
+        1085
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b107_hardcoded_password_default.html",
+      "test_id": "B107",
+      "test_name": "hardcoded_password_default"
+    },
+    {
+      "code": "212 \n213     def exchange_token(\n214         self,\n215         grant_type: str,\n216         code: str = \"\",\n217         code_verifier: str = \"\",\n218         refresh_token: str = \"\",\n219         client_id: str = \"\",\n220         client_secret: str = \"\",\n221         resource: str = \"\",\n222         scope: str = \"\",\n223     ) -> tuple[int, dict[str, Any]]:\n224         \"\"\"Handles OAuth 2.1 token issuance for client_credentials, authorization_code, and refresh_token.\"\"\"\n225         now = time.time()\n226 \n227         # ---------------------------------------------------------------------\n228         # Tier 1: Client Credentials Grant (M2M / Service-Level)\n229         # ---------------------------------------------------------------------\n230         if grant_type == \"client_credentials\":\n231             # Production: require a registered confidential client when configured.\n232             # Zero-config demo (no HEARTH_OAUTH_CLIENTS set) stays open so judges\n233             # need no secrets; operators MUST set HEARTH_OAUTH_CLIENTS in prod\n234             # or explicitly opt into public clients via ALLOW_PUBLIC=1.\n235             _gc_expired(now)\n236             configured = bool(_load_oauth_clients())\n237             allowed_public = os.environ.get(\"HEARTH_OAUTH_ALLOW_PUBLIC_CLIENTS\", \"\") == \"1\"\n238             if configured and not allowed_public and not _verify_client_secret(client_id, client_secret):\n239                 return 401, {\"error\": \"invalid_client\", \"error_description\": \"Unknown client or bad secret.\"}\n240             # Machine-to-machine connection validation for Alexa+ tool discovery & health check\n241             token = f\"mcp_svc_{secrets.token_hex(24)}\"\n242             expires_in = 3600\n243             issued_scope = \"mcp:service\"\n244             _SERVICE_TOKENS[token] = {\n245                 \"client_id\": client_id or \"alexa-plus-service-agent\",\n246                 \"scope\": issued_scope,\n247                 \"expires_at\": now + expires_in,\n248             }\n249             audit.append(\"alexa_addon\", \"client_credentials_token_granted\", {\n250                 \"scope\": issued_scope,\n251                 \"expires_in\": expires_in,\n252             })\n253             return 200, {\n254                 \"access_token\": token,\n255                 \"token_type\": \"Bearer\",\n256                 \"expires_in\": expires_in,\n257                 \"scope\": issued_scope,\n258             }\n259 \n260         # ---------------------------------------------------------------------\n261         # Tier 2: Authorization Code Grant with PKCE S256 (User-Level / Account Linking)\n262         # ---------------------------------------------------------------------\n263         if grant_type == \"authorization_code\":\n264             if not code or code not in _AUTH_CODES:\n265                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"Authorization code is invalid or expired.\"}\n266 \n267             auth_entry = _AUTH_CODES.pop(code)\n268             if now > auth_entry[\"expires_at\"]:\n269                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"Authorization code has expired.\"}\n270 \n271             # Verify PKCE Code Challenge (S256 REQUIRED per OAuth 2.1)\n272             challenge = auth_entry.get(\"code_challenge\", \"\")\n273             method = auth_entry.get(\"code_challenge_method\", \"S256\")\n274             if method != \"S256\":\n275                 return 400, {\"error\": \"invalid_request\", \"error_description\": \"code_challenge_method must be S256.\"}\n276             if not challenge or not code_verifier:\n277                 return 400, {\"error\": \"invalid_request\", \"error_description\": \"Missing code_verifier for PKCE validation.\"}\n278             computed_challenge = _sha256_pkce(code_verifier)\n279             if not hmac.compare_digest(computed_challenge, challenge):\n280                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"PKCE S256 verification failed.\"}\n281 \n282             # Issue User Access Token + Refresh Token\n283             access_token = f\"Atza|{secrets.token_hex(24)}\"\n284             new_refresh_token = f\"Atzr|{secrets.token_hex(24)}\"\n285             expires_in = 3600\n286             user_scope = auth_entry.get(\"scope\", \"mcp:tools mcp:resources\")\n287 \n288             _USER_TOKENS[access_token] = {\n289                 \"user_identity\": auth_entry.get(\"user_identity\", \"Krishiv Joshi\"),\n290                 \"scope\": user_scope,\n291                 \"expires_at\": now + expires_in,\n292             }\n293             _REFRESH_TOKENS[new_refresh_token] = {\n294                 \"user_identity\": auth_entry.get(\"user_identity\", \"Krishiv Joshi\"),\n295                 \"scope\": user_scope,\n296                 \"client_id\": client_id,\n297                 \"created_at\": now,\n298                 \"expires_at\": now + REFRESH_TTL_S,\n299             }\n300 \n301             audit.append(\"alexa_addon\", \"user_account_linked_token_granted\", {\n302                 \"user\": auth_entry.get(\"user_identity\"),\n303                 \"scope\": user_scope,\n304                 \"pkce_method\": method,\n305             })\n306 \n307             return 200, {\n308                 \"access_token\": access_token,\n309                 \"token_type\": \"Bearer\",\n310                 \"expires_in\": expires_in,\n311                 \"refresh_token\": new_refresh_token,\n312                 \"scope\": user_scope,\n313             }\n314 \n315         # ---------------------------------------------------------------------\n316         # Tier 3: Refresh Token Grant\n317         # ---------------------------------------------------------------------\n318         if grant_type == \"refresh_token\":\n319             _gc_expired(now)\n320             if not refresh_token or refresh_token not in _REFRESH_TOKENS:\n321                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"Refresh token is invalid or revoked.\"}\n322 \n323             ref_entry = _REFRESH_TOKENS.pop(refresh_token)  # single-use rotation\n324             if now > float(ref_entry.get(\"expires_at\", 0)):\n325                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"Refresh token has expired.\"}\n326             if client_id and ref_entry.get(\"client_id\") and client_id != ref_entry.get(\"client_id\"):\n327                 return 400, {\"error\": \"invalid_grant\", \"error_description\": \"Refresh token was issued to a different client.\"}\n328             access_token = f\"Atza|{secrets.token_hex(24)}\"\n329             expires_in = 3600\n330             user_scope = ref_entry.get(\"scope\", \"mcp:tools mcp:resources\")\n331 \n332             _USER_TOKENS[access_token] = {\n333                 \"user_identity\": ref_entry.get(\"user_identity\"),\n334                 \"scope\": user_scope,\n335                 \"expires_at\": now + expires_in,\n336             }\n337             # Rotate: issue a fresh refresh token\n338             rotated = f\"Atzr|{secrets.token_hex(24)}\"\n339             _REFRESH_TOKENS[rotated] = {\n340                 \"user_identity\": ref_entry.get(\"user_identity\"),\n341                 \"scope\": user_scope,\n342                 \"client_id\": ref_entry.get(\"client_id\", client_id),\n343                 \"created_at\": now,\n344                 \"expires_at\": now + REFRESH_TTL_S,\n345             }\n346 \n347             return 200, {\n348                 \"access_token\": access_token,\n349                 \"token_type\": \"Bearer\",\n350                 \"expires_in\": expires_in,\n351                 \"refresh_token\": rotated,\n352                 \"scope\": user_scope,\n353             }\n354 \n355         return 400, {\"error\": \"unsupported_grant_type\", \"error_description\": f\"Grant type '{grant_type}' is not supported.\"}\n356 \n",
+      "col_offset": 4,
+      "end_col_offset": 124,
+      "filename": "src/hearth/alexaplus_addon.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 213,
+      "line_range": [
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221,
+        222,
+        223,
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263,
+        264,
+        265,
+        266,
+        267,
+        268,
+        269,
+        270,
+        271,
+        272,
+        273,
+        274,
+        275,
+        276,
+        277,
+        278,
+        279,
+        280,
+        281,
+        282,
+        283,
+        284,
+        285,
+        286,
+        287,
+        288,
+        289,
+        290,
+        291,
+        292,
+        293,
+        294,
+        295,
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303,
+        304,
+        305,
+        306,
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        313,
+        314,
+        315,
+        316,
+        317,
+        318,
+        319,
+        320,
+        321,
+        322,
+        323,
+        324,
+        325,
+        326,
+        327,
+        328,
+        329,
+        330,
+        331,
+        332,
+        333,
+        334,
+        335,
+        336,
+        337,
+        338,
+        339,
+        340,
+        341,
+        342,
+        343,
+        344,
+        345,
+        346,
+        347,
+        348,
+        349,
+        350,
+        351,
+        352,
+        353,
+        354,
+        355
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b107_hardcoded_password_default.html",
+      "test_id": "B107",
+      "test_name": "hardcoded_password_default"
+    },
+    {
+      "code": "254                 \"access_token\": token,\n255                 \"token_type\": \"Bearer\",\n256                 \"expires_in\": expires_in,\n257                 \"scope\": issued_scope,\n258             }\n259 \n260         # ---------------------------------------------------------------------\n261         # Tier 2: Authorization Code Grant with PKCE S256 (User-Level / Account Linking)\n",
+      "col_offset": 16,
+      "end_col_offset": 28,
+      "filename": "src/hearth/alexaplus_addon.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Bearer'",
+      "line_number": 255,
+      "line_range": [
+        253,
+        254,
+        255,
+        256,
+        257,
+        258
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "308                 \"access_token\": access_token,\n309                 \"token_type\": \"Bearer\",\n310                 \"expires_in\": expires_in,\n311                 \"refresh_token\": new_refresh_token,\n312                 \"scope\": user_scope,\n313             }\n314 \n315         # ---------------------------------------------------------------------\n316         # Tier 3: Refresh Token Grant\n",
+      "col_offset": 16,
+      "end_col_offset": 28,
+      "filename": "src/hearth/alexaplus_addon.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Bearer'",
+      "line_number": 309,
+      "line_range": [
+        307,
+        308,
+        309,
+        310,
+        311,
+        312,
+        313
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "348                 \"access_token\": access_token,\n349                 \"token_type\": \"Bearer\",\n350                 \"expires_in\": expires_in,\n351                 \"refresh_token\": rotated,\n352                 \"scope\": user_scope,\n353             }\n354 \n355         return 400, {\"error\": \"unsupported_grant_type\", \"error_description\": f\"Grant type '{grant_type}' is not supported.\"}\n356 \n",
+      "col_offset": 16,
+      "end_col_offset": 28,
+      "filename": "src/hearth/alexaplus_addon.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'Bearer'",
+      "line_number": 349,
+      "line_range": [
+        347,
+        348,
+        349,
+        350,
+        351,
+        352,
+        353
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "80             f.write(json.dumps(checkpoint) + \"\\n\")\n81     except Exception:\n82         pass\n83 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/audit.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 81,
+      "line_range": [
+        81,
+        82
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "98                             break\n99                     except Exception:\n100                         continue\n101             except Exception:\n",
+      "col_offset": 20,
+      "end_col_offset": 32,
+      "filename": "src/hearth/audit.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Continue detected.",
+      "line_number": 99,
+      "line_range": [
+        99,
+        100
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+      "test_id": "B112",
+      "test_name": "try_except_continue"
+    },
+    {
+      "code": "106                 model = mesh.active_model\n107     except Exception:\n108         pass\n109 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/brains.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 107,
+      "line_range": [
+        107,
+        108
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "147                 )\n148                 with urllib.request.urlopen(req, timeout=10) as r:\n149                     data = json.loads(r.read().decode())\n",
+      "col_offset": 21,
+      "end_col_offset": 60,
+      "filename": "src/hearth/brains.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 148,
+      "line_range": [
+        148
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "267                 return m_id\n268     except Exception:\n269         pass\n270 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/brains.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 268,
+      "line_range": [
+        268,
+        269
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "128         seed_used = int(seed if seed is not None else self.random_seed)\n129         rnd = random.Random(seed_used + days_ahead * 10)\n130 \n",
+      "col_offset": 14,
+      "end_col_offset": 56,
+      "filename": "src/hearth/causal_twin.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 330,
+        "link": "https://cwe.mitre.org/data/definitions/330.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+      "line_number": 129,
+      "line_range": [
+        129
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+      "test_id": "B311",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "351             _SCHEDULED_SLOT_ID = data.get(\"slot_id\", _SCHEDULED_SLOT_ID)\n352         except Exception:\n353             pass\n354 \n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/commerce.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 352,
+      "line_range": [
+        352,
+        353
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "1169                      \"staged_only\": True})\n1170     except Exception:\n1171         pass\n1172     res[\"via\"] = \"autopilot_checkout\"\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/commerce.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 1170,
+      "line_range": [
+        1170,
+        1171
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "125         )\n126     except Exception:\n127         pass\n128     return result\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/family.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 126,
+      "line_range": [
+        126,
+        127
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "160         )\n161     except Exception:\n162         pass\n163     return result\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/family.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 161,
+      "line_range": [
+        161,
+        162
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "72         atomic.atomic_write_text(_path(), json.dumps(_events[-30:]))\n73     except Exception:\n74         pass\n75 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/heartbeat.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 73,
+      "line_range": [
+        73,
+        74
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "84                 _events = data\n85     except Exception:\n86         pass\n87 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/heartbeat.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 85,
+      "line_range": [
+        85,
+        86
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "265             atomic.atomic_write_text(_path(), json.dumps(_state))\n266     except Exception:\n267         pass\n268 \n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/home_mock.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 266,
+      "line_range": [
+        266,
+        267
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "286                 os.replace(p, p.parent / f\"home.corrupt.{int(_t.time())}.json\")\n287         except Exception:\n288             pass\n289         try:\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/home_mock.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 287,
+      "line_range": [
+        287,
+        288
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "291             _audit.append(\"sentinel\", \"state_quarantined\", {\"file\": \"home.json\"})\n292         except Exception:\n293             pass\n294 \n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/home_mock.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 292,
+      "line_range": [
+        292,
+        293
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "75                 best_split = partner_share\n76         assert best is not None\n77         # Envy gap: max pairwise utility-envy under equal-split counterfactual\n",
+      "col_offset": 8,
+      "end_col_offset": 31,
+      "filename": "src/hearth/mediation.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.",
+      "line_number": 76,
+      "line_range": [
+        76
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html",
+      "test_id": "B101",
+      "test_name": "assert_used"
+    },
+    {
+      "code": "82         if dp_epsilon:\n83             rnd = random.Random(dp_seed or 7)\n84             scale = 1.0 / max(0.1, dp_epsilon)\n",
+      "col_offset": 18,
+      "end_col_offset": 45,
+      "filename": "src/hearth/mediation.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 330,
+        "link": "https://cwe.mitre.org/data/definitions/330.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+      "line_number": 83,
+      "line_range": [
+        83
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b311-random",
+      "test_id": "B311",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "276             os.replace(db_path, STATE_DIR / f\"memory.corrupt.{int(time.time())}.db\")\n277         except Exception:\n278             pass\n279         con = sqlite3.connect(db_path, timeout=30, isolation_level=None)\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 277,
+      "line_range": [
+        277,
+        278
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "339                     con.execute(\"ROLLBACK\")\n340                 except Exception:\n341                     pass\n342                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 340,
+      "line_range": [
+        340,
+        341
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "344                 con.execute(\"PRAGMA wal_checkpoint(PASSIVE)\")\n345             except Exception:\n346                 pass\n347     finally:\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 345,
+      "line_range": [
+        345,
+        346
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "448                     con.execute(\"ROLLBACK\")\n449                 except Exception:\n450                     pass\n451                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 449,
+      "line_range": [
+        449,
+        450
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "491                     con.execute(\"ROLLBACK\")\n492                 except Exception:\n493                     pass\n494                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 492,
+      "line_range": [
+        492,
+        493
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "496                 con.execute(\"PRAGMA wal_checkpoint(PASSIVE)\")\n497             except Exception:\n498                 pass\n499         return {\"ok\": True, \"id\": gid, \"title\": title, \"steps\": steps,\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 497,
+      "line_range": [
+        497,
+        498
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "564                     con.execute(\"ROLLBACK\")\n565                 except Exception:\n566                     pass\n567                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 565,
+      "line_range": [
+        565,
+        566
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "569                 con.execute(\"PRAGMA wal_checkpoint(PASSIVE)\")\n570             except Exception:\n571                 pass\n572         next_step = steps[progress - 1] if progress > 0 and progress <= len(steps) else None\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 570,
+      "line_range": [
+        570,
+        571
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "654                     con.execute(\"ROLLBACK\")\n655                 except Exception:\n656                     pass\n657                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 655,
+      "line_range": [
+        655,
+        656
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "695                     con.execute(\"ROLLBACK\")\n696                 except Exception:\n697                     pass\n698                 raise\n",
+      "col_offset": 16,
+      "end_col_offset": 24,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 696,
+      "line_range": [
+        696,
+        697
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "702         _audit.append(\"human\", \"gdpr_erasure\", {\"owner\": who or \"all\"})\n703     except Exception:\n704         pass\n705     return {\"ok\": True, \"owner\": who or \"all\"}\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/memory.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 703,
+      "line_range": [
+        703,
+        704
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "197     try:\n198         exec(compile(src, \"<synth>\", \"exec\"), ns)\n199     except Exception as e:\n",
+      "col_offset": 8,
+      "end_col_offset": 49,
+      "filename": "src/hearth/meta_skill.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of exec detected.",
+      "line_number": 198,
+      "line_range": [
+        198
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    },
+    {
+      "code": "240                 self._mount_into_runtime(skill)\n241             except Exception:\n242                 continue\n243 \n",
+      "col_offset": 12,
+      "end_col_offset": 24,
+      "filename": "src/hearth/meta_skill.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Continue detected.",
+      "line_number": 241,
+      "line_range": [
+        241,
+        242
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b112_try_except_continue.html",
+      "test_id": "B112",
+      "test_name": "try_except_continue"
+    },
+    {
+      "code": "303         try:\n304             exec(compile(skill.code_snippet, \"<mount>\", \"exec\"), ns)\n305             handler_fn = ns.get(\"handle\") or ns.get(\"execute_plan\")\n",
+      "col_offset": 12,
+      "end_col_offset": 68,
+      "filename": "src/hearth/meta_skill.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Use of exec detected.",
+      "line_number": 304,
+      "line_range": [
+        304
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b102_exec_used.html",
+      "test_id": "B102",
+      "test_name": "exec_used"
+    },
+    {
+      "code": "137         try:\n138             with urllib.request.urlopen(req, timeout=timeout) as resp:\n139                 status_code = resp.status\n",
+      "col_offset": 17,
+      "end_col_offset": 61,
+      "filename": "src/hearth/model_mesh.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 138,
+      "line_range": [
+        138
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "243         best, (uf, ub, ue), d, scored = _nash_bargaining(cands, ctx)\n244         assert best is not None\n245         frontier = _pareto_frontier(scored)\n",
+      "col_offset": 8,
+      "end_col_offset": 31,
+      "filename": "src/hearth/parliament.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.",
+      "line_number": 244,
+      "line_range": [
+        244
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b101_assert_used.html",
+      "test_id": "B101",
+      "test_name": "assert_used"
+    },
+    {
+      "code": "319         _save_all(store)\n320     except Exception:\n321         pass\n322     # Surface gated signal at top level for propose-never-execute clients.\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/planner_dag.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 320,
+      "line_range": [
+        320,
+        321
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "334         _memory.chat_history_append(\"user\", goal)\n335     except Exception:\n336         pass\n337     return session\n",
+      "col_offset": 4,
+      "end_col_offset": 12,
+      "filename": "src/hearth/planner_dag.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 335,
+      "line_range": [
+        335,
+        336
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "78                 os.replace(p, STATE_DIR / f\"proposals.corrupt.{int(time.time())}.json\")\n79             except Exception:\n80                 pass\n81             items = []\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/proposals.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 79,
+      "line_range": [
+        79,
+        80
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "190                 os.replace(p, STATE_DIR / f\"proposals.corrupt.{int(time.time())}.json\")\n191             except Exception:\n192                 pass\n193             items = []\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/proposals.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 191,
+      "line_range": [
+        191,
+        192
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "215             _audit.append(\"executor\", \"execution_applied\", {\"id\": pid, \"execution\": receipt})\n216         except Exception:\n217             pass\n218         with atomic.locked(p):\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/proposals.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 216,
+      "line_range": [
+        216,
+        217
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "225                 atomic.atomic_write_text(p, json.dumps(items, indent=2))\n226             except Exception:\n227                 pass\n228         target[\"execution\"] = receipt\n",
+      "col_offset": 12,
+      "end_col_offset": 20,
+      "filename": "src/hearth/proposals.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 226,
+      "line_range": [
+        226,
+        227
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "232             _audit.append(\"human\", \"proposal_rejected\", {\"id\": pid, \"title\": target.get(\"title\") if target else \"\"})\n233         except Exception:\n234             pass\n235     return target if target is not None else {\"ok\": False, \"error\": f\"Proposal '{pid}' not found\"}\n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/proposals.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 233,
+      "line_range": [
+        233,
+        234
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "46         \"client_id\": \"\",\n47         \"client_secret\": \"\",\n48         \"access_token\": \"\",\n49         \"environment\": \"live\",\n50         \"connected_at\": None,\n51         \"echo_devices\": [],\n52     },\n53     \"bedrock\": {\n54         \"status\": \"configured\",\n55         \"region\": \"us-east-1\",\n56         \"model\": \"us.amazon.nova-pro-v1:0\",\n57         \"aws_access_key\": \"REDACTED\",\n58         \"aws_secret_key\": \"REDACTED\",\n59         \"has_secret\": True,\n60         \"endpoint\": \"https://bedrock-runtime.us-east-1.amazonaws.com\",\n",
+      "col_offset": 8,
+      "end_col_offset": 23,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 47,
+      "line_range": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "47         \"client_secret\": \"\",\n48         \"access_token\": \"\",\n49         \"environment\": \"live\",\n50         \"connected_at\": None,\n51         \"echo_devices\": [],\n52     },\n53     \"bedrock\": {\n54         \"status\": \"configured\",\n55         \"region\": \"us-east-1\",\n56         \"model\": \"us.amazon.nova-pro-v1:0\",\n57         \"aws_access_key\": \"REDACTED\",\n58         \"aws_secret_key\": \"REDACTED\",\n59         \"has_secret\": True,\n60         \"endpoint\": \"https://bedrock-runtime.us-east-1.amazonaws.com\",\n61     },\n",
+      "col_offset": 8,
+      "end_col_offset": 22,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 48,
+      "line_range": [
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "57         \"aws_access_key\": \"REDACTED\",\n58         \"aws_secret_key\": \"REDACTED\",\n59         \"has_secret\": True,\n60         \"endpoint\": \"https://bedrock-runtime.us-east-1.amazonaws.com\",\n61     },\n62     \"smart_hub\": {\n63         \"status\": \"standby\",\n64         \"hub_type\": \"home_assistant_matter\",\n65         \"url\": \"http://homeassistant.local:8123\",\n66         \"token\": \"\",\n67         \"entities_count\": 0,\n",
+      "col_offset": 8,
+      "end_col_offset": 24,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'REDACTED'",
+      "line_number": 58,
+      "line_range": [
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "58         \"aws_secret_key\": \"REDACTED\",\n59         \"has_secret\": True,\n60         \"endpoint\": \"https://bedrock-runtime.us-east-1.amazonaws.com\",\n61     },\n62     \"smart_hub\": {\n63         \"status\": \"standby\",\n64         \"hub_type\": \"home_assistant_matter\",\n65         \"url\": \"http://homeassistant.local:8123\",\n66         \"token\": \"\",\n67         \"entities_count\": 0,\n68         \"last_sync\": None,\n",
+      "col_offset": 8,
+      "end_col_offset": 20,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: 'True'",
+      "line_number": 59,
+      "line_range": [
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "65         \"url\": \"http://homeassistant.local:8123\",\n66         \"token\": \"\",\n67         \"entities_count\": 0,\n68         \"last_sync\": None,\n69     },\n70     \"real_devices\": [],\n71     \"proposals\": [],\n72     \"events\": [],\n73     \"commerce\": {\n74         \"prime_status\": \"unlinked\",\n",
+      "col_offset": 8,
+      "end_col_offset": 15,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: ''",
+      "line_number": 66,
+      "line_range": [
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "186             atomic.write_json(self.config_path, self._data)\n187         except Exception:\n188             pass\n189 \n",
+      "col_offset": 8,
+      "end_col_offset": 16,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 703,
+        "link": "https://cwe.mitre.org/data/definitions/703.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Try, Except, Pass detected.",
+      "line_number": 187,
+      "line_range": [
+        187,
+        188
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b110_try_except_pass.html",
+      "test_id": "B110",
+      "test_name": "try_except_pass"
+    },
+    {
+      "code": "215         if \"alexa\" in cfg and \"client_secret\" in cfg[\"alexa\"] and cfg[\"alexa\"][\"client_secret\"]:\n216             cfg[\"alexa\"][\"client_secret\"] = \"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\"\n217         if \"smart_hub\" in cfg and \"token\" in cfg[\"smart_hub\"] and cfg[\"smart_hub\"][\"token\"]:\n",
+      "col_offset": 25,
+      "end_col_offset": 40,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'",
+      "line_number": 216,
+      "line_range": [
+        216
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "217         if \"smart_hub\" in cfg and \"token\" in cfg[\"smart_hub\"] and cfg[\"smart_hub\"][\"token\"]:\n218             cfg[\"smart_hub\"][\"token\"] = \"\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\"\n219         return cfg\n",
+      "col_offset": 29,
+      "end_col_offset": 36,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: '\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022'",
+      "line_number": 218,
+      "line_range": [
+        218
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "250             \"client_id\": client_id,\n251             \"client_secret\": \"{{vault:ALEXA_LWA_SECRET}}\",\n252             \"access_token\": f\"Atza|{uuid.uuid4().hex}\",\n253             \"connected_at\": now_iso,\n254         })\n255 \n256         # Record audit event\n257         self.add_real_event(\"alexa+\", \"Authenticated with Login with Amazon (LWA)\", {\n258             \"account\": account_name,\n259             \"skill_id\": skill_id,\n260             \"protocol\": \"OAuth 2.0 / FastMCP\",\n261         })\n262 \n",
+      "col_offset": 12,
+      "end_col_offset": 27,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: '{{vault:ALEXA_LWA_SECRET}}'",
+      "line_number": 251,
+      "line_range": [
+        244,
+        245,
+        246,
+        247,
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "299             \"url\": \"http://homeassistant.local:8123\",\n300             \"token\": \"{{vault:HASS_LONG_LIVED_TOKEN}}\",\n301             \"entities_count\": len(self._data[\"real_devices\"]),\n302             \"last_sync\": datetime.now(timezone.utc).strftime(\"%H:%M:%S UTC\"),\n303         }\n304 \n305         self.add_real_event(\"alexa+\", \"Alexa.Discovery directive synchronized\", {\n306             \"endpoints_count\": len(self._data[\"real_devices\"]),\n307             \"echo_count\": len(self._data[\"alexa\"][\"echo_devices\"]),\n308             \"deliveries\": len(self._data[\"commerce\"][\"active_deliveries\"]),\n",
+      "col_offset": 12,
+      "end_col_offset": 19,
+      "filename": "src/hearth/real_mode.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 259,
+        "link": "https://cwe.mitre.org/data/definitions/259.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Possible hardcoded password: '{{vault:HASS_LONG_LIVED_TOKEN}}'",
+      "line_number": 300,
+      "line_range": [
+        296,
+        297,
+        298,
+        299,
+        300,
+        301,
+        302,
+        303
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b105_hardcoded_password_string.html",
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string"
+    },
+    {
+      "code": "8 import re\n9 import subprocess\n10 from pathlib import Path\n",
+      "col_offset": 0,
+      "end_col_offset": 17,
+      "filename": "src/hearth/sandbox.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "Consider possible security implications associated with the subprocess module.",
+      "line_number": 9,
+      "line_range": [
+        9
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_imports.html#b404-import-subprocess",
+      "test_id": "B404",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "141     timeout = max(1, min(int(timeout or EXEC_TIMEOUT), 120))\n142     env = {\"PATH\": \"/usr/bin:/bin:/usr/local/bin\", \"HOME\": os.environ.get(\"HOME\", \"/tmp\"),\n143            \"LANG\": \"C.UTF-8\", \"PYTHONPATH\": \"src\"}\n",
+      "col_offset": 82,
+      "end_col_offset": 88,
+      "filename": "src/hearth/sandbox.py",
+      "issue_confidence": "MEDIUM",
+      "issue_cwe": {
+        "id": 377,
+        "link": "https://cwe.mitre.org/data/definitions/377.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Probable insecure usage of temp file/directory.",
+      "line_number": 142,
+      "line_range": [
+        142
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b108_hardcoded_tmp_directory.html",
+      "test_id": "B108",
+      "test_name": "hardcoded_tmp_directory"
+    },
+    {
+      "code": "144     try:\n145         proc = subprocess.run(argv, shell=False, cwd=str(root()), env=env,\n146                               capture_output=True, text=True, timeout=timeout)\n147     except subprocess.TimeoutExpired:\n",
+      "col_offset": 15,
+      "end_col_offset": 78,
+      "filename": "src/hearth/sandbox.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 78,
+        "link": "https://cwe.mitre.org/data/definitions/78.html"
+      },
+      "issue_severity": "LOW",
+      "issue_text": "subprocess call - check for execution of untrusted input.",
+      "line_number": 145,
+      "line_range": [
+        145,
+        146
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/plugins/b603_subprocess_without_shell_equals_true.html",
+      "test_id": "B603",
+      "test_name": "subprocess_without_shell_equals_true"
+    },
+    {
+      "code": "66         req = urllib.request.Request(url, headers={\"User-Agent\": \"Mozilla/5.0 (Hearth/1.0)\"}, method=\"POST\")\n67         with urllib.request.urlopen(req, timeout=SEARCH_TIMEOUT) as r:\n68             page = r.read().decode(\"utf-8\", \"replace\")\n",
+      "col_offset": 13,
+      "end_col_offset": 64,
+      "filename": "src/hearth/webtools.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 67,
+      "line_range": [
+        67
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    },
+    {
+      "code": "97         req = urllib.request.Request(url, headers={\"User-Agent\": \"Mozilla/5.0 (Hearth/1.0)\"})\n98         with urllib.request.urlopen(req, timeout=SEARCH_TIMEOUT) as r:\n99             data = _json.loads(r.read().decode(\"utf-8\", \"replace\"))\n",
+      "col_offset": 13,
+      "end_col_offset": 64,
+      "filename": "src/hearth/webtools.py",
+      "issue_confidence": "HIGH",
+      "issue_cwe": {
+        "id": 22,
+        "link": "https://cwe.mitre.org/data/definitions/22.html"
+      },
+      "issue_severity": "MEDIUM",
+      "issue_text": "Audit url open for permitted schemes. Allowing use of file:/ or custom schemes is often unexpected.",
+      "line_number": 98,
+      "line_range": [
+        98
+      ],
+      "more_info": "https://bandit.readthedocs.io/en/1.9.4/blacklists/blacklist_calls.html#b310-urllib-urlopen",
+      "test_id": "B310",
+      "test_name": "blacklist"
+    }
+  ]
+}
