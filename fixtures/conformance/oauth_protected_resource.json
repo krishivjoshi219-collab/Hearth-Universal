@@ -1,0 +1,17 @@
+{
+  "resource": "http://localhost:8799/mcp",
+  "authorization_servers": [
+    "http://localhost:8799"
+  ],
+  "scopes_supported": [
+    "mcp:service",
+    "mcp:tools",
+    "mcp:resources"
+  ],
+  "bearer_methods_supported": [
+    "header"
+  ],
+  "resource_documentation": "http://localhost:8799/docs/alexaplus-addon",
+  "protocol_version": "2025-11-25",
+  "transport": "streamable-http"
+}

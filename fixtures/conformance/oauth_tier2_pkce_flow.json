@@ -1,0 +1,6 @@
+{
+  "code_challenge_method": "S256",
+  "challenge_len": 43,
+  "authorization_code_issued": true,
+  "note": "verifier never leaves the client; server stores SHA256 only"
+}

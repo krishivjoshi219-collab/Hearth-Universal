@@ -1,0 +1,5 @@
+{
+  "exchange_status": 200,
+  "scope": "mcp:tools mcp:resources",
+  "has_refresh_token": true
+}
