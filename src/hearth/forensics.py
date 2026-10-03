@@ -7,11 +7,10 @@ Gaussian likelihoods, log-odds Bayes update, Platt-lite calibration.
 """
 from __future__ import annotations
 import math
-import os
 import secrets
 import time
-from typing import Any, Dict, List
-from . import audit, home_mock, proposals
+from typing import Any, Dict
+from . import audit
 
 _RHO_AIR = 1.225
 _CD = 0.65

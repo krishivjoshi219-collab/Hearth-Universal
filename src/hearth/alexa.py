@@ -12,12 +12,11 @@ Provides native compliance with the Alexa Smart Home API:
 Enables zero-friction integration with Alexa Voice Service (AVS) and Alexa Skills Kit (ASK).
 """
 from __future__ import annotations
-import json
 import time
 import uuid
 from typing import Any
 
-from . import home_mock, sentinel, proposals, audit
+from . import home_mock, proposals, audit
 
 
 def _make_header(namespace: str, name: str, correlation_token: str = "") -> dict[str, Any]:
@@ -643,7 +642,6 @@ def trigger_ring_event(event_type: str = "doorbell_press", visitor_label: str = 
     iso_time = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
     if event_type == "doorbell_press":
-        msg = f"Ring Doorbell: Visitor at Front Door ({visitor_label})"
         heartbeat.tick_proactive("ring_doorbell")
 
         item = proposals.propose(

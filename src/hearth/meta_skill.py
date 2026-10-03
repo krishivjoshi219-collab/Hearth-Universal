@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from . import agent_skills, atomic, audit, brains, sentinel
+from . import agent_skills, atomic, audit, sentinel
 
 
 def _state_dir() -> Path:

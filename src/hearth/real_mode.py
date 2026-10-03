@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from . import atomic, audit, vault
+from . import atomic, audit
 
 
 def _state_dir() -> Path:

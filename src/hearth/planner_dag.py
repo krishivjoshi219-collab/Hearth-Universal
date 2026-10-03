@@ -242,7 +242,6 @@ def orchestrate(goal: str, session_id: str | None = None) -> dict:
     """
     # Lazy imports to avoid circulars at module load.
     from . import planner as _planner
-    from . import proposals as _proposals
     from . import sentinel as _sentinel
     from . import audit as _audit
 

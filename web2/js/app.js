@@ -686,35 +686,55 @@ function speakAlexaVoice(text) {
   window.speechSynthesis.speak(utterance);
 }
 
+/* Live snapshot cache: every polled topic stashes its latest payload so the
+   fullscreen canvas renders measured values, never placeholder copy. */
+const liveSnap = {};
+for (const t of ["home", "parliament", "causal", "forensics", "acoustic", "mediation", "swarm", "roi", "depletion"]) {
+  on(t, (payload) => { liveSnap[t] = payload; });
+}
+
 function renderFullscreenCanvas(data) {
   const box = $("#fullscreenCanvasBox");
   const grid = $("#canvasGrid");
   if (!box || !grid) return;
   box.hidden = false;
+  const parl = liveSnap.parliament || {};
+  const causal = liveSnap.causal || {};
+  const home = liveSnap.home || {};
+  const energy = home.energy || {};
+  const nashTxt = data && data.nash_equilibrium_score != null
+    ? "Nash: " + esc(data.nash_equilibrium_score) + "/10 · " + esc(data.vote || "")
+    : "No deliberation yet — run a showcase above";
+  const vulnCount = causal.vulnerability_count != null ? causal.vulnerability_count
+    : ((causal.vulnerabilities || []).length || "—");
+  const resilience = causal.resilience_score != null ? " · resilience " + esc(causal.resilience_score) : "";
+  const solarTxt = energy.solar_generation_kw != null
+    ? "Solar " + esc(energy.solar_generation_kw) + " kW · net " + esc(energy.net_kw != null ? energy.net_kw : "?") + " kW"
+    : "Live telemetry loads on refresh";
   grid.innerHTML = `
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <div class="canvas-card">
+      <div class="canvas-card-head">
         <strong style="color:var(--amber)">🏛️ Household Parliament Matrix</strong>
         <span class="pill" style="font-size:10px">Game-Theoretic</span>
       </div>
-      <p style="font-size:12px;color:var(--t2);line-height:1.4">Deliberation across FrugalMind, BioComfort, and EcoSovereign ministers with Nash equilibrium score.</p>
-      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsParliamentPreview">Active consensus reached (Nash: 8.4/10)</div>
+      <p>Deliberation across FrugalMind, BioComfort, and EcoSovereign ministers with Nash equilibrium score.</p>
+      <div class="canvas-preview" id="fsParliamentPreview">` + nashTxt + `</div>
     </div>
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <div class="canvas-card">
+      <div class="canvas-card-head">
         <strong style="color:var(--ok)">🔮 7-Day Causal Future Simulation</strong>
-        <span class="pill" style="font-size:10px">Monte Carlo 150x</span>
+        <span class="pill" style="font-size:10px">Monte Carlo</span>
       </div>
-      <p style="font-size:12px;color:var(--t2);line-height:1.4">Stochastic forward prediction of weather tariffs, solar battery discharge, and brownout risk.</p>
-      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsCausalPreview">Pre-emptive contingency staged · 0 brownouts</div>
+      <p>Stochastic forward prediction of weather tariffs, solar battery discharge, and brownout risk.</p>
+      <div class="canvas-preview" id="fsCausalPreview">` + esc(vulnCount) + ` vulnerabilities tracked` + resilience + `</div>
     </div>
-    <div style="background:var(--s1);border:1px solid var(--line);border-radius:8px;padding:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+    <div class="canvas-card">
+      <div class="canvas-card-head">
         <strong style="color:var(--cyan, #38bdf8)">⚡ Energy Arbitrage &amp; Solar Mesh</strong>
-        <span class="pill" style="font-size:10px">Enphase + Ecobee</span>
+        <span class="pill" style="font-size:10px">Live Twin</span>
       </div>
-      <p style="font-size:12px;color:var(--t2);line-height:1.4">Net solar export: 4.4 kW · Battery: 88% · Living room pre-cooled to 20°C before 4 PM peak.</p>
-      <div style="font-size:12px;margin-top:8px;padding:8px;background:var(--s2);border-radius:4px" id="fsEnergyPreview">Annual avoided tariff cost: $642.10</div>
+      <p>Net solar export, battery reserve, and pre-cooling posture from the living digital twin.</p>
+      <div class="canvas-preview" id="fsEnergyPreview">` + solarTxt + `</div>
     </div>
   `;
 }
@@ -902,8 +922,8 @@ if (parlBtn) {
       const paretoText = typeof data.pareto_compromise === "object"
         ? (data.pareto_compromise.executive_summary || JSON.stringify(data.pareto_compromise))
         : String(data.pareto_compromise || "");
-      const nashVal = data.nash_equilibrium_score != null ? data.nash_equilibrium_score : 8.4;
-      const nashPct = (nashVal > 1 ? nashVal * 10 : nashVal * 100).toFixed(0);
+      const nashVal = data.nash_equilibrium_score != null ? data.nash_equilibrium_score : null;
+      const nashPct = nashVal == null ? "—" : (nashVal > 1 ? nashVal * 10 : nashVal * 100).toFixed(0);
 
       openDialog("Parliamentary Consensus Reached",
         '<p style="color:var(--amber);font-weight:700">Nash Equilibrium Score: ' + nashPct + '%</p>' +
@@ -980,7 +1000,7 @@ on("forensics", (f) => {
   const box = $("#forensicsBox");
   if (!box || !f) return;
   const factors = f.physical_factors || [];
-  const confPct = Math.round((f.causal_confidence || 0.99) * 100);
+  const confPct = (f.causal_confidence != null ? Math.round(f.causal_confidence * 100) : '—');
   box.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<span style="font-size:var(--fs-micro);color:var(--t2)">Incident: <strong class="mono">' + esc(f.incident_id || "csi-live") + '</strong></span>' +
@@ -1017,7 +1037,7 @@ if (forensicsBtn) {
       ).join("");
 
       openDialog("Black Box Forensic Incident Reconstruction",
-        '<p style="color:var(--ok);font-weight:700">✓ Intruder Hypothesis Disproven (' + Math.round((data.causal_confidence || 0.99) * 100) + '% Physical Certainty)</p>' +
+        '<p style="color:var(--ok);font-weight:700">✓ Intruder Hypothesis Disproven (' + (data.causal_confidence != null ? Math.round(data.causal_confidence * 100) + '% Physical Certainty' : '— pending scan') + ')</p>' +
         '<p style="margin:8px 0;line-height:1.4">' + esc(data.summary) + '</p>' +
         '<div class="diff" style="margin:12px 0;max-height:220px;overflow-y:auto">' + timelineHtml + '</div>' +
         '<div class="mono" style="font-size:10px;color:var(--t3);background:var(--s2);padding:6px;border-radius:4px">SHA-256 Merkle Proof: ' + esc(data.audit_proof_sha256) + '</div>',
@@ -1046,7 +1066,7 @@ on("acoustic", (a) => {
     '</div>' +
     '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">' +
     '<div><span style="font-size:11px;color:var(--t2)">Spectral Peak:</span> <strong class="mono" style="color:var(--amber)">' + esc(diag.fft_spectral_peak_hz || 60) + ' Hz</strong></div>' +
-    '<div><span style="font-size:11px;color:var(--t2)">Friction Index:</span> <strong class="mono" style="color:var(--bad)">' + Math.round((diag.bearing_friction_index || 0.84) * 100) + '%</strong></div>' +
+    '<div><span style="font-size:11px;color:var(--t2)">Friction Index:</span> <strong class="mono" style="color:var(--bad)">' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong></div>' +
     '<div><span style="font-size:11px;color:var(--t2)">Failure In:</span> <strong style="color:var(--bad)">~' + esc(diag.estimated_days_to_failure || 14) + ' Days</strong></div>' +
     '</div>' +
     '<p style="font-size:var(--fs-micro);color:var(--t1);margin-bottom:8px">' + esc(diag.recommended_action || "") + '</p>' +
@@ -1070,7 +1090,7 @@ if (acousticBtn) {
         const diag = (data.diagnostics || [])[0] || {};
         openDialog("Appliance Acoustic FFT Diagnostics",
           '<p style="color:var(--amber);font-weight:700">⚠️ Mechanical Bearing Wear Detected: ' + esc(diag.appliance) + '</p>' +
-          '<p style="margin:8px 0;line-height:1.4">Echo microphone array captured anomalous vibration harmonics at <strong>' + esc(diag.fft_spectral_peak_hz) + ' Hz</strong> (normal baseline 60.0 Hz). Bearing friction index is <strong>' + Math.round((diag.bearing_friction_index || 0.84) * 100) + '%</strong> with failure projected in ~' + esc(diag.estimated_days_to_failure) + ' days.</p>' +
+          '<p style="margin:8px 0;line-height:1.4">Echo microphone array captured anomalous vibration harmonics at <strong>' + esc(diag.fft_spectral_peak_hz) + ' Hz</strong> (normal baseline 60.0 Hz). Bearing friction index is <strong>' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong> with failure projected in ~' + esc(diag.estimated_days_to_failure) + ' days.</p>' +
           (diag.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">✓ 15% Subscribe & Save replacement part proposal #' + esc(diag.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
           [
             { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
@@ -1098,7 +1118,7 @@ on("mediation", (m) => {
   box.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<strong style="font-size:var(--fs-micro)">' + esc(m.title || "Household Harmony Treaty") + '</strong>' +
-    '<span class="pill" style="color:var(--ok)">Fairness: ' + esc(m.fairness_index || 9.37) + '/10</span>' +
+    '<span class="pill" style="color:var(--ok)">Fairness: ' + (m.fairness_index != null ? esc(m.fairness_index) : '—') + '/10</span>' +
     '</div>' +
     '<div style="font-size:11px;color:var(--amber);margin-bottom:8px">🔒 Zero-Knowledge Verification: Salted SHA-256 (Raw grievances kept confidential)</div>' +
     '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">' +
@@ -1158,7 +1178,7 @@ on("swarm", (s) => {
     '<span class="pill" style="color:var(--ok)">● ' + nodes.length + ' P2P Nodes</span>' +
     '</div>' +
     '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:11px">' +
-    '<div><span style="color:var(--t2)">Export:</span> <strong style="color:var(--amber)">' + esc(arb.total_exported_kw || 3.8) + ' kW</strong></div>' +
+    '<div><span style="color:var(--t2)">Export:</span> <strong style="color:var(--amber)">' + (arb.total_exported_kw != null ? esc(arb.total_exported_kw) : '—') + ' kW</strong></div>' +
     '<div><span style="color:var(--t2)">Revenue:</span> <strong style="color:var(--ok)">+$' + esc(arb.our_revenue_rate_usd_hr || 0.68) + '/hr</strong></div>' +
     '<div><span style="color:var(--t2)">CO2 Offset:</span> <strong style="color:var(--ok)">' + esc(arb.co2_avoided_kg_hr || 2.85) + ' kg/hr</strong></div>' +
     '</div>' +

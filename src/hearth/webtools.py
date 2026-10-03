@@ -61,7 +61,6 @@ def web_search(query: str, count: int = 5) -> dict:
 
 
 def _search_ddg_html(q: str, count: int) -> tuple[list, str]:
-    import json as _json
     url = "https://html.duckduckgo.com/html/?q=" + urllib.parse.quote_plus(q)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Hearth/1.0)"}, method="POST")

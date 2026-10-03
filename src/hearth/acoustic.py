@@ -10,7 +10,7 @@ import math
 import random
 import secrets
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict
 from . import audit, proposals
 
 try:

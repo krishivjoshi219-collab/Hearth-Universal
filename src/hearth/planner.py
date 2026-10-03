@@ -716,7 +716,6 @@ def _stage_gated_proposal(tool_name: str, args: dict) -> dict:
     """Convert a gated agent action into a tray proposal (never executes).
     Idempotent: an identical pending proposal is returned, never duplicated."""
     pending = proposals.list_proposals("pending")
-    titles = {p.get("title") for p in pending}
     if tool_name in ("workspace_exec", "workspace_write"):
         want_kind = tool_name
         key = str(args.get("cmd", args.get("path", "")))[:200]
@@ -894,15 +893,10 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
     elif any(k in low for k in ("save", "renew", "subscription", "money", "waste", "cost", "bill", "$")) and not any(k in low for k in ("bundle", "optimize bundle", "tier discount", "prime max")):
         intent = "FINANCIAL_OPTIMIZATION"
         
-        # 1. Fetch memory constraints
-        mem_res = call_tool("memory_query", {"q": "budget"}, "Query household spending limits & priorities")
-        
         # 2. Real scan of subscriptions
         inbox_res = call_tool("inbox_scan", {}, "Audit active subscriptions & compute utilization rate")
         
         # 3. Check for bundled deals
-        deals_res = call_tool("commerce_scan_deals", {}, "Search for bundled pricing and discounts")
-        
         subs = inbox_res.get("renewals", [])
         total_spend = inbox_res.get("total_annual_spend", 0.0)
         potential_save = inbox_res.get("potential_save_yr", 0.0)
@@ -963,8 +957,6 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         # 1. Read live home state
         home_st = call_tool("home_get_state", {}, "Read multi-room digital twin telemetry")
         
-        # Check for specific light commands
-        light_match = re.search(r"(turn\s+(?:on|off)|dim\s+to\s+\d+|set\s+lights?\s+to\s+\d+)", low)
         room_target = "master_bedroom" if "bedroom" in low else ("kitchen" if "kitchen" in low else "living_room")
         
         if "turn off" in low and ("light" in low or "lights" in low):
@@ -1089,7 +1081,6 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                 "slot_thursday_twilight" if "thursday" in low or "evening" in low else "slot_tuesday_household"
             )
         )
-        slots_info = call_tool("commerce_available_delivery_slots", {}, "Inspect available household delivery slots and stockout risks")
         resched_res = call_tool("commerce_reschedule_delivery", {"slot_id": target_slot, "reason": "User requested schedule adjustment"}, "Update scheduled Amazon delivery slot")
         
         created = call_tool("actions_propose", {
@@ -1124,7 +1115,6 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         # 2. Check deals
         deal_res = call_tool("commerce_scan_deals", {}, "Search Subscribe & Save replenishment bundles")
         
-        low_items = inv_res.get("low_stock", [])
         deals = deal_res.get("deals", [])
         
         # Propose order if reorder requested

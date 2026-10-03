@@ -24,11 +24,9 @@ import os
 import re
 import secrets
 import time
-import uuid
-from pathlib import Path
 from typing import Any
 
-from . import atomic, audit, vault
+from . import audit
 
 # Active code challenges and authorization codes in-memory / cache
 _AUTH_CODES: dict[str, dict[str, Any]] = {}

@@ -15,7 +15,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
-from . import audit, commerce, home_mock, proposals
+from . import audit, commerce, proposals
 
 try:
     import numpy as _np

@@ -8,7 +8,7 @@ from __future__ import annotations
 import secrets
 import time
 from typing import Any, Dict, List
-from . import audit, home_mock, proposals
+from . import audit
 
 
 def clear_double_auction(asks: List[Dict[str, Any]], bids: List[Dict[str, Any]]) -> tuple[float, float]:
@@ -16,7 +16,6 @@ def clear_double_auction(asks: List[Dict[str, Any]], bids: List[Dict[str, Any]])
     sa = sorted(asks, key=lambda a: a["price"])
     sb = sorted(bids, key=lambda b: -b["price"])
     # Aggregate curves
-    q = 0.0
     price = None
     cleared = 0.0
     ai = bi = 0
@@ -88,8 +87,7 @@ class NeighborhoodSwarmGrid:
         buyer_save = cleared * (buyer_peak - price)
         dividend = seller_gain + buyer_save
         carbon = round(cleared * emission_factor_kg_kwh, 2)
-        # Marginal-contribution split (leave-one-out): seller keeps gain, buyers split savings pro-rata
-        total_bid = sum(b["qty"] for b in bids) or 1.0
+        # Marginal-contribution split: seller keeps gain, buyers split savings pro-rata
         transfers = []
         remaining = cleared
         for b in sorted(bids, key=lambda x: -x["price"]):

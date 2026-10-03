@@ -5,9 +5,7 @@ Supports deep negotiation logic with custom multi-resident preferences, toleranc
 micro-climate zone compensation, and Pareto-optimal trade-off synthesis.
 """
 from __future__ import annotations
-import math
 import time
-from typing import Any
 
 # Baseline conflict presets for standard household automation scenarios
 CONFLICT_PRESETS = {

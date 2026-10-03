@@ -10,7 +10,7 @@ import re
 import secrets
 import time
 from typing import Any, Dict, List
-from . import audit, family, memory, proposals
+from . import audit, proposals
 
 _LEX = {
     "chores": ["cleanup", "clean", "kitchen", "dishes", "dishwasher", "chore", "laundry", "trash"],
@@ -121,13 +121,16 @@ class ConfidentialFamilyMediator:
             "friction_reduction_estimate_pct": friction, "projected_monthly_savings_usd": net_savings,
             "privacy_guarantee": "Zero-Knowledge Aggregation (salted hashes; zero verbatim grievances exposed)",
             "verification_hashes": hashes, "hash_salts": salts, "covenants": covenants,
+            "utilities": {r: [round(v, 3) for v in vec] for r, vec in utils.items()},
+            "utility_dims": ["chores", "budget", "climate", "screen"],
             "nash_product": round(best_prod, 4), "envy_gap": envy_gap, "envy_free": envy_gap <= 0.15,
             "dp_applied": bool(dp_epsilon), "dp_epsilon": dp_epsilon,
             "staged_proposal_id": treaty_proposal.get("id"),
             "voice_summary": (f"Household Treaty fairness {fairness}. Leo weekend Minecraft for dog walks, "
                 f"cleanup {best_split:.0%}/{1-best_split:.0%}, office 68F, ${net_savings:.0f}/mo savings staged.")}
         audit.append("family_mediator", "household_treaty_synthesized",
-            {"treaty_id": treaty_id, "fairness": fairness, "parties": list(inputs.keys()), "nash": round(best_prod, 4)})
+            {"treaty_id": treaty_id, "fairness": fairness, "parties": list(inputs.keys()), "nash": round(best_prod, 4),
+             "utilities": {r: [round(v, 3) for v in vec] for r, vec in utils.items()}})
         self._active_treaty = result
         return result
 

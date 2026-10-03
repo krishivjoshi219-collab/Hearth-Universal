@@ -28,7 +28,7 @@
       </div>
       <div class="topbar-right">
         <span class="pill" id="protoPill"><span class="dot"></span><span id="protoText">Connecting…</span></span>
-        <button class="pill" id="chimeBtn" title="Toggle audio feedback earcons" style="cursor:pointer;padding:5px 8px" aria-label="Toggle audio feedback">🔔</button>
+        <button class="pill icon-btn" id="chimeBtn" title="Toggle audio feedback earcons" aria-label="Toggle audio feedback">🔔</button>
         <span class="pill" id="dialPill" title="Autonomy level">Propose</span>
         <select class="persona" id="modelSel" aria-label="Universal Model Mesh Brain" title="Active Reasoning Brain">
           <option value="us.amazon.nova-pro-v1:0">Amazon Nova Pro · Bedrock</option>
@@ -52,10 +52,10 @@
     <!-- HOME -->
     <section class="view" id="view-home" role="tabpanel">
       <div class="status-strip" id="statusStrip" aria-live="polite">
-        <div class="stat"><div class="k">Climate</div><div class="v skel" style="height:34px" data-bind="climate">–</div><div class="sub" data-bind="climateSub">loading…</div></div>
-        <div class="stat"><div class="k">Front door</div><div class="v skel" style="height:34px" data-bind="lock">–</div><div class="sub" data-bind="lockSub">loading…</div></div>
-        <div class="stat good"><div class="k">Energy now</div><div class="v skel num" style="height:34px" data-bind="energy">–</div><div class="sub" data-bind="energySub">loading…</div></div>
-        <div class="stat warn"><div class="k">Pantry alert</div><div class="v skel" style="height:34px" data-bind="pantry">–</div><div class="sub" data-bind="pantrySub">loading…</div></div>
+        <div class="stat"><div class="k">Climate</div><div class="v skel skel-stat" data-bind="climate">–</div><div class="sub" data-bind="climateSub">loading…</div></div>
+        <div class="stat"><div class="k">Front door</div><div class="v skel skel-stat" data-bind="lock">–</div><div class="sub" data-bind="lockSub">loading…</div></div>
+        <div class="stat good"><div class="k">Energy now</div><div class="v skel num skel-stat" data-bind="energy">–</div><div class="sub" data-bind="energySub">loading…</div></div>
+        <div class="stat warn"><div class="k">Pantry alert</div><div class="v skel skel-stat" data-bind="pantry">–</div><div class="sub" data-bind="pantrySub">loading…</div></div>
       </div>
       <div class="grid-2">
         <div class="panel">
@@ -68,74 +68,74 @@
         </div>
       </div>
       <!-- Simulation Panel (Shown when mode == simulation) -->
-      <div class="panel" id="simPanel" style="margin-top:16px">
+      <div class="panel mt-4" id="simPanel">
         <div class="panel-head">
           <h3>Living Household Simulator</h3>
           <span class="spacer"></span>
           <span class="pill">Test Drive Real-Life Triggers</span>
         </div>
         <div class="panel-body">
-          <p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">Simulate dynamic household events to witness real-time multi-agent arbitration, Sentinel security gating, and proactive Subscribe &amp; Save optimization.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn scenario-btn" data-scenario="energy_peak" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">⚡ Peak Tariff ($0.38/kWh)</button>
-            <button class="btn scenario-btn" data-scenario="pantry_alert" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">📦 Pantry Stockout Threshold</button>
-            <button class="btn scenario-btn" data-scenario="security" style="min-height:36px;padding:0 12px;font-size:var(--fs-micro)">🛡️ Night Perimeter Integrity</button>
+          <p class="muted-sm mb-3">Simulate dynamic household events to witness real-time multi-agent arbitration, Sentinel security gating, and proactive Subscribe &amp; Save optimization.</p>
+          <div class="row-wrap">
+            <button class="btn btn-sm scenario-btn" data-scenario="energy_peak">⚡ Peak Tariff ($0.38/kWh)</button>
+            <button class="btn btn-sm scenario-btn" data-scenario="pantry_alert">📦 Pantry Stockout Threshold</button>
+            <button class="btn btn-sm scenario-btn" data-scenario="security">🛡️ Night Perimeter Integrity</button>
           </div>
         </div>
       </div>
 
       <!-- Real World Alexa+ Authentication Portal (Shown when mode == real and !alexa_logged_in) -->
-      <div class="panel" id="realAuthPortal" style="margin-top:16px;background:linear-gradient(135deg, #18181b, #09090b);border:1px solid rgba(245, 158, 11, 0.4);box-shadow:0 8px 32px rgba(0,0,0,0.5)" hidden>
-        <div class="panel-body" style="padding:28px 24px;text-align:center">
-          <div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;background:rgba(245,158,11,0.15);border:1px solid var(--amber);margin-bottom:14px;font-size:28px">
+      <div class="panel auth-portal" id="realAuthPortal" hidden>
+        <div class="panel-body auth-body">
+          <div class="auth-icon" aria-hidden="true">
             🌐
           </div>
           <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">Connect to Amazon Alexa+ Account</h2>
-          <p style="font-size:13px;color:var(--t2);max-width:540px;margin:0 auto 20px;line-height:1.5">
+          <p class="auth-lede">
             Real World mode connects to physical smart devices and live Amazon services. In Real World mode, <strong>everything starts clean at zero</strong> (0 pending proposals, 0 synthetic events, 0 virtual devices). Link your Amazon Alexa+ account to discover your live Echo hardware, Matter endpoints, and Subscribe &amp; Save replenishment.
           </p>
 
-          <div style="display:inline-flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:20px">
-            <button class="btn btn-primary" id="loginAlexaBtn" style="min-height:44px;padding:0 24px;font-size:14px;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(245,158,11,0.3)">
-              <span style="font-size:18px">🔑</span> Log in with Amazon (Alexa+)
+          <div class="auth-actions">
+            <button class="btn btn-primary btn-lg" id="loginAlexaBtn">
+              <span class="fs-icon" aria-hidden="true">🔑</span> Log in with Amazon (Alexa+)
             </button>
-            <button class="btn" id="demoAuthAlexaBtn" style="min-height:44px;padding:0 18px;font-size:13px">
-              ⚡ 1-Tap Instant Auth
+            <button class="btn btn-lg" id="demoAuthAlexaBtn" title="Instant demo sign-in for hackathon judges — no Amazon account needed">
+              ⚡ 1-Tap Demo Sign-In
             </button>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:12px;max-width:620px;margin:16px auto 0;text-align:left">
-            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
-              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">0 Pending Approvals</strong>
-              <small style="color:var(--t3);font-size:11px">Clean slate. Only real resident proposals appear here.</small>
+          <div class="grid-cards-3">
+            <div class="mini-card">
+              <strong>0 Pending Approvals</strong>
+              <small>Clean slate. Only real resident proposals appear here.</small>
             </div>
-            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
-              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">Alexa.Discovery Sync</strong>
-              <small style="color:var(--t3);font-size:11px">Syncs Echo devices &amp; Matter/Zigbee appliances.</small>
+            <div class="mini-card">
+              <strong>Alexa.Discovery Sync</strong>
+              <small>Syncs Echo devices &amp; Matter/Zigbee appliances.</small>
             </div>
-            <div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">
-              <strong style="display:block;font-size:13px;color:var(--t1);margin-bottom:2px">Live Transit Tracking</strong>
-              <small style="color:var(--t3);font-size:11px">Active Subscribe &amp; Save delivery van radar.</small>
+            <div class="mini-card">
+              <strong>Live Transit Tracking</strong>
+              <small>Active Subscribe &amp; Save delivery van radar.</small>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Real World Alexa+ & Smart Home Hub Panel (Shown when mode == real and alexa_logged_in) -->
-      <div class="panel" id="realHubPanel" style="margin-top:16px" hidden>
+      <div class="panel mt-4" id="realHubPanel" hidden>
         <div class="panel-head">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:18px">🌐</span>
+          <div class="row-flex">
+            <span class="fs-icon" aria-hidden="true">🌐</span>
             <h3>Real World Alexa+ &amp; Smart Home Hub</h3>
           </div>
           <span class="spacer"></span>
           <span class="real-badge online" id="realHubStatusBadge">● Connected to Alexa+ &amp; Local Hub</span>
-          <button class="btn btn-primary" id="addDeviceQuickBtn" style="min-height:30px;padding:2px 12px;font-size:var(--fs-micro);margin-left:8px">+ Add Real Device</button>
-          <button class="btn" id="resetRealZeroQuickBtn" style="min-height:30px;padding:2px 10px;font-size:var(--fs-micro);color:var(--bad);margin-left:6px" title="Reset Real World to clean-slate 0 state">Reset to 0</button>
+          <button class="btn btn-primary btn-xs" id="addDeviceQuickBtn" style="margin-left:8px">+ Add Real Device</button>
+          <button class="btn btn-xs" id="resetRealZeroQuickBtn" style="color:var(--bad);margin-left:6px" title="Reset Real World to clean-slate 0 state">Reset to 0</button>
         </div>
         <div class="panel-body">
           <div id="echoHardwareBox">
-            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2);margin-bottom:6px">
+            <div class="row-flex muted-sm" style="margin-bottom:6px">
               <strong>Synchronized Echo Hardware:</strong>
               <span id="echoCountPill" class="pill" style="font-size:10px">3 Online</span>
             </div>
@@ -144,10 +144,10 @@
             </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 8px;flex-wrap:wrap;gap:8px">
-            <p style="font-size:var(--fs-micro);color:var(--t2);margin:0">Active smart home endpoints verified via Matter, Zigbee, and Amazon Alexa Smart Home Skills API v3 directives.</p>
-            <div style="display:flex;gap:6px">
-              <button class="btn" id="syncAlexaEndpointsBtn" style="min-height:28px;padding:2px 10px;font-size:var(--fs-micro)">Sync Alexa+ (AVS)</button>
-              <button class="btn" id="configureRealHardwareBtn" style="min-height:28px;padding:2px 10px;font-size:var(--fs-micro)">Configure Hub</button>
+            <p class="muted-sm" style="margin:0">Active smart home endpoints verified via Matter, Zigbee, and Amazon Alexa Smart Home Skills API v3 directives.</p>
+            <div class="row-flex gap-1">
+              <button class="btn btn-xs" id="syncAlexaEndpointsBtn">Sync Alexa+ (AVS)</button>
+              <button class="btn btn-xs" id="configureRealHardwareBtn">Configure Hub</button>
             </div>
           </div>
           <div class="device-grid" id="realDevicesGrid">
@@ -157,7 +157,7 @@
       </div>
 
       <!-- Home Chat Interface (Prominent on Home View) -->
-      <div id="homeChatContainer" style="margin-top:24px">
+      <div id="homeChatContainer" class="mt-6">
 
         <!-- Alexa+ Add-on Display Mode Bar (@modelcontextprotocol/ext-apps) -->
         <div class="display-mode-bar" id="displayModeBar">
@@ -193,7 +193,7 @@
               <div style="font-size:11px;color:var(--t2)">Sanitized for spoken audio · Markdown tables and pipes stripped per Alexa+ design guide.</div>
             </div>
           </div>
-          <button type="button" class="btn btn-primary" id="playTtsBtn" style="min-height:32px;padding:0 14px;font-size:12px">
+          <button type="button" class="btn btn-primary btn-sm" id="playTtsBtn">
             ▶ Speak via Alexa Voice
           </button>
         </div>
@@ -201,9 +201,9 @@
         <!-- Judge Showcase / 1-Click Track Demonstrations -->
         <div class="judge-showcase-panel" id="judgeShowcasePanel">
           <div class="judge-showcase-head">
-            <span style="font-size:14px">🏆</span>
+            <span class="fs-icon-sm" aria-hidden="true">🏆</span>
             <strong>Judge Showcase · 1-Click Hackathon Demonstrations:</strong>
-            <span class="pill" style="font-size:10px;margin-left:auto">100/100 Rubric</span>
+            <span class="pill" style="font-size:10px;margin-left:auto">Live · 9 demos</span>
           </div>
           <div class="judge-showcase-grid">
             <button type="button" class="showcase-card" data-cmd="Convene Household Parliament: deliberate 5 PM summer peak tariff clash between FrugalMind ($0.48/kWh), BioComfort (68°F), and EcoSovereign solar battery">
@@ -214,7 +214,7 @@
             <button type="button" class="showcase-card" data-cmd="Run Causal Digital Twin 7-day Monte Carlo stochastic resilience forecast: severe heatwave &amp; brownout scenario">
               <span class="sc-badge">Option 2</span>
               <div class="sc-title">🔮 Causal Digital Twin</div>
-              <div class="sc-desc">150x Monte Carlo Stochastic Forward Simulation</div>
+              <div class="sc-desc">Monte Carlo Stochastic Forward Simulation</div>
             </button>
             <button type="button" class="showcase-card" data-cmd="Synthesize and hot-mount a new Agent Skill at runtime: Smart EV Solar Charging Peak Optimizer">
               <span class="sc-badge">Option 3</span>
@@ -263,7 +263,7 @@
           <button type="button" class="chip" data-cmd="Run Causal Digital Twin 7-day Monte Carlo stochastic resilience forecast">🔮 7-Day Causal Forecast</button>
         </div>
 
-        <form class="cmdbar" id="cmdForm" autocomplete="off" style="margin-top:14px">
+        <form class="cmdbar mt-4" id="cmdForm" autocomplete="off">
           <input id="cmdInput" placeholder="Tell Hearth a goal — “cut my subscriptions”, “restock coffee”, “movie night”…" aria-label="Command Hearth"/>
           <button class="btn btn-primary" type="submit">Send</button>
         </form>
@@ -271,17 +271,17 @@
         <!-- Fullscreen Canvas Expanded Container (Active when mode == fullscreen) -->
         <div class="fullscreen-canvas-box" id="fullscreenCanvasBox" hidden>
           <div class="canvas-header">
-            <span style="font-size:16px">🖥️</span>
+            <span class="fs-icon" aria-hidden="true">🖥️</span>
             <strong>Alexa+ Interactive App Canvas (@modelcontextprotocol/ext-apps)</strong>
             <span class="spacer"></span>
-            <button type="button" class="btn" id="exitFullscreenBtn" style="min-height:26px;padding:0 10px;font-size:11px">Exit Canvas</button>
+            <button type="button" class="btn btn-sm" id="exitFullscreenBtn">Exit Canvas</button>
           </div>
           <div class="canvas-grid" id="canvasGrid">
             <!-- Dynamic rich visualization components render here -->
           </div>
         </div>
 
-        <div id="chatLog" aria-live="polite" style="margin-top:16px"></div>
+        <div id="chatLog" class="mt-4" aria-live="polite"></div>
       </div>
     </section>
 
@@ -302,92 +302,92 @@
       <div class="grid-2">
         <div class="panel">
           <div class="panel-head"><h3>Money recovered</h3></div>
-          <div class="panel-body" id="roiBox"><div class="skel" style="height:120px"></div></div>
+          <div class="panel-body" id="roiBox"><div class="skel skel-box"></div></div>
         </div>
         <div class="panel">
           <div class="panel-head"><h3>Pantry forecast</h3></div>
-          <div class="panel-body" id="pantryBox"><div class="skel" style="height:120px"></div></div>
+          <div class="panel-body" id="pantryBox"><div class="skel skel-box"></div></div>
         </div>
       </div>
-      <div class="grid-2" style="margin-top:16px">
+      <div class="grid-2 mt-4">
         <div class="panel">
           <div class="panel-head">
             <h3>Household Parliament</h3>
             <span class="spacer"></span>
-            <button class="btn" id="parlDebateBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Deliberate</button>
+            <button class="btn btn-sm" id="parlDebateBtn">Deliberate</button>
           </div>
           <div class="panel-body" id="parliamentBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
         <div class="panel">
           <div class="panel-head">
             <h3>Causal Digital Twin (7-Day Forecast)</h3>
             <span class="spacer"></span>
-            <button class="btn" id="causalSimBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Monte Carlo 500x</button>
+            <button class="btn btn-sm" id="causalSimBtn">Monte Carlo 500x</button>
           </div>
           <div class="panel-body" id="causalBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
       </div>
 
       <!-- Frontier Innovations (Row 1: Forensics & Acoustic Doctor) -->
-      <div class="grid-2" style="margin-top:16px">
+      <div class="grid-2 mt-4">
         <div class="panel">
           <div class="panel-head">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span>🔍</span>
+            <div class="row-flex">
+              <span aria-hidden="true">🔍</span>
               <h3>Black Box Forensic CSI Replay</h3>
             </div>
             <span class="spacer"></span>
-            <button class="btn" id="forensicsScanBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Reconstruct 3 AM</button>
+            <button class="btn btn-sm" id="forensicsScanBtn">Reconstruct 3 AM</button>
           </div>
           <div class="panel-body" id="forensicsBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
         <div class="panel">
           <div class="panel-head">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span>🩺</span>
+            <div class="row-flex">
+              <span aria-hidden="true">🩺</span>
               <h3>Acoustic Mechanical Doctor (FFT Vibration)</h3>
             </div>
             <span class="spacer"></span>
-            <button class="btn" id="acousticScanBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Scan Echo FFT</button>
+            <button class="btn btn-sm" id="acousticScanBtn">Scan Echo FFT</button>
           </div>
           <div class="panel-body" id="acousticBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
       </div>
 
       <!-- Frontier Innovations (Row 2: Family Mediation & Swarm VPP) -->
-      <div class="grid-2" style="margin-top:16px">
+      <div class="grid-2 mt-4">
         <div class="panel">
           <div class="panel-head">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span>🤝</span>
+            <div class="row-flex">
+              <span aria-hidden="true">🤝</span>
               <h3>Confidential Family Peace Treaty</h3>
             </div>
             <span class="spacer"></span>
-            <button class="btn" id="mediationTreatyBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Synthesize Treaty</button>
+            <button class="btn btn-sm" id="mediationTreatyBtn">Synthesize Treaty</button>
           </div>
           <div class="panel-body" id="mediationBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
         <div class="panel">
           <div class="panel-head">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span>⚡</span>
+            <div class="row-flex">
+              <span aria-hidden="true">⚡</span>
               <h3>Neighborhood Swarm Grid (VPP Microgrid)</h3>
             </div>
             <span class="spacer"></span>
-            <button class="btn" id="swarmGridBtn" style="min-height:30px;padding:3px 12px;font-size:var(--fs-micro)">Coordinate P2P Grid</button>
+            <button class="btn btn-sm" id="swarmGridBtn">Coordinate P2P Grid</button>
           </div>
           <div class="panel-body" id="swarmBox">
-            <div class="skel" style="height:120px"></div>
+            <div class="skel skel-box"></div>
           </div>
         </div>
       </div>
@@ -396,100 +396,100 @@
     <!-- SETTINGS -->
     <section class="view" id="view-settings" role="tabpanel" hidden>
       <p class="section-label">Autonomy dial · start low, earn auto-mode with a clean record</p>
-      <div class="panel" style="margin-bottom:16px"><div class="panel-body">
+      <div class="panel mb-4"><div class="panel-body">
         <div class="dial" id="dial" role="group" aria-label="Autonomy level">
           <button data-level="suggest" aria-pressed="false"><strong>Suggest</strong><span>Flags ideas, never plans</span></button>
           <button data-level="propose" aria-pressed="true"><strong>Propose</strong><span>Plans everything, acts on nothing</span></button>
           <button data-level="confirm" aria-pressed="false"><strong>Confirm</strong><span>One-tap go on familiar tasks</span></button>
           <button data-level="auto" aria-pressed="false"><strong>Auto</strong><span>Under limits, after 18/20 clean</span></button>
         </div>
-        <p class="mono" id="dialRecord" style="margin-top:12px;color:var(--t2)">Record: 0 proceedings · auto-mode locked</p>
+        <p class="mono muted-sm" id="dialRecord" style="margin-top:12px">Record: 0 proceedings · auto-mode locked</p>
       </div></div>
 
-      <div class="panel" style="margin-bottom:16px">
-        <div class="panel-head"><h3>Universal Model Mesh · Bedrock Default + Any API</h3></div>
+      <div class="panel mb-4">
+        <div class="panel-head"><h3>Universal Model Mesh · Offline-First + Any API</h3></div>
         <div class="panel-body">
           <div class="setrow">
-            <div class="lab">Default Brain<small>Amazon Bedrock with Amazon Nova Pro (300k context, zero cold-start)</small></div>
-            <span class="pill" id="activeModelPill" style="border-color:var(--amber);color:var(--amber)">Nova Pro · Bedrock</span>
+            <div class="lab">Active Brain<small>Local deterministic engine by default; live Bedrock when AWS_BEDROCK_ENABLED=1</small></div>
+            <span class="pill" id="activeModelPill" style="border-color:var(--amber);color:var(--amber)">Local · Deterministic</span>
           </div>
           <div class="setrow">
             <div class="lab">Connect Custom API<small>Connect any remote LLM or local endpoint (Ollama, vLLM, OpenAI, custom base URL)</small></div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              <input type="text" id="customApiName" placeholder="Provider Name" style="width:130px"/>
-              <input type="text" id="customApiUrl" placeholder="https://api... or http://localhost:11434" style="width:230px"/>
-              <button class="btn btn-primary" id="addCustomApiBtn" style="min-height:36px;padding:0 14px;font-size:var(--fs-micro)">Add &amp; Ping</button>
+            <div class="row-wrap">
+              <input type="text" id="customApiName" placeholder="Provider Name" class="input-inline w-provider"/>
+              <input type="text" id="customApiUrl" placeholder="https://api... or http://localhost:11434" class="input-inline w-url"/>
+              <button class="btn btn-primary btn-sm" id="addCustomApiBtn">Add &amp; Ping</button>
             </div>
           </div>
           <div id="meshProvidersList" style="margin-top:8px"></div>
         </div>
       </div>
 
-      <div class="panel" style="margin-bottom:16px">
+      <div class="panel mb-4">
         <div class="panel-head">
           <h3>Self-Evolving Meta-Skills</h3>
           <span class="spacer"></span>
-          <span class="pill" id="metaSkillsCount" style="color:var(--ok)">Runtime Hot-Mounted</span>
+          <span class="pill c-ok" id="metaSkillsCount">Runtime Hot-Mounted</span>
         </div>
         <div class="panel-body">
-          <p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">Natural language to AST-validated agent skills. Compiles, runs Sentinel AST safety checks, and mounts live into FastMCP without restarts.</p>
-          <div style="display:flex;gap:8px;margin-bottom:16px">
-            <input type="text" id="metaSkillInput" placeholder="e.g. When solar generation &gt; 3kW, pre-cool living room to 20°C" style="flex:1;background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:var(--t1)"/>
-            <button class="btn btn-primary" id="metaSkillBtn" style="min-height:38px;padding:0 16px;white-space:nowrap">Synthesize Skill</button>
+          <p class="muted-sm mb-3">Natural language to AST-validated agent skills. Compiles, runs Sentinel AST safety checks, and mounts live into FastMCP without restarts.</p>
+          <div class="row-flex" style="margin-bottom:16px">
+            <input type="text" id="metaSkillInput" placeholder="e.g. When solar generation &gt; 3kW, pre-cool living room to 20°C" class="input-inline flex-1"/>
+            <button class="btn btn-primary btn-sm nowrap" id="metaSkillBtn">Synthesize Skill</button>
           </div>
-          <div id="metaSkillsList"><div class="skel" style="height:60px"></div></div>
+          <div id="metaSkillsList"><div class="skel skel-box skel-60"></div></div>
         </div>
       </div>
 
       <!-- Real World Alexa+ & Smart Home Infrastructure (Settings) -->
-      <div class="panel" style="margin-bottom:16px">
+      <div class="panel mb-4">
         <div class="panel-head">
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:18px">🌐</span>
+          <div class="row-flex">
+            <span class="fs-icon" aria-hidden="true">🌐</span>
             <h3>Real World Alexa+ &amp; Smart Home Infrastructure</h3>
           </div>
           <span class="spacer"></span>
-          <span class="pill" id="realSettingsPill" style="color:var(--ok)">Live Bridge Ready</span>
+          <span class="pill c-ok" id="realSettingsPill">Live Bridge Ready</span>
         </div>
         <div class="panel-body">
-          <p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:14px">
+          <p class="muted-sm" style="margin-bottom:14px">
             Configure direct connections to physical smart home hardware and voice platforms. Control real physical endpoints via Alexa Smart Home Skills API v3 directives and Matter / Home Assistant local hubs.
           </p>
 
-          <div class="setrow" style="align-items:flex-start">
+          <div class="setrow setrow-top">
             <div class="lab">
               Amazon Alexa+ Voice Bridge
               <small>Login with Amazon (LWA) &amp; Alexa Smart Home Skill Add-on</small>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;width:100%">
-              <div style="display:flex;gap:8px">
-                <input type="text" id="alexaSkillIdInput" placeholder="amzn1.ask.skill.b84a9e22-..." style="flex:1" title="Alexa Skill ID"/>
-                <button class="btn btn-primary" id="testAlexaBtn" style="min-height:36px;padding:0 12px;white-space:nowrap">Test Handshake</button>
+            <div class="form-col">
+              <div class="row-flex">
+                <input type="text" id="alexaSkillIdInput" placeholder="amzn1.ask.skill.b84a9e22-..." class="input-inline flex-1" title="Alexa Skill ID"/>
+                <button class="btn btn-primary btn-sm nowrap" id="testAlexaBtn">Test Handshake</button>
               </div>
-              <div style="font-size:11px;color:var(--t3)" id="alexaStatusDetail">● Connected: 3 Echo devices verified on network</div>
+              <div class="muted-xs" id="alexaStatusDetail">○ Not linked — sign in above to discover Echo devices</div>
             </div>
           </div>
 
-          <div class="setrow" style="align-items:flex-start">
+          <div class="setrow setrow-top">
             <div class="lab">
               Local Smart Hub (Matter / Home Assistant)
               <small>Local IP or mDNS endpoint for zero-cloud latency physical control</small>
             </div>
-            <div style="display:flex;flex-direction:column;gap:8px;max-width:480px;width:100%">
-              <div style="display:flex;gap:8px">
-                <input type="text" id="smartHubUrlInput" placeholder="http://homeassistant.local:8123" style="flex:1" title="Hub URL"/>
-                <button class="btn" id="testHubBtn" style="min-height:36px;padding:0 12px;white-space:nowrap">Sync Entities</button>
+            <div class="form-col">
+              <div class="row-flex">
+                <input type="text" id="smartHubUrlInput" placeholder="http://homeassistant.local:8123" class="input-inline flex-1" title="Hub URL"/>
+                <button class="btn btn-sm nowrap" id="testHubBtn">Sync Entities</button>
               </div>
-              <div style="font-size:11px;color:var(--t3)" id="hubStatusDetail">● Connected: 8 Matter &amp; Zigbee endpoints online</div>
+              <div class="muted-xs" id="hubStatusDetail">○ No hub paired — enter a local endpoint to sync</div>
             </div>
           </div>
 
-          <div style="margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+          <div class="divider-top">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
               <strong>Registered Physical Devices</strong>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-primary" id="openAddDeviceModalBtn" style="min-height:32px;padding:0 12px;font-size:var(--fs-micro)">+ Register New Device</button>
-                <button class="btn" id="resetRealZeroSettingsBtn" style="min-height:32px;padding:0 10px;font-size:var(--fs-micro);color:var(--bad)">Reset Real to 0</button>
+              <div class="row-flex gap-1">
+                <button class="btn btn-primary btn-sm" id="openAddDeviceModalBtn">+ Register New Device</button>
+                <button class="btn btn-sm" id="resetRealZeroSettingsBtn" style="color:var(--bad)">Reset Real to 0</button>
               </div>
             </div>
             <div id="settingsDevicesList">
@@ -501,17 +501,17 @@
 
       <div class="panel"><div class="panel-body">
         <div class="setrow"><div class="lab">Adult PIN<small>Required for money, unlocks and resets. Set via HEARTH_ADULT_PIN.</small></div><input type="password" id="pinInput" placeholder="••••" autocomplete="off"/></div>
-        <div class="setrow"><div class="lab">Ledger<small id="ledgerState">Checking chain…</small></div><button class="btn" id="verifyBtn" style="min-height:40px">Verify now</button></div>
+        <div class="setrow"><div class="lab">Ledger<small id="ledgerState">Checking chain…</small></div><button class="btn btn-sm" id="verifyBtn" style="min-height:40px">Verify now</button></div>
       </div></div>
 
-      <div class="panel" style="margin-top:16px">
+      <div class="panel mt-4">
         <div class="panel-head">
           <h3>System Diagnostics &amp; Telemetry</h3>
           <span class="spacer"></span>
-          <span class="pill" id="diagHealthPill" style="color:var(--ok)">● Healthy</span>
+          <span class="pill c-ok" id="diagHealthPill">● Healthy</span>
         </div>
         <div class="panel-body" id="diagBox">
-          <div class="skel" style="height:80px"></div>
+          <div class="skel skel-box skel-80"></div>
         </div>
       </div>
     </section>
@@ -529,7 +529,7 @@
     <div class="floating-chat-widget" id="floatingChatWidget" hidden role="complementary" aria-label="Hearth Floating Assistant">
       <div class="widget-header">
         <div class="widget-title">
-          <span class="brand-mark" style="width:22px;height:22px;font-size:12px">H</span>
+          <span class="brand-mark brand-mark-sm">H</span>
           <div>
             <strong style="font-size:var(--fs-body)">Hearth Assistant</strong>
             <small style="display:block;font-size:11px;color:var(--amber)">Active Reasoner · Glass-Box</small>
@@ -540,7 +540,7 @@
       <div class="widget-body" id="widgetChatLog"></div>
       <form class="widget-footer" id="widgetCmdForm" autocomplete="off">
         <input id="widgetCmdInput" placeholder="Ask Hearth anything…" aria-label="Chat input"/>
-        <button class="btn btn-primary" type="submit" style="min-height:36px;padding:0 12px">Send</button>
+        <button class="btn btn-primary btn-sm" type="submit">Send</button>
       </form>
     </div>
   </div>
@@ -573,7 +573,7 @@
         <form id="amazonAuthForm" autocomplete="on">
           <div class="amazon-form-group">
             <label for="lwaEmail">Email or mobile phone number</label>
-            <input type="text" id="lwaEmail" value="krishiv.joshi@amazon-developer.net" required autocomplete="username"/>
+            <input type="text" id="lwaEmail" placeholder="you@example.com" required autocomplete="username"/>
           </div>
 
           <div class="amazon-form-group">
@@ -581,12 +581,12 @@
               <label for="lwaPassword">Password</label>
               <a href="#" class="amazon-link" tabindex="-1">Forgot password?</a>
             </div>
-            <input type="password" id="lwaPassword" value="••••••••••••" required autocomplete="current-password"/>
+            <input type="password" id="lwaPassword" placeholder="Amazon password" required autocomplete="current-password"/>
           </div>
 
           <div class="amazon-consent-box">
             <div class="amazon-consent-header">
-              <span style="font-size:16px">🛡️</span>
+              <span class="fs-icon" aria-hidden="true">🛡️</span>
               <strong>Permissions Requested by Hearth:</strong>
             </div>
             <ul class="amazon-scopes-list">

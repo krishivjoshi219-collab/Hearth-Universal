@@ -4,7 +4,6 @@ to see predictive energy flows, climate shifts, security postures, and replenish
 """
 from __future__ import annotations
 import time
-from typing import Any
 
 TIMELINE_PRESETS = {
     "now": {

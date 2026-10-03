@@ -39,7 +39,7 @@ def _load_config() -> None:
 
 _load_config()
 
-from typing import Annotated, Optional
+from typing import Annotated
 from pydantic import Field
 from mcp.server.fastmcp import FastMCP
 from starlette.requests import Request
@@ -48,7 +48,7 @@ from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
 from hearth import (
     sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
     brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
-    strands_agent, agentcore, agent_skills, mcp_strands_adapter,
+    strands_agent, agentcore, agent_skills,
     parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon,
     forensics, acoustic, mediation, swarm
 )
@@ -1780,7 +1780,6 @@ async def api_alexa_directive(request: Request):
         return JSONResponse({"error": "Invalid JSON"}, status_code=400)
     res = alexa.handle_directive(body)
     try:
-        header = (body.get("directive") or body).get("header", {})
         evt = res.get("event", {}).get("header", {}).get("name", "Response")
         if evt == "ErrorResponse":
             msg = res.get("event", {}).get("payload", {}).get("message", "That did not work.")
@@ -2269,9 +2268,6 @@ async def api_models_provider_add(request: Request):
         return JSONResponse({"ok": False, "error": "api_key too long"}, status_code=400)
     # SSRF guard: block private/metadata hosts for custom providers.
     try:
-        from urllib.parse import urlparse as _up
-        host = (_up(base_url).hostname or "").lower()
-        ok, _reason = True, ""
         from hearth import webtools as _wt
         ok, _reason = _wt._host_allowed(base_url)
         if not ok:
