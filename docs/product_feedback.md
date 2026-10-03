@@ -41,7 +41,7 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 - **AWS Strands Multi-Agent Pattern**:
   - Structuring domain responsibilities into specialized sub-agents (`Arbiter`, `Replenishment`, `Guardian`) under a supervisor pattern dramatically improved plan coherence and reduced prompt token overhead.
 - **Local-First Zero-Config Testing**:
-  - Building an intelligent local offline fallback engine allowed our 199-test suite (`pytest`) to run offline without external network dependencies or API keys.
+  - Building an intelligent local offline fallback engine allowed our 222-test suite (`pytest`) to run offline without external network dependencies or API keys.
 
 ---
 

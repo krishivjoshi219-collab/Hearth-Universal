@@ -50,7 +50,7 @@ from hearth import (
     brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
     strands_agent, agentcore, agent_skills,
     parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon,
-    forensics, acoustic, mediation, swarm
+    forensics, acoustic, mediation, swarm, replay
 )
 
 _SERVER_START_TIME = _time.time()
@@ -512,6 +512,19 @@ def audit_verify() -> dict:
     """
     is_valid = audit.verify()
     return {"valid": is_valid, "algorithm": "SHA-256", "chain_integrity": "OK" if is_valid else "CORRUPTED"}
+
+
+@mcp.tool()
+def audit_replay_decision(
+    proposal_id: Annotated[str, Field(description="Tray proposal ID to time-travel (e.g. 'p9f2c1ab...')")]
+) -> dict:
+    """Time-travel debugger: read-only replay of any tray decision.
+
+    Reconstructs why a proposal exists, what decided it, its audit-trail
+    hashes, and whether undo is available. Never mutates state.
+    Tier-1 verification read.
+    """
+    return replay.replay_decision(proposal_id)
 
 
 @mcp.tool()
@@ -1680,6 +1693,18 @@ async def api_audit(request: Request):
         "recent": list(reversed(recent)),
         "mode": "simulation"
     })
+
+
+@mcp.custom_route("/api/audit/replay", methods=["GET"])
+async def api_audit_replay(request: Request):
+    """Time-travel debugger: read-only replay of any tray decision."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    pid = request.query_params.get("id", "")
+    if not pid:
+        return JSONResponse({"ok": False, "error": "missing ?id="}, status_code=400)
+    return JSONResponse(replay.replay_decision(pid))
 
 
 @mcp.custom_route("/api/reset", methods=["POST"])

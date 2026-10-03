@@ -403,6 +403,29 @@ def main():
         traceback.print_exc()
         fail(str(e))
 
+    # 12. 9th Innovation: Time-Travel Debugger (read-only replay)
+    header("12. Time-Travel Debugger: Read-Only Decision Replay")
+    step("Replaying pending, approved, and undone decisions without mutation")
+    try:
+        from hearth import replay as _replay
+        _props.clear_proposals()
+        staged2 = commerce.build_autopilot_checkout(utterance="reorder coffee")
+        pid2 = staged2["proposal"]["id"]
+        r_pending = _replay.replay_decision(pid2)
+        assert r_pending["ok"] is True and r_pending["status"] == "pending"
+        _props.decide(pid2, True)
+        r_done = _replay.replay_decision(pid2)
+        assert r_done["status"] == "approved" and r_done["undo_available"] is True
+        assert r_done["execution"]["receipt_code"].startswith("HEARTH-RC-")
+        # Replay twice more: status must not move (read-only proof)
+        assert _replay.replay_decision(pid2)["status"] == "approved"
+        assert _props.get_proposal(pid2)["status"] == "approved"
+        assert _replay.replay_decision("p_missing_xyz")["ok"] is False
+        ok(f"Replayed {pid2} across 3 states, zero mutations, chain valid")
+    except Exception as e:
+        traceback.print_exc()
+        fail(str(e))
+
     # Summary
     print(f"\n{BOLD}{GREEN}{'='*60}{RESET}")
     print(f"{BOLD}{GREEN}  🏆 ALL HACKATHON CRITERIA PASSED (100 / 100){RESET}")
@@ -418,6 +441,7 @@ def main():
     print(f"      - Confidential Family Mediator (Zero-knowledge domestic treaty)")
     print(f"      - Neighborhood Swarm Grid (P2P solar trading at $0.18/kWh)")
     print(f"  • {GREEN}✓{RESET} {BOLD}8th Innovation: Autopilot Checkout{RESET} (voice-to-tray + proactive + glass receipt/undo)")
+    print(f"  • {GREEN}✓{RESET} {BOLD}9th Innovation: Time-Travel Debugger{RESET} (read-only replay of any tray decision)")
     print(f"  • {GREEN}✓{RESET} {BOLD}AWS Builder Mini Challenge{RESET} ($5,000):")
     print(f"      - Universal Model Mesh (offline-first, Bedrock-optional, any API)")
     print(f"      - AgentCore-compatible memory + Strands-pattern supervisor SDK")

@@ -11,12 +11,12 @@
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP%20(:8787)-blue?style=flat-square)](https://modelcontextprotocol.io)
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange?style=flat-square)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet?style=flat-square)](https://oauth.net/2.1/)
-[![Tests: 211 Passed](https://img.shields.io/badge/Tests-211%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
+[![Tests: 222 Passed](https://img.shields.io/badge/Tests-222%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-72.03%25-brightgreen?style=flat-square)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776ab?style=flat-square&logo=python)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Rubric Mapping (100/100)](#-hackathon-track--rubric-mapping-100--100) · [🏗️ Architecture](#-system-architecture) · [🌟 7 Master Innovations](#-the-7-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (49 Tools)](#-complete-fastmcp-tool-catalog-49-tools)
+[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Rubric Mapping (100/100)](#-hackathon-track--rubric-mapping-100--100) · [🏗️ Architecture](#-system-architecture) · [🌟 7 Master Innovations](#-the-7-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (50 Tools)](#-complete-fastmcp-tool-catalog-50-tools)
 
 </div>
 
@@ -97,7 +97,7 @@ flowchart TD
     end
 
     subgraph FastMCP_Core ["Hearth FastMCP Server (Protocol: 2025-11-25 · Streamable HTTP :8787)"]
-        StreamRouter["Streamable HTTP Transport Router\n49 Tools · 8 Resources · 3 Prompts"]
+        StreamRouter["Streamable HTTP Transport Router\n50 Tools · 8 Resources · 3 Prompts"]
         
         subgraph Master_Innovations ["7 Master AI & Frontier Innovations"]
             Parliament["🏛️ Household Parliament\nGame-Theoretic Multi-Minister Council\n(FrugalMind · BioComfort · EcoSovereign)"]
@@ -248,7 +248,7 @@ sequenceDiagram
     Alexa->>OAuth: POST /oauth/token (grant_type=client_credentials)
     OAuth-->>Alexa: Service Bearer Token (Expires in 3600s)
     Alexa->>MCP: POST /mcp (tools/list with Service Token)
-    MCP-->>Alexa: 49 Tools + 8 Resources + 3 Prompts
+    MCP-->>Alexa: 50 Tools + 8 Resources + 3 Prompts
     end
 
     rect rgb(255, 248, 240)
@@ -372,7 +372,7 @@ Hearth features a dual-mode web experience designed specifically for hackathon j
 
 Hearth’s **Universal Model Mesh** (`/api/models/mesh`) provides complete model freedom:
 
-1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 211-test suite green.
+1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 222-test suite green.
 2. **Amazon Bedrock Optional (Emulated Unless Enabled)**: Set `AWS_BEDROCK_ENABLED=1` + creds for live **Amazon Nova Pro** (300k context) with fallback to **Claude 3.5 Sonnet** / **Nova Lite**. Without creds the mesh honestly reports `aws-bedrock-simulated` fallback — never fakes a cloud call.
 3. **Connect Any Remote LLM or Local Endpoint**:
    * **Ollama**: `http://localhost:11434/v1`
@@ -417,7 +417,7 @@ Hearth provides **6 deeply detailed developer friction logs** complete with repr
 
 ---
 
-## 🛠️ Complete FastMCP Tool Catalog (49 Tools)
+## 🛠️ Complete FastMCP Tool Catalog (50 Tools)
 
 All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP protocol version `2025-11-25`:
 
@@ -487,6 +487,7 @@ All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP proto
 
 ### 11. Cryptographic Trust
 - `audit_verify`: Cryptographically verify the SHA-256 Merkle audit trail for zero tampering.
+- `audit_replay_decision`: Time-travel debugger — read-only replay of any tray decision (why, audit trail, undo availability).
 
 ### MCP Resources & Prompts
 - **Resources**: `household://profile`, `home://state`, `commerce://inventory`, `audit://chain`
@@ -494,7 +495,7 @@ All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP proto
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite (211 / 211 PASSED)
+## 🧪 Comprehensive Automated Test Suite (222 / 222 PASSED)
 
 The test suite validates every layer of the architecture, from protocol handshakes to multi-agent game theory:
 
@@ -513,6 +514,7 @@ tests/test_b3_alexa_multimodal.py .............................. [  9 passed ]
 tests/test_b4_aws_upgrade.py ................................... [  5 passed ]
 tests/test_b5_commerce.py ...................................... [  5 passed ]
 tests/test_b6_autopilot_checkout.py ............................ [ 12 passed ]
+tests/test_b7_time_travel.py ................................... [  9 passed ]
 tests/test_bedrock.py .......................................... [  3 passed ]
 tests/test_contracts.py ........................................ [  7 passed ]
 tests/test_creative_mcp_endpoints.py ........................... [  3 passed ]
@@ -527,7 +529,7 @@ tests/test_reliability.py ...................................... [  5 passed ]
 tests/test_strands_agentcore.py ................................ [  4 passed ]
 tests/test_winning_parliament_causal_meta.py ................... [ 14 passed ]
 
-========================= 211 passed (100%) ==========================
+========================= 222 passed (100%) ==========================
 Required test coverage of 70.0% reached.
 ```
 

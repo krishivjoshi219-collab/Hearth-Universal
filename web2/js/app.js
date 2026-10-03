@@ -433,6 +433,7 @@ on("proposals", (res) => {
         "<p class='mono' style='color:var(--t3)'>id " + esc(p.id) + " · kind " + esc(p.kind) + "</p>",
         [
           { label: "Proceed", primary: true, onClick: () => decide(p.id, true, el) },
+          { label: "⏪ Time Travel", onClick: () => replayDecision(p.id) },
           { label: "Reject", onClick: () => decide(p.id, false, el) },
         ])
     );
@@ -440,6 +441,40 @@ on("proposals", (res) => {
   });
 });
 let lastApprovedPid = null;
+async function replayDecision(id) {
+  toast("Time-traveling to decision…");
+  let data = null;
+  try {
+    const r = await fetch("/api/audit/replay?id=" + encodeURIComponent(id));
+    data = await r.json();
+  } catch (e) {
+    toast("Replay failed: offline", true);
+    return;
+  }
+  if (!data || !data.ok) {
+    toast("Replay failed: " + ((data && data.error) || "unknown"), true);
+    return;
+  }
+  const trail = (data.audit_trail || []).map((t) =>
+    '<div class="mono" style="color:var(--t3)">#' + esc((t.hash || "").slice(0, 8)) +
+    ' · ' + esc(t.actor) + ' · ' + esc(t.action) + '</div>'
+  ).join("") || '<div class="muted-sm">No audit entries yet</div>';
+  openDialog("⏪ Time Travel: " + (data.title || data.kind),
+    "<p style='color:var(--amber);font-weight:700'>" + esc(data.replay_note || "") + "</p>" +
+    "<p style='color:var(--t1);margin:8px 0'><strong>Why:</strong> " +
+    esc(JSON.stringify(data.why || {}, null, 1)) + "</p>" +
+    (data.execution ? "<p class='receipt' style='color:var(--ok)'>Receipt: " +
+      esc(data.execution.receipt_code || data.execution.note || "") + "</p>" : "") +
+    '<div class="diff" style="margin:12px 0;max-height:220px;overflow-y:auto">' + trail + "</div>" +
+    "<p class='mono' style='color:var(--t3)'>chain " +
+    (data.chain_valid ? "valid ✓" : "BROKEN") + " · undo " +
+    (data.undo_available ? "available" : "n/a") + "</p>",
+    data.undo_available
+      ? [{ label: "↩ Undo this decision", primary: true,
+           onClick: () => { undoProposal(id); } }, { label: "Close" }]
+      : [{ label: "Close", primary: true }]);
+}
+
 async function undoProposal(id, el) {
   toast("Reversing action…");
   setLightWave("thinking");

@@ -7,7 +7,7 @@ Win Alexa+ ($25k) with an open glass-box agent that runs on any key, plus Open S
 Single FastMCP server (stateless Streamable HTTP 2025-11-25) owns `/mcp` + custom routes (`/health`, `/api/*`, `/`). Static PWA simulator, no build. Modules: `vault`, `sentinel`, `audit`, `memory` (SQLite), `home_mock`, `proposals`, `brains` (OpenAI-compatible + mock fallback + Bedrock slot), `planner` (DAG).
 
 ## Done
-- 49 MCP tools, 8 resources, 3 prompts; curl-verified initialize/tools/list/tools/call.
+- 50 MCP tools, 8 resources, 3 prompts; curl-verified initialize/tools/list/tools/call.
 - Approval tray seeded by money-intent chat; scene suggestions for home intent; memory API + UI.
 - 9 pytest (gate, redaction, audit chain, memory, home, proposals, planner).
 - Docs: friction x5, product feedback, demo script, contributing, security.
