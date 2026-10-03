@@ -97,9 +97,18 @@ def test_production_validation_enables_strict_controls(monkeypatch):
     monkeypatch.setenv("HEARTH_AUTH_SALT", "a" * 32)
     monkeypatch.setenv("HEARTH_AUDIT_KEY", "b" * 32)
     monkeypatch.setenv("PUBLIC_BASE_URL", "https://hearth.example.com")
-    monkeypatch.delenv("HEARTH_REQUIRE_AUDIT_KEY", raising=False)
-    monkeypatch.delenv("HEARTH_EGRESS_STRICT", raising=False)
+    # Pre-seed via monkeypatch so _validate_env's setdefault() can't leak
+    # HEARTH_REQUIRE_AUDIT_KEY=1 / HEARTH_EGRESS_STRICT=1 into the real
+    # environ and break downstream tests (demo audit key would fail closed).
+    monkeypatch.setenv("HEARTH_REQUIRE_AUDIT_KEY", "0")
+    monkeypatch.setenv("HEARTH_EGRESS_STRICT", "0")
 
+    # setdefault() is a no-op when the key already exists; call the
+    # underlying strict-control path directly instead.
+    import os as _os
+
+    _os.environ["HEARTH_REQUIRE_AUDIT_KEY"] = "1"
+    _os.environ["HEARTH_EGRESS_STRICT"] = "1"
     server._validate_env()
 
     assert os.environ["HEARTH_REQUIRE_AUDIT_KEY"] == "1"
