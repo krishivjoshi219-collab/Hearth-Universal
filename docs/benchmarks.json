@@ -1,0 +1,98 @@
+{
+  "engines": {
+    "parliament.deliberate": {
+      "n": 20,
+      "p50_ms": 6.85,
+      "p95_ms": 12.42,
+      "max_ms": 12.42
+    },
+    "causal_twin.run(7d/100it)": {
+      "n": 20,
+      "p50_ms": 104.79,
+      "p95_ms": 115.05,
+      "max_ms": 115.05
+    },
+    "forensics.reconstruct": {
+      "n": 20,
+      "p50_ms": 0.67,
+      "p95_ms": 1.64,
+      "max_ms": 1.64
+    },
+    "acoustic.scan": {
+      "n": 20,
+      "p50_ms": 49.92,
+      "p95_ms": 60.37,
+      "max_ms": 60.37
+    },
+    "mediation.treaty": {
+      "n": 20,
+      "p50_ms": 10.14,
+      "p95_ms": 15.05,
+      "max_ms": 15.05
+    },
+    "swarm.dispatch": {
+      "n": 20,
+      "p50_ms": 0.68,
+      "p95_ms": 1.1,
+      "max_ms": 1.1
+    }
+  },
+  "http": {
+    "GET /health": {
+      "n": 20,
+      "p50_ms": 17.13,
+      "p95_ms": 79.93,
+      "max_ms": 79.93
+    },
+    "GET /api/causal/vulnerabilities": {
+      "n": 20,
+      "p50_ms": 87.57,
+      "p95_ms": 109.39,
+      "max_ms": 109.39
+    },
+    "GET /api/swarm/grid": {
+      "n": 20,
+      "p50_ms": 15.96,
+      "p95_ms": 80.64,
+      "max_ms": 80.64
+    },
+    "GET /api/acoustic/scan": {
+      "n": 20,
+      "p50_ms": 79.21,
+      "p95_ms": 111.14,
+      "max_ms": 111.14
+    },
+    "POST /api/parliament/deliberate": {
+      "n": 20,
+      "p50_ms": 30.32,
+      "p95_ms": 130.17,
+      "max_ms": 130.17
+    }
+  },
+  "scaling": [
+    {
+      "iterations": 50,
+      "wall_ms": 66.5,
+      "vulns": 5,
+      "savings": 106.98
+    },
+    {
+      "iterations": 100,
+      "wall_ms": 109.9,
+      "vulns": 5,
+      "savings": 106.11
+    },
+    {
+      "iterations": 150,
+      "wall_ms": 151.6,
+      "vulns": 5,
+      "savings": 106.36
+    },
+    {
+      "iterations": 300,
+      "wall_ms": 280.5,
+      "vulns": 5,
+      "savings": 106.31
+    }
+  ]
+}
