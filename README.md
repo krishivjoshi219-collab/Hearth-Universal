@@ -11,7 +11,7 @@
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP%20(:8787)-blue?style=flat-square)](https://modelcontextprotocol.io)
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange?style=flat-square)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet?style=flat-square)](https://oauth.net/2.1/)
-[![Tests: 249 Passed](https://img.shields.io/badge/Tests-261%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
+[![Tests: 272 Passed](https://img.shields.io/badge/Tests-272%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-73.56%25-brightgreen?style=flat-square)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776ab?style=flat-square&logo=python)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
@@ -57,7 +57,7 @@ cd Hearth-Universal
 1. **Validates FastMCP Protocol Version `2025-11-25`**: Starts the Streamable HTTP server on port `8787` (`/mcp`).
 2. **Executes the Official Rubric Evaluator**: Runs [`scripts/evaluate_rubric.py`](scripts/evaluate_rubric.py) across all 10 judging dimensions (**100 / 100 points**).
 3. **Verifies Alexa+ Compliance**: Executes [`tests/test_alexaplus_addon_compliance.py`](tests/test_alexaplus_addon_compliance.py) validating RFC 9728 PRM, OAuth 2.1 PKCE S256 two-tier authentication, and `addon.json`.
-4. **Validates Frontier Innovations**: Executes [`tests/test_frontier_innovations.py`](tests/test_frontier_innovations.py) (13 tests verifying Forensics, Acoustics, Treaty, and Swarm VPP).
+4. **Validates Frontier Innovations**: Executes [`tests/test_frontier_innovations.py`](tests/test_frontier_innovations.py) (18 tests verifying Forensics, Acoustics, Treaty, and Swarm VPP).
 5. **Launches the Web App Experience**: Opens `http://localhost:8787/web2/index.html` with **9 one-click showcase demonstrations**.
 
 ---
@@ -418,7 +418,7 @@ Hearth ships two surfaces: an **Echo Show viewport** at `/echo` (1280×800, larg
 
 Hearth’s **Universal Model Mesh** (`/api/models/mesh`) provides complete model freedom:
 
-1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 261-test suite green.
+1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 272-test suite green.
 2. **Amazon Bedrock Optional (Emulated Unless Enabled)**: Set `AWS_BEDROCK_ENABLED=1` + creds for live **Amazon Nova Pro** (300k context) with fallback to **Claude 3.5 Sonnet** / **Nova Lite**. Without creds the mesh honestly reports `aws-bedrock-simulated` fallback — never fakes a cloud call.
 3. **Connect Any Remote LLM or Local Endpoint**:
    * **Ollama**: `http://localhost:11434/v1`
@@ -433,18 +433,38 @@ As part of the **Open Source Mini Challenge ($5,000)**, Hearth Universal contrib
 
 👉 **[`open-source-contribution/mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/)** (Apache-2.0 License)
 
-```python
-from mcp_strands_adapter import StrandsMCPToolBridge
+The Strands SDK ships tooling to *consume* MCP servers, but not to *expose* Strands agents
+to an MCP host. This library covers that direction — **Strands → MCP**:
 
-# Dynamically wrap any FastMCP 2025-11-25 tool into an AWS Strands Agent tool:
-bridge = StrandsMCPToolBridge()
-schema = bridge.register_strands_tool("hearth_tool", my_handler)
-result = bridge.invoke_from_mcp("hearth_tool", {"param": 42})
+```python
+from mcp.server.fastmcp import FastMCP
+from strands import Agent, tool
+from mcp_strands_adapter import MCPServerBridge
+
+@tool
+def tariff_shift(kwh: float, hours: int = 2) -> dict:
+    """Shift load off the peak tariff window.
+
+    Args:
+        kwh: energy to shift
+        hours: how long to defer
+    """
+    return {"shifted_kwh": kwh, "hours": hours}
+
+mcp = FastMCP("household")
+MCPServerBridge(prefix="hearth_").register_all(mcp, [tariff_shift])
+# serve with: mcp.run(transport="streamable-http")
 ```
 
-* **Zero-Dependency Architecture**: No heavy dependencies, clean standard library code.
-* **Automated JSON Schema Synthesis**: Converts Python type annotations and docstrings into compliant tool schemas.
-* **Dedicated Test Suite & Docs**: Includes full unit tests and standalone quickstart examples.
+* **Reuses the SDK's own schemas**: reads `tool_spec` from a `@tool` object instead of
+  re-deriving what Strands already derives correctly, and only reshapes
+  `inputSchema.json` into MCP's flat `inputSchema`.
+* **Exports whole agents**: a bare `Agent` is adapted via `Agent.as_tool()`, with its async
+  `stream()` drained for MCP's synchronous `tools/call`.
+* **Honest dependencies**: core requires `mcp>=1.23.0,<2.2`; `strands` and `aws` extras
+  pull in `strands-agents` and `boto3`.
+* **15 unit tests** and a runnable quickstart that works with or without the optional
+  dependency — the Strands-specific tests skip automatically.
 
 ---
 
@@ -542,7 +562,7 @@ All 51 tools are exposed over Streamable HTTP at `/mcp` conforming to MCP protoc
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite (261 / 261 PASSED)
+## 🧪 Comprehensive Automated Test Suite (272 / 272 PASSED)
 
 The test suite validates every layer of the architecture, from protocol handshakes to multi-agent game theory:
 
@@ -552,7 +572,7 @@ pytest --cov=src --cov-report=term-missing
 ```
 
 ```text
-tests/test_agent_skills.py .................. [3 passed]
+tests/test_agent_skills.py .................. [5 passed]
 tests/test_alexaplus_addon_compliance.py .... [11 passed]
 tests/test_auth.py .......................... [11 passed]
 tests/test_b1_dag.py ........................ [4 passed]
@@ -569,7 +589,7 @@ tests/test_echo_surface.py .................. [21 passed]
 tests/test_fortress2.py ..................... [6 passed]
 tests/test_frontier_innovations.py .......... [18 passed]
 tests/test_fuzz_http.py ..................... [26 passed]
-tests/test_hearth.py ........................ [51 passed]
+tests/test_hearth.py ........................ [60 passed]
 tests/test_mcp_http.py ...................... [1 passed]
 tests/test_mcp_strands_adapter.py ........... [4 passed]
 tests/test_product_experience.py ............ [6 passed]
@@ -579,12 +599,12 @@ tests/test_ui_contracts.py .................. [11 passed]
 tests/test_winning_parliament_causal_meta.py ... [14 passed]
 
 ==============================================================
-270 passed in 54.12s
+272 passed
 TOTAL                                5334   1222   1532    316    74%
 Required test coverage of 70.0% reached. Total coverage: 74.22%
 ```
 
-* **Mostly In-Memory Testing**: 248 of 249 tests use Starlette's `TestClient` with no socket binding. One test (`tests/test_mcp_http.py`) deliberately spawns a real server on port 8799 and tears it down — it is the only proof that the protocol works over a real socket rather than through an in-process shim.
+* **Mostly In-Memory Testing**: 271 of 272 tests use Starlette's `TestClient` with no socket binding. The one exception (`tests/test_mcp_http.py`) deliberately spawns a real server on port 8799 and tears it down — it is the only proof that the protocol works over a real socket rather than through an in-process shim.
 
 ---
 

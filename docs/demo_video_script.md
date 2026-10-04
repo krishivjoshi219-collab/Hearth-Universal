@@ -20,10 +20,10 @@
 - **Visual**: Screen capture of terminal.
   - Run: `python3 mcp-server/server.py` (shows FastMCP starting on port `8787` with 51 tools).
   - Run: `curl POST /mcp` initialize request. Output displays `"protocolVersion": "2025-11-25"`.
-  - Run: `pytest -q` (**270 passing tests**).
+  - Run: `pytest -q` (**272 passing tests**).
   - Run: `python3 scripts/evaluate_rubric.py` (shows 100/100 all criteria passing).
 - **Narrator**:
-  > *"Hearth is completely zero-friction and zero-build. It requires no closed API keys, Node.js, or cloud hardware to evaluate. Our server exposes a fully compliant MCP 2025-11-25 Streamable HTTP endpoint. As you can see, our official rubric evaluator verifies all 270 tests and protocol handshakes across Alexa+, AWS Builder, and Open Source."*
+  > *"Hearth is completely zero-friction and zero-build. It requires no closed API keys, Node.js, or cloud hardware to evaluate. Our server exposes a fully compliant MCP 2025-11-25 Streamable HTTP endpoint. As you can see, our official rubric evaluator verifies all 272 tests and protocol handshakes across Alexa+, AWS Builder, and Open Source."*
 
 ---
 

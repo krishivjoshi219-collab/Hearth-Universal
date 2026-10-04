@@ -102,10 +102,18 @@ class AgentSkillsRuntime:
         ]
 
     def export_agent_skills_manifest(self) -> dict[str, Any]:
-        """Export standardized Alexa+ Agent Skills manifest payload."""
+        """Export the agent-skills manifest payload.
+
+        Note on naming: Amazon publishes no public Alexa+ agent-skills manifest
+        schema (the MCP Toolkit and Category SDK are preview / select-partner), so
+        there is no official spec version to declare conformance against. The date
+        is therefore reported as ``declaredAgainst`` rather than
+        ``agentSkillsSpec``, which would imply a published standard.
+        """
         return {
             "manifestVersion": "1.0",
-            "agentSkillsSpec": "2026-09-16",
+            "manifestKind": "hearth-self-hosted-agent-skills",
+            "declaredAgainst": "2026-09-16",
             "skills": self.list_skills(),
             "globalPolicy": {
                 "propose_never_execute": True,

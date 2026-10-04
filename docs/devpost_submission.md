@@ -45,11 +45,11 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 - **Glass-Box Ops Cockpit**: A deep-inspection desktop/tablet view showing multi-turn voice chat, DAG ReAct execution graphs, the Proposal Approval Tray, and the multi-room Digital Twin.
 
 ### 2. AWS Builder Multi-Service Pipeline: Strands Agents SDK & Bedrock AgentCore
-- **AWS Strands Multi-Agent Supervisor Pattern**: Coordinates specialized domain sub-agents:
+- **AWS Strands Multi-Agent Supervisor**: Genuine `strands.Agent` objects, tools declared with the SDK's `@tool` decorator, sub-agents composed with the SDK's `Agent.as_tool()` agents-as-tools pattern. `strands_backend` reports which path ran (`aws-strands-sdk` / `aws-strands-sdk-no-inference` / `pattern-fallback`) and is never guessed. Coordinates:
   - `ArbiterNegotiatorAgent`: Resolves resident preference disputes with Pareto efficiency and shifts high-draw loads off peak energy tariffs.
   - `ReplenishmentDepletionAgent`: Evaluates consumable depletion velocities and maximizes 15% Subscribe & Save discounts.
   - `SentinelGuardianAgent`: Enforces 3-tier risk gating, child guardrails, and cryptographic audits.
-- **AWS Bedrock AgentCore Memory**: Emulates the serverless AgentCore Memory architecture for persistent session turns and cross-session episodic memory retrieval.
+- **AWS Bedrock AgentCore Memory**: An AgentCore-Memory-compatible store for persistent session turns and cross-session episodic retrieval. `get_stats()` reports its backend precisely (`bedrock-agentcore-memory-compatible`, `implementation: local-json-store`) and sets `live_sync` only when `AWS_AGENTCORE_MEMORY_ID` and credentials are present.
 - **Amazon Bedrock Converse Multi-Model Router (optional, emulated by default)**: Dynamic routing between **Claude 3.5 Sonnet** (deep reasoning) and **Amazon Nova Pro** (structured fast planning) with adaptive retries and `system=[]` prompt isolation when `AWS_BEDROCK_ENABLED=1`; honest `aws-bedrock-simulated` offline fallback otherwise.
 
 ### 3. Autonomous Subscription & Financial Hygiene (Saves $803.76/yr)
@@ -76,28 +76,28 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 ### 7. Cryptographic SHA-256 Ledger & Alexa+ Agent Skills
 - Immutably records every AI proposal, human approval, and Sentinel block in an append-only SHA-256 hash chain (`audit.jsonl`).
 - Implements the official **Alexa+ Agent Skills** specification (`skill/agent_skills_manifest.json`) for declarative skill discovery and capability handshakes.
-- Publishes **[`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/)**: a standalone open-source library bridging AWS Strands Agents SDK to FastMCP 2025-11-25 over Streamable HTTP.
+- Publishes **[`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/)**: a standalone Apache-2.0 library exposing AWS Strands agents and tools *as* MCP 2025-11-25 tools over Streamable HTTP — the direction the Strands SDK does not cover. Reuses the SDK's `tool_spec`, reshapes `inputSchema.json` into MCP's flat `inputSchema`, and adapts `AgentTool.stream()` to synchronous `tools/call`.
 
 ---
 
 ## ⚙️ How We Built It
 
 - **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 51 tools, 8 resources, and 3 prompt templates (counts verified live over the wire).
-- **AWS Strands Agents SDK (`src/hearth/strands_agent.py`)**: Multi-agent supervisor pattern delegating to Arbiter, Replenishment, and Sentinel agents.
+- **AWS Strands Agents SDK (`src/hearth/strands_agent.py`)**: Real `strands-agents` integration (`pip install -e ".[aws]"`). Three sub-agents built as `strands.Agent` objects with SDK-derived tool schemas, composed via `Agent.as_tool()`; every schema reported by `strands_sdk_status()` is produced by the SDK. A deterministic router remains the offline path so tests need no credentials.
 - **Bedrock AgentCore (`src/hearth/agentcore.py`)**: Persistent session turns and cross-session episodic context retrieval.
 - **Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers.
 - **Official Rubric Evaluator (`scripts/evaluate_rubric.py`)**: 1-second automated verification across all competition rubrics.
-- **Testing & Verification**: 249 automated unit, regression, contract, auth, UI-contract, and smoke tests passing.
+- **Testing & Verification**: 272 automated unit, regression, contract, auth, UI-contract, and smoke tests passing.
 
 ---
 
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **249 Automated Tests**: 100% pass rate.
+- **272 Automated Tests**: 100% pass rate.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
-- **Open Source Contribution**: Creating the first turnkey bridge between AWS Strands and FastMCP 2025-11-25.
+- **Open Source Contribution**: `mcp-strands-adapter` covers the direction the SDK does not ship — exposing Strands agents *as* MCP tools, reusing the SDK's own `tool_spec` rather than re-deriving schemas. Apache-2.0, 15 standalone tests, real `mcp` and `strands-agents` dependencies declared honestly.
 ```
 
 ---

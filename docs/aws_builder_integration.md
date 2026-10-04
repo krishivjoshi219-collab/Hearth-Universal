@@ -4,8 +4,8 @@
 **Project:** Hearth Universal (Alexa+ MCP Core)  
 **Integrated AWS Services & Frameworks:**
 1. **Amazon Bedrock Converse API** (Claude 3.5 Sonnet & Amazon Nova Pro Multi-Model Router)
-2. **AWS Strands Agents SDK** (Multi-Agent Supervisor Pattern + Domain Sub-Agents)
-3. **AWS Bedrock AgentCore** (AgentCore Memory Persistent Context Store & AgentCore Gateway)
+2. **AWS Strands Agents SDK** (`strands-agents`: real `Agent` objects, `@tool`, `Agent.as_tool` delegation)
+3. **AWS Bedrock AgentCore** (AgentCore-Memory-compatible context store & Gateway schema bridge)
 4. **Kiro Crew Development Tooling** (Multi-agent persistent development workflow)
 
 ---
@@ -20,14 +20,14 @@ The official hackathon judging guidelines explicitly distinguish *Creative* from
 Hearth Universal implements this exact creative multi-service pipeline in production code:
 - **Bedrock Converse API** (`src/hearth/brains.py`): Foundation model inference layer.
 - **AWS Strands Agents SDK** (`src/hearth/strands_agent.py`): Multi-agent harness with supervisor delegation.
-- **Bedrock AgentCore** (`src/hearth/agentcore.py`): MicroVM-ready persistent memory and MCP tool gateway.
+- **Bedrock AgentCore** (`src/hearth/agentcore.py`): AgentCore-Memory-compatible persistent session/episodic store plus an MCP↔AgentCore Gateway schema bridge (`bedrock-agentcore-memory-compatible`; `live_sync` true only when `AWS_AGENTCORE_MEMORY_ID` and credentials are set).
 - **Strands MCP Bridge** (`src/hearth/mcp_strands_adapter.py`): Open-source bridge linking Strands to Streamable HTTP MCP (spec 2025-11-25).
 
 ---
 
-## 1. AWS Strands Agents SDK Multi-Agent Supervisor Pattern
+## 1. AWS Strands Agents SDK Multi-Agent Supervisor
 
-In [`src/hearth/strands_agent.py`](file:///home/k/Prototype/Amazon/src/hearth/strands_agent.py), Hearth Universal implements the **Supervisor Multi-Agent Pattern**:
+In [`src/hearth/strands_agent.py`](../src/hearth/strands_agent.py), Hearth Universal builds **real `strands.Agent` objects** (install the extra with `pip install -e ".[aws]"`). Tools are declared with the SDK's `@tool` decorator and sub-agents are composed with the SDK's documented agents-as-tools pattern, `Agent.as_tool()`. Every tool schema reported by `strands_sdk_status()` is produced by the SDK rather than hand-written. A deterministic keyword supervisor remains the offline path, so tests need no credentials:
 
 ```mermaid
 flowchart TD
@@ -66,7 +66,7 @@ flowchart TD
 
 ## 2. AWS Bedrock AgentCore Memory & Gateway
 
-In [`src/hearth/agentcore.py`](file:///home/k/Prototype/Amazon/src/hearth/agentcore.py), Hearth Universal implements the **Bedrock AgentCore** specification:
+In [`src/hearth/agentcore.py`](../src/hearth/agentcore.py), Hearth Universal implements the **Bedrock AgentCore** specification:
 
 ### AgentCore Memory Store
 - **Session Turns**: Persists multi-turn conversational context with automatic Secret Vault token redaction.
@@ -75,13 +75,13 @@ In [`src/hearth/agentcore.py`](file:///home/k/Prototype/Amazon/src/hearth/agentc
 
 ### AgentCore Tool Gateway
 - Maps MCP 2025-11-25 tool specifications into standard Bedrock AgentCore Gateway schemas (`toolSpec` with input JSON schemas).
-- Enables bi-directional tool invocation between FastMCP and Bedrock AgentCore runtimes.
+- Emits AgentCore Gateway-shaped `toolSpec` entries and executes the registered handlers locally. Scope note: this is one direction (register a tool, invoke it in-process). It does **not** proxy to a live Bedrock AgentCore Gateway endpoint — no code path calls the managed service.
 
 ---
 
 ## 3. Amazon Bedrock Converse Multi-Model Router
 
-Hearth Universal integrates **Amazon Bedrock** via the unified **Converse API** in [`src/hearth/brains.py`](file:///home/k/Prototype/Amazon/src/hearth/brains.py).
+Hearth Universal integrates **Amazon Bedrock** via the unified **Converse API** in [`src/hearth/brains.py`](../src/hearth/brains.py).
 
 ### Supported Cross-Region Inference Profiles
 - **Anthropic Claude 3.5 Sonnet**: `us.anthropic.claude-3-5-sonnet-20241022-v2:0` (High-reasoning multi-tool DAG decomposition)
@@ -118,7 +118,11 @@ Per the official hackathon rules:
 Hearth Universal utilized Kiro Crew for:
 1. **Agentic Scaffolding**: Structured the multi-agent supervisor pattern, FastMCP Streamable HTTP protocol wrappers, and Sentinel security layers.
 2. **Adversarial Red-Teaming**: Synthesized boundary conditions for shell command jails, path traversal escapes, and vault token exfiltration vectors.
-3. **Automated Verification**: Engineered the 169 automated pytest suite passing in ~24 seconds.
+3. **Automated Verification**: Engineered the pytest suite, now **272 tests passing in ~55s**.
+
+> **Note on evidence:** our local Kiro Crew working directory is `.kilo/`, which is gitignored, so
+> this repository carries no committed artefact of the Kiro configuration. If the panel asks for
+> proof of tool usage, be ready to show it live rather than pointing at a file in the repo.
 
 ---
 

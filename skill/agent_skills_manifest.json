@@ -1,7 +1,8 @@
 {
-  "$schema": "https://developer.amazon.com/schemas/alexa-plus/agent-skills-v1.json",
+  "manifestKind": "hearth-self-hosted-agent-skills",
+  "_note": "Authored by the Hearth Universal project, not by Amazon. The referenced Amazon schema URL does not resolve: no public Alexa+ agent-skills manifest schema is published, because the Alexa+ MCP Toolkit and Category SDK are in preview and available to select partners only. This manifest declares our own agent skills and is served over MCP; the normative, hackathon-eligible surface is the MCP server itself (POST /mcp, spec 2025-11-25).",
   "manifestVersion": "1.0",
-  "agentSkillsSpec": "2026-09-16",
+  "declaredAgainst": "2026-09-16",
   "publisher": {
     "name": "Hearth Universal Community",
     "organization": "Open Glass-Box Agent Project"
@@ -21,29 +22,59 @@
     {
       "id": "amzn1.ask.skill.hearth.household_ops",
       "name": "Household Operations & Digital Twin",
-      "capabilities": ["digital_twin_read", "scene_control", "time_travel_forecast"],
-      "tools": ["home_get_state", "home_set_scene", "timemachine_forecast"],
+      "capabilities": [
+        "digital_twin_read",
+        "scene_control",
+        "time_travel_forecast"
+      ],
+      "tools": [
+        "home_get_state",
+        "home_set_scene",
+        "timemachine_forecast"
+      ],
       "requires_human_approval": false
     },
     {
       "id": "amzn1.ask.skill.hearth.commerce_replenish",
       "name": "Pantry & Subscribe & Save Optimizer",
-      "capabilities": ["depletion_forecasting", "bundle_tier_optimization", "delivery_scheduling", "voice_to_tray_checkout"],
-      "tools": ["commerce_list_inventory", "commerce_optimize_bundles", "commerce_reschedule_delivery", "commerce_autopilot_checkout"],
+      "capabilities": [
+        "depletion_forecasting",
+        "bundle_tier_optimization",
+        "delivery_scheduling",
+        "voice_to_tray_checkout"
+      ],
+      "tools": [
+        "commerce_list_inventory",
+        "commerce_optimize_bundles",
+        "commerce_reschedule_delivery",
+        "commerce_autopilot_checkout"
+      ],
       "requires_human_approval": true
     },
     {
       "id": "amzn1.ask.skill.hearth.family_arbiter",
       "name": "Family Arbiter & Energy Arbitrage",
-      "capabilities": ["pareto_bargaining", "tariff_load_shifting"],
-      "tools": ["family_arbiter_resolve"],
+      "capabilities": [
+        "pareto_bargaining",
+        "tariff_load_shifting"
+      ],
+      "tools": [
+        "family_arbiter_resolve"
+      ],
       "requires_human_approval": false
     },
     {
       "id": "amzn1.ask.skill.hearth.strands_supervisor",
       "name": "AWS Strands Multi-Agent Orchestrator",
-      "capabilities": ["multi_agent_delegation", "agentcore_memory_persistence", "supervisor_synthesis"],
-      "tools": ["strands_agent_orchestrate", "agentcore_memory_sync"],
+      "capabilities": [
+        "multi_agent_delegation",
+        "agentcore_memory_persistence",
+        "supervisor_synthesis"
+      ],
+      "tools": [
+        "strands_agent_orchestrate",
+        "agentcore_memory_sync"
+      ],
       "requires_human_approval": true
     }
   ],

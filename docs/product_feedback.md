@@ -12,17 +12,17 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
    - Implemented the official MCP specification version **2025-11-25** over Streamable HTTP (`stateless_http=True`).
    - Exposed **51 agentic tools**, 8 resources, and 3 prompt templates (`prepare_family_weekend`, `audit_monthly_finances`, `emergency_lockdown`). Counts are verified live against `tools/list` over the wire in `tests/test_mcp_http.py`.
 2. **AWS Strands Agents SDK**:
-   - Implemented the **Supervisor Multi-Agent Pattern** in [`src/hearth/strands_agent.py`](file:///home/k/Prototype/Amazon/src/hearth/strands_agent.py), coordinating specialized sub-agents (`ArbiterNegotiatorAgent`, `ReplenishmentDepletionAgent`, `SentinelGuardianAgent`).
-   - Built the open-source bridge [`src/hearth/mcp_strands_adapter.py`](file:///home/k/Prototype/Amazon/src/hearth/mcp_strands_adapter.py) linking Strands agents to Streamable HTTP MCP tools.
+   - Built the supervisor with **real `strands.Agent` objects** in [`src/hearth/strands_agent.py`](../src/hearth/strands_agent.py), using the SDK's `@tool` decorator and `Agent.as_tool()` agents-as-tools delegation for `ArbiterNegotiatorAgent`, `ReplenishmentDepletionAgent`, and `SentinelGuardianAgent`. Tool schemas are SDK-derived. `strands_backend` reports which path ran (`aws-strands-sdk` / `aws-strands-sdk-no-inference` / `pattern-fallback`) and is never guessed.
+   - Published the open-source library [`mcp-strands-adapter`](../open-source-contribution/mcp-strands-adapter/), which exposes Strands agents *as* MCP 2025-11-25 tools over Streamable HTTP — the direction the SDK does not ship. [`src/hearth/mcp_strands_adapter.py`](../src/hearth/mcp_strands_adapter.py) is a path-based re-export of it, with tests asserting no second implementation reappears.
 3. **AWS Bedrock AgentCore Memory & Gateway**:
-   - Integrated Bedrock AgentCore Memory architecture in [`src/hearth/agentcore.py`](file:///home/k/Prototype/Amazon/src/hearth/agentcore.py) for persistent conversational turns and cross-session episodic memory retrieval.
+   - Implemented an AgentCore-Memory-compatible store in [`src/hearth/agentcore.py`](../src/hearth/agentcore.py) for persistent conversational turns and cross-session episodic retrieval. `get_stats()` names its backend and implementation explicitly and sets `live_sync` only when `AWS_AGENTCORE_MEMORY_ID` and credentials are present, rather than claiming live sync unconditionally.
 4. **Amazon Bedrock Converse API (`boto3`)**:
    - Orchestrated multi-turn agentic reasoning with **Anthropic Claude 3.5 Sonnet** (`us.anthropic.claude-3-5-sonnet-20241022-v2:0`) and **Amazon Nova Pro** (`us.amazon.nova-pro-v1:0`).
    - Implemented dynamic multi-model routing based on content hints, adaptive botocore retries, and `system=[]` prompt isolation.
 5. **Alexa+ Agent Skills Runtime (`skill/agent_skills_manifest.json`)**:
-   - Built the declarative manifest engine and invocation runtime in [`src/hearth/agent_skills.py`](file:///home/k/Prototype/Amazon/src/hearth/agent_skills.py) adhering to Amazon Alexa+ Agent Skills standards.
+   - Built the declarative manifest engine and invocation runtime in [`src/hearth/agent_skills.py`](../src/hearth/agent_skills.py). The manifest is self-authored: no public Alexa+ agent-skills schema is published (the MCP Toolkit is preview / select-partner), so the date it targets is reported as `declaredAgainst` rather than a spec version, and the committed file carries no `$schema` URL.
 6. **Amazon Alexa Smart Home v3 API**:
-   - Built directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers in [`src/hearth/alexa.py`](file:///home/k/Prototype/Amazon/src/hearth/alexa.py).
+   - Built directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers in [`src/hearth/alexa.py`](../src/hearth/alexa.py).
 7. **FastMCP & Starlette / Uvicorn**:
    - Single-process server running on port `8787` serving MCP protocol endpoints on `/mcp`, REST APIs on `/api/*`, and the static multi-modal Alexa+ simulator on `/`.
 8. **SQLite & SHA-256 Cryptographic Chain**:
@@ -41,7 +41,7 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 - **AWS Strands Multi-Agent Pattern**:
   - Structuring domain responsibilities into specialized sub-agents (`Arbiter`, `Replenishment`, `Guardian`) under a supervisor pattern dramatically improved plan coherence and reduced prompt token overhead.
 - **Local-First Zero-Config Testing**:
-  - Building an intelligent local offline fallback engine allowed our 249-test suite (`pytest`) to run offline without external network dependencies or API keys.
+  - Building an intelligent local offline fallback engine allowed our 272-test suite (`pytest`) to run offline without external network dependencies or API keys.
 
 ---
 
