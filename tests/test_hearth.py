@@ -363,7 +363,6 @@ def _fake_brain_factory(script):
 
 
 def test_react_loop_gates_and_grounds(monkeypatch):
-    import json as _json
     home_mock.toggle_lock(door="front_door", locked=True)
     script = [
         {"call": {"tool": "home_toggle_lock", "args": {"door": "front_door", "locked": False}, "why": "test unlock"}},

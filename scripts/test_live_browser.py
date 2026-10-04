@@ -4,7 +4,6 @@ simulations, reversibility, custom API keys, and worst-case stress inputs.
 """
 import json
 import os
-import sys
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -162,7 +161,7 @@ def run_tests():
             # Verify Undo button appeared
             undo_btns = driver.find_elements(By.CLASS_NAME, "btn-undo")
             if undo_btns:
-                log(f"Undo affordance detected! Clicking Undo...", "PASS")
+                log("Undo affordance detected! Clicking Undo...", "PASS")
                 undo_btns[0].click()
                 time.sleep(1.5)
                 log("Undo clicked: state rolled back safely!", "PASS")

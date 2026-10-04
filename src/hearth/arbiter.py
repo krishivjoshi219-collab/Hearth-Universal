@@ -182,7 +182,7 @@ def arbitrate_multi_resident_climate(parties: list[dict], custom_params: dict | 
             perceived_offset = min(round(abs(delta) * 0.55, 1), 1.2)
             perceived_c = round(target_setpoint + perceived_offset, 1)
             tactic = "zone baffle focus"
-            zone_baffles[p_name] = f"Zone baffle damper restricted (deflect cool draft)"
+            zone_baffles[p_name] = "Zone baffle damper restricted (deflect cool draft)"
         else:
             perceived_c = target_setpoint
             tactic = "ambient neutral"
@@ -277,7 +277,7 @@ def arbitrate_tariff_load_shifting(custom_params: dict | None = None) -> dict:
     diff_str = f"Immediate Start (${peak_rate:.2f}/kWh) -> Delayed to 9:15 PM (${offpeak_rate:.2f}/kWh)"
 
     parties = [
-        {"name": "Household User", "request": f"Start Heavy Wash Cycle immediately" if device == "dishwasher" else f"Charge {device_title} immediately"},
+        {"name": "Household User", "request": "Start Heavy Wash Cycle immediately" if device == "dishwasher" else f"Charge {device_title} immediately"},
         {"name": "Grid Sentinel", "policy": f"Peak pricing active until 9:00 PM (${peak_rate:.2f}/kWh)"},
     ]
 

@@ -10,7 +10,7 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 
 1. **Model Context Protocol (MCP) Python SDK (`mcp>=1.29.1,<2`)**:
    - Implemented the official MCP specification version **2025-11-25** over Streamable HTTP (`stateless_http=True`).
-   - Exposed 35 agentic tools, 4 resources (`household://profile`, `home://state`, `commerce://inventory`, `audit://chain`), and 3 prompt templates (`prepare_family_weekend`, `audit_monthly_finances`, `emergency_lockdown`).
+   - Exposed **51 agentic tools**, 8 resources, and 3 prompt templates (`prepare_family_weekend`, `audit_monthly_finances`, `emergency_lockdown`). Counts are verified live against `tools/list` over the wire in `tests/test_mcp_http.py`.
 2. **AWS Strands Agents SDK**:
    - Implemented the **Supervisor Multi-Agent Pattern** in [`src/hearth/strands_agent.py`](file:///home/k/Prototype/Amazon/src/hearth/strands_agent.py), coordinating specialized sub-agents (`ArbiterNegotiatorAgent`, `ReplenishmentDepletionAgent`, `SentinelGuardianAgent`).
    - Built the open-source bridge [`src/hearth/mcp_strands_adapter.py`](file:///home/k/Prototype/Amazon/src/hearth/mcp_strands_adapter.py) linking Strands agents to Streamable HTTP MCP tools.
@@ -41,7 +41,7 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 - **AWS Strands Multi-Agent Pattern**:
   - Structuring domain responsibilities into specialized sub-agents (`Arbiter`, `Replenishment`, `Guardian`) under a supervisor pattern dramatically improved plan coherence and reduced prompt token overhead.
 - **Local-First Zero-Config Testing**:
-  - Building an intelligent local offline fallback engine allowed our 222-test suite (`pytest`) to run offline without external network dependencies or API keys.
+  - Building an intelligent local offline fallback engine allowed our 249-test suite (`pytest`) to run offline without external network dependencies or API keys.
 
 ---
 

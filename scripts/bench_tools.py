@@ -6,7 +6,6 @@ dev tree. Read-only calls only — no proposals decided, no hardware touched.
 """
 import json
 import os
-import statistics
 import sys
 import tempfile
 import time

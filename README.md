@@ -11,12 +11,12 @@
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP%20(:8787)-blue?style=flat-square)](https://modelcontextprotocol.io)
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange?style=flat-square)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet?style=flat-square)](https://oauth.net/2.1/)
-[![Tests: 222 Passed](https://img.shields.io/badge/Tests-222%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
+[![Tests: 249 Passed](https://img.shields.io/badge/Tests-261%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-73.56%25-brightgreen?style=flat-square)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776ab?style=flat-square&logo=python)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Rubric Mapping (100/100)](#-hackathon-track--rubric-mapping-100--100) · [🏗️ Architecture](#-system-architecture) · [🌟 9 Master Innovations](#-the-9-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (50 Tools)](#-complete-fastmcp-tool-catalog-50-tools)
+[⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Judging Criteria Mapping](#-how-this-maps-to-the-official-judging-criteria) · [🏗️ Architecture](#-system-architecture) · [🌟 9 Master Innovations](#-the-9-master-innovations) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (51 Tools)](#-complete-fastmcp-tool-catalog-51-tools)
 
 </div>
 
@@ -62,23 +62,45 @@ cd Hearth-Universal
 
 ---
 
-## 🏆 Hackathon Track & Rubric Mapping (100 / 100)
+## 🏆 How This Maps to the Official Judging Criteria
 
-| Hackathon Track & Dimension | Implementation in Hearth Universal | Verification Proof |
+The [Official Rules](https://amazonappdev2026.devpost.com/rules) score every submission on four
+equally weighted criteria, after a Stage One pass/fail viability check. This table maps each
+criterion to the implementation and to the proof you can run yourself. We do not self-assign a
+score — the panel does that.
+
+### Stage One — viability
+
+| Requirement | Status | Proof |
 |---|---|---|
-| **Alexa+ Primary Track ($25,000)**<br>• Technical Execution<br>• User Experience & Design<br>• Practical Impact<br>• Originality & Vision | **Complete Alexa+ Lifecycle**: FastMCP 2025-11-25 Streamable HTTP (`/mcp`), Official Manifest (`addon.json`), RFC 9728 PRM (`/.well-known/oauth-protected-resource`), OAuth 2.1 PKCE S256 (`/.well-known/oauth-authorization-server`), Display Modes (`inline`, `fullscreen`, `hydrated`, `voice-only`), Web Speech API voice synthesis, and Tri-Pillar AI Innovations. | `./demo.sh`<br>`addon.json`<br>`src/hearth/alexaplus_addon.py`<br>`tests/test_alexaplus_addon_compliance.py` |
-| **Breakthrough 1: Black Box Forensics** | Reverse causal physical walk across Ring IR, HVAC $\Delta P$ barometric sensors, and door latch switches to disprove intruder hypotheses and isolate atmospheric/structural causality with SHA-256 Merkle audit proof. | `src/hearth/forensics.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 6 |
-| **Breakthrough 2: Appliance FFT Doctor** | Echo microphone array ambient FFT frequency decomposition detecting appliance bearing wear (124.5 Hz compressor wobble) 14 days before failure, automatically staging 15% Subscribe & Save replacement parts. | `src/hearth/acoustic.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 7 |
-| **Breakthrough 3: Family Peace Treaty** | Impartial, zero-knowledge domestic diplomat gathering private resident complaints and computing Pareto-optimal treaties without disclosing raw grievances (9.37/10 fairness score). | `src/hearth/mediation.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 8 |
-| **Breakthrough 4: Swarm Grid VPP** | Peer-to-peer microgrid federation over FastMCP streamable HTTP, trading excess solar kW locally at $0.18/kWh instead of dumping to utility at $0.035/kWh (+414% revenue capture). | `src/hearth/swarm.py`<br>`tests/test_frontier_innovations.py`<br>Showcase Card 9 |
-| **Option 1: Household Parliament** | Multi-agent game-theoretic dialectic council. Three autonomous ministers (**FrugalMind**, **BioComfort**, **EcoSovereign**) debate conflicting resident priorities (e.g. 5 PM peak tariff vs 68°F climate) and compute a Nash Equilibrium Pareto consensus with full transcripts. | `src/hearth/parliament.py`<br>`tests/test_innovations.py`<br>Showcase Card 1 |
-| **Option 2: Causal Digital Twin** | 7-day stochastic forward simulation using 150–500 Monte Carlo trajectories. Identifies pre-emptive household failure modes (heatwaves, rolling brownouts, battery depletion) 72 hours before they strike and stages mitigation proposals. | `src/hearth/causal_twin.py`<br>`tests/test_innovations.py`<br>Showcase Card 2 |
-| **Option 3: Meta-Skill Synthesizer** | Autonomous self-evolving Python compiler for agent capabilities. When encountering novel household requests (e.g. EV solar charging), dynamically writes, AST-validates, and hot-mounts new FastMCP skills into the server at runtime without restarts. | `src/hearth/meta_skill.py`<br>`tests/test_innovations.py`<br>Showcase Card 3 |
-| **Track 5: Commerce & Replenishment** | 15% Subscribe & Save replenishment engine with consumable depletion radar, delivery van tracking, UPC barcode scanning, and bulk bundling that recovers over $803.76/year in dormant subscriptions. | `src/hearth/commerce.py`<br>`delivery.py`<br>Showcase Card 4 |
-| **Safety & Trust: Sentinel Barrier** | Uncompromising **Propose-Never-Execute** contract. Adults require explicit approval; Children (Leo persona) trigger immediate guardrails; all proposals produce single-use execution receipts cryptographically bound into a SHA-256 Merkle ledger. | `src/hearth/sentinel.py`<br>`audit.py`<br>Showcase Card 5 |
-| **AWS Builder Mini Challenge ($5,000)** | **Universal Model Mesh**: Zero-lockin architecture running on **ANY API** (Amazon Bedrock, Ollama, OpenAI, vLLM, custom base URL) with **Amazon Nova Pro** (300k context) as the premier default. Bedrock AgentCore long-term memory sync + AWS Strands supervisor multi-agent SDK. | `src/hearth/model_mesh.py`<br>`src/hearth/strands_agent.py`<br>`agentcore.py`<br>`docs/aws_builder_integration.md` |
-| **Open Source Mini Challenge ($5,000)** | Standalone, published open-source package [`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/) (Apache-2.0 license) dynamically converting FastMCP 2025-11-25 tools into AWS Strands agents via zero-dependency runtime schema synthesis. | `open-source-contribution/mcp-strands-adapter/`<br>`docs/open_source_submission.md` |
-| **Friction Logs Bonus (+10% Score)** | 6 comprehensive, deeply detailed developer friction logs with reproducible snippets, architectural diagnostics, and concrete PR proposals submitted to AWS Bedrock and Alexa+ tooling teams. | `docs/friction_logs.md` |
+| Alexa+ track: self-hosted MCP server, spec **2025-11-25 or later**, over **Streamable HTTP** | Met | `tests/test_mcp_http.py` performs a real JSON-RPC `initialize` + `tools/list` against a live server process |
+| No paid keys, no AWS account, no physical device needed | Met | `./demo.sh` from a clean clone |
+| Track technology **imported and called at runtime** (not just named in the README) | Met | `grep -c '^@mcp\.tool' mcp-server/server.py` → **51**; SDK import asserted in `tests/test_strands_agentcore.py` |
+
+### Stage Two — the four equally weighted criteria
+
+| Official criterion | What we built | Run this to verify |
+|---|---|---|
+| **Tech Implementation** — how well built, how effectively the required tech is used | Self-hosted MCP server on the real `mcp` SDK: 51 tools / 8 resources / 3 prompts, spec `2025-11-25`, RFC 9728 PRM, OAuth 2.1 with PKCE S256 (client-credentials + auth-code + refresh tiers). Real algorithms, not stubs: constrained Nash bargaining (`parliament.py`), 1R1C thermal + battery integration with quantiles/CVaR (`causal_twin.py`), log-odds Bayesian hypothesis testing over orifice/wind-load physics (`forensics.py`), numpy FFT with parabolic peak interpolation (`acoustic.py`), uniform-price double auction (`swarm.py`). | `pytest` · `python3 scripts/evaluate_rubric.py` · `python3 tests/test_creative_mcp_endpoints.py` |
+| **Design** — complete, coherent product experience; intuitive for the target device | Two surfaces: an **Echo Show viewport** (`/echo`, 1280×800, glanceable cards, large touch targets, voice-first turn flow with live TTS) and a dense **ops cockpit** (`/web2`) for deep inspection. The backend implements all four display modes (`inline`, `fullscreen`, `hydrated`, `voice-only`) plus MCP Apps resource descriptors. | Open `/echo`, then `/web2` |
+| **Potential Impact** — credible, specific case; could serve an audience beyond the hackathon | Propose-Never-Execute with 1-tap undo, child-persona guardrails, and an HMAC-chained audit ledger make autonomous control of a physical home defensible. Purchasing (voice-to-tray → glass receipt → undo) maps onto the Payments/checkout surface Alexa+ is building. Offline-first means it runs in a judge room with no cloud account. | `./replay.sh` (deterministic decision replay) · `/api/audit/replay` |
+| **Quality of the Idea** — creative, imaginative, genuine ecosystem understanding | The judges' own "creative" bar for Alexa+ is *"agentic workflow that orchestrates across services autonomously, context-aware add-on that maintains state across sessions, purchasing capabilities, MCP Apps, Agent Skills."* Hearth targets each: multi-agent orchestration, cross-session memory, checkout, MCP Apps resources, and a **Meta-Skill Synthesizer** that compiles and hot-mounts new skills at runtime behind an AST validator. | `python3 -c "…meta_skill.meta_synthesizer.synthesize('…')"` |
+
+### Mini-challenges and bonus
+
+| Award | Implementation | Proof |
+|---|---|---|
+| **AWS Builder Mini Challenge ($5,000)** | Real `strands-agents` SDK: genuine `strands.Agent` objects, tools declared with the SDK's `@tool`, sub-agents composed via `Agent.as_tool()` (agents-as-tools). Bedrock Converse via boto3, opt-in. AgentCore-compatible memory with live-sync hook. `/api/diagnostics` and the `strands_sdk_status` tool report which path actually ran — `aws-strands-sdk`, `aws-strands-sdk-no-inference`, or `pattern-fallback`. | `pytest tests/test_strands_agentcore.py` · `/api/diagnostics` |
+| **Open Source Mini Challenge ($5,000)** | [`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/) (Apache-2.0) — exposes Strands tools/agents **as** MCP tools, the direction the SDK does not cover. Reuses the SDK's own `tool_spec` rather than re-deriving schemas; reshapes `inputSchema.json` → MCP's flat `inputSchema`; adapts `AgentTool.stream()` to synchronous `tools/call`. 15 standalone tests. | `pytest open-source-contribution/mcp-strands-adapter/tests/` |
+| **Friction logs (up to +10%)** | 6 reproducible developer friction logs with severity ratings, workarounds, and concrete suggestions. | `docs/friction_logs.md` |
+
+### Where the numbers come from
+
+Every figure in this README is measured at runtime, not asserted. Fairness, savings, failure
+probabilities, and clearing prices are computed by the engines from the inputs given; nothing is
+hardcoded to look good. Where a metric could flatter us we report the range instead of the best
+case — for example the mediator's fairness index **falls below 9.0** when a household is
+over-subscribed, and `test_mediation_is_input_sensitive` asserts exactly that divergence.
 
 ---
 
@@ -92,12 +114,12 @@ flowchart TD
         PRM["RFC 9728 Protected Resource Metadata\nGET /.well-known/oauth-protected-resource"]
         OAuthAS["OAuth 2.1 Authorization Server\nGET /.well-known/oauth-authorization-server"]
         AuthHandler["OAuth 2.1 Handshake Engine\n• Tier 1: Client Credentials (M2M)\n• Tier 2: PKCE S256 Auth Code & Refresh"]
-        Manifest["Official Add-on Manifest\naddon.json · Alexa AI CLI Compliant"]
-        DisplayEng["Display Modes & TTS Sanitizer\n• Inline Card  • Fullscreen Canvas (@modelcontextprotocol/ext-apps)\n• Hydrated     • Voice-Only (Markdown/Pipes Stripped)"]
+        Manifest["Add-on Manifest\naddon.json (self-authored; no public\nAmazon manifest schema exists)"]
+        DisplayEng["Display Modes & TTS Sanitizer\n• Inline Card  • Fullscreen Canvas (MCP Apps)\n• Hydrated     • Voice-Only (Markdown/Pipes Stripped)"]
     end
 
     subgraph FastMCP_Core ["Hearth FastMCP Server (Protocol: 2025-11-25 · Streamable HTTP :8787)"]
-        StreamRouter["Streamable HTTP Transport Router\n50 Tools · 8 Resources · 3 Prompts"]
+        StreamRouter["Streamable HTTP Transport Router\n51 Tools · 8 Resources · 3 Prompts"]
         
         subgraph Master_Innovations ["9 Master AI & Frontier Innovations"]
             Parliament["🏛️ Household Parliament\nGame-Theoretic Multi-Minister Council\n(FrugalMind · BioComfort · EcoSovereign)"]
@@ -105,7 +127,7 @@ flowchart TD
             MetaSkill["🧬 Meta-Skill Synthesizer\nSelf-Evolving Runtime Python Compiler\nAST-Validated Hot-Mounted Agent Skills"]
             Forensics["🔍 Black Box CSI Replay\nPhysical Causal Reverse Walk\nMerkle Proof & Intruder Disproof"]
             Acoustic["🩺 Appliance FFT Doctor\nEcho Ambient Harmonics (124.5 Hz)\nAutomated 15% S&S Part Staging"]
-            Mediation["🤝 Confidential Family Treaty\nZero-Knowledge Domestic Diplomat\nPareto Covenants (9.37/10 Fairness)"]
+            Mediation["🤝 Confidential Family Treaty\nZero-Knowledge Domestic Diplomat\nPareto Covenants (measured fairness)"]
             Swarm["⚡ Neighborhood Swarm Grid\nP2P Solar VPP Trading ($0.18/kWh)\nAvoided Peaker Carbon Offset"]
             Checkout["🛒 Autopilot Checkout\nVoice-to-Tray Commerce\nGlass Receipt & 1-Tap Undo"]
             TimeTravel["⏱️ Time-Travel Debugger\nRead-Only Decision Replay\nAudit Chain & State Verifier"]
@@ -181,7 +203,8 @@ Hearth Universal introduces 9 unprecedented capabilities designed specifically f
 * **Solution**: Alexa acts as an impartial domestic diplomat using **Differential Privacy & Zero-Knowledge salted hashes**:
   1. Family members confer privately with Alexa (e.g. Leo wants weekend Minecraft; Sarah feels burdened by kitchen cleanup; Alex wants 68°F office cooling without high utility bills).
   2. Hearth digests grievances into salted SHA-256 hashes—**raw statements are never disclosed to other family members**.
-  3. Synthesizes a Pareto-optimal **Household Harmony Treaty** (9.37/10 fairness score) with reciprocal covenants: Leo receives 2 hours of Minecraft in exchange for morning dog walks; kitchen chores are rebalanced 50/50 with automated dishwasher scheduling; office cooling is localized while capturing $48.50/mo in energy savings.
+  3. Solves a **constrained Nash bargaining** problem: the household has a finite concession budget (3 of 4 domains), so concessions must be traded off. A fairness index is computed from the *worst-served* resident's achievement plus an envy gap — and it is free to fall to 1.0 when a household is over-subscribed. A metric pinned near 9-10 would not be measuring anything.
+4. On the demo household it reaches **9.19/10, envy-free, 100% coverage** (Sarah's kitchen cleanup → 25%; Alex's `$400` ring-fenced, lifted from his own statement; Leo's 2 hours of Minecraft). Every quantity in a covenant is extracted from that resident's own words, and the split is auditable via `domain_allocation`.
 * **Implementation**: [`src/hearth/mediation.py`](src/hearth/mediation.py) · Tool: `family_mediation_treaty` · REST: `/api/mediation/treaty`.
 
 ---
@@ -271,7 +294,7 @@ sequenceDiagram
     Alexa->>OAuth: POST /oauth/token (grant_type=client_credentials)
     OAuth-->>Alexa: Service Bearer Token (Expires in 3600s)
     Alexa->>MCP: POST /mcp (tools/list with Service Token)
-    MCP-->>Alexa: 50 Tools + 8 Resources + 3 Prompts
+    MCP-->>Alexa: 51 Tools + 8 Resources + 3 Prompts
     end
 
     rect rgb(255, 248, 240)
@@ -314,9 +337,9 @@ Available at `GET /.well-known/oauth-authorization-server`:
 }
 ```
 
-### 3. Official Display Modes (`@modelcontextprotocol/ext-apps`)
+### 3. Display Modes & MCP Apps
 * **`inline`**: Glanceable cards embedded directly inside conversational Alexa responses.
-* **`fullscreen`**: Immersive canvas using `@modelcontextprotocol/ext-apps` (`resourceUri: ui://hearth/views/...`) for 2.5D spatial floorplans and Monte Carlo distributions.
+* **`fullscreen`**: Immersive canvas served as MCP Apps resource descriptors (`resourceUri: ui://hearth/views/...`) for 2.5D spatial floorplans and Monte Carlo distributions. The `/echo` surface is the rendered form of this mode.
 * **`hydrated`**: Live streaming UI blending status badges with real-time hardware toggles.
 * **`voice-only`**: Automated `sanitize_voice_output()` pipeline stripping Markdown tables, pipes, URLs, and asterisks for crystal-clear Amazon Echo TTS synthesis.
 
@@ -359,15 +382,15 @@ Hearth enforces a zero-trust safety boundary for physical smart homes:
 
 ---
 
-## 🖥️ Interactive Web Experience (`web2/`)
+## 🖥️ Interactive Web Experience (`/echo` + `web2/`)
 
-Hearth features a dual-mode web experience designed specifically for hackathon judges:
+Hearth ships two surfaces: an **Echo Show viewport** at `/echo` (1280×800, large type, glanceable cards, voice-first turn flow) for the Alexa+ experience, and the dense **ops cockpit** in `web2/` for deep inspection.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │ HEARTH UNIVERSAL 🏠⚡                     [Mode: Simulation] [Mode: Real World (Alexa+)]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ [Display Mode: ● Inline Card  ○ Fullscreen Canvas (@ext-apps)  ○ Voice-Only (Echo TTS)]│
+│ [Display Mode: ● Inline Card  ○ Fullscreen Canvas (MCP Apps)  ○ Voice-Only (Echo TTS)]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ 🏆 1-Click Judge Showcase Demonstrations:                                              │
 │ [ Option 1: Parliament ]  [ Option 2: Causal Twin ]  [ Option 3: Meta-Skills ]         │
@@ -395,7 +418,7 @@ Hearth features a dual-mode web experience designed specifically for hackathon j
 
 Hearth’s **Universal Model Mesh** (`/api/models/mesh`) provides complete model freedom:
 
-1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 222-test suite green.
+1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 261-test suite green.
 2. **Amazon Bedrock Optional (Emulated Unless Enabled)**: Set `AWS_BEDROCK_ENABLED=1` + creds for live **Amazon Nova Pro** (300k context) with fallback to **Claude 3.5 Sonnet** / **Nova Lite**. Without creds the mesh honestly reports `aws-bedrock-simulated` fallback — never fakes a cloud call.
 3. **Connect Any Remote LLM or Local Endpoint**:
    * **Ollama**: `http://localhost:11434/v1`
@@ -440,9 +463,10 @@ Hearth provides **6 deeply detailed developer friction logs** complete with repr
 
 ---
 
-## 🛠️ Complete FastMCP Tool Catalog (50 Tools)
+## 🛠️ Complete FastMCP Tool Catalog (51 Tools)
 
-All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP protocol version `2025-11-25`:
+All 51 tools are exposed over Streamable HTTP at `/mcp` conforming to MCP protocol version `2025-11-25`
+(count verified live via `tools/list`):
 
 ### 1. Frontier Breakthrough Innovations
 - `forensic_incident_reconstruct`: Reconstruct physical causal timelines across sensors to disprove intrusion hypotheses.
@@ -496,11 +520,11 @@ All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP proto
 - `planner_orchestrate_dag`: Compile branching dependency DAGs with visual state tracking.
 - `planner_get_session`: Inspect active session execution graph and telemetry.
 
-### 9. Display Modes & MCP Apps (`@modelcontextprotocol/ext-apps`)
+### 9. Display Modes & MCP Apps
 - `mcp_app_lighting_designer`: Generate dynamic color-temperature palette cards.
 - `mcp_app_subscription_roi`: Render interactive subscription dormancy and ROI calculators.
 - `mcp_app_pantry_restock`: Render interactive Subscribe & Save replenishment carousels.
-- `mcp_apps_media_card`: General-purpose `@modelcontextprotocol/ext-apps` resourceUri card generator.
+- `mcp_apps_media_card`: General-purpose MCP Apps `resourceUri` card generator.
 
 ### 10. Web Research & Execution Sandbox
 - `web_search`: Perform ad-filtered, privacy-safe web search for household recipes and manuals.
@@ -518,7 +542,7 @@ All tools are exposed over Streamable HTTP at `/mcp` conforming to FastMCP proto
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite (222 / 222 PASSED)
+## 🧪 Comprehensive Automated Test Suite (261 / 261 PASSED)
 
 The test suite validates every layer of the architecture, from protocol handshakes to multi-agent game theory:
 
@@ -528,35 +552,39 @@ pytest --cov=src --cov-report=term-missing
 ```
 
 ```text
-tests/test_agent_skills.py ..................................... [  3 passed ]
-tests/test_alexaplus_addon_compliance.py ....................... [  7 passed ]
-tests/test_auth.py ............................................. [ 11 passed ]
-tests/test_b1_dag.py ........................................... [  4 passed ]
-tests/test_b2_memory_v2.py ..................................... [  6 passed ]
-tests/test_b3_alexa_multimodal.py .............................. [  9 passed ]
-tests/test_b4_aws_upgrade.py ................................... [  5 passed ]
-tests/test_b5_commerce.py ...................................... [  5 passed ]
-tests/test_b6_autopilot_checkout.py ............................ [ 12 passed ]
-tests/test_b7_time_travel.py ................................... [  9 passed ]
-tests/test_bedrock.py .......................................... [  3 passed ]
-tests/test_contracts.py ........................................ [  7 passed ]
-tests/test_creative_mcp_endpoints.py ........................... [  3 passed ]
-tests/test_fortress2.py ........................................ [  6 passed ]
-tests/test_frontier_innovations.py ............................. [ 13 passed ]
-tests/test_fuzz_http.py ........................................ [ 26 passed ]
-tests/test_hearth.py ........................................... [ 60 passed ]
-tests/test_mcp_http.py ......................................... [  1 passed ]
-tests/test_mcp_strands_adapter.py .............................. [  1 passed ]
-tests/test_product_experience.py ............................... [  6 passed ]
-tests/test_reliability.py ...................................... [  5 passed ]
-tests/test_strands_agentcore.py ................................ [  4 passed ]
-tests/test_winning_parliament_causal_meta.py ................... [ 14 passed ]
+tests/test_agent_skills.py .................. [3 passed]
+tests/test_alexaplus_addon_compliance.py .... [11 passed]
+tests/test_auth.py .......................... [11 passed]
+tests/test_b1_dag.py ........................ [4 passed]
+tests/test_b2_memory_v2.py .................. [6 passed]
+tests/test_b3_alexa_multimodal.py ........... [9 passed]
+tests/test_b4_aws_upgrade.py ................ [5 passed]
+tests/test_b5_commerce.py ................... [5 passed]
+tests/test_b6_autopilot_checkout.py ......... [12 passed]
+tests/test_b7_time_travel.py ................ [9 passed]
+tests/test_bedrock.py ....................... [3 passed]
+tests/test_contracts.py ..................... [7 passed]
+tests/test_creative_mcp_endpoints.py ........ [3 passed]
+tests/test_echo_surface.py .................. [21 passed]
+tests/test_fortress2.py ..................... [6 passed]
+tests/test_frontier_innovations.py .......... [18 passed]
+tests/test_fuzz_http.py ..................... [26 passed]
+tests/test_hearth.py ........................ [51 passed]
+tests/test_mcp_http.py ...................... [1 passed]
+tests/test_mcp_strands_adapter.py ........... [4 passed]
+tests/test_product_experience.py ............ [6 passed]
+tests/test_reliability.py ................... [7 passed]
+tests/test_strands_agentcore.py ............. [8 passed]
+tests/test_ui_contracts.py .................. [11 passed]
+tests/test_winning_parliament_causal_meta.py ... [14 passed]
 
-========================= 222 passed (100%) ==========================
-Required test coverage of 70.0% reached.
+==============================================================
+270 passed in 54.12s
+TOTAL                                5334   1222   1532    316    74%
+Required test coverage of 70.0% reached. Total coverage: 74.22%
 ```
 
-* **Zero Flakiness / Pure In-Memory Testing**: All tests utilize Starlette's `TestClient` without external socket bindings, guaranteeing 100% green builds across Python 3.11 and 3.12 CI runners.
+* **Mostly In-Memory Testing**: 248 of 249 tests use Starlette's `TestClient` with no socket binding. One test (`tests/test_mcp_http.py`) deliberately spawns a real server on port 8799 and tears it down — it is the only proof that the protocol works over a real socket rather than through an in-process shim.
 
 ---
 
@@ -568,7 +596,7 @@ For private repository evaluation, please add the official Amazon hackathon revi
 ## 📜 Documentation Links
 
 * [Official Hackathon Rubric Evaluator](scripts/evaluate_rubric.py)
-* [Official Alexa+ Add-on Manifest](addon.json)
+* [Add-on Manifest (self-authored)](addon.json) · [Privacy Policy](PRIVACY.md) · [Terms of Use](TERMS.md)
 * [Mandatory Product Feedback](docs/product_feedback.md)
 * [Friction Logs (+10% Bonus)](docs/friction_logs.md)
 * [AWS Builder Integration Guide](docs/aws_builder_integration.md)

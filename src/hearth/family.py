@@ -118,7 +118,7 @@ def negotiate_climate(parties: list[dict] | None = None,
     # Persist the outcome for context continuity (best-effort, never fatal).
     try:
         memory.remember(
-            f"arbiter_climate_last",
+            "arbiter_climate_last",
             f"{result['compromise'].get('target_setpoint')}°C via {result.get('resolution_badge', 'Pareto')} "
             f"({', '.join(p['name'] for p in norm)})",
             owner="household",

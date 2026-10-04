@@ -1213,7 +1213,7 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             goals_res = call_tool("goals_list", {}, "Fetch all household goals from SQLite")
             goals = goals_res.get("goals", [])
             lines = [f"• **{g['title']}** (Progress: Step {g['progress']} of {len(g.get('steps', []))}) — Status: {g['status'].upper()}" for g in goals]
-            grounded_synthesis = f"Here are your active household goals:\n\n" + "\n".join(lines)
+            grounded_synthesis = "Here are your active household goals:\n\n" + "\n".join(lines)
 
     # --------------------------------------------------------------------------
     # F. Trip Planning (live web research + staged booking — zero fixture data)

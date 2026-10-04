@@ -1,7 +1,6 @@
 """Tests for Alexa+ Agent Skills Runtime and Declarative Manifest."""
 import json
 import os
-import pytest
 from hearth import agent_skills
 
 

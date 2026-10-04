@@ -102,7 +102,7 @@ class TestResourcesManifest:
     def test_tray_resource(self, client):
         commerce.build_autopilot_checkout(utterance="reorder coffee")
         # resources are mounted on the MCP app; exercise via direct import
-        from server import checkout_tray, receipt_last
+        from server import checkout_tray
         import json
         tray = json.loads(checkout_tray())
         assert "pending" in tray

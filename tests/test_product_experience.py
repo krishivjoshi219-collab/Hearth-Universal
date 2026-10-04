@@ -9,7 +9,7 @@ from starlette.testclient import TestClient
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
-from hearth import proposals, home_mock, audit, heartbeat, sentinel
+from hearth import proposals, home_mock, audit
 import server
 
 
