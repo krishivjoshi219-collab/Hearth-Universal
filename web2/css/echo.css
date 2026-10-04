@@ -1,0 +1,822 @@
+/* Hearth — Echo Show surface (1280x800 landscape).
+ *
+ * Design intent: an Echo Show is an *ambient* device that is on all day, so the
+ * resting state must be glanceable from across a room, not a dense dashboard.
+ * That drives every value below.
+ *
+ * Contrast with the ops cockpit (web2/css): body text is 21px instead of 13.5px,
+ * hero numerals reach 92px, and every interactive target is at least 64px tall
+ * (touch-first, no mouse). Information density is deliberately capped at three
+ * glanceable zones.
+ *
+ * No inline styles or scripts: served under CSP script-src 'self'; style-src 'self'.
+ */
+
+:root {
+  /* Surfaces — same zinc family as the cockpit so the two read as one product. */
+  --e-s0: #08080a;
+  --e-s1: #0f0f13;
+  --e-s2: #16161b;
+  --e-s3: #1f1f26;
+  --e-line: rgba(255, 255, 255, 0.09);
+  --e-line-strong: rgba(255, 255, 255, 0.16);
+
+  /* Type */
+  --e-t1: #f7f7f8;
+  --e-t2: #a8a8b2;
+  --e-t3: #6e6e78;
+
+  /* Signal */
+  --e-amber: #f5a524;
+  --e-amber-soft: rgba(245, 165, 36, 0.15);
+  --e-ok: #34d399;
+  --e-ok-soft: rgba(52, 211, 153, 0.14);
+  --e-bad: #f87171;
+  --e-bad-soft: rgba(248, 113, 113, 0.14);
+  --e-cool: #7dd3fc;
+
+  /* Type scale — room-readable. */
+  --e-xs: 15px;
+  --e-sm: 17px;
+  --e-body: 21px;
+  --e-lg: 27px;
+  --e-xl: 36px;
+  --e-hero: 92px;
+
+  --e-font: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    Roboto, sans-serif;
+  --e-mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --e-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  background: var(--e-s0);
+  color: var(--e-t1);
+  font-family: var(--e-font);
+  font-size: var(--e-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.mono {
+  font-family: var(--e-mono);
+}
+
+/* ---------------------------------------------------------------- shell --- */
+
+.shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  height: 100vh;
+  padding: 26px 34px 24px;
+  gap: 18px;
+}
+
+/* ----------------------------------------------------------------- topbar --- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.brand h1 {
+  font-size: var(--e-lg);
+  font-weight: 680;
+  letter-spacing: -0.015em;
+}
+
+.brand .tag {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.clock {
+  margin-left: auto;
+  text-align: right;
+}
+
+.clock .time {
+  font-size: var(--e-xl);
+  font-weight: 620;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.clock .date {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  margin-top: 4px;
+}
+
+.chipbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--e-line);
+  background: var(--e-s2);
+  color: var(--e-t2);
+  font-size: var(--e-xs);
+  font-weight: 560;
+  cursor: pointer;
+  transition: background 160ms var(--e-ease), color 160ms var(--e-ease),
+    border-color 160ms var(--e-ease);
+}
+
+.chip:hover {
+  background: var(--e-s3);
+  color: var(--e-t1);
+}
+
+.chip[aria-pressed="true"] {
+  background: var(--e-amber-soft);
+  border-color: rgba(245, 165, 36, 0.45);
+  color: var(--e-amber);
+}
+
+.chip .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--e-t3);
+}
+
+/* Utility classes (no inline styles: CSP style-src 'self' forbids them). */
+.chip-right {
+  margin-left: auto;
+}
+
+.card-panel-grow {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.chip .dot.ok {
+  background: var(--e-ok);
+}
+.chip .dot.warn {
+  background: var(--e-amber);
+}
+.chip .dot.bad {
+  background: var(--e-bad);
+}
+
+/* ------------------------------------------------------------------- main --- */
+
+.main {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 20px;
+  min-height: 0;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: linear-gradient(180deg, var(--e-s1), var(--e-s0));
+  border: 1px solid var(--e-line);
+  border-radius: 26px;
+  padding: 26px 30px;
+  overflow: hidden;
+}
+
+.eyebrow {
+  font-size: var(--e-xs);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--e-t3);
+  font-weight: 620;
+}
+
+/* Ambient resting state: one glanceable hero plus supporting numerals.
+ * When a result is showing, the ambient block yields space to the reply
+ * (see body.has-result) so the response is never clipped off-screen. */
+.ambient {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 2px;
+  transition: opacity 220ms var(--e-ease);
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+}
+
+.hero .deg {
+  font-size: 78px;
+  font-weight: 300;
+  line-height: 0.86;
+  letter-spacing: -0.045em;
+}
+
+.hero .unit {
+  font-size: var(--e-xl);
+  color: var(--e-t3);
+  padding-bottom: 10px;
+}
+
+.hero .where {
+  margin-left: auto;
+  text-align: right;
+  padding-bottom: 8px;
+}
+
+.hero .where .label {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.hero .where .val {
+  font-size: var(--e-lg);
+  font-weight: 560;
+  margin-top: 2px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+/* Compact by design: on an 800px-tall screen every pixel the metrics give up
+ * goes to the conversation region below, which is where answers appear. */
+.metric {
+  background: var(--e-s2);
+  border: 1px solid var(--e-line);
+  border-radius: 18px;
+  padding: 13px 16px;
+}
+
+.metric .k {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+}
+
+.metric .v {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+  line-height: 1.08;
+}
+
+.metric .s {
+  font-size: 14px;
+  color: var(--e-t2);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric.ok .v {
+  color: var(--e-ok);
+}
+.metric.warn .v {
+  color: var(--e-amber);
+}
+.metric.cool .v {
+  color: var(--e-cool);
+}
+
+/* Spoken / response region.
+ *
+ * This is the scroll container. On a 1280x800 Echo Show the stage is ~370px tall,
+ * so a rich result (verdict banner + several cards) does not fit alongside the
+ * ambient hero. Rather than clip the reply -- which silently hides the answer
+ * from anyone standing in the room -- the region scrolls and the ambient block
+ * recedes while a result is displayed.
+ */
+.speech {
+  margin-top: auto;
+  border-top: 1px solid var(--e-line);
+  padding-top: 18px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+/* Result state: recede the ambient hero so the reply owns the stage. */
+body.has-result .ambient {
+  opacity: 0.45;
+  gap: 12px;
+}
+
+body.has-result .hero .deg {
+  font-size: 52px;
+}
+
+body.has-result .hero .unit {
+  font-size: var(--e-lg);
+  padding-bottom: 4px;
+}
+
+body.has-result .metrics {
+  display: none;
+}
+
+.speech .said {
+  font-size: var(--e-lg);
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.speech .said .q {
+  color: var(--e-t3);
+}
+
+.reply {
+  font-size: var(--e-body);
+  color: var(--e-t2);
+  margin-top: 10px;
+}
+
+.thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--e-amber);
+  font-size: var(--e-body);
+}
+
+.thinking .bars {
+  display: inline-flex;
+  gap: 4px;
+  align-items: flex-end;
+  height: 22px;
+}
+
+.thinking .bars i {
+  width: 4px;
+  height: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  animation: pulse 900ms var(--e-ease) infinite alternate;
+}
+
+.thinking .bars i:nth-child(2) {
+  animation-delay: 150ms;
+}
+.thinking .bars i:nth-child(3) {
+  animation-delay: 300ms;
+}
+
+@keyframes pulse {
+  from {
+    transform: scaleY(0.35);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* Verdict banner — used for forensics / big categorical results. */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: var(--e-ok-soft);
+  border: 1px solid rgba(52, 211, 153, 0.32);
+}
+
+.verdict .icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.verdict .label {
+  font-size: var(--e-lg);
+  font-weight: 640;
+  color: var(--e-ok);
+  letter-spacing: -0.01em;
+}
+
+.verdict .conf {
+  margin-left: auto;
+  font-size: var(--e-xl);
+  font-weight: 620;
+  color: var(--e-ok);
+}
+
+.verdict.bad {
+  background: var(--e-bad-soft);
+  border-color: rgba(248, 113, 113, 0.34);
+}
+.verdict.bad .label,
+.verdict.bad .conf {
+  color: var(--e-bad);
+}
+.verdict.warn {
+  background: var(--e-amber-soft);
+  border-color: rgba(245, 165, 36, 0.34);
+}
+.verdict.warn .label,
+.verdict.warn .conf {
+  color: var(--e-amber);
+}
+
+/* Generic card list (ministers, covenants, hazards) */
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.card {
+  background: var(--e-s2);
+  border: 1px solid var(--e-line);
+  border-radius: 14px;
+  padding: 12px 16px;
+}
+
+.card .top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--e-sm);
+}
+
+.card .top .name {
+  font-weight: 620;
+}
+
+.card .top .tag {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card .top .score {
+  margin-left: auto;
+  color: var(--e-ok);
+  font-weight: 620;
+}
+
+.card .body {
+  font-size: var(--e-sm);
+  color: var(--e-t2);
+  margin-top: 5px;
+}
+
+.card .body em {
+  color: var(--e-t1);
+  font-style: normal;
+}
+
+.hashline {
+  font-family: var(--e-mono);
+  font-size: 12px;
+  color: var(--e-t3);
+  word-break: break-all;
+  margin-top: 8px;
+}
+
+/* ------------------------------------------------------------------ rail --- */
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.card-panel {
+  background: var(--e-s2);
+  border: 1px solid var(--e-line);
+  border-radius: 20px;
+  padding: 16px 18px;
+}
+
+.card-panel .head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.card-panel .head h2 {
+  font-size: var(--e-sm);
+  font-weight: 640;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--e-t2);
+}
+
+.pill {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 620;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--e-amber-soft);
+  color: var(--e-amber);
+}
+
+.tray-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--e-line);
+}
+
+.tray-item:first-of-type {
+  border-top: none;
+  padding-top: 2px;
+}
+
+.tray-item .title {
+  font-size: var(--e-sm);
+  font-weight: 580;
+  line-height: 1.3;
+}
+
+.tray-item .why {
+  font-size: var(--e-xs);
+  color: var(--e-t3);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tray-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* Touch targets: never below 64px on this surface. */
+.btn {
+  flex: 1;
+  min-height: 64px;
+  border-radius: 16px;
+  border: 1px solid var(--e-line-strong);
+  background: var(--e-s3);
+  color: var(--e-t1);
+  font-family: inherit;
+  font-size: var(--e-sm);
+  font-weight: 620;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 140ms var(--e-ease), background 140ms var(--e-ease),
+    border-color 140ms var(--e-ease);
+}
+
+.btn:hover:not(:disabled) {
+  background: #26262e;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--e-amber);
+  border-color: var(--e-amber);
+  color: #1a1204;
+}
+
+.btn.primary:hover:not(:disabled) {
+  background: #ffb63d;
+}
+
+.btn.ok {
+  border-color: rgba(52, 211, 153, 0.42);
+  color: var(--e-ok);
+}
+
+.btn.ok:hover:not(:disabled) {
+  background: var(--e-ok-soft);
+}
+
+.btn.ghost {
+  background: transparent;
+}
+
+/* --------------------------------------------------------------- ask row --- */
+
+.askrow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+
+.askrow::-webkit-scrollbar {
+  display: none;
+}
+
+.askrow > * {
+  flex: 0 0 auto;
+}
+
+.askrow .lead {
+  font-size: var(--e-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--e-t3);
+  font-weight: 620;
+  margin-right: 4px;
+}
+
+.ask {
+  min-height: 64px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid var(--e-line-strong);
+  background: var(--e-s2);
+  color: var(--e-t1);
+  font-family: inherit;
+  font-size: var(--e-sm);
+  font-weight: 560;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 150ms var(--e-ease), border-color 150ms var(--e-ease),
+    transform 140ms var(--e-ease);
+}
+
+.ask:hover:not(:disabled) {
+  background: var(--e-s3);
+  border-color: rgba(245, 165, 36, 0.4);
+}
+
+.ask:active:not(:disabled) {
+  transform: scale(0.975);
+}
+
+.ask:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ask .ico {
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------- utility --- */
+
+.mic {
+  margin-left: auto;
+  min-height: 64px;
+  padding: 0 30px;
+  flex: 0 0 auto;
+}
+
+.mic.listening {
+  border-color: rgba(245, 165, 36, 0.55);
+  background: var(--e-amber-soft);
+  color: var(--e-amber);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.empty {
+  font-size: var(--e-sm);
+  color: var(--e-t3);
+  padding: 6px 0;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translate(-50%, calc(100% + 40px));
+  background: var(--e-s3);
+  border: 1px solid var(--e-line-strong);
+  border-radius: 999px;
+  padding: 14px 26px;
+  font-size: var(--e-sm);
+  font-weight: 560;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6);
+  transition: transform 260ms var(--e-ease);
+  max-width: 90vw;
+  text-align: center;
+}
+
+.toast.show {
+  transform: translate(-50%, 0);
+}
+
+.toast.err {
+  border-color: rgba(248, 113, 113, 0.5);
+  color: var(--e-bad);
+}
+
+/* Voice-only display mode: strip everything but the spoken sentence. */
+body[data-display="voice-only"] .stage > *,
+body[data-display="voice-only"] .rail,
+body[data-display="voice-only"] .askrow,
+body[data-display="voice-only"] .chipbar {
+  display: none;
+}
+
+body[data-display="voice-only"] .stage {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: var(--e-s0);
+}
+
+body[data-display="voice-only"] .speech {
+  border: none;
+  margin: 0;
+}
+
+body[data-display="voice-only"] .said {
+  font-size: 34px;
+}
+
+/* An Echo Show viewed from across the room: heavier contrast, no motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--e-s0), 0 0 0 6px var(--e-amber);
+}

@@ -1051,7 +1051,7 @@ on("forensics", (f) => {
       '<div style="margin-bottom:4px"><strong>' + esc(pf.factor) + ':</strong> ' + esc(pf.measured) + ' — <span style="color:var(--t2)">' + esc(pf.impact) + '</span></div>'
     ).join("") +
     '</div>' +
-    '<div class="mono" style="font-size:10px;color:var(--t3);word-break:break-all">Merkle Proof: ' + esc(f.audit_proof_sha256 || "") + '</div>';
+    '<div class="mono" style="font-size:10px;color:var(--t3);word-break:break-all">Merkle Proof: ' + esc(f.audit_proof || "") + '</div>';
 });
 
 const forensicsBtn = $("#forensicsScanBtn");
@@ -1075,7 +1075,7 @@ if (forensicsBtn) {
         '<p style="color:var(--ok);font-weight:700">✓ Intruder Hypothesis Disproven (' + (data.causal_confidence != null ? Math.round(data.causal_confidence * 100) + '% Physical Certainty' : '— pending scan') + ')</p>' +
         '<p style="margin:8px 0;line-height:1.4">' + esc(data.summary) + '</p>' +
         '<div class="diff" style="margin:12px 0;max-height:220px;overflow-y:auto">' + timelineHtml + '</div>' +
-        '<div class="mono" style="font-size:10px;color:var(--t3);background:var(--s2);padding:6px;border-radius:4px">SHA-256 Merkle Proof: ' + esc(data.audit_proof_sha256) + '</div>',
+        '<div class="mono" style="font-size:10px;color:var(--t3);background:var(--s2);padding:6px;border-radius:4px">SHA-256 Merkle Proof: ' + esc(data.audit_proof || "") + '</div>',
         [
           { label: "Done", primary: true }
         ]
@@ -1153,14 +1153,23 @@ on("mediation", (m) => {
   box.innerHTML =
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<strong style="font-size:var(--fs-micro)">' + esc(m.title || "Household Harmony Treaty") + '</strong>' +
-    '<span class="pill" style="color:var(--ok)">Fairness: ' + (m.fairness_index != null ? esc(m.fairness_index) : '—') + '/10</span>' +
+    '<span class="pill" style="color:var(--ok)">Fairness: ' +
+    (m.fairness_index_out_of_10 != null ? esc(m.fairness_index_out_of_10) : '—') + '/10</span>' +
     '</div>' +
-    '<div style="font-size:11px;color:var(--amber);margin-bottom:8px">🔒 Zero-Knowledge Verification: Salted SHA-256 (Raw grievances kept confidential)</div>' +
+    '<div style="font-size:11px;color:var(--amber);margin-bottom:8px">🔒 Zero-Knowledge Verification: Salted SHA-256 (raw grievances never shared between residents)</div>' +
+    '<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">Nash achievement ' +
+    Math.round((m.nash_achievement || 0) * 100) + '% · coverage ' + esc(m.cooperation_coverage_pct) +
+    '% · envy gap ' + esc(m.envy_gap) + ' · conceded: ' +
+    esc((m.domains_conceded || []).join(", ") || "none") + '</div>' +
     '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">' +
     covs.map((c) =>
       '<div style="background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:2px"><strong>' + esc(c.domain.replace(/_/g, " ").toUpperCase()) + '</strong><span style="color:var(--ok)">' + esc(c.satisfaction_pct) + '% satisfaction</span></div>' +
-      '<div style="color:var(--t2)">' + esc(c.covenant) + '</div>' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:2px">' +
+      '<strong>' + esc((c.domain || "").replace(/_/g, " ").toUpperCase()) + '</strong>' +
+      '<span style="color:var(--t2)">' + esc(c.resident || "") + '</span>' +
+      '<span style="color:var(--ok)">' + esc(c.satisfaction_pct) + '% satisfaction</span></div>' +
+      // Field name is concession_granted -- the API has no `covenant` key.
+      '<div style="color:var(--t2)">' + esc(c.concession_granted || "") + '</div>' +
       '</div>'
     ).join("") +
     '</div>' +
@@ -1176,24 +1185,55 @@ if (mediationBtn) {
     mediationBtn.disabled = false;
     mediationBtn.textContent = "Synthesize Treaty";
     if (status === 200 && data) {
+      // Field names must match the /api/mediation/treaty payload:
+      // concession_granted (not `covenant`), satisfaction_pct, and
+      // fairness_index_out_of_10. Reading the wrong key silently rendered
+      // "undefined" in this dialog.
       const covHtml = (data.covenants || []).map((c) =>
-        '<div style="margin-bottom:8px;padding:8px;background:var(--s2);border-radius:6px">' +
-        '<div style="display:flex;justify-content:space-between"><strong>' + esc(c.domain.replace(/_/g, " ")) + '</strong><span style="color:var(--ok)">' + esc(c.satisfaction_pct) + '%</span></div>' +
-        '<div style="font-size:12px;color:var(--t1);margin-top:4px">' + esc(c.covenant) + '</div>' +
+        '<div style="margin-bottom:10px;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--line)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">' +
+        '<strong>' + esc(c.resident || "") + '</strong>' +
+        '<span style="color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' + esc((c.domain || "").replace(/_/g, " ")) + '</span>' +
+        '<span class="num" style="color:var(--ok);font-weight:600">' + esc(c.satisfaction_pct) + '%</span>' +
+        '</div>' +
+        '<div style="font-size:12.5px;color:var(--t1);margin-top:6px">' + esc(c.concession_granted || "") + '</div>' +
+        '<div style="font-size:12px;color:var(--t2);margin-top:6px;border-left:2px solid var(--line-strong);padding-left:8px">' +
+        'In return: ' + esc(c.reciprocal_obligation || "") + '</div>' +
+        (c.domain_weight != null
+          ? '<div class="mono" style="color:var(--t3);margin-top:6px">weight ' + esc(c.domain_weight) +
+            ' · concession ' + esc(c.concession_level) + '</div>'
+          : '') +
         '</div>'
       ).join("");
 
-      openDialog("Confidential Family Treaty Synthesized",
-        '<p style="color:var(--ok);font-weight:700">Fairness Index: ' + esc(data.fairness_index) + '/10 · Pareto Optimal</p>' +
-        '<p style="font-size:12px;color:var(--t2);margin:6px 0">Zero-knowledge differential privacy ensures individual resident complaints remain encrypted and private.</p>' +
+      const conceded = (data.domains_conceded || []).join(", ") || "none";
+      const metrics =
+        '<div class="grid-3" style="margin:12px 0;gap:8px">' +
+        '<div class="mini-card"><small>Nash achievement</small><strong class="num">' +
+        Math.round((data.nash_achievement || 0) * 100) + '%</strong></div>' +
+        '<div class="mini-card"><small>Coverage</small><strong class="num">' +
+        esc(data.cooperation_coverage_pct) + '%</strong></div>' +
+        '<div class="mini-card"><small>Envy gap</small><strong class="num">' +
+        esc(data.envy_gap) + '</strong></div>' +
+        '</div>';
+
+      openDialog("Household Treaty — " + (data.scenario === "household_demo" ? "demo household" : "resident supplied"),
+        '<p style="color:var(--ok);font-weight:700;font-size:15px">Fairness ' + esc(data.fairness_index_out_of_10) +
+        '/10 · ' + esc(data.feasible_vectors_explored) + ' feasible concession vectors searched</p>' +
+        '<p style="font-size:12px;color:var(--t2);margin:6px 0">Domains conceded: <strong>' + esc(conceded) + '</strong> ' +
+        '(household concession budget ' + esc(data.concession_budget) + ' of 4). Fairness is measured, not asserted: it ' +
+        'falls when a household is over-subscribed.</p>' +
+        metrics +
         '<div style="margin:12px 0">' + covHtml + '</div>' +
-        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged for household ratification in Approvals.</p>' : ''),
+        '<p style="font-size:11.5px;color:var(--t3)">Raw grievances were never shared between residents — only per-resident ' +
+        'salted SHA-256 digests are retained.</p>' +
+        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged for ratification in Approvals.</p>' : ''),
         [
           { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
           { label: "Dismiss" }
         ]
       );
-      toast("Family Treaty synthesized with " + esc(data.fairness_index) + "/10 fairness");
+      toast("Treaty negotiated: fairness " + esc(data.fairness_index_out_of_10) + "/10");
       refresh();
     } else {
       toast("Mediation failed (" + status + ")", true);
@@ -1298,7 +1338,9 @@ if (metaSkillBtn) {
     metaSkillBtn.disabled = false;
     metaSkillBtn.textContent = "Synthesize Skill";
     if (status === 200 && data.ok) {
-      toast("Synthesized & live-mounted: " + (data.skill ? data.skill.name : "Custom Skill"));
+      // /api/meta-skills/synthesize returns flat keys (skill_id, name, ...),
+      // not a nested `skill` object.
+      toast("Synthesized & live-mounted: " + (data.name || data.skill_id || "Custom Skill"));
       input.value = "";
       refresh();
     } else {
