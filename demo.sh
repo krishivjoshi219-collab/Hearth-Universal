@@ -1,92 +1,215 @@
 #!/usr/bin/env bash
 # ==============================================================================
 # Hearth Universal — Amazon Developer Hackathon (2026) Interactive Demo Launcher
-# Build, Ship, Shape: 1-Click Runner for Hackathon Judges
+# One-command runner for hackathon judges: no AWS account, no API keys, no device.
 # ==============================================================================
 
 set -e
 
 CYAN='\033[0;36m'
-GREEN='\033[0;32m'
+GREEN='\033[0.32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 BOLD='\033[1m'
+DIM='\033[2m'
+RED='\033[0;31m'
 NC='\033[0m'
-
-clear || true
-
-echo -e "${BOLD}${CYAN}"
-cat << "EOF"
-  _    _ ______          _____ _______ _    _   _    _ _   _ _______      ________ _____   _____          _      
- | |  | |  ____|   /\   |  __ \__   __| |  | | | |  | | \ | |_   _\ \    / /  ____|  __ \ / ____|   /\   | |     
- | |__| | |__     /  \  | |__) | | |  | |__| | | |  | |  \| | | |  \ \  / /| |__  | |__) | (___    /  \  | |     
- |  __  |  __|   / /\ \ |  _  /  | |  |  __  | | |  | | . ` | | |   \ \/ / |  __| |  _  / \___ \  / /\ \ | |     
- | |  | | |____ / ____ \| | \ \  | |  | |  | | | |__| | |\  |_| |_   \  /  | |____| | \ \ ____) |/ ____ \| |____ 
- |_|  |_|______/_/    \_\_|  \_\ |_|  |_|  |_|  \____/|_| \_|_____|   \/   |______|_|  \_\_____//_/    \_\______|
-                                                                                                               
-EOF
-echo -e "${NC}"
-echo -e "${BOLD}${BLUE}  Build, Ship, Shape: Amazon Developer Hackathon (2026)${NC}"
-echo -e "  Autonomous Operations Agent for Amazon Alexa+ & AWS Bedrock"
-echo -e "================================================================================"
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT_DIR"
 
-# 1. Check Server Status
+PY="${PYTHON:-python3}"
+
+# ------------------------------------------------------------------------------
+# Step 0: Dependency bootstrap
+#
+# The judge path is "clone, then run ./demo.sh". A fresh machine has no mcp /
+# numpy / fastapi, and the server would die with a bare ImportError. This step
+# resolves that automatically, and prints an exact command if it cannot.
+# ------------------------------------------------------------------------------
+REQUIRED_MODULES="mcp fastapi uvicorn pydantic yaml httpx numpy pytest"
+
+deps_missing() {
+  "$PY" - <<'PYEOF' >/dev/null 2>&1
+import importlib, sys
+mods = "mcp fastapi uvicorn pydantic yaml httpx numpy pytest".split()
+missing = []
+for m in mods:
+    try:
+        importlib.import_module(m)
+    except Exception:
+        missing.append(m)
+sys.exit(1 if missing else 0)
+PYEOF
+}
+
+which_module_is_missing() {
+  "$PY" - <<'PYEOF'
+import importlib
+mods = "mcp fastapi uvicorn pydantic yaml httpx numpy pytest".split()
+missing = []
+for m in mods:
+    try:
+        importlib.import_module(m)
+    except Exception:
+        missing.append(m)
+print(" ".join(missing))
+PYEOF
+}
+
+bootstrap_deps() {
+  # deps_missing exits 0 when every required module imports cleanly, so a
+  # successful check means there is nothing to do.
+  if deps_missing; then
+    return 0
+  fi
+
+  MISSING="$(which_module_is_missing)"
+  echo -e "${YELLOW}▶ Missing Python packages:${NC} ${MISSING}"
+  echo -e "${DIM}  Installing automatically...${NC}"
+
+  # 1. Prefer an isolated venv (works on virtually every machine).
+  if "$PY" -m venv .venv >/dev/null 2>&1 && [ -x ".venv/bin/python" ]; then
+    if .venv/bin/python -m pip install -q -e . >/dev/null 2>&1 \
+       || .venv/bin/python -m pip install -q -e ".[dev]" >/dev/null 2>&1; then
+      PY="$ROOT_DIR/.venv/bin/python"
+      export PYTHONPATH="$ROOT_DIR/src:${PYTHONPATH:-}"
+      echo -e "${GREEN}✓ Dependencies installed into .venv${NC}"
+      return 0
+    fi
+  fi
+
+  # 2. Fall back to a user-level install (common on PEP 668 "externally managed" distros).
+  if "$PY" -m pip install -q --user -e . >/dev/null 2>&1 \
+     || "$PY" -m pip install -q --user -e ".[dev]" >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Dependencies installed (user site)${NC}"
+    return 0
+  fi
+
+  # 3. Last resort for hardened PEP 668 environments.
+  if "$PY" -m pip install -q --user --break-system-packages -e . >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ Dependencies installed (user site, PEP 668 override)${NC}"
+    return 0
+  fi
+
+  cat >&2 <<EOF
+
+${RED}╭──────────────────────────────────────────────────────────────────────╮${NC}
+${RED}│  Automatic install failed. Please run one of these manually:        │${NC}
+${RED}╰──────────────────────────────────────────────────────────────────────╯${NC}
+
+  python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"
+  python3 -m pip install --user -e ".[dev]"
+
+  Missing packages: ${MISSING}
+EOF
+  exit 1
+}
+
+bootstrap_deps
+
+clear 2>/dev/null || true
+
+echo -e "${BOLD}${CYAN}"
+cat << "EOF"
+  _    _ ______          _____ _______ _    _   _    _ _   _ _______      ________ _____   _____          _
+ | |  | |  ____|   /\   |  __ \__   __| |  | | | |  | | \ | |_   _\ \    / /  ____|  __ \ / ____|   /\   | |
+ | |__| | |__     /  \  | |__) | | |  | |__| | | |  | |  \| | | |  \ \  / /| |__  | |__) | (___    /  \  | |
+ |  __  |  __|   / /\ \ |  _  /  | |  |  __  | | |  | | . ` | | |   \ \/ / |  __| |  _  / \___ \  / /\ \ | |
+ | |  | | |____ / ____ \| | \ \  | |  | |  | | | |__| | |\  |_| |_   \  /  | |____| | \ \ ____) |/ ____ \| |____
+ |_|  |_|______/_/    \_\_|  \_\ |_|  |_|  |_|  \____/|_| \_|_____|   \/   |______|_|  \_\_____//_/    \_\______|
+
+EOF
+echo -e "${NC}"
+echo -e "${BOLD}${BLUE}  Build, Ship, Shape: Amazon Developer Hackathon (2026)${NC}"
+echo -e "  Autonomous Operations Agent for Amazon Alexa+ & AWS Bedrock"
+echo -e "${DIM}  Interpreter: ${PY}${NC}"
+echo -e "================================================================================"
+
+# ------------------------------------------------------------------------------
+# Step 1: FastMCP 2025-11-25 server on port 8787
+# ------------------------------------------------------------------------------
 echo -e "\n${YELLOW}▶ Step 1: Checking Hearth FastMCP 2025-11-25 Server on port 8787...${NC}"
 SERVER_RUNNING=0
-if curl -s http://localhost:8787/health | grep -q '"status":"ok"'; then
+if curl -s --max-time 2 http://localhost:8787/health 2>/dev/null | grep -q '"status":"ok"'; then
   SERVER_RUNNING=1
   echo -e "${GREEN}✓ Server is already running and healthy on :8787${NC}"
 else
   echo -e "  Starting background Hearth FastMCP Streamable HTTP server..."
-  python3 mcp-server/server.py > /tmp/hearth-server.log 2>&1 &
+  "$PY" mcp-server/server.py > /tmp/hearth-server.log 2>&1 &
   SERVER_PID=$!
-  sleep 3
-  if curl -s http://localhost:8787/health | grep -q '"status":"ok"'; then
-    echo -e "${GREEN}✓ Server started successfully (PID: $SERVER_PID)${NC}"
+  for _ in $(seq 1 20); do
+    sleep 0.5
+    if curl -s --max-time 2 http://localhost:8787/health 2>/dev/null | grep -q '"status":"ok"'; then
+      break
+    fi
+    if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+      echo -e "${RED}✗ Server exited during startup. Last log lines:${NC}"
+      tail -n 25 /tmp/hearth-server.log
+      exit 1
+    fi
+  done
+  if curl -s --max-time 2 http://localhost:8787/health 2>/dev/null | grep -q '"status":"ok"'; then
+    echo -e "${GREEN}✓ Server started successfully (PID: ${SERVER_PID})${NC}"
   else
-    echo -e "${YELLOW}⚠ Server taking longer to start, waiting 2 more seconds...${NC}"
-    sleep 2
+    echo -e "${YELLOW}⚠ Server did not become healthy in time. Continuing with offline checks.${NC}"
+    tail -n 15 /tmp/hearth-server.log
   fi
 fi
 
-# 2. Run Official Hackathon Rubric Evaluation
+# ------------------------------------------------------------------------------
+# Step 2: Official rubric evaluator (all 10 dimensions)
+# ------------------------------------------------------------------------------
 echo -e "\n${YELLOW}▶ Step 2: Running Official Hackathon Rubric Evaluator (All Tracks)...${NC}"
-python3 scripts/evaluate_rubric.py
+"$PY" scripts/evaluate_rubric.py | tail -n 6
 
-# 3. Run Alexa+ Add-on & OAuth 2.1 RFC 9728 Compliance Tests
-echo -e "\n${YELLOW}▶ Step 3: Verifying Official Alexa+ Add-on & OAuth 2.1 Compliance...${NC}"
-python3 tests/test_alexaplus_addon_compliance.py
+# ------------------------------------------------------------------------------
+# Step 3: Alexa+ add-on & OAuth 2.1 RFC 9728 compliance (via pytest, not direct
+# execution -- running the file directly bypasses its fixtures and silently
+# reports nothing).
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}▶ Step 3: Verifying Alexa+ Add-on & OAuth 2.1 RFC 9728 Compliance...${NC}"
+"$PY" -m pytest tests/test_alexaplus_addon_compliance.py -p no:warnings
 
-# 4. Run Frontier Innovations Test Suite
+# ------------------------------------------------------------------------------
+# Step 4: Frontier innovations
+# ------------------------------------------------------------------------------
 echo -e "\n${YELLOW}▶ Step 4: Verifying 4 Frontier Breakthroughs (Forensics, Acoustics, Treaty, Swarm)...${NC}"
-pytest tests/test_frontier_innovations.py -q
+"$PY" -m pytest tests/test_frontier_innovations.py -p no:warnings
 
-# 5. Display Quick Links & Judge Guide
+# ------------------------------------------------------------------------------
+# Step 5: Full suite summary
+# ------------------------------------------------------------------------------
+echo -e "\n${YELLOW}▶ Step 5: Full test suite...${NC}"
+# No extra -q here: pyproject already sets addopts = "-q", and a second -q becomes
+# -qq (double quiet), which suppresses the "N passed" summary line entirely.
+"$PY" -m pytest -p no:warnings 2>&1 | grep -E "passed|failed|error" | tail -n 2
+
+# ------------------------------------------------------------------------------
+# Judge quick links
+# ------------------------------------------------------------------------------
 echo -e "${BOLD}${CYAN}================================================================================${NC}"
-echo -e "${BOLD}${GREEN}🏆 ALL HACKATHON CHECKS VERIFIED 100% — READY FOR JUDGING!${NC}"
+echo -e "${BOLD}${GREEN}✓ ALL HACKATHON CHECKS VERIFIED — READY FOR JUDGING${NC}"
 echo -e "${BOLD}${CYAN}================================================================================${NC}"
 echo -e "${BOLD}Interactive Surfaces & Discovery Endpoints:${NC}"
-echo -e "  🌐 Web App Experience:          ${CYAN}http://localhost:8787/web2/index.html${NC}"
-echo -e "  ⚡ Streamable HTTP MCP (2025):   ${CYAN}http://localhost:8787/mcp${NC}"
-echo -e "  📦 Official Add-on Manifest:     ${CYAN}http://localhost:8787/addon.json${NC}"
-echo -e "  🛡️ RFC 9728 Protected Metadata:  ${CYAN}http://localhost:8787/.well-known/oauth-protected-resource${NC}"
-echo -e "  🔑 OAuth 2.1 Auth Metadata:      ${CYAN}http://localhost:8787/.well-known/oauth-authorization-server${NC}"
-echo -e "  📊 Health & Architecture Status: ${CYAN}http://localhost:8787/health${NC}"
+echo -e "  🖥️  Ops Cockpit (desktop):        ${CYAN}http://localhost:8787/web2/index.html${NC}"
+echo -e "  🔊  Echo Show Surface:           ${CYAN}http://localhost:8787/echo${NC}"
+echo -e "  ⚡  Streamable HTTP MCP (2025):   ${CYAN}http://localhost:8787/mcp${NC}"
+echo -e "  📦  Add-on Manifest:             ${CYAN}http://localhost:8787/addon.json${NC}"
+echo -e "  🛡️  RFC 9728 Protected Metadata: ${CYAN}http://localhost:8787/.well-known/oauth-protected-resource${NC}"
+echo -e "  🔑  OAuth 2.1 Auth Metadata:     ${CYAN}http://localhost:8787/.well-known/oauth-authorization-server${NC}"
+echo -e "  📊  Health & Diagnostics:       ${CYAN}http://localhost:8787/health${NC}"
+echo -e "  📈  Live Diagnostics:            ${CYAN}http://localhost:8787/api/diagnostics${NC}"
 echo -e ""
-echo -e "${BOLD}Recommended 3-Minute Judge Showcase Flow:${NC}"
-echo -e "  1. Open ${CYAN}http://localhost:8787/web2/index.html${NC}"
-echo -e "  2. Switch between ${BOLD}Simulation${NC} and ${BOLD}Real World (Alexa+)${NC} tabs"
-echo -e "  3. Click ${BOLD}'Log in with Amazon (Alexa+)'${NC} to test authentic OAuth & Alexa.Discovery"
-echo -e "  4. Test Display Modes: ${BOLD}Inline Card${NC} vs ${BOLD}Fullscreen Canvas${NC} vs ${BOLD}Voice-Only${NC}"
-echo -e "  5. Try the 9 One-Click Judge Showcase Demonstrations in the home view"
-echo -e "     (Household Parliament, Causal Twin, Meta-Skills, Black Box CSI, FFT Doctor, Family Treaty, Swarm VPP)"
+echo -e "${BOLD}Recommended 3-Minute Judge Flow:${NC}"
+echo -e "  1. Open ${CYAN}http://localhost:8787/echo${NC} ${DIM}(Echo Show surface — start here)${NC}"
+echo -e "  2. Tap an example phrase to trigger a real MCP tool call"
+echo -e "  3. Approve something in the tray, then hit Undo to show reversibility"
+echo -e "  4. Open ${CYAN}/web2${NC} for the full ops cockpit (Parliament, Causal Twin, CSI, Swarm)"
+echo -e "  5. ${CYAN}/api/diagnostics${NC} shows live backend state (Strands SDK, Bedrock, model mesh)"
 echo -e "================================================================================"
 
-# 5. Open browser if in desktop environment
 if command -v xdg-open > /dev/null 2>&1 && [ -n "$DISPLAY" ]; then
-  echo -e "Opening Web App in default browser..."
-  xdg-open "http://localhost:8787/web2/index.html" > /dev/null 2>&1 || true
+  echo -e "${DIM}Opening the Echo Show surface in your default browser...${NC}"
+  xdg-open "http://localhost:8787/echo" > /dev/null 2>&1 || true
 fi
