@@ -8,8 +8,10 @@ Implements the Bedrock AgentCore architecture patterns:
 3. AgentCore Runtime Hooks: MicroVM/container execution lifecycle telemetry.
 
 Zero-config offline fallback: Works completely without AWS credentials using local
-state persistence. When AWS credentials and AgentCore environment variables are present,
-routes to the live Bedrock AgentCore managed service.
+state persistence. This is an AgentCore-Memory-*compatible* local store, and the
+`backend` field in `get_stats()` states which one is active. Setting
+AWS_AGENTCORE_MEMORY_ID together with AWS credentials enables live sync to the
+managed Bedrock AgentCore Memory service.
 """
 from __future__ import annotations
 
@@ -136,11 +138,18 @@ class AgentCoreMemoryStore:
     def get_stats(self) -> dict[str, Any]:
         self._load()
         total_turns = sum(len(v) for v in self._cache.values())
+        memory_id = os.environ.get("AWS_AGENTCORE_MEMORY_ID")
         return {
             "sessions_count": len(self._cache),
             "total_turns": total_turns,
-            "backend": "Bedrock-AgentCore-Memory-Emulated",
-            "live_sync": os.environ.get("AWS_AGENTCORE_MEMORY_ID") is not None,
+            # Stated precisely: this is an AgentCore-Memory-compatible local
+            # store. It syncs to the live Bedrock AgentCore Memory service only
+            # when AWS_AGENTCORE_MEMORY_ID (and credentials) are configured.
+            "backend": "bedrock-agentcore-memory-compatible",
+            "implementation": "local-json-store",
+            "live_sync": memory_id is not None,
+            "live_sync_service": "Amazon Bedrock AgentCore Memory" if memory_id else None,
+            "live_sync_hint": "set AWS_AGENTCORE_MEMORY_ID + AWS credentials to enable live sync",
         }
 
 

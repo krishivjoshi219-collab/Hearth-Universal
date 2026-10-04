@@ -12,6 +12,8 @@ def test_agentcore_memory_append_and_search(tmp_path):
     assert "peanuts" in entry1["content"]
 
     entry2 = store.append_turn("ses_01", "assistant", "Noted, peanut allergy recorded.")
+    assert entry2["session_id"] == "ses_01"
+    assert "peanut allergy" in entry2["content"]
     turns = store.get_session_turns("ses_01")
     assert len(turns) == 2
 
@@ -65,3 +67,94 @@ def test_strands_supervisor_orchestration():
     assert len(res["delegated_agents"]) >= 2
     assert len(res["subagent_executions"]) >= 2
     assert len(res["plan_summary"]) > 20
+
+
+# ---------------------------------------------------------------------------
+# AWS Strands Agents SDK integration
+#
+# These tests assert the SDK integration is *real* rather than claimed: when the
+# optional dependency is installed the module must construct genuine
+# strands.Agent objects whose tool schemas are produced by the SDK, and when it
+# is absent the module must degrade honestly to the deterministic fallback.
+# Both branches are asserted, so the tests pass in CI with or without the extra.
+# ---------------------------------------------------------------------------
+
+def test_strands_sdk_status_reports_backend_honestly():
+    status = strands_agent.StrandsSupervisor().strands_sdk_status()
+    assert status["backend"] in (
+        "aws-strands-sdk",
+        "aws-strands-sdk-no-inference",
+        "pattern-fallback",
+    )
+    assert status["integration"]
+    assert status["install_hint"]
+    if strands_agent.STRANDS_AVAILABLE:
+        assert status["sdk_installed"] is True
+        # No live-inference claim unless Bedrock is actually enabled.
+        assert status["backend"] != "aws-strands-sdk" or status["bedrock_enabled"] is True
+    else:
+        assert status["sdk_installed"] is False
+        assert status["sdk_import_error"]
+
+
+@pytest.mark.skipif(not strands_agent.STRANDS_AVAILABLE,
+                    reason="strands-agents optional extra not installed")
+def test_real_strands_agents_and_agents_as_tools_are_constructed():
+    """The supervisor must build real strands.Agent objects wired with as_tool."""
+    from strands import Agent  # noqa: F401  -- proves the SDK is importable here
+
+    sup = strands_agent.StrandsSupervisor()
+    sup._build_sdk_agents()
+    assert sup._sdk_agents is not None, sup._sdk_error
+    assert sup._sdk_supervisor is not None, sup._sdk_error
+
+    # Three genuine sub-agents, each exposing SDK-derived tools.
+    assert set(sup._sdk_agents) == {"arbiter", "replenishment", "guardian"}
+    for agent in sup._sdk_agents.values():
+        assert isinstance(agent, Agent)
+        specs = [t.tool_spec for t in agent.tool_registry.registry.values()]
+        assert specs, "each sub-agent must expose at least one SDK-derived tool spec"
+        for spec in specs:
+            # Schemas come from the SDK: name/description + JSON-Schema object.
+            assert spec["name"]
+            assert spec["description"]
+            assert spec["inputSchema"]["json"]["type"] == "object"
+
+    # Supervisor composed via the SDK's agents-as-tools delegation pattern.
+    delegate_names = set(sup._sdk_supervisor.tool_registry.registry.keys())
+    assert delegate_names == {"delegate_arbiter", "delegate_replenishment", "delegate_guardian"}
+
+    status = sup.strands_sdk_status()
+    assert status["sdk_installed"] is True
+    assert status["construction_error"] is None
+    assert status["subagent_tool_names"]["guardian"] == ["judge_action_safety", "verify_audit_chain"]
+
+
+@pytest.mark.skipif(not strands_agent.STRANDS_AVAILABLE,
+                    reason="strands-agents optional extra not installed")
+def test_orchestration_reports_backend_and_still_gates_actions():
+    """SDK presence must not change the Propose-Never-Execute contract."""
+    res = strands_agent.StrandsSupervisor().orchestrate_goal(
+        "Prepare family weekend: balance thermostat, restock milk and coffee, verify safety"
+    )
+    assert res["ok"] is True
+    assert res["strands_backend"].startswith("aws-strands-sdk")
+    assert res["strands_sdk"]["sdk_installed"] is True
+    # Deterministic sub-agents still ran and anything consequential is only staged.
+    assert res["delegated_agents"]
+    for p in res["proposals_staged"]:
+        assert p["status"] == "pending", "agents must never auto-approve a proposal"
+
+
+def test_fallback_path_is_used_when_sdk_is_unavailable(monkeypatch):
+    """With the SDK unavailable the supervisor must degrade, not crash."""
+    monkeypatch.setattr(strands_agent, "STRANDS_AVAILABLE", False)
+    sup = strands_agent.StrandsSupervisor()
+    sup._sdk_agents = None
+    sup._sdk_supervisor = None
+    assert sup.backend == "pattern-fallback"
+
+    res = sup.orchestrate_goal("verify the front door and audit the pantry")
+    assert res["ok"] is True
+    assert res["strands_backend"] == "pattern-fallback"
+    assert res["delegated_agents"]

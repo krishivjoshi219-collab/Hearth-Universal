@@ -62,6 +62,7 @@ ALLOW_TOOLS = {
     "mcp_app_lighting_designer",
     "mcp_app_pantry_restock",
     "audit_verify",
+    "strands_sdk_status",
     "web_search",
     "web_fetch",
     "workspace_read",

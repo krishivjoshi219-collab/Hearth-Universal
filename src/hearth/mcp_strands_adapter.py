@@ -1,85 +1,61 @@
-"""MCP Strands Adapter: Open-Source Bridge between AWS Strands Agents SDK and MCP 2025-11-25.
+"""Vendored re-export of the standalone `mcp-strands-adapter` package.
 
-Open Source Mini Challenge Component:
-Enables developers building multi-agent systems with AWS Strands Agents SDK to
-seamlessly expose and consume tools adhering to Model Context Protocol (MCP spec 2025-11-25)
-over Streamable HTTP without boilerplate.
+This module exists so the main project can import the bridge without adding the
+standalone package to `sys.path`. The implementation lives in exactly one place:
 
-Key Capabilities:
-1. `StrandsToMCPTool`: Wraps an AWS Strands callable agent tool into an MCP tool definition.
-2. `MCPToStrandsTool`: Converts an external MCP Streamable HTTP tool into a native Strands tool callable.
-3. `StrandsToolRegistry`: Unified registry with dynamic JSON Schema reflection.
+    open-source-contribution/mcp-strands-adapter/mcp_strands_adapter/adapter.py
+
+There is deliberately no second copy of the logic here. An earlier revision kept a
+duplicated 80-line implementation here, which meant the library shipped in the
+Open Source Mini Challenge submission and the code exercised by this project's
+tests could silently drift apart.
 """
 from __future__ import annotations
 
-import inspect
-from typing import Any, Callable, get_type_hints
+import importlib.util
+import sys
+from pathlib import Path
+from typing import Any
+
+_PKG_DIR = (
+    Path(__file__).resolve().parents[2]
+    / "open-source-contribution"
+    / "mcp-strands-adapter"
+    / "mcp_strands_adapter"
+)
 
 
-class StrandsMCPToolBridge:
-    """Bi-directional bridge between AWS Strands Agent tools and MCP 2025-11-25 definitions."""
+def _load_standalone() -> Any:
+    """Import the standalone package by path, registering it as a real module."""
+    init = _PKG_DIR / "__init__.py"
+    if not init.exists():  # pragma: no cover - only if the repo layout changes
+        raise ImportError(
+            f"standalone mcp-strands-adapter package not found at {_PKG_DIR}. "
+            f"Expected the open-source-contribution/ directory in this repository."
+        )
+    if "mcp_strands_adapter" in sys.modules:
+        return sys.modules["mcp_strands_adapter"]
+    spec = importlib.util.spec_from_file_location(
+        "mcp_strands_adapter", init, submodule_search_locations=[str(_PKG_DIR)]
+    )
+    if spec is None or spec.loader is None:  # pragma: no cover
+        raise ImportError(f"cannot load mcp_strands_adapter from {_PKG_DIR}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["mcp_strands_adapter"] = module
+    spec.loader.exec_module(module)
+    return module
 
-    def __init__(self, name_prefix: str = "strands_") -> None:
-        self.name_prefix = name_prefix
-        self._strands_tools: dict[str, Callable[..., Any]] = {}
-        self._schemas: dict[str, dict[str, Any]] = {}
 
-    def register_strands_tool(
-        self,
-        name: str,
-        fn: Callable[..., Any],
-        description: str | None = None,
-    ) -> dict[str, Any]:
-        """Convert a Strands tool function into an MCP 2025-11-25 Tool Specification."""
-        mcp_name = f"{self.name_prefix}{name}" if not name.startswith(self.name_prefix) else name
-        doc = description or inspect.getdoc(fn) or f"Strands tool {name}"
-        
-        # Build JSON Schema for parameters via inspect
-        sig = inspect.signature(fn)
-        type_hints = get_type_hints(fn) if hasattr(fn, "__annotations__") else {}
-        properties: dict[str, Any] = {}
-        required: list[str] = []
+_mod = _load_standalone()
 
-        for p_name, param in sig.parameters.items():
-            if p_name in ("self", "cls"):
-                continue
-            p_type = type_hints.get(p_name, Any)
-            type_str = "string"
-            if p_type in (int, float):
-                type_str = "number"
-            elif p_type is bool:
-                type_str = "boolean"
-            elif p_type in (dict, list):
-                type_str = "object"
+MCPServerBridge = _mod.MCPServerBridge
+StrandsMCPToolBridge = _mod.StrandsMCPToolBridge
+strands_available = _mod.strands_available
+to_mcp_tool = _mod.to_mcp_tool
 
-            properties[p_name] = {
-                "type": type_str,
-                "description": f"Parameter {p_name}",
-            }
-            if param.default is inspect.Parameter.empty:
-                required.append(p_name)
-
-        schema = {
-            "name": mcp_name,
-            "description": doc,
-            "inputSchema": {
-                "type": "object",
-                "properties": properties,
-                "required": required,
-            },
-        }
-
-        self._strands_tools[mcp_name] = fn
-        self._schemas[mcp_name] = schema
-        return schema
-
-    def list_mcp_tools(self) -> list[dict[str, Any]]:
-        """List all converted MCP tools ready for FastMCP registration."""
-        return list(self._schemas.values())
-
-    def invoke_from_mcp(self, mcp_tool_name: str, arguments: dict[str, Any]) -> Any:
-        """Execute a Strands tool invoked via an MCP client JSON-RPC request."""
-        if mcp_tool_name not in self._strands_tools:
-            raise KeyError(f"Strands tool '{mcp_tool_name}' not registered in bridge")
-        fn = self._strands_tools[mcp_tool_name]
-        return fn(**arguments)
+__all__ = [
+    "MCPServerBridge",
+    "StrandsMCPToolBridge",
+    "strands_available",
+    "to_mcp_tool",
+]

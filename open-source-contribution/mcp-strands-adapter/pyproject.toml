@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mcp-strands-adapter"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
-  { name="Hearth Universal Contributors", email="developers@hearth-universal.local" },
+  { name="Hearth Universal Contributors" },
 ]
-description = "Universal bridge connecting AWS Strands Agents SDK to Model Context Protocol (MCP 2025-11-25) over Streamable HTTP."
+description = "Expose AWS Strands Agents SDK tools and agents as Model Context Protocol (MCP 2025-11-25) tools over Streamable HTTP."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -20,12 +20,16 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 keywords = ["mcp", "model-context-protocol", "aws-strands", "bedrock", "alexa-plus", "agentic-ai"]
-dependencies = []
+dependencies = ["mcp>=1.23.0,<2.2"]
 
 [project.optional-dependencies]
-dev = [
-    "pytest>=8.0.0",
-]
+# Install the Strands integration:  pip install "mcp-strands-adapter[strands]"
+strands = ["strands-agents>=1.57.0,<2"]
+aws = ["strands-agents>=1.57.0,<2", "boto3>=1.34.0,<2"]
+dev = ["pytest>=8.0.0", "strands-agents>=1.57.0,<2"]
+
+[tool.setuptools.packages.find]
+include = ["mcp_strands_adapter*"]
 
 [project.urls]
 "Homepage" = "https://github.com/krishivjoshi219-collab/Hearth-Universal"

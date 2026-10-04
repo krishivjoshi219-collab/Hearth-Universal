@@ -295,22 +295,30 @@ def main():
 
     # 9. Standalone Open Source Adapter
     header("9. Open Source Mini Challenge: mcp-strands-adapter")
-    step("Validating standalone open-source library and JSON Schema synthesis")
+    step("Validating standalone open-source library and Strands->MCP tool export")
     try:
-        from mcp_strands_adapter import StrandsMCPToolBridge
+        from mcp_strands_adapter import MCPServerBridge, strands_available
 
-        bridge = StrandsMCPToolBridge(name_prefix="eval_")
-        schema = bridge.register_strands_tool(
-            "calculate_savings",
-            lambda kw_savings, rate: {"total": kw_savings * rate},
-            description="Computes energy savings in dollars",
-        )
-        assert schema["name"] == "eval_calculate_savings"
-        assert "kw_savings" in schema["inputSchema"]["properties"]
+        def calculate_savings(kw_savings: float, rate: float = 0.25) -> dict:
+            """Compute energy savings in dollars.
 
-        res = bridge.invoke_from_mcp("eval_calculate_savings", {"kw_savings": 10.0, "rate": 0.25})
+            Args:
+                kw_savings: kWh shifted off peak
+                rate: peak price delta per kWh
+            """
+            return {"total": kw_savings * rate}
+
+        bridge = MCPServerBridge(prefix="eval_")
+        definition = bridge.add(calculate_savings)
+        assert definition["name"] == "eval_calculate_savings"
+        assert "kw_savings" in definition["inputSchema"]["properties"]
+        # int/float fidelity and docstring-derived descriptions.
+        assert definition["inputSchema"]["properties"]["kw_savings"]["type"] == "number"
+        assert "kWh shifted off peak" in definition["inputSchema"]["properties"]["kw_savings"]["description"]
+
+        res = bridge.call("eval_calculate_savings", {"kw_savings": 10.0, "rate": 0.25})
         assert res["total"] == 2.5
-        ok("Zero-dependency dynamic reflection & invocation verified")
+        ok(f"Strands->MCP export verified (strands-agents installed: {strands_available()})")
     except Exception as e:
         traceback.print_exc()
         fail(str(e))

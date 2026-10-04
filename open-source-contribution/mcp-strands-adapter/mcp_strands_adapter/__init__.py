@@ -1,6 +1,16 @@
-"""mcp-strands-adapter: Universal bridge connecting AWS Strands Agents SDK to Model Context Protocol (MCP 2025-11-25)."""
+"""mcp-strands-adapter: serve AWS Strands agents over the Model Context Protocol."""
+from .adapter import (
+    MCPServerBridge,
+    StrandsMCPToolBridge,
+    strands_available,
+    to_mcp_tool,
+)
 
-from .adapter import StrandsMCPToolBridge
-
-__version__ = "0.1.0"
-__all__ = ["StrandsMCPToolBridge"]
+__version__ = "0.2.0"
+__all__ = [
+    "MCPServerBridge",
+    "StrandsMCPToolBridge",
+    "strands_available",
+    "to_mcp_tool",
+    "__version__",
+]

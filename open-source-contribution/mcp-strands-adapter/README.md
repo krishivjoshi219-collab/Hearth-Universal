@@ -1,123 +1,140 @@
-# mcp-strands-adapter 🚀
+# mcp-strands-adapter
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![MCP Spec](https://img.shields.io/badge/MCP_Spec-2025--11--25-green.svg)](https://modelcontextprotocol.io/)
-[![AWS Strands](https://img.shields.io/badge/AWS-Strands_Agents_SDK-orange.svg)](https://builder.aws.com)
+[![AWS Strands](https://img.shields.io/badge/AWS-Strands_Agents_SDK-orange.svg)](https://strandsagents.com)
 
-> **Universal bridge connecting AWS Strands Agents SDK to Model Context Protocol (MCP 2025-11-25) over Streamable HTTP.**
-
----
-
-## 💡 Why This Matters (The Hackathon Problem)
-
-In the **Build, Ship, Shape: Amazon Developer Hackathon (2026)**:
-- **Alexa+ developers** are instructed to expose agent capabilities via **Model Context Protocol (MCP)**, with a minimum required spec version of **2025-11-25** over Streamable HTTP.
-- **AWS Builder developers** utilize the powerful **AWS Strands Agents SDK** to orchestrate multi-agent workflows (Supervisor patterns, specialized sub-agents, Bedrock Converse loops).
-
-**The Problem:** Prior to this library, there was no standard way to expose AWS Strands agent tools directly as FastMCP tools, nor could an MCP client invoke Strands agent routines without manual, brittle serialization boilerplate.
-
-**The Solution:** `mcp-strands-adapter` provides a zero-dependency, bidirectional bridge. It inspects Python type annotations and docstrings on any Strands agent tool, reflects compliant JSON Schema specifications according to MCP 2025-11-25, and enables seamless invocation across HTTP/SSE transports.
+> **Expose AWS Strands Agents SDK tools and agents as Model Context Protocol (MCP 2025-11-25) tools over Streamable HTTP.**
 
 ---
 
-## 🏛️ Architecture
+## The gap this fills
 
-```mermaid
-flowchart LR
-    subgraph AlexaPlus_MCP ["Alexa+ / MCP Client"]
-        MCPClient["MCP Client\n(Streamable HTTP)"]
-    end
+The Strands Agents SDK ships tooling to **consume** MCP servers. It does not ship a
+straightforward way to **expose** Strands agents and tools to an MCP host such as
+Alexa+. This adapter covers that direction.
 
-    subgraph Adapter ["mcp-strands-adapter"]
-        Bridge["StrandsMCPToolBridge\n• Dynamic JSON Schema Reflection\n• Signature Validation\n• JSON-RPC Dispatch"]
-    end
-
-    subgraph AWS_Strands ["AWS Strands Multi-Agent"]
-        StrandsTool["Strands Agent Tool\n(Python Callable + Docstring)"]
-        Supervisor["Supervisor Agent\n(Amazon Bedrock Converse)"]
-    end
-
-    MCPClient <-->|MCP Spec 2025-11-25| Bridge
-    Bridge <-->|Native Python Call| StrandsTool
-    StrandsTool <--> Supervisor
-```
+It also avoids redoing work the SDK already does well. Strands derives tool schemas
+with Pydantic and `docstring-parser`, producing a `ToolSpec` whose JSON Schema is
+nested at `inputSchema.json`. MCP expects that schema **flat** at `inputSchema`.
+When you hand this bridge an object that is already a Strands tool, it reuses the
+SDK's own `tool_spec` and performs only that reshaping.
 
 ---
 
-## 📦 Installation
+## Install
 
 ```bash
-pip install mcp-strands-adapter
-```
-*(Or install locally for development):*
-```bash
-pip install -e .
+pip install mcp-strands-adapter           # core (MCP only)
+pip install "mcp-strands-adapter[strands]" # + AWS Strands Agents SDK
 ```
 
 ---
 
-## ⚡ Quickstart Example
+## Quickstart
 
-```python
-from mcp_strands_adapter import StrandsMCPToolBridge
-
-# 1. Define a native AWS Strands Agent tool with type hints and docstring
-def calculate_pareto_comfort(cooling_target: float, current_tariff: float) -> dict:
-    """Computes optimal HVAC setpoints under current dynamic energy tariffs."""
-    adjusted = cooling_target + (1.5 if current_tariff > 0.40 else 0.0)
-    return {"setpoint": adjusted, "mode": "eco" if current_tariff > 0.40 else "comfort"}
-
-# 2. Initialize the Bridge
-bridge = StrandsMCPToolBridge(name_prefix="strands_")
-
-# 3. Register the Strands tool
-tool_schema = bridge.register_strands_tool(
-    name="pareto_comfort",
-    fn=calculate_pareto_comfort,
-)
-
-print("Generated MCP 2025-11-25 Tool Schema:")
-print(tool_schema)
-
-# 4. Invoke from an incoming MCP JSON-RPC call
-result = bridge.invoke_from_mcp("strands_pareto_comfort", {"cooling_target": 72.0, "current_tariff": 0.45})
-print("Execution Result:", result)
-```
-
----
-
-## 🔌 Integration with FastMCP Server
+### Serve Strands tools and agents to Alexa+
 
 ```python
 from mcp.server.fastmcp import FastMCP
-from mcp_strands_adapter import StrandsMCPToolBridge
+from strands import Agent, tool
+from mcp_strands_adapter import MCPServerBridge
 
-mcp = FastMCP("AlexaPlusHouseholdAgent")
-bridge = StrandsMCPToolBridge()
+@tool
+def tariff_shift(kwh: float, hours: int = 2) -> dict:
+    """Shift load off the peak tariff window.
 
-# Register your Strands tool with the bridge
-bridge.register_strands_tool("tariff_shift", lambda hours: {"shifted_hours": hours})
+    Args:
+        kwh: energy to shift
+        hours: how long to defer
+    """
+    return {"shifted_kwh": kwh, "hours": hours}
 
-# Expose over FastMCP
-for tool in bridge.list_mcp_tools():
-    tool_name = tool["name"]
-    @mcp.tool(name=tool_name, description=tool["description"])
-    def dynamic_mcp_wrapper(**kwargs):
-        return bridge.invoke_from_mcp(tool_name, kwargs)
+mcp = FastMCP("household")
+MCPServerBridge(prefix="hearth_").register_all(mcp, [tariff_shift])
+# serve with: mcp.run(transport="streamable-http")
+```
+
+### Dispatch a `tools/call` payload
+
+```python
+bridge = MCPServerBridge(prefix="hearth_")
+bridge.add(tariff_shift)
+
+bridge.list_tools()                       # -> MCP tools/list definitions
+bridge.call("hearth_tariff_shift", {"kwh": 3.0, "hours": 3})
+```
+
+### Export a whole Agent
+
+```python
+arbiter = Agent(
+    name="hearth_arbiter",
+    description="Resolves household conflicts.",
+    system_prompt="You arbitrate conflicts.",
+)
+definition = bridge.add(arbiter)   # uses Agent.as_tool() internally
+```
+
+A bare `Agent` is adapted through the SDK's `Agent.as_tool()`. Because that result
+exposes an async `stream()` rather than `__call__`, the bridge drives the stream on
+a private event loop and returns the final text payload — MCP `tools/call` is
+synchronous. An SDK-declared error is raised, not swallowed.
+
+---
+
+## What the bridge does for you
+
+| Concern | Behaviour |
+|---|---|
+| Schema source | Reuses the SDK's `tool_spec` for Strands tools; reflects only plain callables |
+| Schema reshaping | `inputSchema.json` (Strands) → flat `inputSchema` (MCP) |
+| `int` vs `number` | Preserved exactly (`integer` is not widened to `number`) |
+| Descriptions | Parsed from the docstring `Args:` block instead of `Parameter x` placeholders |
+| Argument coercion | JSON scalars coerced to the annotated type (`"5"` → `5`) |
+| Unknown arguments | Rejected with `TypeError` instead of silently dropped |
+| Mounted defaults | Preserved, so the FastMCP schema matches the advertised definition |
+| Agent streaming | `as_tool()` async `stream()` adapted to a synchronous MCP call |
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph Host["MCP Host (Alexa+, etc.)"]
+        Client["MCP Client\nStreamable HTTP"]
+    end
+
+    subgraph Bridge["mcp-strands-adapter"]
+        B["MCPServerBridge\n• spec reshaping\n• arg validation/coercion\n• sync dispatch"]
+    end
+
+    subgraph Strands["AWS Strands"]
+        T["@tool function\n(SDK-derived tool_spec)"]
+        A["Agent\n→ .as_tool() → .stream()"]
+    end
+
+    Client <-->|MCP 2025-11-25| B
+    B -->|reuse tool_spec| T
+    B -->|drain async stream| A
 ```
 
 ---
 
-## 🧪 Testing
+## Testing
 
-Run tests with pytest:
 ```bash
+pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
+Strands-specific tests skip automatically when the optional extra is absent, so the
+suite is green with or without it.
+
 ---
 
-## 📜 License
+## License
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
