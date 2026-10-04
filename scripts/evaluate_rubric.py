@@ -81,8 +81,14 @@ def main():
         assert "fullscreen" in addon_manifest["display"]["supportedModes"]
         assert "hydrated" in addon_manifest["display"]["supportedModes"]
         assert "voice-only" in addon_manifest["display"]["supportedModes"]
-        assert "checkout" in addon_manifest["display"]["views"]
-        assert "receipt" in addon_manifest["display"]["views"]
+        views = addon_manifest["display"]["mcpApps"]["views"]
+        assert "checkout" in views
+        assert "receipt" in views
+        # Honesty guards: no dead $schema, no localhost legal URLs.
+        assert "$schema" not in addon_manifest
+        for k in ("privacyPolicyUrl", "termsOfUseUrl"):
+            assert addon_manifest["legal"][k].startswith("https://")
+            assert "localhost" not in addon_manifest["legal"][k]
         # PUBLIC_BASE_URL override honored for deploy
         import os as _os
         _os.environ["PUBLIC_BASE_URL"] = "https://hearth-demo.example.com"
@@ -90,7 +96,7 @@ def main():
         eng2 = _apl.AlexaPlusAddonEngine()
         assert eng2.base_url == "https://hearth-demo.example.com", eng2.base_url
         del _os.environ["PUBLIC_BASE_URL"]
-        ok("addon.json compliant; all 4 display modes + checkout/receipt views + PUBLIC_BASE_URL override")
+        ok("add-on manifest: 4 display modes + MCP Apps views + public legal URLs + PUBLIC_BASE_URL override")
     except Exception as e:
         traceback.print_exc()
         fail(str(e))

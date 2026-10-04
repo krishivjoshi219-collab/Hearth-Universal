@@ -198,3 +198,57 @@ if __name__ == "__main__":
     print("\n=======================================================")
     print("🏆 ALL 7 ALEXA+ ADD-ON COMPLIANCE TESTS PASSED (100%)!")
     print("=======================================================\n")
+
+
+# ---------------------------------------------------------------------------
+# Manifest honesty + drift guard
+#
+# Amazon publishes no public Alexa+ add-on manifest schema (the Alexa+ MCP
+# Toolkit and Category SDK are preview / select-partner only). The manifest is
+# therefore authored by this project, and these tests exist to make sure it never
+# *claims* to be official or points at a dead schema URL.
+# ---------------------------------------------------------------------------
+
+def test_manifest_does_not_claim_an_official_schema():
+    """A `$schema` pointing at a nonexistent Amazon URL reads as spec-padding.
+
+    Verified against developer.amazon.com: the add-on manifest schema path 404s.
+    """
+    manifest = alexaplus_engine.generate_addon_manifest()
+    assert "$schema" not in manifest, "manifest must not reference an unpublished schema URL"
+    assert manifest["manifestKind"] == "hearth-self-hosted-alexa-plus-addon"
+    assert manifest["_note"], "manifest must state that it is self-authored"
+
+
+def test_manifest_legal_urls_are_publicly_resolvable_not_localhost():
+    """Store listings require resolvable public URLs; localhost cannot be reviewed."""
+    manifest = alexaplus_engine.generate_addon_manifest()
+    legal = manifest["legal"]
+    for key in ("privacyPolicyUrl", "termsOfUseUrl"):
+        assert legal[key].startswith("https://"), f"{key} must be a public https URL"
+        assert "localhost" not in legal[key], f"{key} must not point at localhost"
+    # The self-hosted equivalents stay available for local use.
+    assert "privacyPolicy" in legal["localEquivalents"]
+    assert "termsOfUse" in legal["localEquivalents"]
+
+
+def test_static_addon_json_matches_generated_manifest():
+    """addon.json and the served manifest must not drift apart."""
+    repo_root = os.path.join(os.path.dirname(__file__), "..")
+    static_path = os.path.join(repo_root, "addon.json")
+    with open(static_path, encoding="utf-8") as fh:
+        static = json.load(fh)
+    generated = alexaplus_engine.generate_addon_manifest()
+    assert static == generated, (
+        "addon.json is out of sync with AlexaPlusAddonEngine.generate_addon_manifest(). "
+        "Regenerate one from the other."
+    )
+
+
+def test_manifest_display_modes_are_the_four_supported_modes():
+    manifest = alexaplus_engine.generate_addon_manifest()
+    modes = manifest["display"]["supportedModes"]
+    assert modes == ["inline", "fullscreen", "hydrated", "voice-only"]
+    assert manifest["display"]["mcpApps"]["views"], "MCP Apps resource descriptors are advertised"
+    # The old claim of a published spec identifier is gone.
+    assert "mcpAppsStandard" not in manifest["display"]

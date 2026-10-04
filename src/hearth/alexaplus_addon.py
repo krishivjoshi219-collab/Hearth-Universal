@@ -124,6 +124,12 @@ class AlexaPlusAddonEngine:
         )
         self.canonical_uri = canonical_uri
         self.base_url = canonical_uri.rsplit("/mcp", 1)[0] or "http://localhost:8787"
+        # Canonical public repository, used for legally-required URLs that must be
+        # resolvable by a store listing reviewer (not localhost).
+        self.repo_url = (
+            _os.environ.get("HEARTH_REPO_URL")
+            or "https://github.com/krishivjoshi219-collab/Hearth-Universal"
+        ).rstrip("/")
 
     # =========================================================================
     # 1. RFC 9728 Protected Resource Metadata (PRM)
@@ -429,10 +435,24 @@ class AlexaPlusAddonEngine:
     # 5. Add-on Project Scaffolding & Manifest Generator
     # =========================================================================
     def generate_addon_manifest(self) -> dict[str, Any]:
-        """Generates standard addon.json compliant with Alexa AI CLI & Developer Portal."""
+        """Describes this add-on's self-hosted Alexa+ surface.
+
+        Note on `$schema`: there is deliberately none. Amazon publishes no public
+        Alexa+ add-on manifest schema — the Alexa+ MCP Toolkit and Category SDK are
+        in preview and available to select partners only — so pointing at an
+        "official" schema URL would resolve to a dead link and misrepresent this
+        file as Amazon-certified. The normative, hackathon-eligible surface is the
+        MCP server itself: POST /mcp over Streamable HTTP, protocol 2025-11-25.
+        """
         return {
-            "$schema": "https://developer.amazon.com/schemas/alexa-plus/addon-manifest-v1.json",
             "manifestVersion": "1.0",
+            "manifestKind": "hearth-self-hosted-alexa-plus-addon",
+            "_note": (
+                "Authored by the Hearth Universal project, not by Amazon. No public "
+                "Alexa+ add-on manifest schema exists to validate against; this file "
+                "documents the self-hosted MCP endpoint, OAuth 2.1 metadata, and MCP "
+                "Apps resource descriptors."
+            ),
             "addon": {
                 "id": "amzn1.ask.addon.hearth.operations",
                 "name": "Hearth Universal Operations Agent",
@@ -450,23 +470,27 @@ class AlexaPlusAddonEngine:
                 "categories": ["SMART_HOME", "PRODUCTIVITY", "SHOPPING"],
             },
             "runtime": {
-                "transport": "Streamable-HTTP-MCP-2025-11-25",
+                "transport": "streamable-http",
                 "endpoint": f"{self.base_url}/mcp",
                 "protocolVersion": "2025-11-25",
-                "latencyTargetMs": 500,
+                "jsonResponse": True,
+                "stateless": True,
             },
             "display": {
                 "supportedModes": ["inline", "fullscreen", "hydrated", "voice-only"],
                 "defaultMode": "inline",
-                "mcpAppsStandard": "@modelcontextprotocol/ext-apps",
-                "views": {
-                    "timeline": "ui://hearth/views/timeline",
-                    "energy_mesh": "ui://hearth/views/energy_mesh",
-                    "parliament": "ui://hearth/views/parliament",
-                    "resilience": "ui://hearth/views/resilience",
-                    "checkout": "ui://hearth/views/checkout",
-                    "receipt": "ui://hearth/views/receipt"
-                }
+                "mcpApps": {
+                    "note": ("MCP Apps resource descriptors served over this same MCP "
+                             "server at the resourceUri values below."),
+                    "views": {
+                        "timeline": "ui://hearth/views/timeline",
+                        "energy_mesh": "ui://hearth/views/energy_mesh",
+                        "parliament": "ui://hearth/views/parliament",
+                        "resilience": "ui://hearth/views/resilience",
+                        "checkout": "ui://hearth/views/checkout",
+                        "receipt": "ui://hearth/views/receipt",
+                    },
+                },
             },
             "authentication": {
                 "type": "oauth2.1",
@@ -477,9 +501,16 @@ class AlexaPlusAddonEngine:
                 "scopes": ["mcp:service", "mcp:tools", "mcp:resources"],
             },
             "legal": {
-                "privacyPolicyUrl": f"{self.base_url}/privacy",
-                "termsOfUseUrl": f"{self.base_url}/terms",
-            }
+                # Point at the hosted documents, not at localhost: a store listing
+                # requires a resolvable public URL. The local routes remain
+                # available for self-hosted use.
+                "privacyPolicyUrl": f"{self.repo_url}/blob/main/PRIVACY.md",
+                "termsOfUseUrl": f"{self.repo_url}/blob/main/TERMS.md",
+                "localEquivalents": {
+                    "privacyPolicy": f"{self.base_url}/privacy",
+                    "termsOfUse": f"{self.base_url}/terms",
+                },
+            },
         }
 
 
