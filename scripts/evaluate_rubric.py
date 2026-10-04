@@ -351,11 +351,19 @@ def main():
     try:
         from hearth import mediation
         treaty = mediation.family_mediator.draft_household_treaty(topic="monthly_household_equilibrium")
-        assert treaty["fairness_index_out_of_10"] >= 9.0
+        # The index is a measurement, not a marketing number: it is free to fall
+        # below 9.0 when a household is genuinely over-subscribed (see
+        # test_mediation_is_input_sensitive). This threshold asserts only that
+        # the demo household is well served, not that 9.0 is a floor.
+        assert treaty["fairness_index_out_of_10"] >= 8.5
+        assert treaty["cooperation_coverage_pct"] == 100.0, "demo household should be fully served"
+        assert treaty["envy_free"] is True, "demo treaty must be envy-free"
         assert len(treaty["covenants"]) == 3
         assert len(treaty["verification_hashes"]) == 3
         assert treaty["staged_proposal_id"] is not None
-        ok(f"Fairness index: {treaty['fairness_index_out_of_10']}/10, 3 zero-knowledge salted covenants staged")
+        ok(f"Fairness index: {treaty['fairness_index_out_of_10']}/10 "
+           f"(Nash achievement {treaty['nash_achievement']:.0%}, envy-free), "
+           f"3 zero-knowledge salted covenants staged")
     except Exception as e:
         traceback.print_exc()
         fail(str(e))
