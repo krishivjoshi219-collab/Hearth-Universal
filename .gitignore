@@ -19,3 +19,6 @@ web/
 .coverage
 .coverage.*
 htmlcov/
+
+# JetBrains IDE project files (machine-local, never part of the submission)
+.idea/
