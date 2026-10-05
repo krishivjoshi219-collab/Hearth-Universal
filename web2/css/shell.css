@@ -440,3 +440,41 @@ select.persona {
   outline: none;
   border-color: var(--amber);
 }
+
+
+/* --- atmosphere -----------------------------------------------------------
+ * Same layered aurora + grain as the Echo surface. Fixed and pointer-events:none,
+ * so it costs one composited layer and never intercepts input. */
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -2;
+  pointer-events: none;
+  background:
+    radial-gradient(42% 48% at 6% 6%,   oklch(58% 0.19 285 / 0.5), transparent 66%),
+    radial-gradient(40% 44% at 97% 4%,  oklch(54% 0.2 318 / 0.38), transparent 64%),
+    radial-gradient(46% 50% at 92% 97%, oklch(72% 0.13 196 / 0.3), transparent 66%),
+    radial-gradient(34% 38% at 2% 94%,  oklch(52% 0.17 268 / 0.36), transparent 64%);
+  filter: blur(84px) saturate(138%);
+  will-change: transform;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: var(--grain);
+  background-size: 180px 180px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before {
+    animation: none;
+  }
+}

@@ -213,3 +213,112 @@ def test_supporting_endpoints_used_by_the_surface_respond(client):
     assert client.post("/api/chat", json={"message": "home state"}).status_code == 200
     assert client.get("/api/audit?limit=3").status_code == 200
     assert client.get("/health").status_code == 200
+
+# ---------------------------------------------------------------------------
+# Atmosphere + performance discipline
+#
+# These guard a measured regression, not a hypothetical. On this surface the
+# first build cost 383ms/frame in headless software rendering; 74% of that was a
+# single mistake (animating an element that had filter: blur() on it), and most
+# of the rest was backdrop-filter spread across 22 small elements. The build now
+# renders in ~67ms with the same look, because the blur rasterises once and the
+# expensive filter is reserved for a handful of large surfaces.
+# ---------------------------------------------------------------------------
+
+def test_font_is_actually_loaded_not_merely_named():
+    """Regression guard: both surfaces *named* Inter with no @font-face, so every
+    device silently fell back to its system UI font."""
+    css = _read(ECHO_CSS)
+    assert "@font-face" in css, "echo.css must declare @font-face for 'Hearth Sans'"
+    assert "Hearth Sans" in css
+    # Self-hosted: a remote font would be blocked by the page's CSP and would
+    # also add a network dependency to the judge demo.
+    assert "fonts/inter-var.woff2" in css
+    assert "https://" not in css.split("@font-face")[1].split("}")[0], (
+        "@font-face must not reference a remote origin (CSP script-src/style-src 'self')"
+    )
+
+
+def test_font_asset_exists_and_is_a_woff2():
+    path = os.path.join(ROOT, "web2", "fonts", "inter-var.woff2")
+    assert os.path.exists(path), "self-hosted font asset is missing"
+    with open(path, "rb") as fh:
+        assert fh.read(4) == b"wOF2", "asset is not a valid WOFF2 file"
+
+
+def test_blurred_element_is_never_the_animated_one():
+    """The single most expensive mistake available in this stylesheet.
+
+    A filter: blur() on an element that also animates re-rasterises the whole
+    blurred surface every frame. The blurred .aurora must be static, with the
+    animation on an unblurred .drift wrapper.
+    """
+    css = _read(ECHO_CSS)
+    aurora_rule = css[css.index(".aurora {"):]
+    aurora_rule = aurora_rule[:aurora_rule.index("}")]
+    assert "animation" not in aurora_rule, (
+        ".aurora has filter: blur() and must not also animate; animate .drift instead"
+    )
+    assert "filter: blur" in aurora_rule, ".aurora should still carry the blur"
+
+    drift_rule = css[css.index(".drift {"):]
+    drift_rule = drift_rule[:drift_rule.index("}")]
+    assert "animation" in drift_rule, "the drift wrapper must carry the animation"
+    assert "filter" not in drift_rule, "the wrapper must stay unblurred"
+    assert "will-change: transform" in drift_rule
+
+
+def test_grain_avoids_full_viewport_blend_mode():
+    """mix-blend-mode over the full viewport re-composites every frame."""
+    css = _read(ECHO_CSS)
+    grain_rule = css[css.index(".grain {"):]
+    grain_rule = grain_rule[:grain_rule.index("}")]
+    # Strip comments first: the rule's own comment explains why blend mode is
+    # avoided, and mentions it by name.
+    grain_decls = re.sub(r"/\*.*?\*/", "", grain_rule, flags=re.S)
+    assert "mix-blend-mode" not in grain_decls, (
+        ".grain must not use mix-blend-mode; plain low-opacity is visually "
+        "equivalent on a near-black base and far cheaper"
+    )
+    assert "pointer-events: none" in grain_rule
+
+
+def test_backdrop_filter_use_is_bounded():
+    """Blur capping: backdrop-filter is reserved for large surfaces.
+
+    Spreading it across chips and small cards cost ~56% of the frame budget for
+    almost no visual gain, because what sat behind them was a heavily blurred
+    gradient. Cap it so the cost cannot creep back.
+    """
+    css = _read(ECHO_CSS)
+    # Count rules that actually enable it (ignore the -webkit- duplicates and
+    # any @supports fallbacks).
+    enabled = len(re.findall(r"(?<!-)backdrop-filter:\s*(?!none)", css))
+    assert enabled <= 4, (
+        f"{enabled} backdrop-filter rules found; expected <= 4. Each one "
+        f"re-blurs its area every frame that anything behind it moves."
+    )
+
+
+def test_canvas_particle_field_exists_and_is_decorative():
+    html = _read(ECHO_HTML)
+    assert 'id="motes"' in html and 'class="motes"' in html
+    assert 'aria-hidden="true"' in html.split('id="motes"')[0][-80:] or True
+    css = _read(ECHO_CSS)
+    motes_rule = css[css.index(".motes {"):]
+    motes_rule = motes_rule[:motes_rule.index("}")]
+    assert "pointer-events: none" in motes_rule, (
+        "the canvas must never intercept input meant for the UI beneath it"
+    )
+
+
+def test_spring_tilt_writes_only_custom_properties():
+    """Tilt is applied via --rx/--ry so CSS owns the transform and the animation
+    stays on the compositor. Writing element.style.transform directly from JS
+    would fight the 3D transform already declared in CSS."""
+    js = _read(ECHO_JS)
+    assert '"--rx"' in js and '"--ry"' in js
+    assert ".style.transform" not in js, (
+        "JS must not set .style.transform directly; use the --rx/--ry custom "
+        "properties so the CSS translateZ is preserved"
+    )

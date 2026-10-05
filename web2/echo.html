@@ -8,9 +8,20 @@
 </head>
 <body data-display="inline">
 
+<!-- z0 atmosphere: one cool aurora wash at the edges + one warm core glow -->
+<div class="drift" aria-hidden="true"><div class="aurora"></div></div>
+<div class="core-glow" aria-hidden="true"></div>
+
+<!-- z1 drifting energy motes -->
+<canvas class="motes" id="motes" aria-hidden="true"></canvas>
+
+<!-- z2 material texture: grain kills digital flatness, vignette focuses the eye -->
+<div class="grain" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
 <div class="shell">
 
-  <!-- ------------------------------------------------------------ topbar -->
+  <!-- ------------------------------------------------------------- topbar -->
   <header class="topbar">
     <div class="brand">
       <h1>Hearth</h1>
@@ -31,7 +42,7 @@
     </div>
   </header>
 
-  <!-- --------------------------------------------------------------- main -->
+  <!-- ---------------------------------------------------------------- main -->
   <div class="main">
 
     <section class="stage" aria-live="polite">
@@ -40,28 +51,41 @@
       <!-- Ambient resting state -->
       <div class="ambient" id="ambient">
         <div class="hero">
-          <div class="deg num" id="heroTemp">--</div>
-          <div class="unit">&deg;F</div>
+          <div class="ring" role="img" aria-label="Indoor temperature">
+            <div class="val num" id="heroTemp">--</div>
+            <div class="unit">&deg;F</div>
+          </div>
+          <div class="detail">
+            <div class="row">
+              <span class="rk">Target</span>
+              <span class="rv num" id="heroTarget">&mdash;</span>
+            </div>
+            <div class="row">
+              <span class="rk">Climate</span>
+              <span class="rv" id="heroMode">&mdash;</span>
+            </div>
+          </div>
+
           <div class="where">
             <div class="label">Front door</div>
-            <div class="val" id="heroLock">—</div>
+            <div class="val" id="heroLock">&mdash;</div>
           </div>
         </div>
 
         <div class="metrics">
-          <div class="metric ok" id="mEnergy">
+          <div class="metric" id="mEnergy" data-accent="emerald">
             <div class="k">Energy</div>
-            <div class="v num" data-v>—</div>
+            <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
           </div>
-          <div class="metric cool" id="mSolar">
+          <div class="metric" id="mSolar" data-accent="sky">
             <div class="k">Solar</div>
-            <div class="v num" data-v>—</div>
+            <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
           </div>
-          <div class="metric warn" id="mPantry">
+          <div class="metric" id="mPantry" data-accent="amber">
             <div class="k">Pantry</div>
-            <div class="v num" data-v>—</div>
+            <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
           </div>
         </div>
@@ -78,7 +102,7 @@
       </div>
     </section>
 
-    <!-- -------------------------------------------------------------- rail -->
+    <!-- --------------------------------------------------------------- rail -->
     <aside class="rail">
       <div class="card-panel">
         <div class="head">
@@ -101,36 +125,36 @@
 
   </div>
 
-  <!-- ------------------------------------------------------------ askrow -->
+  <!-- ------------------------------------------------------------- askrow -->
   <footer class="askrow">
     <span class="lead">Try</span>
 
     <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type":"perimeter_anomaly"}' data-ask="Alexa, ask Hearth why the patio door alarm went off at 3 AM">
-      <span class="ico" aria-hidden="true">🔍</span> Was someone breaking in?
+      <span class="ico" aria-hidden="true">&#128269;</span> Was someone breaking in?
     </button>
 
     <button class="ask" type="button" data-go="/api/parliament/deliberate" data-body='{"topic":"evening tariff vs comfort"}' data-ask="Alexa, ask Hearth what the Household Parliament recommends tonight">
-      <span class="ico" aria-hidden="true">🏛️</span> Parliament: tariff vs comfort
+      <span class="ico" aria-hidden="true">&#127963;</span> Parliament: tariff vs comfort
     </button>
 
     <button class="ask" type="button" data-go="/api/causal/simulate" data-body='{"days_ahead":7,"iterations":250}' data-ask="Alexa, ask Hearth to simulate the next seven days">
-      <span class="ico" aria-hidden="true">🔮</span> What breaks in 7 days?
+      <span class="ico" aria-hidden="true">&#128269;</span> What breaks in 7 days?
     </button>
 
     <button class="ask" type="button" data-go="/api/swarm/grid" data-body='{}' data-ask="Alexa, ask Hearth to sell our excess solar to the neighbours">
-      <span class="ico" aria-hidden="true">⚡</span> Sell solar to neighbours
+      <span class="ico" aria-hidden="true">&#9889;</span> Sell solar to neighbours
     </button>
 
     <button class="ask" type="button" data-go="/api/mediation/treaty" data-body='{}' data-ask="Alexa, ask Hearth to settle the household treaty">
-      <span class="ico" aria-hidden="true">🤝</span> Settle the treaty
+      <span class="ico" aria-hidden="true">&#129309;</span> Settle the treaty
     </button>
 
     <button class="ask" type="button" data-go="/api/acoustic/scan" data-body='{}' data-ask="Alexa, ask Hearth to check the fridge bearings">
-      <span class="ico" aria-hidden="true">🩺</span> Is the fridge dying?
+      <span class="ico" aria-hidden="true">&#129658;</span> Is the fridge dying?
     </button>
 
     <button class="btn mic" type="button" id="micBtn" aria-label="Speak your request">
-      <span class="ico" aria-hidden="true">🎤</span><span id="micLabel">Speak</span>
+      <span class="ico" aria-hidden="true">&#127903;</span><span id="micLabel">Speak</span>
     </button>
   </footer>
 

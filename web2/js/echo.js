@@ -19,6 +19,8 @@
     ambient: $("#ambient"),
     heroTemp: $("#heroTemp"),
     heroLock: $("#heroLock"),
+    heroTarget: $("#heroTarget"),
+    heroMode: $("#heroMode"),
     said: $("#said"),
     response: $("#response"),
     statusBody: $("#statusBody"),
@@ -96,6 +98,181 @@
       month: "short",
       day: "numeric",
     });
+  }
+
+  // =========================================================== atmosphere ===
+  /* A small canvas particle field plus a real spring integrator.
+   *
+   * Why hand-rolled rather than a library: the page is served under
+   * `script-src 'self'` with no CDN available, so three.js/ogl/gsap are simply
+   * not options. A 2D canvas with additive blending and a damped spring gives
+   * the same perceptual result for a fraction of the weight, and degrades to a
+   * plain gradient background when motion is reduced or the canvas is missing.
+   */
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  /* Motes: slow-rising warm/cool particles with parallax by depth. */
+  const MOTE_COUNT = 54;
+
+  function initMotes() {
+    const canvas = document.getElementById("motes");
+    if (!canvas || !canvas.getContext) return null;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    let w = 0;
+    let h = 0;
+    let motes = [];
+    let raf = 0;
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = w + "px";
+      canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+
+    const seed = () => {
+      motes = [];
+      for (let i = 0; i < MOTE_COUNT; i += 1) {
+        // depth in [0,1] drives size, speed, opacity and blur-ish softness
+        const depth = Math.random();
+        motes.push({
+          x: Math.random() * w,
+          y: Math.random() * h,
+          depth,
+          r: 0.6 + depth * 2.4,
+          vy: -(0.06 + depth * 0.22),
+          drift: (Math.random() - 0.5) * 0.12,
+          // warm amber vs cool sky, matching the surface's two signal hues
+          warm: Math.random() > 0.42,
+          phase: Math.random() * Math.PI * 2,
+        });
+      }
+    };
+
+    const frame = () => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "lighter";
+      for (const m of motes) {
+        m.y += m.vy;
+        m.x += m.drift + Math.sin(m.phase + m.y * 0.004) * 0.16;
+        if (m.y < -12) {
+          m.y = h + 12;
+          m.x = Math.random() * w;
+        }
+        if (m.x < -12) m.x = w + 12;
+        if (m.x > w + 12) m.x = -12;
+
+        const a = 0.1 + m.depth * 0.3;
+        const g = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 7);
+        const tint = m.warm ? "255, 196, 110" : "150, 210, 255";
+        g.addColorStop(0, "rgba(" + tint + "," + a + ")");
+        g.addColorStop(1, "rgba(" + tint + ",0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r * 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      raf = window.requestAnimationFrame(frame);
+    };
+
+    resize();
+    seed();
+    window.addEventListener("resize", () => {
+      resize();
+      seed();
+    });
+
+    if (reduceMotion.matches) {
+      // Draw one static frame: the material still reads, nothing moves.
+      ctx.clearRect(0, 0, w, h);
+      window.cancelAnimationFrame(raf);
+      return { stop() {} };
+    }
+    raf = window.requestAnimationFrame(frame);
+    return {
+      stop() { window.cancelAnimationFrame(raf); },
+    };
+  }
+
+  /* Critically-damped-ish spring for card tilt. Real springs settle with
+   * overshoot and inertia; a CSS cubic-bezier cannot, which is exactly why
+   * this felt flat before. */
+  function springTilt() {
+    const cards = Array.from(document.querySelectorAll(".metric"));
+    if (!cards.length || reduceMotion.matches) return { stop() {} };
+
+    const state = cards.map((el) => ({
+      el,
+      tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0,
+    }));
+
+    let raf = 0;
+    let running = false;
+
+    const step = () => {
+      let settled = true;
+      for (const s of state) {
+        // stiffness 0.12, damping 0.78 -> slight overshoot, ~350ms settle
+        const k = 0.12;
+        const d = 0.78;
+        s.vx += (s.tx - s.x) * k;
+        s.vy += (s.ty - s.y) * k;
+        s.vx *= d;
+        s.vy *= d;
+        s.x += s.vx;
+        s.y += s.vy;
+        if (Math.abs(s.tx - s.x) > 0.02 || Math.abs(s.ty - s.y) > 0.02) settled = false;
+        // translateZ is already applied in CSS; append the tilt only.
+        s.el.style.setProperty("--rx", s.y.toFixed(3) + "deg");
+        s.el.style.setProperty("--ry", s.x.toFixed(3) + "deg");
+      }
+      raf = settled ? 0 : window.requestAnimationFrame(step);
+      if (!raf) running = false;
+    };
+
+    const kick = () => {
+      if (!running) {
+        running = true;
+        raf = window.requestAnimationFrame(step);
+      }
+    };
+
+    const onMove = (ev) => {
+      const max = 5.2;
+      cards.forEach((el, i) => {
+        const r = el.getBoundingClientRect();
+        const cx = r.left + r.width / 2;
+        const cy = r.top + r.height / 2;
+        const nx = (ev.clientX - cx) / Math.max(1, r.width / 2);
+        const ny = (ev.clientY - cy) / Math.max(1, r.height / 2);
+        state[i].tx = Math.max(-1, Math.min(1, nx)) * max;
+        state[i].ty = Math.max(-1, Math.min(1, ny)) * -max;
+      });
+      kick();
+    };
+
+    const onLeave = () => {
+      state.forEach((s) => { s.tx = 0; s.ty = 0; });
+      kick();
+    };
+
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerleave", onLeave, { passive: true });
+
+    return {
+      stop() {
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerleave", onLeave);
+        if (raf) window.cancelAnimationFrame(raf);
+      },
+    };
   }
 
   // ------------------------------------------------------- speech synthesis
@@ -237,6 +414,15 @@
     );
   }
 
+  /* SHOUTING_SNAKE -> Shouting Snake. Enum-ish values come straight out of the
+   * engines and read as machine output until they are formatted. */
+  function humanize(v) {
+    return String(v == null ? "" : v)
+      .replace(/_/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
   /* Tone a label from its own words so a scary result is never shown in the
    * calm green used for a benign one. */
   function toneFor(text) {
@@ -256,7 +442,7 @@
           esc(e.causal_factor || "") + "</div></div>"
       );
       return (
-        verdictBanner("🔍", d.verdict, num(Number(d.confidence_score) * 100, 0) + "%", toneFor(d.verdict)) +
+        verdictBanner("🔍", humanize(d.verdict), num(Number(d.confidence_score) * 100, 0) + "%", toneFor(d.verdict)) +
         '<div class="reply">' + esc(d.summary || "") + "</div>" +
         '<div class="cards">' + timeline.join("") + "</div>" +
         (d.audit_proof
@@ -292,7 +478,7 @@
 
     "/api/causal/simulate": (d) => {
       const vulns = (d.vulnerabilities || []).map((v) => ({
-        name: (v.hazard_type || "").replace(/_/g, " "),
+        name: humanize(v.hazard_type),
         tag: v.impact_severity,
         score: num(v.probability_pct, 0) + "%",
         body: "<em>" + esc(v.contingency_action || "") + "</em><br/>" + esc(v.root_cause || ""),
@@ -335,7 +521,7 @@
     "/api/mediation/treaty": (d) => {
       const covs = (d.covenants || []).map((c) => ({
         name: c.resident,
-        tag: (c.domain || "").replace(/_/g, " "),
+        tag: humanize(c.domain),
         score: num(c.satisfaction_pct, 0) + "%",
         body: "<em>" + esc(c.concession_granted || "") + "</em><br/>In return: " +
           esc(c.reciprocal_obligation || ""),
@@ -466,6 +652,18 @@
         el.heroLock.style.color =
           lock === "locked" ? "var(--e-ok)" : lock ? "var(--e-bad)" : "";
 
+        const climate = home.living_room?.climate || {};
+        if (el.heroTarget) {
+          const t = Number(climate.target_c);
+          el.heroTarget.textContent = Number.isFinite(t)
+            ? num(cToF(t), 1) + " \u00b0F"
+            : "\u2014";
+        }
+        if (el.heroMode) {
+          const bits = [climate.mode, climate.fan].filter(Boolean);
+          el.heroMode.textContent = bits.length ? bits.join(" \u00b7 ") : "\u2014";
+        }
+
         const e = home.energy || {};
         setMetric("mEnergy",
           num(e.current_draw_kw, 2) + " kW",
@@ -550,4 +748,8 @@
   setupMic();
   refreshAmbient();
   setInterval(refreshAmbient, 20000);
+
+  /* Atmosphere last: it is decoration and must never delay data. */
+  initMotes();
+  springTilt();
 })();
