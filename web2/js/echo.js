@@ -32,6 +32,14 @@
     live: $("#live"),
     micBtn: $("#micBtn"),
     micLabel: $("#micLabel"),
+    receiptBackdrop: $("#receiptBackdrop"),
+    receiptCode: $("#receiptCode"),
+    receiptTitle: $("#receiptTitle"),
+    receiptSub: $("#receiptSub"),
+    receiptBody: $("#receiptBody"),
+    receiptUndoBtn: $("#receiptUndoBtn"),
+    receiptCloseBtn: $("#receiptCloseBtn"),
+    receiptDoneBtn: $("#receiptDoneBtn"),
   };
 
   let displayMode = "inline";
@@ -354,19 +362,23 @@
     { re: /solar|sell|neighbou?r|grid|export|vpp|power plant/i, go: "/api/swarm/grid", body: {}, label: "Coordinating microgrid" },
     { re: /treaty|mediat|fight|argue|settle|family|chore/i, go: "/api/mediation/treaty", body: {}, label: "Negotiating treaty" },
     { re: /fridge|bearing|noise|acoustic|appliance|fft|dying/i, go: "/api/acoustic/scan", body: {}, label: "Analysing appliance acoustics" },
-    { re: /pantry|milk|coffee|restock|order|buy|grocery/i, go: "/api/acoustic/scan", body: {}, label: "Checking the pantry" },
+    { re: /pantry|milk|coffee|restock|order|buy|grocery|everything|fix groceries|robux|toy/i, go: "/api/commerce/autopilot-checkout", passPhrase: true, label: "Staging your restock" },
+    { re: /save.*800|save money|subscription|renewal|audit.*bill|waste/i, go: "/api/renewals", body: {}, label: "Auditing subscriptions" },
   ];
 
   async function handleUtterance(phrase) {
     const hit = UTTERANCE_ROUTES.find((r) => r.re.test(phrase));
     if (!hit) {
       const msg =
-        "I did not match that to a capability. Try asking about a break-in, the household parliament, a seven day forecast, selling solar, the family treaty, or the fridge.";
+        "I did not match that to a capability. Try asking about a break-in, the household parliament, a seven day forecast, selling solar, the family treaty, or restocking groceries.";
       el.response.textContent = msg;
       speak(msg);
       return;
     }
-    await run(hit.go, hit.body, hit.label);
+    const body = hit.passPhrase
+      ? { utterance: phrase, voice_confidence: 0.95 }
+      : hit.body;
+    await run(hit.go, body, hit.label);
   }
 
   // -------------------------------------------------------------- rendering
@@ -539,6 +551,56 @@
       );
     },
 
+    "/api/renewals": (d) => {
+      const cards = (d.renewals || []).map((s) => ({
+        name: s.name,
+        tag: s.recommendation === "cancel" ? "cancel" : "downgrade",
+        score: "+$" + num(s.savings_yr, 2) + "/yr",
+        body: "<em>" + esc(s.usage_status || "") + "</em><br/>" + esc(s.reason || ""),
+      }));
+      const stageRow = '<div class="stage-row">' + (d.renewals || []).map((s) =>
+        '<button type="button" class="btn ghost" data-sub="' + esc(s.id) + '">Stage +$' +
+        num(s.savings_yr, 2) + "/yr</button>").join("") + "</div>";
+      return (
+        verdictBanner("💸", "WASTE FOUND",
+          "+$" + num(d.potential_save_yr, 2) + "/yr", "") +
+        cardList(cards) + stageRow +
+        '<div class="reply">Nothing cancelled — stage one tap at a time, Approve in the tray to execute. ' +
+        "Total spend $" + num(d.total_annual_spend, 2) + "/yr.</div>"
+      );
+    },
+
+    "/api/commerce/autopilot-checkout": (d) => {
+      if (d.blocked) {
+        return (
+          verdictBanner("🛡️", "CHILD SAFETY GUARDRAIL", "BLOCKED", "bad") +
+          '<div class="reply"><strong>🛡️ Leo (9) is blocked from purchasing by architectural design, not prompt.</strong><br/>' +
+          esc(d.message || "Child profile 'Leo' is restricted from staging orders or making purchases.") + "</div>"
+        );
+      }
+      if (d.clarification_required) {
+        return (
+          verdictBanner("🛒", "WHICH ITEMS?", "clarify", "warn") +
+          '<div class="reply">' + esc(d.message || "Which items should I stage?") + "</div>"
+        );
+      }
+      const cart = d.cart_preview || {};
+      const items = (cart.items || []).map((it) => ({
+        name: it.name,
+        tag: "Subscribe & Save",
+        score: "$" + num(it.unit_price, 2),
+        body: "was $" + num(it.original_price, 2) + " · <em>" + esc(it.prime_delivery || "") + "</em>",
+      }));
+      return (
+        verdictBanner("🛒", "CART STAGED — NOTHING ORDERED",
+          "$" + num(cart.final_total, 2) + " (saves $" + num(cart.savings, 2) + ")",
+          "") +
+        cardList(items) +
+        '<div class="reply">Tap Approve in the tray to order · one tap undoes. ' +
+        esc(d.message || "") + "</div>"
+      );
+    },
+
     "/api/acoustic/scan": (d) => {
       const apps = (d.appliances || []).map((a) => ({
         name: a.name,
@@ -581,6 +643,18 @@
     if (path.includes("swarm")) return d.voice_summary;
     if (path.includes("parliament")) return "Parliament reached a consensus at a Nash score of " + num(d.nash_equilibrium_score, 1) + ".";
     if (path.includes("causal")) return "Found " + (d.vulnerabilities || []).length + " vulnerabilities. Resilience score " + num(d.grid_resilience_score, 0) + ".";
+    if (path.includes("renewals")) {
+      return "Found " + num(d.potential_save_yr, 0) +
+        " dollars a year in waste across " + (d.renewals || []).length +
+        " subscriptions. Nothing cancelled — tap the tray to stage them.";
+    }
+    if (path.includes("autopilot-checkout")) {
+      if (d.blocked) return "Blocked by child safety contract. Leo cannot make purchases.";
+      if (d.clarification_required) return "Which items should I stage? Nothing is ordered yet.";
+      const cart = d.cart_preview || {};
+      return "Cart staged for " + (cart.item_count || 0) + " items, saving " +
+        num(cart.savings, 2) + " dollars. Nothing ordered until you tap Approve.";
+    }
     return "Done.";
   }
 
@@ -595,6 +669,7 @@
     try {
       const data = await call(path, body);
       el.response.innerHTML = render(path, data);
+      tickMoney();
       // Recede the ambient hero so the reply owns the stage, and start the
       // reply region scrolled to the top of the new content.
       document.body.classList.add("has-result");
@@ -604,7 +679,7 @@
       await refreshTray();
     } catch (err) {
       el.response.innerHTML =
-        '<span style="color:var(--e-bad)">Could not complete that: ' + esc(err.message) + "</span>";
+        '<span class="u-color-var-e-bad" >Could not complete that: ' + esc(err.message) + "</span>";
       speak("Sorry, that did not work.");
     } finally {
       busy = false;
@@ -708,12 +783,44 @@
 
   async function refreshTray() {
     try {
-      const res = await fetch("/api/audit?limit=3", { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error("audit unavailable");
+      const res = await fetch("/api/proposals?limit=20", { headers: { Accept: "application/json" } });
+      if (!res.ok) throw new Error("tray unavailable");
+      const data = await res.json();
+      renderTray(data.proposals || [], data.pending_count || 0);
       setConn("ok", "connected");
     } catch (_) {
       setConn("warn", "degraded");
     }
+  }
+
+  function renderTray(items, pendingCount) {
+    if (!el.trayBody) return;
+    if (pendingCount > 0) {
+      el.trayCount.hidden = false;
+      el.trayCount.textContent = pendingCount;
+    } else {
+      el.trayCount.hidden = true;
+    }
+    const pend = items.filter((p) => p && p.status === "pending").slice(0, 5);
+    const done = items.filter((p) => p && p.status !== "pending").slice(0, 3);
+    if (!pend.length && !done.length) {
+      el.trayBody.innerHTML =
+        '<div class="empty">Nothing has run without you. Consequential actions appear here first — and undo in one tap.</div>';
+      return;
+    }
+    el.trayBody.innerHTML =
+      pend.map((p) =>
+        '<div class="tray-item"><div class="tray-title">' + esc(p.title) + "</div>" +
+        '<div class="tray-meta">' + esc(p.kind || "") +
+        (p.cost_delta_yr ? " · $" + num(Math.abs(p.cost_delta_yr), 2) + "/yr" : "") + " · undoes in 1 tap</div>" +
+        '<div class="tray-actions"><button type="button" class="btn primary" data-act="approve" data-pid="' +
+        esc(p.id) + '">Approve</button>' +
+        '<button type="button" class="btn ghost" data-act="reject" data-pid="' +
+        esc(p.id) + '">Reject</button></div></div>').join("") +
+      done.map((p) =>
+        '<div class="tray-item decided"><div class="tray-title">' + esc(p.title) + "</div>" +
+        '<div class="tray-actions"><button type="button" class="btn ghost" data-act="undo" data-pid="' +
+        esc(p.id) + '">Undo</button></div></div>').join("");
   }
 
   // ---------------------------------------------------------------- wiring
@@ -732,6 +839,195 @@
     });
   });
 
+  // ============================================================= Earcons ===
+  let audioCtx = null;
+  function getAudioContext() {
+    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === "suspended") {
+      audioCtx.resume().catch(() => {});
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, type, startTime, duration, gainVal, dest) {
+    try {
+      const osc = dest.context.createOscillator();
+      const gain = dest.context.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(gainVal, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain);
+      gain.connect(dest);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    } catch (_) {}
+  }
+
+  function playEarcon(name) {
+    try {
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      const t = ctx.currentTime;
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.18, t);
+      master.connect(ctx.destination);
+
+      if (name === "stage") {
+        playTone(523.25, "sine", t, 0.12, 0.22, master);
+        playTone(659.25, "sine", t + 0.09, 0.2, 0.25, master);
+      } else if (name === "approve") {
+        playTone(523.25, "sine", t, 0.22, 0.2, master);
+        playTone(659.25, "triangle", t + 0.05, 0.24, 0.22, master);
+        playTone(783.99, "sine", t + 0.1, 0.3, 0.26, master);
+        playTone(1046.50, "sine", t + 0.15, 0.4, 0.24, master);
+      } else if (name === "undo") {
+        playTone(783.99, "sine", t, 0.11, 0.22, master);
+        playTone(659.25, "sine", t + 0.08, 0.13, 0.2, master);
+        playTone(523.25, "sine", t + 0.16, 0.22, 0.18, master);
+      } else if (name === "block") {
+        playTone(329.63, "sawtooth", t, 0.14, 0.12, master);
+        playTone(261.63, "sine", t + 0.1, 0.22, 0.2, master);
+      }
+    } catch (_) {}
+  }
+
+  // ======================================================== Glass Receipt ===
+  function showReceipt(p) {
+    if (!el.receiptBackdrop || !p) return;
+    const exec = p.execution || {};
+    const code = exec.receipt_code || ("HEARTH-RC-" + (p.id || "000").toUpperCase());
+    if (el.receiptCode) el.receiptCode.textContent = code;
+    if (el.receiptTitle) el.receiptTitle.textContent = p.title || "Action Applied";
+    if (el.receiptUndoBtn) el.receiptUndoBtn.dataset.pid = p.id || "";
+
+    const kind = p.kind || "";
+    let html = "";
+    if (kind === "subscription_cancel" || kind === "cancel_subscription" || kind === "downgrade_subscription") {
+      const saveYr = exec.savings_yr || Math.abs(p.cost_delta_yr || 0);
+      const serv = exec.service_name || p.title;
+      const portal = exec.portal_url || "";
+      const phone = exec.support_phone || "";
+      html =
+        '<div class="receipt-row"><span class="receipt-rk">Service</span><span class="receipt-rv">' + esc(serv) + '</span></div>' +
+        '<div class="receipt-row"><span class="receipt-rk">Annual Household Savings</span><span class="receipt-rv highlight num">+$' + num(saveYr, 2) + '/yr</span></div>' +
+        (portal ? '<div class="receipt-row"><span class="receipt-rk">Provider Cancellation Portal</span><a class="receipt-rv link" href="' + esc(portal) + '" target="_blank" rel="noopener">Open ' + esc(portal.replace(/^https?:\/\//, '')) + ' &rarr;</a></div>' : '') +
+        (phone ? '<div class="receipt-row"><span class="receipt-rk">Concierge Phone Assist</span><span class="receipt-rv num mono">' + esc(phone) + '</span></div>' : '') +
+        '<div class="receipt-row"><span class="receipt-rk">Human Reversibility</span><span class="receipt-rv">100% Guaranteed reversible before billing cycle</span></div>';
+    } else if (kind === "commerce_order") {
+      const tot = exec.final_total || Math.abs(p.cost_delta_yr || 0);
+      const sav = exec.savings || 0;
+      const items = exec.items || [];
+      const sched = exec.delivery_schedule?.slot_name || "Amazon Prime Dedicated Box (Tuesday)";
+      html =
+        '<div class="receipt-row"><span class="receipt-rk">Delivery Window</span><span class="receipt-rv">' + esc(sched) + '</span></div>' +
+        '<div class="receipt-row"><span class="receipt-rk">Replenishment Total</span><span class="receipt-rv highlight num">$' + num(tot, 2) + '</span></div>' +
+        (sav > 0 ? '<div class="receipt-row"><span class="receipt-rk">Subscribe & Save Discount (15%)</span><span class="receipt-rv highlight num">-$' + num(sav, 2) + '</span></div>' : '') +
+        (items.length ? '<div class="receipt-items-list">' + items.map(it => '<div class="receipt-item-line"><span>' + esc(it.name || it.item_id) + '</span><span class="num mono">$' + num(it.price, 2) + '</span></div>').join('') + '</div>' : '') +
+        '<div class="receipt-row"><span class="receipt-rk">Human Reversibility</span><span class="receipt-rv">Reversible in 1 tap prior to fulfillment dispatch</span></div>';
+    } else {
+      html =
+        '<div class="receipt-row"><span class="receipt-rk">Action Verdict</span><span class="receipt-rv">' + esc(exec.note || "Executed successfully") + '</span></div>' +
+        (p.cost_delta_yr ? '<div class="receipt-row"><span class="receipt-rk">Financial Impact</span><span class="receipt-rv highlight num">$' + num(Math.abs(p.cost_delta_yr), 2) + '/yr</span></div>' : '') +
+        '<div class="receipt-row"><span class="receipt-rk">Audit Seal</span><span class="receipt-rv mono">SHA-256 Merkle Ratchet</span></div>';
+    }
+    if (el.receiptBody) el.receiptBody.innerHTML = html;
+    el.receiptBackdrop.hidden = false;
+  }
+
+  function hideReceipt() {
+    if (el.receiptBackdrop) {
+      el.receiptBackdrop.hidden = true;
+    }
+  }
+
+  if (el.receiptUndoBtn) {
+    el.receiptUndoBtn.addEventListener("click", async () => {
+      const pid = el.receiptUndoBtn.dataset.pid;
+      if (!pid || busy) return;
+      try {
+        const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/undo", {});
+        const ok = d && d.ok !== false;
+        playEarcon("undo");
+        toast(ok ? "Undone — reversed in the ledger." : "Undo failed.", !ok);
+        speak(ok ? "Undone. Action reversed." : "Undo failed.");
+        hideReceipt();
+        await refreshTray();
+      } catch (err) {
+        toast("Undo failed.", true);
+      }
+    });
+  }
+  if (el.receiptCloseBtn) el.receiptCloseBtn.addEventListener("click", hideReceipt);
+  if (el.receiptDoneBtn) el.receiptDoneBtn.addEventListener("click", hideReceipt);
+  if (el.receiptBackdrop) {
+    el.receiptBackdrop.addEventListener("click", (e) => {
+      if (e.target === el.receiptBackdrop) hideReceipt();
+    });
+  }
+
+  /* Staged-card buttons rendered inside replies (e.g. renewals "Stage" row). */
+  el.response.addEventListener("click", async (e) => {
+    const st = e.target && e.target.closest ? e.target.closest("[data-sub]") : null;
+    if (!st || busy) return;
+    try {
+      const data = await call("/api/renewals/stage", { id: st.dataset.sub });
+      playEarcon("stage");
+      toast(data.message || "Staged in the tray.");
+      speak("Staged. Approve it in the tray when ready — nothing is cancelled yet.");
+      await refreshTray();
+    } catch (err) {
+      playEarcon("block");
+      toast("Could not stage that.", true);
+    }
+  });
+
+  /* Approval tray decisions (Approve / Reject / Undo) live on the Echo surface. */
+  if (el.trayBody) {
+    el.trayBody.addEventListener("click", async (e) => {
+      const b = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
+      if (!b || busy) return;
+      const pid = b.dataset.pid;
+      const act = b.dataset.act;
+      b.disabled = true;
+      try {
+        if (act === "undo") {
+          const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/undo", {});
+          const ok = d && d.ok !== false;
+          playEarcon("undo");
+          hideReceipt();
+          toast(ok ? "Undone — reversed in the ledger." : "Undo failed.", !ok);
+          speak(ok ? "Undone." : "Undo failed.");
+        } else {
+          const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/decide",
+            { approved: act === "approve" });
+          const ok = d && d.ok !== false;
+          if (act === "approve") {
+            playEarcon("approve");
+            if (ok && d) showReceipt(d);
+          } else {
+            playEarcon("undo");
+          }
+          toast(ok ? "Sealed in the ledger." : "That did not go through.", !ok);
+          speak(ok ? (act === "approve" ? "Approved. Receipt sealed." : "Rejected.") : "That did not go through.");
+        }
+        await refreshTray();
+        if (act === "approve" || act === "reject") {
+          const sealed = el.trayBody.querySelector(".tray-item.decided");
+          if (sealed) sealed.classList.add("sealed");
+        }
+      } catch (err) {
+        playEarcon("block");
+        toast("That did not go through.", true);
+        b.disabled = false;
+      }
+    });
+  }
+
   document.querySelectorAll(".chip[data-mode]").forEach((chip) => {
     chip.addEventListener("click", () => {
       displayMode = chip.dataset.mode;
@@ -743,13 +1039,165 @@
     });
   });
 
+  const personaBtn = document.querySelector("#personaToggleBtn");
+  if (personaBtn) {
+    async function syncPersona() {
+      try {
+        const r = await fetch("/api/persona");
+        if (r.ok) {
+          const d = await r.json();
+          const pid = d.active_persona?.id || "admin";
+          const isChild = pid === "child" || pid === "leo";
+          personaBtn.dataset.persona = isChild ? "child" : "admin";
+          personaBtn.setAttribute("aria-pressed", String(isChild));
+          personaBtn.textContent = isChild ? "🧒 Leo (Child)" : "👤 Alex (Adult)";
+        }
+      } catch (_) {}
+    }
+    syncPersona();
+
+    personaBtn.addEventListener("click", async () => {
+      const cur = personaBtn.dataset.persona || "admin";
+      const next = cur === "admin" ? "child" : "admin";
+      try {
+        const res = await fetch("/api/persona", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: next }),
+        });
+        if (res.ok) {
+          const isChild = next === "child";
+          personaBtn.dataset.persona = next;
+          personaBtn.setAttribute("aria-pressed", String(isChild));
+          personaBtn.textContent = isChild ? "🧒 Leo (Child)" : "👤 Alex (Adult)";
+          if (isChild) {
+            playEarcon("block");
+            toast("Active: Leo (Child) — child guardrail engaged", false);
+            speak("Switched to Leo persona. Financial orders and unlocks are restricted.");
+            el.said.innerHTML = '<span class="q">&ldquo;</span>Leo: buy me Robux<span class="q">&rdquo;</span>';
+            el.response.innerHTML =
+              verdictBanner("🛡️", "CHILD SAFETY GUARDRAIL", "BLOCKED", "bad") +
+              '<div class="reply"><strong>🛡️ Leo (9) is blocked from purchasing or unlocking by architectural design, not prompt.</strong><br/>' +
+              'Child safety contract: orders, subscription cancellations, and perimeter doors are hard-refused at the AST gateway layer. Zero proposals staged.</div>';
+          } else {
+            playEarcon("approve");
+            toast("Active: Alex (Adult) — full authorization", false);
+            speak("Switched to adult profile. Full household authorization enabled.");
+            el.said.innerHTML = '<span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>';
+            el.response.innerHTML =
+              '<div class="reply">Tap a suggestion, or speak. Nothing is bought, unlocked or changed without your approval.</div>';
+          }
+        }
+      } catch (err) {
+        toast("Could not switch persona", true);
+      }
+    });
+  }
+
   tickClock();
   setInterval(tickClock, 15000);
   setupMic();
   refreshAmbient();
-  setInterval(refreshAmbient, 20000);
+  refreshTray();
+  setInterval(() => { refreshAmbient(); refreshTray(); }, 20000);
 
   /* Atmosphere last: it is decoration and must never delay data. */
   initMotes();
   springTilt();
+
+  /* ---------------------------------------------------------- guided tour
+   * ?tour=1 drives the hero flow end-to-end with captions, so a recorded
+   * take needs no timing skill: audit -> stage -> approve -> undo ->
+   * fix groceries -> approve -> undo. Every step is a real API call. */
+  /* Money count-up: verdict figures tick like a slot machine. Runs on any
+   * verdict banner whose value starts with +$ or $. Pure presentation. */
+  function tickMoney() {
+    el.response.querySelectorAll(".verdict .conf").forEach((node) => {
+      const m = (node.textContent || "").match(/^\+?\$([\d,]+\.\d{2})/);
+      if (!m || node.dataset.ticked) return;
+      node.dataset.ticked = "1";
+      const target = parseFloat(m[1].replace(/,/g, ""));
+      const prefix = node.textContent.trim().startsWith("+") ? "+$" : "$";
+      const suffix = node.textContent.slice(node.textContent.indexOf(m[1]) + m[1].length);
+      const t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / 1400);
+        const eased = 1 - Math.pow(1 - k, 3);
+        node.textContent = prefix +
+          (target * eased).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+          suffix;
+        if (k < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function runTour() {
+    const capEl = document.querySelector("#tourCap");
+    const bar = document.querySelector("#tourbar");
+    if (!capEl || !bar) return;
+    bar.hidden = false;
+    const splash = document.querySelector("#splash");
+    if (splash) {
+      splash.hidden = false;
+      await new Promise((r) => setTimeout(r, 3000));
+      splash.classList.add("out");
+      await new Promise((r) => setTimeout(r, 750));
+      splash.hidden = true;
+    }
+    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+    const cap = (t) => { capEl.textContent = t; };
+    const firstSub = () => el.response.querySelector("[data-sub]");
+    const trayBtn = (act) => el.trayBody.querySelector('[data-act="' + act + '"]');
+    const waitForFree = async () => {
+      for (let i = 0; i < 40 && busy; i++) await wait(250);
+    };
+
+    await waitForFree();
+    cap("“Save me $800” — the audit");
+    const renewalsBtn = document.querySelector('.ask[data-go="/api/renewals"]');
+    if (renewalsBtn) renewalsBtn.click();
+    await wait(6500);
+    await waitForFree();
+
+    cap("Stage one savings card — nothing is cancelled yet");
+    const sub = firstSub();
+    if (sub) sub.click();
+    await wait(3000);
+    await waitForFree();
+
+    cap("One tap approves — a sealed receipt, not a silent charge");
+    const approve = trayBtn("approve");
+    if (approve) approve.click();
+    await wait(3500);
+    await waitForFree();
+
+    cap("One tap undoes everything");
+    const undo = trayBtn("undo");
+    if (undo) undo.click();
+    await wait(3500);
+    await waitForFree();
+
+    cap("“We are out of everything, fix groceries”");
+    const grocBtn = document.querySelector('.ask[data-go="/api/commerce/autopilot-checkout"]');
+    if (grocBtn) grocBtn.click();
+    await wait(7000);
+    await waitForFree();
+
+    cap("The cart is staged — 5 items, 15% saved, still nothing ordered");
+    const approve2 = trayBtn("approve");
+    if (approve2) approve2.click();
+    await wait(3500);
+    await waitForFree();
+
+    const undo2 = trayBtn("undo");
+    if (undo2) undo2.click();
+    await wait(3500);
+
+    cap("Tour complete — the surface is yours. Nothing runs without your tap.");
+  }
+
+  if (new URLSearchParams(location.search).get("tour") === "1") {
+    setTimeout(runTour, 1200);
+  }
 })();

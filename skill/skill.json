@@ -7,12 +7,12 @@
           "summary": "Open-source glass-box personal operating system on Alexa+ MCP.",
           "description": "Hearth Universal connects Alexa+ to local home automation, subscription hygiene, and multi-resident arbitration under the Propose-Never-Execute contract. Multi-modal: voice + Fire TV D-pad/keyboard + APL visual cards in a single turn, with TTS queue, Echo chime, light-wave hooks, and a ReAct visualizer trace.",
           "examplePhrases": [
-            "Alexa, ask Hearth to run a subscription audit",
-            "Alexa, ask Hearth to solve the thermostat dispute",
+            "Alexa, ask Hearth to save me $800 on renewals",
+            "Alexa, ask Hearth we are out of everything, fix groceries",
             "Alexa, show me the pending approval tray",
+            "Alexa, ask Hearth to solve the thermostat dispute",
             "Alexa, turn on the living room lights",
-            "Alexa, set the thermostat to 21 degrees",
-            "Alexa, show me the thermostat card"
+            "Alexa, set the thermostat to 21 degrees"
           ]
         }
       },

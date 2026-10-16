@@ -4,8 +4,10 @@ Amazon Subscribe & Save 5+ item bundle tier optimization, and proposing cart che
 Strictly adheres to propose-never-execute: orders require human approval in the tray.
 """
 from __future__ import annotations
+
 import json
 import os
+import re
 import time
 from pathlib import Path
 
@@ -226,6 +228,8 @@ SUBSCRIPTION_SERVICES = [
         "recommendation": "cancel",
         "savings_yr": 239.88,
         "reason": "No household member streamed in over 60 days.",
+        "portal_url": "https://streambox.example/account/cancel",
+        "support_phone": "1-800-555-0199",
     },
     {
         "id": "sub_gym",
@@ -237,6 +241,8 @@ SUBSCRIPTION_SERVICES = [
         "recommendation": "downgrade",
         "savings_yr": 360.00,
         "reason": "Downgrading to Standard Tier ($35/mo) retains weekend access while saving $360/yr.",
+        "portal_url": "https://metrofitness.example/membership/plan",
+        "support_phone": "1-888-555-0142",
     },
     {
         "id": "sub_gamepass",
@@ -248,6 +254,8 @@ SUBSCRIPTION_SERVICES = [
         "recommendation": "cancel",
         "savings_yr": 203.88,
         "reason": "Unplayed library. Can be resumed instantly with cloud saves preserved.",
+        "portal_url": "https://cloudgaming.example/sub/manage",
+        "support_phone": "1-800-555-0188",
     },
     {
         "id": "sub_music",
@@ -259,6 +267,7 @@ SUBSCRIPTION_SERVICES = [
         "recommendation": "keep",
         "savings_yr": 0.0,
         "reason": "Heavy daily usage for kitchen & living room background audio.",
+        "portal_url": "https://amazon.example/music/settings",
     },
     {
         "id": "sub_cloud",
@@ -270,6 +279,7 @@ SUBSCRIPTION_SERVICES = [
         "recommendation": "keep",
         "savings_yr": 0.0,
         "reason": "Contains encrypted backups of family media and home security footage.",
+        "portal_url": "https://cloudvault.example/storage/plan",
     },
 ]
 
@@ -477,7 +487,7 @@ def optimize_bundles(item_ids: list[str] | None = None, auto_fill_tier: bool = T
     if auto_fill_tier and len(initial_items) < target_tier_items:
         remaining_candidates = sorted(
             [i for i in HOUSEHOLD_ESSENTIALS if i["id"] not in selected_ids],
-            key=lambda x: compute_days_until_empty(x)
+            key=compute_days_until_empty
         )
         for cand in remaining_candidates:
             if len(initial_items) + len(pull_forward_items) >= target_tier_items:
@@ -665,27 +675,26 @@ def get_depletion_forecast() -> list[dict]:
     """
     enriched = [_enriched_copy(i) for i in HOUSEHOLD_ESSENTIALS]
     items = sorted(enriched, key=lambda x: x.get("days_until_empty", 99))
-    out = []
-    for i in items:
-        out.append(
-            {
-                "id": i["id"],
-                "name": i["name"],
-                "days_until_empty": i["days_until_empty"],
-                "level_pct": i["level_pct"],
-                "daily_use_rate_pct": i["daily_use_rate_pct"],
-                "depletion_computed": True,
-                "formula": "level_pct / daily_use_rate_pct",
-                "status": i["status"],
-                "price": i["price"],
-                "subscribe_price": i["subscribe_and_save_price"],
-                "prime_delivery": i["prime_delivery"],
-                "asin": i["asin"],
-                "upc": i.get("upc"),
-                "amazon_url": f"https://www.amazon.com/dp/{i['asin']}",
-                "sandbox_fixture": True,
-            }
-        )
+    out = [
+        {
+            "id": i["id"],
+            "name": i["name"],
+            "days_until_empty": i["days_until_empty"],
+            "level_pct": i["level_pct"],
+            "daily_use_rate_pct": i["daily_use_rate_pct"],
+            "depletion_computed": True,
+            "formula": "level_pct / daily_use_rate_pct",
+            "status": i["status"],
+            "price": i["price"],
+            "subscribe_price": i["subscribe_and_save_price"],
+            "prime_delivery": i["prime_delivery"],
+            "asin": i["asin"],
+            "upc": i.get("upc"),
+            "amazon_url": f"https://www.amazon.com/dp/{i['asin']}",
+            "sandbox_fixture": True,
+        }
+        for i in items
+    ]
     return out
 
 
@@ -760,9 +769,8 @@ def stage_amazon_cart(
     # If bundle optimization requested, run the bundle engine
     if bundle_optimized:
         bundle_res = optimize_bundles(item_ids=item_ids, auto_fill_tier=True)
-        order_items = []
-        for b_item in bundle_res["items"]:
-            order_items.append({
+        order_items = [
+            {
                 "asin": b_item["asin"],
                 "name": b_item["name"],
                 "quantity": 1,
@@ -771,7 +779,9 @@ def stage_amazon_cart(
                 "prime_delivery": "Prime Household Delivery Day",
                 "subscribe_and_save": True,
                 "pulled_forward": b_item.get("pulled_forward", False),
-            })
+            }
+            for b_item in bundle_res["items"]
+        ]
         
         reg_subtotal = bundle_res["pricing"]["regular_total"]
         final_subtotal = bundle_res["pricing"]["optimized_bundle_total"]
@@ -959,10 +969,7 @@ def simulate_barcode_scan(item_id: str, action: str = "replenish") -> dict:
     Sandbox fixture — no live scanner hardware / retail API.
     """
     act = str(action or "replenish").strip().lower()
-    if act in ("depleted", "deplete", "empty", "consume"):
-        act = "deplete"
-    else:
-        act = "replenish"
+    act = "deplete" if act in ("depleted", "deplete", "empty", "consume") else "replenish"
     item = _resolve_scan_target(item_id)
     if item is not None:
         rate = DAILY_CONSUMPTION_RATE_PCT.get(item["id"], 3.0) or 3.0
@@ -1117,11 +1124,40 @@ def build_autopilot_checkout(
     """
     from . import proposals as _proposals
 
+    # Child persona gate: children can never stage commercial orders or make purchases
+    low_utt = (utterance or "").lower()
+    is_child = (
+        str(os.environ.get("HEARTH_ACTIVE_PERSONA", "")).lower() in ("child", "leo", "kid")
+        or bool(re.search(r"^(?:leo|child|kid)\b\s*[:,-]?\s*", low_utt))
+        or bool(re.search(r"\b(?:as|from|i am|i'm)\s+(?:leo|child|kid)\b", low_utt))
+        or "robux" in low_utt
+    )
+    if is_child:
+        return {
+            "ok": False,
+            "gated": True,
+            "blocked": True,
+            "clarification_required": False,
+            "message": "🛡️ Child profile 'Leo' is restricted from staging orders or making purchases. Ask an adult to authorize.",
+            "error": "Child safety guardrail: Child profile 'Leo' is restricted from domestic spending.",
+            **sandbox_disclaimer(),
+        }
+
     ids = list(item_ids or [])
     parsed = parse_voice_utterance(utterance) if utterance else {"item_ids": [], "unmapped": []}
     parsed_ids = not ids  # True when relying on voice parse (no explicit ids)
     if not ids:
         ids = parsed["item_ids"]
+    # Hero intent: "out of everything / fix groceries / restock week" resolves
+    # to all low-stock items. Still staged as Tier-2 proposal, never charged.
+    if not ids and (utterance or ""):
+        low_all = (utterance or "").lower()
+        if any(p in low_all for p in ("everything", "fix groceries", "restock week",
+                                       "weekly shop", "restock everything")):
+            try:
+                ids = [it["id"] for it in get_low_stock()]
+            except Exception:
+                ids = []
     # Validate against inventory
     valid_ids = {it["id"] for it in HOUSEHOLD_ESSENTIALS}
     ids = [i for i in ids if i in valid_ids]

@@ -14,19 +14,19 @@ export function formatMarkdown(text) {
 
   // Code blocks (```...```)
   s = s.replace(/```([\s\S]*?)```/g, (_, code) =>
-    '<pre class="mono" style="background:var(--s3);padding:8px 12px;border-radius:6px;overflow-x:auto;margin:6px 0;font-size:var(--fs-micro);line-height:1.4;">' +
+    '<pre class="mono u-background-var-s3-padding-8px-12px-border-radius" >' +
     code.trim() +
     '</pre>'
   );
 
   // Inline code (`...`)
-  s = s.replace(/`([^`]+)`/g, '<code class="mono" style="background:var(--s3);padding:2px 5px;border-radius:4px;font-size:0.9em;color:var(--amber);">$1</code>');
+  s = s.replace(/`([^`]+)`/g, '<code class="mono u-background-var-s3-padding-2px-5px-border-radius-" >$1</code>');
 
   // Bold (**...**)
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong style="color:var(--t1);font-weight:700;">$1</strong>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong class="u-color-var-t1-font-weight-700" >$1</strong>');
 
   // Italic (*...*)
-  s = s.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em style="color:var(--t2);">$2</em>$3');
+  s = s.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em class="u-color-var-t2" >$2</em>$3');
 
   // Process lines for bullet items and spacing
   const lines = s.split(/\r?\n/);
@@ -37,7 +37,7 @@ export function formatMarkdown(text) {
     const trimmed = raw.trim();
 
     if (!trimmed) {
-      formatted.push('<div style="height:6px;"></div>');
+      formatted.push('<div class="u-height-6px" ></div>');
       continue;
     }
 
@@ -52,7 +52,7 @@ export function formatMarkdown(text) {
       continue;
     }
 
-    formatted.push('<div style="margin:2px 0;">' + raw + '</div>');
+    formatted.push('<div class="u-margin-2px-0" >' + raw + '</div>');
   }
 
   return formatted.join("");
@@ -296,13 +296,13 @@ on("home", (h) => {
         if (activeDel.length) {
           const d = activeDel[0];
           delBox.innerHTML =
-            '<div style="background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
-            '<strong style="color:var(--amber);font-size:12px">🚚 ' + esc(d.status || "In Transit") + '</strong>' +
-            '<span class="pill" style="font-size:10px">' + esc(d.eta || "Today") + '</span>' +
+            '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+            '<div class="u-display-flex-justify-content-space-between-align" >' +
+            '<strong class="u-color-var-amber-font-size-12px" >🚚 ' + esc(d.status || "In Transit") + '</strong>' +
+            '<span class="pill u-font-size-10px" >' + esc(d.eta || "Today") + '</span>' +
             '</div>' +
-            '<div style="font-size:13px;font-weight:600;margin-bottom:4px">' + esc(d.items ? d.items.join(", ") : "Amazon Package") + '</div>' +
-            '<small style="color:var(--t3);font-size:11px">Tracking #' + esc(d.tracking_number || "") + ' · ' + esc(d.stops_away || 3) + ' stops away</small>' +
+            '<div class="u-font-size-13px-font-weight-600-margin-bottom-4px" >' + esc(d.items ? d.items.join(", ") : "Amazon Package") + '</div>' +
+            '<small class="u-color-var-t3-font-size-11px" >Tracking #' + esc(d.tracking_number || "") + ' · ' + esc(d.stops_away || 3) + ' stops away</small>' +
             '</div>';
         } else {
           delBox.innerHTML = '<div class="empty"><strong>No deliveries today</strong>Prime Subscribe &amp; Save up to date.</div>';
@@ -333,7 +333,7 @@ on("depletion", (d) => {
   setBind("pantrySub", esc(worst.name || worst.id));
   const box = $("#pantryBox");
   box.innerHTML = f.slice(0, 5).map((it) =>
-    '<div class="insight"><div class="big num">' + esc(it.days_until_empty) + '<small style="font-size:12px;color:var(--t2)">d</small></div>' +
+    '<div class="insight"><div class="big num">' + esc(it.days_until_empty) + '<small class="u-font-size-12px-color-var-t2" >d</small></div>' +
     '<div class="txt">' + esc(it.name || it.id) + "<br><span class='mono'>" + esc(it.id || "") + "</span></div></div>"
   ).join("");
 });
@@ -342,9 +342,9 @@ on("roi", (r) => {
   const save = r.potential_save_yr ?? r.savings_annual ?? "?";
   const items = r.renewals || r.dormant || [];
   box.innerHTML =
-    '<div class="insight"><div class="big num" style="color:var(--ok)">$' + esc(save) + '</div><div class="txt">recoverable per year · $' +
+    '<div class="insight"><div class="big num u-color-var-ok" >$' + esc(save) + '</div><div class="txt">recoverable per year · $' +
     esc(r.total_annual_spend ?? "?") + ' tracked spend' +
-    '<br><button class="btn" id="roiGo" style="min-height:36px;margin-top:8px">Review in Approvals</button></div></div>' +
+    '<br><button class="btn u-min-height-36px-margin-top-8px" id="roiGo" >Review in Approvals</button></div></div>' +
     items.slice(0, 4).map((s) =>
       '<div class="insight"><div class="txt">' + esc(s.name || s.id) + '<br><span class="mono">' +
       esc(s.usage_status || s.detail || "") + "</span></div><div class='mono' style='color:var(--ok)'>$" +
@@ -419,7 +419,7 @@ on("proposals", (res) => {
     el.innerHTML =
       '<div class="intent-top"><h4>' + esc(p.title || p.kind) + "</h4>" + deltaBadge(p) + "</div>" +
       '<p class="intent-reasons">' + esc((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "")) + "</p>" +
-      '<p class="mono" style="padding:2px 16px 0;color:var(--t3)"><span class="risk ' + esc(p.risk_level || "medium") + '">' +
+      '<p class="mono u-padding-2px-16px-0-color-var-t3" ><span class="risk ' + esc(p.risk_level || "medium") + '">' +
       esc(p.risk_level || "medium") + "</span> · single-use · expires on decide</p>" +
       '<div class="intent-actions"><button class="btn btn-primary" data-a="1">Proceed</button>' +
       "<button class='btn' data-a='inspect'>Inspect</button>" +
@@ -456,7 +456,7 @@ async function replayDecision(id) {
     return;
   }
   const trail = (data.audit_trail || []).map((t) =>
-    '<div class="mono" style="color:var(--t3)">#' + esc((t.hash || "").slice(0, 8)) +
+    '<div class="mono u-color-var-t3" >#' + esc((t.hash || "").slice(0, 8)) +
     ' · ' + esc(t.actor) + ' · ' + esc(t.action) + '</div>'
   ).join("") || '<div class="muted-sm">No audit entries yet</div>';
   openDialog("⏪ Time Travel: " + (data.title || data.kind),
@@ -465,7 +465,7 @@ async function replayDecision(id) {
     esc(JSON.stringify(data.why || {}, null, 1)) + "</p>" +
     (data.execution ? "<p class='receipt' style='color:var(--ok)'>Receipt: " +
       esc(data.execution.receipt_code || data.execution.note || "") + "</p>" : "") +
-    '<div class="diff" style="margin:12px 0;max-height:220px;overflow-y:auto">' + trail + "</div>" +
+    '<div class="diff u-margin-12px-0-max-height-220px-overflow-y-auto" >' + trail + "</div>" +
     "<p class='mono' style='color:var(--t3)'>chain " +
     (data.chain_valid ? "valid ✓" : "BROKEN") + " · undo " +
     (data.undo_available ? "available" : "n/a") + "</p>",
@@ -508,7 +508,7 @@ async function decide(id, approved, el, note) {
   const actions = el.querySelector(".intent-actions");
   const snapshot = el.innerHTML;
   if (actions) {
-    actions.innerHTML = '<span class="mono" style="color:var(--t2)">Settling…</span>';
+    actions.innerHTML = '<span class="mono u-color-var-t2" >Settling…</span>';
   }
   const { status, data } = await post("/api/decide", { id, approved });
   if (status === 200 && data && data.ok !== false) {
@@ -749,24 +749,24 @@ function renderFullscreenCanvas(data) {
   grid.innerHTML = `
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong style="color:var(--amber)">🏛️ Household Parliament Matrix</strong>
-        <span class="pill" style="font-size:10px">Game-Theoretic</span>
+        <strong class="u-color-var-amber" >🏛️ Household Parliament Matrix</strong>
+        <span class="pill u-font-size-10px" >Game-Theoretic</span>
       </div>
       <p>Deliberation across FrugalMind, BioComfort, and EcoSovereign ministers with Nash equilibrium score.</p>
       <div class="canvas-preview" id="fsParliamentPreview">` + nashTxt + `</div>
     </div>
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong style="color:var(--ok)">🔮 7-Day Causal Future Simulation</strong>
-        <span class="pill" style="font-size:10px">Monte Carlo</span>
+        <strong class="u-color-var-ok" >🔮 7-Day Causal Future Simulation</strong>
+        <span class="pill u-font-size-10px" >Monte Carlo</span>
       </div>
       <p>Stochastic forward prediction of weather tariffs, solar battery discharge, and brownout risk.</p>
       <div class="canvas-preview" id="fsCausalPreview">` + esc(vulnCount) + ` vulnerabilities tracked` + resilience + `</div>
     </div>
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong style="color:var(--cyan, #38bdf8)">⚡ Energy Arbitrage &amp; Solar Mesh</strong>
-        <span class="pill" style="font-size:10px">Live Twin</span>
+        <strong class="u-color-var-cyan-38bdf8" >⚡ Energy Arbitrage &amp; Solar Mesh</strong>
+        <span class="pill u-font-size-10px" >Live Twin</span>
       </div>
       <p>Net solar export, battery reserve, and pre-cooling posture from the living digital twin.</p>
       <div class="canvas-preview" id="fsEnergyPreview">` + solarTxt + `</div>
@@ -869,7 +869,7 @@ on("models", (res) => {
   if (provBox && res.providers) {
     provBox.innerHTML = res.providers.map((p) =>
       '<span class="provider-tag' + (p.name === res.active_provider ? " active" : "") + '">' +
-      '<span class="dot" style="background:' + (p.status === "connected" ? "var(--ok)" : "var(--amber)") + '"></span>' +
+      '<span class="dot '+ (p.status === "connected" ? "u-bg-ok" : "u-bg-amber") + '"></span>' +
       esc(p.name) + " · " + esc(p.models_count || 1) + " models (" + esc(p.latency_ms || 22) + "ms)</span>"
     ).join("");
   }
@@ -926,8 +926,8 @@ on("parliament", (p) => {
     ? p.ministers
     : Object.entries(p.ministers).map(([k, v]) => ({ id: k, name: v.title || v.name || k, ...v }));
   box.innerHTML =
-    '<p style="font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px">' +
-    esc(p.council || "Household Parliament") + ' · <span style="color:var(--amber)">' + esc(p.governance_model || "Nash Equilibrium") + '</span></p>' +
+    '<p class="u-font-size-var-fs-micro-color-var-t2-margin-botto" >' +
+    esc(p.council || "Household Parliament") + ' · <span class="u-color-var-amber" >' + esc(p.governance_model || "Nash Equilibrium") + '</span></p>' +
     '<div class="parliament-grid">' +
     ministers.map((m) =>
       '<div class="minister-card">' +
@@ -952,7 +952,7 @@ if (parlBtn) {
     if (status === 200 && data) {
       const speeches = (data.speeches || []).map((s) => {
         const text = Array.isArray(s.arguments) ? s.arguments.join(" ") : (s.speech || s.stance || "");
-        return '<div style="margin-bottom:8px"><strong>' + esc(s.minister) + (s.role ? ' (' + esc(s.role) + ')' : '') + ':</strong> ' + esc(text) + '</div>';
+        return '<div class="u-margin-bottom-8px" ><strong>' + esc(s.minister) + (s.role ? ' (' + esc(s.role) + ')' : '') + ':</strong> ' + esc(text) + '</div>';
       }).join("");
       const paretoText = typeof data.pareto_compromise === "object"
         ? (data.pareto_compromise.executive_summary || JSON.stringify(data.pareto_compromise))
@@ -961,10 +961,10 @@ if (parlBtn) {
       const nashPct = nashVal == null ? "—" : (nashVal > 1 ? nashVal * 10 : nashVal * 100).toFixed(0);
 
       openDialog("Parliamentary Consensus Reached",
-        '<p style="color:var(--amber);font-weight:700">Nash Equilibrium Score: ' + nashPct + '%</p>' +
-        '<p style="color:var(--t1);margin:8px 0"><strong>Pareto Compromise:</strong> ' + esc(paretoText) + '</p>' +
-        '<div class="diff" style="margin:12px 0">' + speeches + '</div>' +
-        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+        '<p class="u-color-var-amber-font-weight-700" >Nash Equilibrium Score: ' + nashPct + '%</p>' +
+        '<p class="u-color-var-t1-margin-8px-0" ><strong>Pareto Compromise:</strong> ' + esc(paretoText) + '</p>' +
+        '<div class="diff u-margin-12px-0" >' + speeches + '</div>' +
+        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
         [
           { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
           { label: "Dismiss" }
@@ -987,9 +987,9 @@ on("causal", (c) => {
     ? Math.round(c.resilience_score > 1 ? c.resilience_score : c.resilience_score * 100)
     : 96;
   box.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">' +
-    '<span style="font-size:var(--fs-micro);color:var(--t2)">Stochastic World Model: <strong>' + esc(c.simulation_id || "sim-live") + '</strong></span>' +
-    '<span class="pill" style="color:var(--ok)">' + score + '% Grid Resilience</span>' +
+    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<span class="u-font-size-var-fs-micro-color-var-t2" >Stochastic World Model: <strong>' + esc(c.simulation_id || "sim-live") + '</strong></span>' +
+    '<span class="pill u-color-var-ok" >' + score + '% Grid Resilience</span>' +
     '</div>' +
     (!vulns.length
       ? '<div class="empty"><strong>Zero vulnerabilities detected</strong>Household state is stable across horizon.</div>'
@@ -999,15 +999,15 @@ on("causal", (c) => {
         const title = esc(v.title || (v.hazard_type ? v.hazard_type.replace(/_/g, " ") : v.domain) || "Anomaly");
         const action = esc(v.contingency_action || v.countermeasure || v.description || v.root_cause || "");
         return (
-          '<div class="insight" style="margin-bottom:8px">' +
-          '<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">' +
+          '<div class="insight u-margin-bottom-8px" >' +
+          '<div class="u-flex-1" ><div class="u-display-flex-align-items-center-gap-8px-margin-b" >' +
           '<span class="vuln-badge ' + sev + '">' + sev + '</span>' +
           '<strong>' + title + '</strong>' +
-          '<small class="mono" style="color:var(--t2)">' + horizon + '</small>' +
+          '<small class="mono u-color-var-t2" >' + horizon + '</small>' +
           '</div>' +
-          '<div style="font-size:var(--fs-micro);color:var(--t2)">' + action + '</div>' +
+          '<div class="u-font-size-var-fs-micro-color-var-t2" >' + action + '</div>' +
           '</div>' +
-          (v.expected_loss_usd ? '<div class="mono" style="color:var(--bad)">−$' + esc(v.expected_loss_usd) + '</div>' : '') +
+          (v.expected_loss_usd ? '<div class="mono u-color-var-bad" >−$' + esc(v.expected_loss_usd) + '</div>' : '') +
           '</div>'
         );
       }).join(""));
@@ -1037,21 +1037,21 @@ on("forensics", (f) => {
   const factors = f.physical_factors || [];
   const confPct = (f.causal_confidence != null ? Math.round(f.causal_confidence * 100) : '—');
   box.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<span style="font-size:var(--fs-micro);color:var(--t2)">Incident: <strong class="mono">' + esc(f.incident_id || "csi-live") + '</strong></span>' +
-    '<span class="pill" style="color:var(--ok)">' + confPct + '% Causal Confidence</span>' +
+    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<span class="u-font-size-var-fs-micro-color-var-t2" >Incident: <strong class="mono">' + esc(f.incident_id || "csi-live") + '</strong></span>' +
+    '<span class="pill u-color-var-ok" >' + confPct + '% Causal Confidence</span>' +
     '</div>' +
-    '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' +
-    '<span class="vuln-badge low" style="font-weight:700">✓ INTRUSION DISPROVEN</span>' +
-    '<span style="font-size:11px;color:var(--amber)">' + esc(f.verdict || "ATMOSPHERIC_DELTA_P") + '</span>' +
+    '<div class="u-display-flex-align-items-center-gap-6px-margin-b" >' +
+    '<span class="vuln-badge low u-font-weight-700" >✓ INTRUSION DISPROVEN</span>' +
+    '<span class="u-font-size-11px-color-var-amber" >' + esc(f.verdict || "ATMOSPHERIC_DELTA_P") + '</span>' +
     '</div>' +
-    '<p style="font-size:var(--fs-micro);color:var(--t1);margin-bottom:10px;line-height:1.4">' + esc(f.summary || "") + '</p>' +
-    '<div style="background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:11px;margin-bottom:8px">' +
+    '<p class="u-font-size-var-fs-micro-color-var-t1-margin-botto" >' + esc(f.summary || "") + '</p>' +
+    '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
     factors.slice(0, 3).map((pf) =>
-      '<div style="margin-bottom:4px"><strong>' + esc(pf.factor) + ':</strong> ' + esc(pf.measured) + ' — <span style="color:var(--t2)">' + esc(pf.impact) + '</span></div>'
+      '<div class="u-margin-bottom-4px" ><strong>' + esc(pf.factor) + ':</strong> ' + esc(pf.measured) + ' — <span class="u-color-var-t2" >' + esc(pf.impact) + '</span></div>'
     ).join("") +
     '</div>' +
-    '<div class="mono" style="font-size:10px;color:var(--t3);word-break:break-all">Merkle Proof: ' + esc(f.audit_proof || "") + '</div>';
+    '<div class="mono u-font-size-10px-color-var-t3-word-break-break-all" >Merkle Proof: ' + esc(f.audit_proof || "") + '</div>';
 });
 
 const forensicsBtn = $("#forensicsScanBtn");
@@ -1064,18 +1064,18 @@ if (forensicsBtn) {
     forensicsBtn.textContent = "Reconstruct 3 AM";
     if (status === 200 && data) {
       const timelineHtml = (data.timeline_events || []).map((ev) =>
-        '<div style="margin-bottom:8px;padding-left:8px;border-left:2px solid var(--amber)">' +
-        '<div class="mono" style="font-size:11px;color:var(--t2)">' + esc(ev.timestamp) + ' · <strong>' + esc(ev.source) + '</strong></div>' +
-        '<div style="font-size:12px;color:var(--t1)">' + esc(ev.event) + '</div>' +
-        '<div style="font-size:11px;color:var(--ok)">' + esc(ev.deduction) + '</div>' +
+        '<div class="u-margin-bottom-8px-padding-left-8px-border-left-2" >' +
+        '<div class="mono u-font-size-11px-color-var-t2" >' + esc(ev.timestamp) + ' · <strong>' + esc(ev.source) + '</strong></div>' +
+        '<div class="u-font-size-12px-color-var-t1" >' + esc(ev.event) + '</div>' +
+        '<div class="u-font-size-11px-color-var-ok" >' + esc(ev.deduction) + '</div>' +
         '</div>'
       ).join("");
 
       openDialog("Black Box Forensic Incident Reconstruction",
-        '<p style="color:var(--ok);font-weight:700">✓ Intruder Hypothesis Disproven (' + (data.causal_confidence != null ? Math.round(data.causal_confidence * 100) + '% Physical Certainty' : '— pending scan') + ')</p>' +
-        '<p style="margin:8px 0;line-height:1.4">' + esc(data.summary) + '</p>' +
-        '<div class="diff" style="margin:12px 0;max-height:220px;overflow-y:auto">' + timelineHtml + '</div>' +
-        '<div class="mono" style="font-size:10px;color:var(--t3);background:var(--s2);padding:6px;border-radius:4px">SHA-256 Merkle Proof: ' + esc(data.audit_proof || "") + '</div>',
+        '<p class="u-color-var-ok-font-weight-700" >✓ Intruder Hypothesis Disproven (' + (data.causal_confidence != null ? Math.round(data.causal_confidence * 100) + '% Physical Certainty' : '— pending scan') + ')</p>' +
+        '<p class="u-margin-8px-0-line-height-1-4" >' + esc(data.summary) + '</p>' +
+        '<div class="diff u-margin-12px-0-max-height-220px-overflow-y-auto" >' + timelineHtml + '</div>' +
+        '<div class="mono u-font-size-10px-color-var-t3-background-var-s2-pa" >SHA-256 Merkle Proof: ' + esc(data.audit_proof || "") + '</div>',
         [
           { label: "Done", primary: true }
         ]
@@ -1093,21 +1093,21 @@ on("acoustic", (a) => {
   const box = $("#acousticBox");
   if (!box || !a) return;
   const diag = (a.diagnostics || [])[0] || {};
-  const statusColor = diag.status === "warning" ? "var(--amber)" : "var(--ok)";
+  const statusColor = diag.status === "warning" ? "u-color-var-amber" : "u-color-var-ok";
   box.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<span style="font-size:var(--fs-micro);color:var(--t2)">Appliance: <strong>' + esc(diag.appliance || "All Appliances") + '</strong></span>' +
-    '<span class="pill" style="color:' + statusColor + '">● ' + esc(diag.status || "healthy").toUpperCase() + '</span>' +
+    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<span class="u-font-size-var-fs-micro-color-var-t2" >Appliance: <strong>' + esc(diag.appliance || "All Appliances") + '</strong></span>' +
+    '<span class="pill '+ statusColor + '">● ' + esc(diag.status || "healthy").toUpperCase() + '</span>' +
     '</div>' +
-    '<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">' +
-    '<div><span style="font-size:11px;color:var(--t2)">Spectral Peak:</span> <strong class="mono" style="color:var(--amber)">' + esc(diag.fft_spectral_peak_hz || 60) + ' Hz</strong></div>' +
-    '<div><span style="font-size:11px;color:var(--t2)">Friction Index:</span> <strong class="mono" style="color:var(--bad)">' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong></div>' +
-    '<div><span style="font-size:11px;color:var(--t2)">Failure In:</span> <strong style="color:var(--bad)">~' + esc(diag.estimated_days_to_failure || 14) + ' Days</strong></div>' +
+    '<div class="u-display-flex-align-items-center-gap-12px-margin-" >' +
+    '<div><span class="u-font-size-11px-color-var-t2" >Spectral Peak:</span> <strong class="mono u-color-var-amber" >' + esc(diag.fft_spectral_peak_hz || 60) + ' Hz</strong></div>' +
+    '<div><span class="u-font-size-11px-color-var-t2" >Friction Index:</span> <strong class="mono u-color-var-bad" >' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong></div>' +
+    '<div><span class="u-font-size-11px-color-var-t2" >Failure In:</span> <strong class="u-color-var-bad" >~' + esc(diag.estimated_days_to_failure || 14) + ' Days</strong></div>' +
     '</div>' +
-    '<p style="font-size:var(--fs-micro);color:var(--t1);margin-bottom:8px">' + esc(diag.recommended_action || "") + '</p>' +
-    (diag.part_asin ? '<div style="background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:space-between">' +
-      '<span style="font-size:11px">📦 Part: <strong class="mono">' + esc(diag.part_asin) + '</strong> (15% Subscribe &amp; Save)</span>' +
-      (diag.staged_proposal_id ? '<span class="pill" style="color:var(--ok);font-size:10px">Staged in Tray</span>' : '') +
+    '<p class="u-font-size-var-fs-micro-color-var-t1-margin-botto" >' + esc(diag.recommended_action || "") + '</p>' +
+    (diag.part_asin ? '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+      '<span class="u-font-size-11px" >📦 Part: <strong class="mono">' + esc(diag.part_asin) + '</strong> (15% Subscribe &amp; Save)</span>' +
+      (diag.staged_proposal_id ? '<span class="pill u-color-var-ok-font-size-10px" >Staged in Tray</span>' : '') +
       '</div>' : '');
 });
 
@@ -1124,9 +1124,9 @@ if (acousticBtn) {
         const data = await res.json();
         const diag = (data.diagnostics || [])[0] || {};
         openDialog("Appliance Acoustic FFT Diagnostics",
-          '<p style="color:var(--amber);font-weight:700">⚠️ Mechanical Bearing Wear Detected: ' + esc(diag.appliance) + '</p>' +
-          '<p style="margin:8px 0;line-height:1.4">Echo microphone array captured anomalous vibration harmonics at <strong>' + esc(diag.fft_spectral_peak_hz) + ' Hz</strong> (normal baseline 60.0 Hz). Bearing friction index is <strong>' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong> with failure projected in ~' + esc(diag.estimated_days_to_failure) + ' days.</p>' +
-          (diag.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">✓ 15% Subscribe & Save replacement part proposal #' + esc(diag.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+          '<p class="u-color-var-amber-font-weight-700" >⚠️ Mechanical Bearing Wear Detected: ' + esc(diag.appliance) + '</p>' +
+          '<p class="u-margin-8px-0-line-height-1-4" >Echo microphone array captured anomalous vibration harmonics at <strong>' + esc(diag.fft_spectral_peak_hz) + ' Hz</strong> (normal baseline 60.0 Hz). Bearing friction index is <strong>' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong> with failure projected in ~' + esc(diag.estimated_days_to_failure) + ' days.</p>' +
+          (diag.staged_proposal_id ? '<p class="receipt u-color-var-ok" >✓ 15% Subscribe & Save replacement part proposal #' + esc(diag.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
           [
             { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
             { label: "Dismiss" }
@@ -1151,29 +1151,29 @@ on("mediation", (m) => {
   if (!box || !m) return;
   const covs = m.covenants || [];
   box.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<strong style="font-size:var(--fs-micro)">' + esc(m.title || "Household Harmony Treaty") + '</strong>' +
-    '<span class="pill" style="color:var(--ok)">Fairness: ' +
+    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<strong class="u-font-size-var-fs-micro" >' + esc(m.title || "Household Harmony Treaty") + '</strong>' +
+    '<span class="pill u-color-var-ok" >Fairness: ' +
     (m.fairness_index_out_of_10 != null ? esc(m.fairness_index_out_of_10) : '—') + '/10</span>' +
     '</div>' +
-    '<div style="font-size:11px;color:var(--amber);margin-bottom:8px">🔒 Zero-Knowledge Verification: Salted SHA-256 (raw grievances never shared between residents)</div>' +
-    '<div style="font-size:10.5px;color:var(--t3);margin-bottom:8px">Nash achievement ' +
+    '<div class="u-font-size-11px-color-var-amber-margin-bottom-8px" >🔒 Zero-Knowledge Verification: Salted SHA-256 (raw grievances never shared between residents)</div>' +
+    '<div class="u-font-size-10-5px-color-var-t3-margin-bottom-8px" >Nash achievement ' +
     Math.round((m.nash_achievement || 0) * 100) + '% · coverage ' + esc(m.cooperation_coverage_pct) +
     '% · envy gap ' + esc(m.envy_gap) + ' · conceded: ' +
     esc((m.domains_conceded || []).join(", ") || "none") + '</div>' +
-    '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">' +
+    '<div class="u-display-flex-flex-direction-column-gap-6px-margi" >' +
     covs.map((c) =>
-      '<div style="background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:2px">' +
+      '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+      '<div class="u-display-flex-justify-content-space-between-margi" >' +
       '<strong>' + esc((c.domain || "").replace(/_/g, " ").toUpperCase()) + '</strong>' +
-      '<span style="color:var(--t2)">' + esc(c.resident || "") + '</span>' +
-      '<span style="color:var(--ok)">' + esc(c.satisfaction_pct) + '% satisfaction</span></div>' +
+      '<span class="u-color-var-t2" >' + esc(c.resident || "") + '</span>' +
+      '<span class="u-color-var-ok" >' + esc(c.satisfaction_pct) + '% satisfaction</span></div>' +
       // Field name is concession_granted -- the API has no `covenant` key.
-      '<div style="color:var(--t2)">' + esc(c.concession_granted || "") + '</div>' +
+      '<div class="u-color-var-t2" >' + esc(c.concession_granted || "") + '</div>' +
       '</div>'
     ).join("") +
     '</div>' +
-    (m.staged_proposal_id ? '<div class="receipt" style="color:var(--ok);font-size:11px">Proposal #' + esc(m.staged_proposal_id) + ' staged for family ratification.</div>' : '');
+    (m.staged_proposal_id ? '<div class="receipt u-color-var-ok-font-size-11px" >Proposal #' + esc(m.staged_proposal_id) + ' staged for family ratification.</div>' : '');
 });
 
 const mediationBtn = $("#mediationTreatyBtn");
@@ -1190,17 +1190,17 @@ if (mediationBtn) {
       // fairness_index_out_of_10. Reading the wrong key silently rendered
       // "undefined" in this dialog.
       const covHtml = (data.covenants || []).map((c) =>
-        '<div style="margin-bottom:10px;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--line)">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">' +
+        '<div class="u-margin-bottom-10px-padding-10px-background-var-s" >' +
+        '<div class="u-display-flex-justify-content-space-between-align" >' +
         '<strong>' + esc(c.resident || "") + '</strong>' +
-        '<span style="color:var(--t2);font-size:11px;text-transform:uppercase;letter-spacing:.04em">' + esc((c.domain || "").replace(/_/g, " ")) + '</span>' +
-        '<span class="num" style="color:var(--ok);font-weight:600">' + esc(c.satisfaction_pct) + '%</span>' +
+        '<span class="u-color-var-t2-font-size-11px-text-transform-upper" >' + esc((c.domain || "").replace(/_/g, " ")) + '</span>' +
+        '<span class="num u-color-var-ok-font-weight-600" >' + esc(c.satisfaction_pct) + '%</span>' +
         '</div>' +
-        '<div style="font-size:12.5px;color:var(--t1);margin-top:6px">' + esc(c.concession_granted || "") + '</div>' +
-        '<div style="font-size:12px;color:var(--t2);margin-top:6px;border-left:2px solid var(--line-strong);padding-left:8px">' +
+        '<div class="u-font-size-12-5px-color-var-t1-margin-top-6px" >' + esc(c.concession_granted || "") + '</div>' +
+        '<div class="u-font-size-12px-color-var-t2-margin-top-6px-borde" >' +
         'In return: ' + esc(c.reciprocal_obligation || "") + '</div>' +
         (c.domain_weight != null
-          ? '<div class="mono" style="color:var(--t3);margin-top:6px">weight ' + esc(c.domain_weight) +
+          ? '<div class="mono u-color-var-t3-margin-top-6px" >weight ' + esc(c.domain_weight) +
             ' · concession ' + esc(c.concession_level) + '</div>'
           : '') +
         '</div>'
@@ -1208,7 +1208,7 @@ if (mediationBtn) {
 
       const conceded = (data.domains_conceded || []).join(", ") || "none";
       const metrics =
-        '<div class="grid-3" style="margin:12px 0;gap:8px">' +
+        '<div class="grid-3 u-margin-12px-0-gap-8px" >' +
         '<div class="mini-card"><small>Nash achievement</small><strong class="num">' +
         Math.round((data.nash_achievement || 0) * 100) + '%</strong></div>' +
         '<div class="mini-card"><small>Coverage</small><strong class="num">' +
@@ -1218,16 +1218,16 @@ if (mediationBtn) {
         '</div>';
 
       openDialog("Household Treaty — " + (data.scenario === "household_demo" ? "demo household" : "resident supplied"),
-        '<p style="color:var(--ok);font-weight:700;font-size:15px">Fairness ' + esc(data.fairness_index_out_of_10) +
+        '<p class="u-color-var-ok-font-weight-700-font-size-15px" >Fairness ' + esc(data.fairness_index_out_of_10) +
         '/10 · ' + esc(data.feasible_vectors_explored) + ' feasible concession vectors searched</p>' +
-        '<p style="font-size:12px;color:var(--t2);margin:6px 0">Domains conceded: <strong>' + esc(conceded) + '</strong> ' +
+        '<p class="u-font-size-12px-color-var-t2-margin-6px-0" >Domains conceded: <strong>' + esc(conceded) + '</strong> ' +
         '(household concession budget ' + esc(data.concession_budget) + ' of 4). Fairness is measured, not asserted: it ' +
         'falls when a household is over-subscribed.</p>' +
         metrics +
-        '<div style="margin:12px 0">' + covHtml + '</div>' +
-        '<p style="font-size:11.5px;color:var(--t3)">Raw grievances were never shared between residents — only per-resident ' +
+        '<div class="u-margin-12px-0" >' + covHtml + '</div>' +
+        '<p class="u-font-size-11-5px-color-var-t3" >Raw grievances were never shared between residents — only per-resident ' +
         'salted SHA-256 digests are retained.</p>' +
-        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged for ratification in Approvals.</p>' : ''),
+        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged for ratification in Approvals.</p>' : ''),
         [
           { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
           { label: "Dismiss" }
@@ -1248,20 +1248,20 @@ on("swarm", (s) => {
   const arb = s.economic_arbitrage || {};
   const nodes = s.nodes || [];
   box.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
-    '<span style="font-size:var(--fs-micro);color:var(--t2)">Settlement Rate: <strong style="color:var(--ok)">$' + esc(s.local_clearing_price_usd_kwh) + '/kWh</strong> <small>(vs utility $' + esc(s.utility_sell_rate_usd_kwh) + ')</small></span>' +
-    '<span class="pill" style="color:var(--ok)">● ' + nodes.length + ' P2P Nodes</span>' +
+    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<span class="u-font-size-var-fs-micro-color-var-t2" >Settlement Rate: <strong class="u-color-var-ok" >$' + esc(s.local_clearing_price_usd_kwh) + '/kWh</strong> <small>(vs utility $' + esc(s.utility_sell_rate_usd_kwh) + ')</small></span>' +
+    '<span class="pill u-color-var-ok" >● ' + nodes.length + ' P2P Nodes</span>' +
     '</div>' +
-    '<div style="display:flex;gap:12px;margin-bottom:10px;font-size:11px">' +
-    '<div><span style="color:var(--t2)">Export:</span> <strong style="color:var(--amber)">' + (arb.total_exported_kw != null ? esc(arb.total_exported_kw) : '—') + ' kW</strong></div>' +
-    '<div><span style="color:var(--t2)">Revenue:</span> <strong style="color:var(--ok)">+$' + esc(arb.our_revenue_rate_usd_hr || 0.68) + '/hr</strong></div>' +
-    '<div><span style="color:var(--t2)">CO2 Offset:</span> <strong style="color:var(--ok)">' + esc(arb.co2_avoided_kg_hr || 2.85) + ' kg/hr</strong></div>' +
+    '<div class="u-display-flex-gap-12px-margin-bottom-10px-font-si" >' +
+    '<div><span class="u-color-var-t2" >Export:</span> <strong class="u-color-var-amber" >' + (arb.total_exported_kw != null ? esc(arb.total_exported_kw) : '—') + ' kW</strong></div>' +
+    '<div><span class="u-color-var-t2" >Revenue:</span> <strong class="u-color-var-ok" >+$' + esc(arb.our_revenue_rate_usd_hr || 0.68) + '/hr</strong></div>' +
+    '<div><span class="u-color-var-t2" >CO2 Offset:</span> <strong class="u-color-var-ok" >' + esc(arb.co2_avoided_kg_hr || 2.85) + ' kg/hr</strong></div>' +
     '</div>' +
-    '<div style="display:flex;flex-direction:column;gap:6px">' +
+    '<div class="u-display-flex-flex-direction-column-gap-6px" >' +
     nodes.slice(1).map((n) =>
-      '<div style="background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;font-size:11px">' +
+      '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
       '<div><strong>' + esc(n.address) + '</strong> (' + esc(n.asset || n.role) + ')</div>' +
-      '<span class="mono" style="color:var(--amber)">' + esc(n.power_kw) + ' kW (' + esc(n.battery_soc_pct) + '% SOC)</span>' +
+      '<span class="mono u-color-var-amber" >' + esc(n.power_kw) + ' kW (' + esc(n.battery_soc_pct) + '% SOC)</span>' +
       '</div>'
     ).join("") +
     '</div>';
@@ -1278,14 +1278,14 @@ if (swarmBtn) {
     if (status === 200 && data) {
       const arb = data.economic_arbitrage || {};
       openDialog("Neighborhood Swarm Grid Dispatch",
-        '<p style="color:var(--ok);font-weight:700">⚡ Peer-to-Peer Microgrid Dispatch Active</p>' +
-        '<p style="margin:8px 0;line-height:1.4">Exporting <strong>' + esc(arb.total_exported_kw) + ' kW</strong> excess solar directly to neighborhood peers at <strong>$' + esc(data.local_clearing_price_usd_kwh) + '/kWh</strong> instead of selling to utility grid at $' + esc(data.utility_sell_rate_usd_kwh) + '/kWh (+414% revenue capture).</p>' +
-        '<div style="background:var(--s2);padding:10px;border-radius:6px;margin:10px 0;font-size:12px">' +
+        '<p class="u-color-var-ok-font-weight-700" >⚡ Peer-to-Peer Microgrid Dispatch Active</p>' +
+        '<p class="u-margin-8px-0-line-height-1-4" >Exporting <strong>' + esc(arb.total_exported_kw) + ' kW</strong> excess solar directly to neighborhood peers at <strong>$' + esc(data.local_clearing_price_usd_kwh) + '/kWh</strong> instead of selling to utility grid at $' + esc(data.utility_sell_rate_usd_kwh) + '/kWh (+414% revenue capture).</p>' +
+        '<div class="u-background-var-s2-padding-10px-border-radius-6px" >' +
         '<div>💰 Our P2P Earnings: <strong>+$' + esc(arb.our_revenue_rate_usd_hr) + '/hr</strong> (vs $' + esc(arb.our_utility_dump_revenue_usd_hr) + '/hr dump)</div>' +
         '<div>🤝 Community Avoided Cost: <strong>+$' + esc(arb.net_community_savings_usd_hr) + '/hr</strong></div>' +
         '<div>🌱 Decarbonization: <strong>' + esc(arb.co2_avoided_kg_hr) + ' kg CO2/hr avoided</strong></div>' +
         '</div>' +
-        (data.staged_proposal_id ? '<p class="receipt" style="color:var(--ok)">Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
         [
           { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
           { label: "Dismiss" }
@@ -1314,7 +1314,7 @@ on("metaSkills", (m) => {
     '<div class="meta-skill-item">' +
     '<div class="title">' +
     '<strong>' + esc(s.name || s.skill_id) + '</strong>' +
-    '<div style="font-size:var(--fs-micro);color:var(--t2)">' +
+    '<div class="u-font-size-var-fs-micro-color-var-t2" >' +
     esc(s.trigger_intent || s.description || "Synthesized Alexa+ capability") +
     ' · ' + esc(s.invocation_count || 0) + ' runs</div>' +
     '</div>' +
@@ -1360,14 +1360,14 @@ on("diagnostics", (diag) => {
   }
   box.innerHTML =
     '<div class="diag-grid">' +
-    '<div class="diag-item"><div class="label">Brain &amp; Provider</div><div class="value" style="font-size:var(--fs-body)">' +
+    '<div class="diag-item"><div class="label">Brain &amp; Provider</div><div class="value u-font-size-var-fs-body" >' +
     esc((diag.active_brain || "nova-pro").split(":").pop()) + ' · ' + esc((diag.active_provider || "bedrock").toUpperCase()) + '</div></div>' +
     '<div class="diag-item"><div class="label">FastMCP Protocol</div><div class="value">' +
     esc(diag.spec_version || "2025-11-25") + '</div></div>' +
-    '<div class="diag-item"><div class="label">Audit Merkle Chain</div><div class="value" style="color:' +
-    (diag.audit_ledger && diag.audit_ledger.valid ? 'var(--ok)' : 'var(--bad)') + '">' +
+    '<div class="diag-item"><div class="label">Audit Merkle Chain</div><div class="value ' +
+    (diag.audit_ledger && diag.audit_ledger.valid ? 'u-color-var-ok' : 'u-color-var-bad') + '">' +
     (diag.audit_ledger && diag.audit_ledger.valid ? '✓ ' + diag.audit_ledger.events_count + ' sealed' : 'Broken') + '</div></div>' +
-    '<div class="diag-item"><div class="label">Causal Resilience</div><div class="value" style="color:var(--ok)">' +
+    '<div class="diag-item"><div class="label">Causal Resilience</div><div class="value u-color-var-ok" >' +
     Math.round(diag.causal_twin && diag.causal_twin.resilience_score != null
       ? (diag.causal_twin.resilience_score > 1 ? diag.causal_twin.resilience_score : diag.causal_twin.resilience_score * 100)
       : 96) + '%</div></div>' +
@@ -1500,8 +1500,8 @@ async function loadRealHardwareConfig() {
     if (echoCount) echoCount.textContent = echoes.length + " Online";
     if (echoStrip) {
       echoStrip.innerHTML = echoes.map((e) =>
-        '<div class="echo-pill"><span>📻</span> <strong>' + esc(e.name) + '</strong> <span class="mono" style="color:var(--ok);font-size:10px">● ' + esc(e.status || "online") + '</span></div>'
-      ).join("") || '<span style="color:var(--t3);font-size:11px">No Echo devices synchronized</span>';
+        '<div class="echo-pill"><span>📻</span> <strong>' + esc(e.name) + '</strong> <span class="mono u-color-var-ok-font-size-10px" >● ' + esc(e.status || "online") + '</span></div>'
+      ).join("") || '<span class="u-color-var-t3-font-size-11px" >No Echo devices synchronized</span>';
     }
 
     renderRealDevices(cfg.real_devices || []);
@@ -1528,14 +1528,14 @@ function renderRealDevices(devices) {
     return (
       '<div class="device-card">' +
       '<div class="device-card-head">' +
-      '<span style="font-size:18px">' + icon + '</span>' +
+      '<span class="u-font-size-18px" >' + icon + '</span>' +
       '<span class="domain-tag">' + esc(d.protocol || d.domain) + '</span>' +
       '</div>' +
       '<div class="name">' + esc(d.name) + '</div>' +
       '<div class="state">● ' + esc(d.state || "Online") + '</div>' +
       '<div class="meta">' +
       '<span>' + esc(d.room || "Home") + '</span>' +
-      '<span class="mono" style="color:var(--ok)">' + esc(d.status || "online") + '</span>' +
+      '<span class="mono u-color-var-ok" >' + esc(d.status || "online") + '</span>' +
       '</div>' +
       '</div>'
     );
@@ -1549,12 +1549,12 @@ function renderRealDevices(devices) {
     settingsList.innerHTML = devices.map((d) => {
       const icon = domainIcons[d.domain] || "🔌";
       return (
-        '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px var(--sp3);background:var(--s2);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:8px;">' +
-        '<div style="display:flex;align-items:center;gap:10px;">' +
-        '<span style="font-size:18px">' + icon + '</span>' +
-        '<div><strong>' + esc(d.name) + '</strong><small style="display:block;color:var(--t2)">' + esc(d.room) + ' · ' + esc(d.protocol) + ' (' + esc(d.state) + ')</small></div>' +
+        '<div class="u-display-flex-align-items-center-justify-content-" >' +
+        '<div class="u-display-flex-align-items-center-gap-10px" >' +
+        '<span class="u-font-size-18px" >' + icon + '</span>' +
+        '<div><strong>' + esc(d.name) + '</strong><small class="u-display-block-color-var-t2" >' + esc(d.room) + ' · ' + esc(d.protocol) + ' (' + esc(d.state) + ')</small></div>' +
         '</div>' +
-        '<button class="btn btn-del-dev" data-id="' + esc(d.id) + '" style="min-height:30px;padding:2px 10px;font-size:12px;color:var(--bad)">Remove</button>' +
+        '<button class="btn btn-del-dev u-min-height-30px-padding-2px-10px-font-size-12px-" data-id="' + esc(d.id) + '" >Remove</button>' +
         '</div>'
       );
     }).join("") || '<div class="empty">0 devices registered. All clean.</div>';
@@ -1700,14 +1700,14 @@ $("#resetRealZeroSettingsBtn")?.addEventListener("click", performRealReset);
 function openAddDeviceDialog() {
   openDialog(
     "Register Real Smart Home Device",
-    '<div style="display:flex;flex-direction:column;gap:10px">' +
-    '<div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Device Name</label>' +
-    '<input type="text" id="newDevName" placeholder="e.g. Master Bedroom Thermostat" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)"/></div>' +
-    '<div style="display:flex;gap:8px">' +
-    '<div style="flex:1"><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Room</label>' +
-    '<input type="text" id="newDevRoom" placeholder="Living Room, Kitchen..." value="Living Room" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)"/></div>' +
-    '<div style="flex:1"><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Domain</label>' +
-    '<select id="newDevDomain" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)">' +
+    '<div class="u-display-flex-flex-direction-column-gap-10px" >' +
+    '<div><label class="u-font-size-12px-color-var-t2-display-block-margin" >Device Name</label>' +
+    '<input class="u-width-100-background-var-s1-border-1px-solid-var" type="text" id="newDevName" placeholder="e.g. Master Bedroom Thermostat" /></div>' +
+    '<div class="u-display-flex-gap-8px" >' +
+    '<div class="u-flex-1" ><label class="u-font-size-12px-color-var-t2-display-block-margin" >Room</label>' +
+    '<input class="u-width-100-background-var-s1-border-1px-solid-var" type="text" id="newDevRoom" placeholder="Living Room, Kitchen..." value="Living Room" /></div>' +
+    '<div class="u-flex-1" ><label class="u-font-size-12px-color-var-t2-display-block-margin" >Domain</label>' +
+    '<select class="u-width-100-background-var-s1-border-1px-solid-var" id="newDevDomain" >' +
     '<option value="climate">Climate (Thermostat)</option>' +
     '<option value="lock">Lock (Deadbolt/Handle)</option>' +
     '<option value="light">Light (Bulb/Strip/Switch)</option>' +
@@ -1716,8 +1716,8 @@ function openAddDeviceDialog() {
     '<option value="switch">Smart Plug / Switch</option>' +
     '</select></div>' +
     '</div>' +
-    '<div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Protocol / Hub</label>' +
-    '<select id="newDevProtocol" style="width:100%;background:var(--s1);border:1px solid var(--line);border-radius:6px;padding:8px 10px;color:var(--t1)">' +
+    '<div><label class="u-font-size-12px-color-var-t2-display-block-margin" >Protocol / Hub</label>' +
+    '<select class="u-width-100-background-var-s1-border-1px-solid-var" id="newDevProtocol" >' +
     '<option value="Matter">Matter (Standard)</option>' +
     '<option value="Zigbee">Zigbee / Z-Wave (Local Bridge)</option>' +
     '<option value="Alexa AVS">Amazon Alexa (AVS / ASK Directives)</option>' +

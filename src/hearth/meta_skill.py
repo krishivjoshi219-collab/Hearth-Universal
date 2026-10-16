@@ -233,7 +233,7 @@ class MetaSkillSynthesizer:
             return
         for file in self.storage_dir.glob("*.json"):
             try:
-                with open(file, "r", encoding="utf-8") as f:
+                with open(file, encoding="utf-8") as f:
                     data = json.load(f)
                 skill = SynthesizedSkill(**{k: v for k, v in data.items() if k in SynthesizedSkill.__dataclass_fields__})
                 self._skills[skill.skill_id] = skill

@@ -14,8 +14,9 @@ Implements the official Alexa+ Agent Skills specification:
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from . import arbiter, audit, commerce, home_mock, strands_agent
 

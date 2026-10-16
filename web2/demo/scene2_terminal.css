@@ -1,0 +1,178 @@
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #09090b;
+    color: #e4e4e7;
+    font-family: ui-monospace, "SF Mono", "Liberation Mono", Menlo, monospace;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 40px 40px;
+  }
+
+  /* Header banner */
+  .top-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+  }
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .tag-pill {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+  }
+  .banner-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffffff;
+  }
+  .banner-meta {
+    font-size: 14px;
+    color: #a1a1aa;
+  }
+
+  /* Terminal Window */
+  .term-window {
+    flex: 1;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .term-header {
+    background: #161b22;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #30363d;
+  }
+  .term-dots {
+    display: flex;
+    gap: 8px;
+    margin-right: 20px;
+  }
+  .dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+  }
+  .dot.red { background: #ff5f56; }
+  .dot.yellow { background: #ffbd2e; }
+  .dot.green { background: #27c93f; }
+  .term-title {
+    font-size: 14px;
+    color: #8b949e;
+    font-weight: 600;
+    flex: 1;
+    text-align: center;
+  }
+
+  .term-body {
+    flex: 1;
+    padding: 24px 28px;
+    font-size: 15px;
+    line-height: 1.55;
+    overflow-y: auto;
+    color: #c9d1d9;
+  }
+
+  /* Command prompts & outputs */
+  .cmd-line {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .prompt-symbol { color: #58a6ff; font-weight: 700; }
+  .prompt-cmd { color: #f0f6fc; font-weight: 700; }
+
+  .out-box {
+    margin-bottom: 18px;
+    padding-left: 14px;
+    border-left: 2px solid #30363d;
+  }
+
+  .text-green { color: #3fb950; font-weight: 600; }
+  .text-cyan { color: #58a6ff; }
+  .text-yellow { color: #d29922; }
+  .text-purple { color: #bc8cff; }
+  .text-dim { color: #8b949e; }
+  .text-bold { font-weight: 700; }
+  .text-white { color: #ffffff; }
+
+  /* Evaluation Table */
+  .eval-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 30px;
+    background: #161b22;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    margin-top: 10px;
+  }
+  .eval-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13.5px;
+  }
+
+  .trophy-banner {
+    margin-top: 14px;
+    background: rgba(39, 201, 63, 0.12);
+    border: 1px solid rgba(39, 201, 63, 0.4);
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .trophy-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #3fb950;
+  }
+  .trophy-score {
+    font-size: 20px;
+    font-weight: 900;
+    color: #ffffff;
+    background: #238636;
+    padding: 4px 14px;
+    border-radius: 6px;
+  }
+/* --- progressive reveal driven by scene2_terminal.js --- */
+  .term-body > * {
+    transition: opacity 0.30s ease, transform 0.30s ease;
+  }
+  .term-body > .pending {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .cmd-line.typing::after {
+    content: "▋";
+    color: #38bdf8;
+    animation: term-blink 1s steps(2, start) infinite;
+  }
+  @keyframes term-blink {
+    to { visibility: hidden; }
+  }

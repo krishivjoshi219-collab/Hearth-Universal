@@ -8,6 +8,8 @@
   their original signatures (new optional kwargs only).
 """
 from __future__ import annotations
+
+import contextlib
 import json
 import os
 import sqlite3
@@ -195,10 +197,8 @@ def _init_db(con: sqlite3.Connection) -> None:
         "ALTER TABLE goals ADD COLUMN updated_at INTEGER DEFAULT 0",
         "ALTER TABLE goals ADD COLUMN last_advanced_at INTEGER DEFAULT 0",
     ):
-        try:
+        with contextlib.suppress(sqlite3.OperationalError):
             con.execute(stmt)
-        except sqlite3.OperationalError:
-            pass
 
     # Populate defaults if facts table has no rows
     count = con.execute("SELECT COUNT(*) FROM facts").fetchone()[0]
@@ -272,10 +272,8 @@ def _db() -> sqlite3.Connection:
     except sqlite3.DatabaseError:
         # Corrupt database: quarantine it and start fresh instead of
         # failing every request until someone SSHes in.
-        try:
+        with contextlib.suppress(Exception):
             os.replace(db_path, STATE_DIR / f"memory.corrupt.{int(time.time())}.db")
-        except Exception:
-            pass
         con = sqlite3.connect(db_path, timeout=30, isolation_level=None)
         _init_db(con)
         return con
@@ -335,15 +333,11 @@ def remember(key: str, value: str, owner: str = "household") -> dict:
                     )
                 con.execute("COMMIT")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
-            try:
+            with contextlib.suppress(Exception):
                 con.execute("PRAGMA wal_checkpoint(PASSIVE)")
-            except Exception:
-                pass
     finally:
         con.close()
     out: dict = {"ok": True, "key": key, "value": value, "owner": resident}
@@ -444,10 +438,8 @@ def delete(key: str) -> dict:
                 con.execute("COMMIT")
                 affected = cur.rowcount
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
         return {"ok": affected > 0, "key": key}
     finally:
@@ -487,15 +479,11 @@ def create_goal(title: str, steps: list[str], owner: str = "household",
                 con.execute("COMMIT")
                 gid = cur.lastrowid
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
-            try:
+            with contextlib.suppress(Exception):
                 con.execute("PRAGMA wal_checkpoint(PASSIVE)")
-            except Exception:
-                pass
         return {"ok": True, "id": gid, "title": title, "steps": steps,
                 "progress": 0, "status": "active", "owner": resident,
                 "priority": prio, "deadline": dl}
@@ -541,7 +529,7 @@ def advance_goal(gid: int) -> dict:
                 if not row:
                     con.execute("ROLLBACK")
                     return {"ok": False, "error": f"Goal ID {gid} not found"}
-                title, steps_json, progress, status = row
+                title, steps_json, progress, _status = row
                 try:
                     steps = json.loads(steps_json) if steps_json else []
                     if not isinstance(steps, list):
@@ -560,15 +548,11 @@ def advance_goal(gid: int) -> dict:
                                 (progress, "done" if done else "active", gid))
                 con.execute("COMMIT")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
-            try:
+            with contextlib.suppress(Exception):
                 con.execute("PRAGMA wal_checkpoint(PASSIVE)")
-            except Exception:
-                pass
         next_step = steps[progress - 1] if progress > 0 and progress <= len(steps) else None
         return {
             "ok": True,
@@ -650,10 +634,8 @@ def chat_history_append(role: str, content: str, model: str = "") -> None:
                 )
                 con.execute("COMMIT")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
     finally:
         con.close()
@@ -691,15 +673,11 @@ def delete_all(owner: str = "") -> dict:
                     con.execute("DELETE FROM chat_history")
                 con.execute("COMMIT")
             except Exception:
-                try:
+                with contextlib.suppress(Exception):
                     con.execute("ROLLBACK")
-                except Exception:
-                    pass
                 raise
     finally:
         con.close()
-    try:
+    with contextlib.suppress(Exception):
         _audit.append("human", "gdpr_erasure", {"owner": who or "all"})
-    except Exception:
-        pass
     return {"ok": True, "owner": who or "all"}

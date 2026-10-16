@@ -15,6 +15,7 @@ Example goal flow::
     goals.scheduler_tick()        # hourly hook: advances oldest due active goal
 """
 from __future__ import annotations
+
 import os
 import time
 

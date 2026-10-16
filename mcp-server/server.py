@@ -3,6 +3,7 @@ Serves MCP protocol on /mcp, REST APIs for simulator on /api/*, and interactive 
 Verifies via curl POST /mcp initialize -> protocolVersion 2025-11-25.
 """
 from __future__ import annotations
+
 import asyncio
 import json
 import os
@@ -40,17 +41,43 @@ def _load_config() -> None:
 _load_config()
 
 from typing import Annotated
-from pydantic import Field
+
 from mcp.server.fastmcp import FastMCP
+from pydantic import Field
 from starlette.requests import Request
-from starlette.responses import JSONResponse, FileResponse, PlainTextResponse
+from starlette.responses import FileResponse, JSONResponse, PlainTextResponse
 
 from hearth import (
-    sentinel, vault, audit, memory, home_mock, proposals, planner, commerce,
-    brains, alexa, heartbeat, webtools, sandbox, arbiter, timemachine, auth,
-    strands_agent, agentcore, agent_skills,
-    parliament, causal_twin, meta_skill, model_mesh, real_mode, alexaplus_addon,
-    forensics, acoustic, mediation, swarm, replay
+    acoustic,
+    agent_skills,
+    agentcore,
+    alexa,
+    alexaplus_addon,
+    arbiter,
+    audit,
+    auth,
+    brains,
+    causal_twin,
+    commerce,
+    forensics,
+    heartbeat,
+    home_mock,
+    mediation,
+    memory,
+    meta_skill,
+    model_mesh,
+    parliament,
+    planner,
+    proposals,
+    real_mode,
+    replay,
+    sandbox,
+    sentinel,
+    strands_agent,
+    swarm,
+    timemachine,
+    vault,
+    webtools,
 )
 
 _SERVER_START_TIME = _time.time()
@@ -199,7 +226,7 @@ def _adult_or_403(request: Request, action: str):
     )
 
 PROTOCOL = "2025-11-25"
-HEARTH_VERSION = "1.32.0"
+HEARTH_VERSION = "1.33.0"
 START_TIME = _time.time()
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
 _PORT = int(os.environ.get("PORT", "8787"))
@@ -944,35 +971,47 @@ def brains_add_custom_provider(
 @mcp.tool()
 def forensic_incident_reconstruct(
     incident_type: Annotated[str, Field(description="Incident category: 'perimeter_anomaly', 'freezer_thaw', or 'general'")] = "perimeter_anomaly",
-    lookback_seconds: Annotated[int, Field(description="Lookback window in seconds")] = 3600
+    lookback_seconds: Annotated[int, Field(description="Lookback window in seconds")] = 3600,
+    sensor_readings: Annotated[dict | None, Field(description="Optional live sensor overrides, e.g. {'wind_mph': 5, 'torque_nm': 1.4, 'intruder_biometric_confidence': 0.9}")] = None,
 ) -> dict:
     """Run Black Box Forensic Incident Reconstruction using reverse causal walk across household telemetry."""
-    return forensics.forensics_engine.reconstruct_incident(incident_type=incident_type, lookback_seconds=lookback_seconds)
+    return forensics.forensics_engine.reconstruct_incident(incident_type=incident_type, lookback_seconds=lookback_seconds, sensor_readings=sensor_readings)
 
 
 @mcp.tool()
 def acoustic_diagnostics_scan(
     target_appliance: Annotated[str, Field(description="Target appliance name or 'all'")] = "all",
-    stage_remedy: Annotated[bool, Field(description="Automatically stage 15% Subscribe & Save replacement part proposal if wear > 75%")] = True
+    stage_remedy: Annotated[bool, Field(description="Automatically stage 15% Subscribe & Save replacement part proposal if wear > 75%")] = True,
+    synth_seed: Annotated[int, Field(description="Seed for deterministic FFT synthesis (vary to prove measurement)")] = 42,
+    fault_hz_override: Annotated[float | None, Field(description="Optional fault frequency override in Hz; <=0 forces healthy, None uses default 124.5")] = None,
 ) -> dict:
     """Perform ambient FFT harmonic acoustic scan on appliances to detect physical bearing wear before failure."""
-    return acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target_appliance, stage_remedy=stage_remedy)
+    return acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target_appliance, stage_remedy=stage_remedy, synth_seed=synth_seed, fault_hz_override=fault_hz_override)
 
 
 @mcp.tool()
 def family_mediation_treaty(
-    topic: Annotated[str, Field(description="Household dispute topic")] = "monthly_household_equilibrium"
+    topic: Annotated[str, Field(description="Household dispute topic")] = "monthly_household_equilibrium",
+    statements: Annotated[dict | None, Field(description="Optional resident statements {name: text} for live mediation")] = None,
 ) -> dict:
     """Synthesize a balanced Pareto-Optimal Family Treaty without exposing raw private resident grievances."""
-    return mediation.family_mediator.draft_household_treaty(topic=topic)
+    return mediation.family_mediator.draft_household_treaty(topic=topic, private_statements=statements)
 
 
 @mcp.tool()
 def grid_swarm_coordinate(
-    export_kw: Annotated[float, Field(description="Available solar kilowatt surplus to export to neighborhood")] = 3.8
+    export_kw: Annotated[float, Field(description="Available solar kilowatt surplus to export to neighborhood")] = 3.8,
+    feeder_limit_kw: Annotated[float, Field(description="Feeder transformer limit in kW")] = 10.0,
+    buyer_peak_tariff: Annotated[float | None, Field(description="Optional buyer peak tariff override in $/kWh to prove price sensitivity")] = None,
 ) -> dict:
     """Arbitrate peer-to-peer energy trades across neighborhood Hearth nodes in a virtual power plant."""
-    return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw)
+    if buyer_peak_tariff is not None:
+        bids = [
+            {"node": "104 Maple Drive", "price": float(buyer_peak_tariff), "qty": 4.5},
+            {"node": "212 Cedar Court", "price": round(float(buyer_peak_tariff) * 0.536, 3), "qty": 2.1},
+        ]
+        return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, bids=bids, feeder_limit_kw=feeder_limit_kw)
+    return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, feeder_limit_kw=feeder_limit_kw)
 
 
 # ==============================================================================
@@ -1320,11 +1359,27 @@ async def api_chat(request: Request):
 
     # Never stall the event loop: planner does blocking network/SQLite inside.
     # 25s hard deadline, then an honest 504 (client retries safely: chat is read-only).
+    # Persona bridge: the cockpit switch (POST /api/persona) sets ACTIVE_PERSONA,
+    # but planner.plan() only reads HEARTH_ACTIVE_PERSONA. Without this bridge the
+    # Leo selector in the UI would be decorative and the child guardrail would not
+    # fire on chat turns. Set-and-restore inside the worker thread.
+    def _plan_as_active_persona():
+        prev = os.environ.get("HEARTH_ACTIVE_PERSONA")
+        pid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+        os.environ["HEARTH_ACTIVE_PERSONA"] = {"child": "leo", "guest": "guest"}.get(pid, pid)
+        try:
+            return planner.plan(message, provider)
+        finally:
+            if prev is None:
+                os.environ.pop("HEARTH_ACTIVE_PERSONA", None)
+            else:
+                os.environ["HEARTH_ACTIVE_PERSONA"] = prev
+
     try:
         out = await asyncio.wait_for(
-            asyncio.to_thread(planner.plan, message, provider), timeout=25
+            asyncio.to_thread(_plan_as_active_persona), timeout=25
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         _bump("chat_timeout")
         audit.append("system", "chat_timeout", {"message_len": len(message)})
         return JSONResponse(
@@ -1641,9 +1696,60 @@ async def api_home_routine(request: Request):
     return JSONResponse(res)
 
 
-@mcp.custom_route("/api/renewals", methods=["GET"])
+@mcp.custom_route("/api/renewals", methods=["GET", "POST"])
 async def api_renewals(request: Request):
     return JSONResponse(proposals.scan_renewals())
+
+
+@mcp.custom_route("/api/renewals/stage", methods=["POST"])
+async def api_renewals_stage(request: Request):
+    """Stage one subscription cancel/downgrade as a Tier-2 tray proposal (never executes)."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        sub_id = str((await request.json()).get("id", ""))
+    except Exception:
+        sub_id = ""
+    # Persona Guardrail: Leo (child) profile is blocked from staging financial changes
+    pid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+    if pid == "child":
+        audit.append("sentinel", "child_subscription_cancel_blocked", {"id": sub_id})
+        return JSONResponse({"ok": False, "staged": False,
+                             "error": "Child profile cannot stage subscription cancellations",
+                             "blocked": True}, status_code=403)
+    scan = proposals.scan_renewals()
+    match = next((r for r in scan.get("renewals", []) if r.get("id") == sub_id), None)
+    if match is None:
+        return JSONResponse({"ok": False, "staged": False,
+                             "message": "Unknown subscription — nothing staged.",
+                             "candidates": [r.get("id") for r in scan.get("renewals", [])]})
+    verb = "Cancel" if match.get("recommendation") == "cancel" else "Downgrade"
+    try:
+        save_yr = float(match.get("savings_yr") or 0)
+    except (TypeError, ValueError):
+        save_yr = 0.0
+    title = f"{verb} {match.get('name')} (save ${save_yr:.2f}/yr)"
+    for p in proposals.list_proposals("pending"):
+        if isinstance(p, dict) and p.get("kind") == "subscription_cancel" and p.get("title") == title:
+            return JSONResponse({"ok": True, "staged": True, "deduplicated": True,
+                                 "proposal": p, "message": f"Already pending as {p.get('id')}."})
+    meta = {
+        "subscription_id": sub_id,
+        "service_name": match.get("name"),
+        "portal_url": match.get("portal_url", ""),
+        "support_phone": match.get("support_phone", ""),
+        "savings_yr": save_yr,
+        "recommendation": match.get("recommendation"),
+    }
+    prop = proposals.propose(kind="subscription_cancel", title=title,
+                             reasons=str(match.get("reason", "")),
+                             cost_delta_yr=-save_yr,
+                             risk_level="medium",
+                             meta=meta)
+    audit.append("agent", "api_renewals_stage", {"id": sub_id, "proposal": prop.get("id")})
+    return JSONResponse({"ok": True, "staged": True, "proposal": prop,
+                         "message": f"Staged as {prop.get('id')} — Approve in the tray to execute. Nothing cancelled."})
 
 
 @mcp.custom_route("/api/commerce", methods=["GET"])
@@ -1974,9 +2080,10 @@ def _load_persona() -> dict:
 
 def _save_persona(p: dict) -> None:
     try:
-        from pathlib import Path as _Path
-        from hearth import atomic as _atomic
         import json as _json
+        from pathlib import Path as _Path
+
+        from hearth import atomic as _atomic
         os.makedirs(os.path.dirname(_PERSONA_FILE), exist_ok=True)
         target = _Path(_PERSONA_FILE)
         with _atomic.locked(target):
@@ -2063,6 +2170,35 @@ async def api_stage_cart(request: Request):
         bundle_optimized=bundle_opt
     )
     return JSONResponse(cart)
+
+
+@mcp.custom_route("/api/commerce/autopilot-checkout", methods=["POST"])
+async def api_commerce_autopilot_checkout(request: Request):
+    """Voice-to-tray checkout: stage Subscribe & Save cart from a voice utterance (Tier-2, never charges)."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        body = await request.json()
+        utterance = str(body.get("utterance", ""))
+        voice_confidence = float(body.get("voice_confidence", 0.95))
+    except Exception:
+        utterance = ""
+        voice_confidence = 0.95
+    prev = os.environ.get("HEARTH_ACTIVE_PERSONA")
+    pid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+    if pid == "child":
+        os.environ["HEARTH_ACTIVE_PERSONA"] = "leo"
+    try:
+        res = commerce.build_autopilot_checkout(utterance=utterance, voice_confidence=voice_confidence)
+    finally:
+        if prev is None:
+            os.environ.pop("HEARTH_ACTIVE_PERSONA", None)
+        else:
+            os.environ["HEARTH_ACTIVE_PERSONA"] = prev
+    audit.append("agent", "api_commerce_autopilot_checkout",
+                 {"utterance": utterance[:200], "gated": res.get("gated")})
+    return JSONResponse(res)
 
 
 @mcp.custom_route("/api/commerce/optimize-bundles", methods=["GET", "POST"])
@@ -2391,14 +2527,16 @@ async def api_forensics_reconstruct(request: Request):
         return _t
     inc_type = "perimeter_anomaly"
     lookback = 3600
+    sensor_readings = None
     if request.method == "POST":
         try:
             body = await request.json()
             inc_type = body.get("incident_type", "perimeter_anomaly")
             lookback = int(body.get("lookback_seconds", 3600))
+            sensor_readings = body.get("sensor_readings")
         except Exception:
             pass
-    res = forensics.forensics_engine.reconstruct_incident(incident_type=inc_type, lookback_seconds=lookback)
+    res = forensics.forensics_engine.reconstruct_incident(incident_type=inc_type, lookback_seconds=lookback, sensor_readings=sensor_readings)
     return JSONResponse(res)
 
 
@@ -2410,14 +2548,18 @@ async def api_acoustic_scan(request: Request):
         return _t
     target = "all"
     stage_remedy = True
+    synth_seed = 42
+    fault_hz_override = None
     if request.method == "POST":
         try:
             body = await request.json()
             target = body.get("target_appliance", "all")
             stage_remedy = bool(body.get("stage_remedy", True))
+            synth_seed = int(body.get("synth_seed", 42))
+            fault_hz_override = body.get("fault_hz_override")
         except Exception:
             pass
-    res = acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target, stage_remedy=stage_remedy)
+    res = acoustic.acoustic_doctor.scan_appliance_acoustics(target_appliance=target, stage_remedy=stage_remedy, synth_seed=synth_seed, fault_hz_override=fault_hz_override)
     return JSONResponse(res)
 
 
@@ -2447,13 +2589,30 @@ async def api_swarm_grid(request: Request):
     if _t is not None:
         return _t
     export_kw = 3.8
+    feeder_limit_kw = 10.0
+    buyer_peak = None
+    custom_bids = None
+    custom_asks = None
     if request.method == "POST":
         try:
             body = await request.json()
             export_kw = float(body.get("export_kw", 3.8))
+            feeder_limit_kw = float(body.get("feeder_limit_kw", 10.0))
+            buyer_peak = body.get("buyer_peak_tariff")
+            custom_bids = body.get("bids")
+            custom_asks = body.get("asks")
         except Exception:
             pass
-    res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw)
+    if custom_bids is not None or custom_asks is not None:
+        res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, bids=custom_bids, asks=custom_asks, feeder_limit_kw=feeder_limit_kw)
+    elif buyer_peak is not None:
+        bids = [
+            {"node": "104 Maple Drive", "price": float(buyer_peak), "qty": 4.5},
+            {"node": "212 Cedar Court", "price": round(float(buyer_peak) * 0.536, 3), "qty": 2.1},
+        ]
+        res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, bids=bids, feeder_limit_kw=feeder_limit_kw)
+    else:
+        res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, feeder_limit_kw=feeder_limit_kw)
     return JSONResponse(res)
 
 

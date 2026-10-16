@@ -365,6 +365,16 @@ body {
     0 4px 18px oklch(82% 0.125 74 / 0.24);
 }
 
+.chip[data-persona="child"] {
+  color: oklch(86% 0.16 48);
+  border-color: oklch(80% 0.18 48 / 0.6);
+  background: linear-gradient(157deg, oklch(75% 0.18 48 / 0.22), oklch(75% 0.18 48 / 0.08));
+  box-shadow:
+    inset 0 1px 0 0 oklch(90% 0.14 55 / 0.3),
+    0 0 0 1px oklch(80% 0.18 48 / 0.12),
+    0 4px 18px oklch(80% 0.18 48 / 0.25);
+}
+
 .chip .dot {
   width: 7px;
   height: 7px;
@@ -1164,4 +1174,381 @@ body.has-result .metrics { display: none; }
 :focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px var(--e-base), 0 0 0 6px oklch(82% 0.125 74 / 0.9);
+}
+
+/* Staged-action row inside rendered replies (e.g. renewals Stage buttons). */
+.stage-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+/* Guided-tour caption bar (?tour=1 film strip). */
+.tourbar {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--e-edge);
+  background: oklch(12% 0.03 270 / 0.92);
+}
+.tourbar[hidden] {
+  display: none;
+}
+.tour-kicker {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+.tour-cap {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* Cinematic tour splash (?tour=1): title beat before the demo. */
+.splash {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: radial-gradient(120% 90% at 50% 10%, oklch(22% 0.06 270) 0%, oklch(8% 0.02 270) 70%);
+  text-align: center;
+  padding: 0 8vw;
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+.splash[hidden] {
+  display: none;
+}
+.splash.out {
+  opacity: 0;
+  pointer-events: none;
+}
+.splash-kicker {
+  font-size: 15px;
+  letter-spacing: 0.32em;
+  opacity: 0.7;
+  animation: splash-rise 0.8s ease both;
+}
+.splash-title {
+  font-size: clamp(56px, 11vw, 128px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  background: linear-gradient(100deg, #ffd166 10%, #f4f1ea 45%, #7dd3a8 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: splash-rise 0.8s 0.15s ease both;
+}
+.splash-sub {
+  font-size: clamp(18px, 3vw, 30px);
+  opacity: 0.85;
+  animation: splash-rise 0.8s 0.3s ease both;
+}
+@keyframes splash-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Hero chips: the money story glows, the engine room waits its turn. */
+.ask.hero {
+  border-color: oklch(75% 0.15 85 / 0.65);
+  box-shadow: 0 0 18px oklch(75% 0.15 85 / 0.25), inset 0 0 12px oklch(75% 0.15 85 / 0.08);
+  font-weight: 700;
+}
+
+/* Receipt-seal pulse on approve: the frame judges screenshot. */
+@keyframes seal-pop {
+  0% { transform: scale(0.96); box-shadow: 0 0 0 oklch(60% 0.18 160 / 0); }
+  40% { transform: scale(1.02); box-shadow: 0 0 26px oklch(60% 0.18 160 / 0.55); }
+  100% { transform: scale(1); box-shadow: 0 0 0 oklch(60% 0.18 160 / 0); }
+}
+.tray-item.sealed {
+  animation: seal-pop 0.9s ease;
+  border-color: oklch(65% 0.18 160 / 0.7);
+}
+
+/* Approval tray items (pending + decided) on the Echo surface. */
+.tray-item {
+  padding: 12px 4px;
+  border-top: 1px solid var(--e-edge);
+}
+.tray-item:first-child {
+  border-top: none;
+}
+.tray-title {
+  font-weight: 650;
+}
+.tray-meta {
+  opacity: 0.72;
+  margin: 2px 0 8px;
+}
+.tray-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.tray-item.decided {
+  opacity: 0.8;
+}
+
+/* ======================================================= Glass Receipt Modal */
+.receipt-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(4% 0.01 270 / 0.78);
+  padding: 20px;
+  animation: receipt-fade-in 240ms ease;
+}
+.receipt-backdrop[hidden] {
+  display: none;
+}
+.receipt-card {
+  position: relative;
+  width: 100%;
+  max-width: 580px;
+  border-radius: 28px;
+  border: 1px solid oklch(75% 0.18 160 / 0.4);
+  background: linear-gradient(160deg,
+    oklch(18% 0.032 274 / 0.94) 0%,
+    oklch(11% 0.024 274 / 0.96) 100%);
+  box-shadow:
+    0 0 0 1px oklch(100% 0 0 / 0.08),
+    0 24px 60px oklch(0% 0 0 / 0.7),
+    0 0 80px oklch(75% 0.18 160 / 0.18);
+  padding: 28px 32px;
+  animation: receipt-card-rise 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.receipt-glow {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(75% 0.18 160 / 0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+.receipt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.receipt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: oklch(75% 0.18 160 / 0.12);
+  border: 1px solid oklch(75% 0.18 160 / 0.35);
+  color: oklch(88% 0.18 160);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.receipt-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: oklch(80% 0.2 160);
+  box-shadow: 0 0 8px oklch(80% 0.2 160);
+}
+.receipt-close {
+  background: transparent;
+  border: none;
+  color: var(--e-ink-3);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: color 150ms ease;
+}
+.receipt-close:hover {
+  color: var(--e-ink);
+}
+.receipt-code {
+  font-size: 14px;
+  color: var(--e-ink-3);
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+}
+.receipt-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--e-ink);
+  margin-bottom: 4px;
+}
+.receipt-sub {
+  font-size: 14px;
+  color: var(--e-ink-2);
+  margin-bottom: 20px;
+}
+.receipt-body {
+  border-top: 1px solid var(--e-edge);
+  border-bottom: 1px solid var(--e-edge);
+  padding: 16px 0;
+  margin-bottom: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.receipt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 16px;
+}
+.receipt-rk {
+  color: var(--e-ink-3);
+  font-size: 14px;
+}
+.receipt-rv {
+  color: var(--e-ink);
+  font-weight: 600;
+  text-align: right;
+}
+.receipt-rv.highlight {
+  color: oklch(88% 0.18 160);
+  font-size: 20px;
+}
+.receipt-rv.link {
+  color: oklch(82% 0.125 220);
+  text-decoration: underline;
+}
+.receipt-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.receipt-item-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 4px 0;
+  border-bottom: 1px dashed oklch(100% 0 0 / 0.08);
+}
+.receipt-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.btn.danger {
+  border-color: oklch(70% 0.16 25 / 0.5);
+  color: oklch(85% 0.16 25);
+}
+.btn.danger:hover {
+  background: oklch(70% 0.16 25 / 0.15);
+  border-color: oklch(75% 0.18 25);
+}
+
+@keyframes receipt-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes receipt-card-rise {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ======================================= Mobile Viewport Responsive (<=768px) */
+@media (max-width: 768px) {
+  html, body {
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+  }
+  .shell {
+    height: auto;
+    min-height: 100vh;
+    padding: 14px 14px 24px;
+    gap: 14px;
+    perspective: none;
+  }
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    transform: none;
+  }
+  .brand h1 {
+    font-size: 22px;
+  }
+  .chipbar {
+    order: 3;
+    width: 100%;
+    margin-left: 0;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .clock {
+    margin-left: auto;
+    transform: none;
+  }
+  .clock .time {
+    font-size: 26px;
+  }
+  .main {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .stage {
+    padding: 18px 16px;
+    transform: none;
+  }
+  .hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    transform: none;
+  }
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .rail {
+    transform: none;
+  }
+  .askrow {
+    overflow-x: auto;
+    padding: 10px 4px;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .receipt-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+  .receipt-title {
+    font-size: 22px;
+  }
+  .receipt-footer {
+    flex-direction: column;
+    width: 100%;
+  }
+  .receipt-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }

@@ -478,3 +478,16 @@ body::after {
     animation: none;
   }
 }
+
+/* Skip link: must be real CSS, not an inline style attribute.
+   The server sends `style-src 'self'`, so inline style="..." is dropped by the
+   browser - which left this link stranded on-screen at left:0. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 8px;
+  z-index: 999;
+}
+.skip-link:focus {
+  left: 8px;
+}

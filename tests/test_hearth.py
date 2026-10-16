@@ -1,7 +1,9 @@
-import os, tempfile
+import os
+import tempfile
+
 os.environ["HEARTH_STATE_DIR"] = tempfile.mkdtemp()
 
-from hearth import sentinel, vault, audit, memory, home_mock, proposals, planner, commerce, brains
+from hearth import audit, brains, commerce, home_mock, memory, planner, proposals, sentinel, vault
 
 
 def test_sentinel_denies_destructive():
@@ -244,7 +246,7 @@ def test_corrupt_audit_reports_false_not_crash():
         f.write("garbage{{{not json\n")
     assert audit.verify() is False
     # tidy: drop the poisoned line so later tests see a valid chain
-    lines = [l for l in log.read_text().splitlines() if not l.startswith("garbage")]
+    lines = [line for line in log.read_text().splitlines() if not line.startswith("garbage")]
     log.write_text("\n".join(lines) + ("\n" if lines else ""))
     assert audit.verify() is True
 
@@ -480,6 +482,23 @@ def test_child_persona_guardrail():
     assert "Child safety" in v_unlock.reason
 
 
+def test_child_persona_draft_never_claims_staged(monkeypatch):
+    """Draft honesty: a blocked child run must say blocked, never 'staged'."""
+    monkeypatch.setenv("HEARTH_ACTIVE_PERSONA", "leo")
+    # Hermetic tray: earlier tests may have staged the same titles as pending,
+    # which would skip proposing entirely and mask the denial path.
+    monkeypatch.setattr(proposals, "list_proposals", lambda *a, **k: [])
+    for goal in ("buy a 4K gaming drone right now",
+                 "audit household renewals and stage dormant subscription cancellations",
+                 "unlock the front door"):
+        out = planner.plan(goal)
+        assert out.get("proposals_created", []) == [], goal
+        draft = out.get("draft", "")
+        assert "Tap Approve" not in draft, (goal, draft[:200])
+        assert "Cart Checkout Card" not in draft, (goal, draft[:200])
+        assert "Blocked by the safety contract" in draft, (goal, draft[:200])
+
+
 def test_mcp_apps_generation():
     roi_app = planner.TOOLS["mcp_app_subscription_roi"]["handler"]({})
     assert roi_app["app_id"] == "mcp_app_subscription_roi"
@@ -700,5 +719,36 @@ def test_planner_bundle_and_delivery_and_arbiter_dags():
     p_arb = planner.plan("negotiate temperature conflict between Alex at 19.5 and Sarah at 23.5 and Leo at 21.0")
     assert p_arb["intent"] == "FAMILY_ARBITER"
     assert any(s["tool"] == "family_arbiter_resolve" for s in p_arb["dag"])
+
+
+def test_planner_natural_language_robustness():
+    """Verify that natural queries for streaming services, pantry checks, child blocks, and untracked items behave robustly."""
+    from hearth import planner, proposals
+    proposals.clear_proposals()
+
+    # 1. Unscripted streaming subscription audit
+    p_stream = planner.plan("Can you check if there are any streaming services we are paying for but not watching?")
+    assert p_stream["intent"] == "FINANCIAL_OPTIMIZATION"
+    assert "StreamBox 4K" in p_stream["draft"]
+    assert any(s["tool"] == "inbox_scan" for s in p_stream["dag"])
+
+    # 2. Pantry stock inquiry for untracked item
+    p_eggs = planner.plan("Are we low on eggs?")
+    assert p_eggs["intent"] == "HOUSEHOLD_COMMERCE"
+    assert "not currently in your tracked" in p_eggs["draft"]
+    assert p_eggs["proposals_created"] == []
+
+    # 3. Child persona prefix gate
+    p_leo = planner.plan("Leo: buy me robux")
+    assert p_leo["proposals_created"] == []
+    assert "Blocked by the safety contract" in p_leo["draft"] or "Leo can't spend" in p_leo["draft"]
+
+    # 4. Untracked item buy request does not stage coffee
+    p_toy = planner.plan("I want to buy a toy")
+    assert p_toy["proposals_created"] == []
+    assert "couldn't find" in p_toy["draft"] and "toy" in p_toy["draft"]
+
+    proposals.clear_proposals()
+
 
 

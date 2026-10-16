@@ -19,9 +19,10 @@ import json
 import os
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from . import atomic, vault
 
@@ -117,7 +118,7 @@ class AgentCoreMemoryStore:
         if not terms:
             return matches
 
-        for sid, turns in self._cache.items():
+        for turns in self._cache.values():
             for turn in turns:
                 text = turn.get("content", "").lower()
                 score = sum(1 for term in terms if term in text)

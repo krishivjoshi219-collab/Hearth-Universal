@@ -1,8 +1,9 @@
-import os, tempfile
+import os
+import tempfile
+
 os.environ["HEARTH_STATE_DIR"] = tempfile.mkdtemp()
 
-from hearth import planner, planner_dag
-from hearth import home_mock
+from hearth import home_mock, planner, planner_dag
 
 
 def test_b1_dag_decomposes():

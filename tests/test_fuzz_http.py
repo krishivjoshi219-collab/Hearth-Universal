@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import os
 import sys
+
 import pytest
 from starlette.testclient import TestClient
 
@@ -169,7 +170,7 @@ class TestPayloadLimitsAndRateHammering:
         # Evict bucket for testclient host
         server._RATE_BUCKETS.clear()
         statuses = []
-        for i in range(server.RATE_LIMIT + 5):
+        for _ in range(server.RATE_LIMIT + 5):
             res = client.post("/api/chat", json={"message": "rate limit hammer test"})
             statuses.append(res.status_code)
 

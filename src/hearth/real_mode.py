@@ -13,11 +13,12 @@ Manages switching between:
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -173,7 +174,7 @@ class RealModeManager:
             self._save()
             return
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 loaded = json.load(f)
             merged = json.loads(json.dumps(ZERO_REAL_CONFIG))
             merged.update(loaded)
@@ -182,10 +183,8 @@ class RealModeManager:
             self._data = json.loads(json.dumps(ZERO_REAL_CONFIG))
 
     def _save(self) -> None:
-        try:
+        with contextlib.suppress(Exception):
             atomic.write_json(self.config_path, self._data)
-        except Exception:
-            pass
 
     def get_mode(self) -> str:
         return self._data.get("mode", "simulation")
@@ -237,7 +236,7 @@ class RealModeManager:
         client_id = creds.get("client_id") or "amzn1.application-oa2-client.hearth-alexa-hub"
         account_name = creds.get("account_name") or "Krishiv Joshi (Amazon Household)"
 
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         
         # Mark logged in
         alexa_cfg = self._data.setdefault("alexa", {})
@@ -299,7 +298,7 @@ class RealModeManager:
             "url": "http://homeassistant.local:8123",
             "token": "{{vault:HASS_LONG_LIVED_TOKEN}}",
             "entities_count": len(self._data["real_devices"]),
-            "last_sync": datetime.now(timezone.utc).strftime("%H:%M:%S UTC"),
+            "last_sync": datetime.now(UTC).strftime("%H:%M:%S UTC"),
         }
 
         self.add_real_event("alexa+", "Alexa.Discovery directive synchronized", {
@@ -326,7 +325,7 @@ class RealModeManager:
         self._save()
 
         audit.append("system", "real_mode_reset_to_zero", {
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now(UTC).isoformat()
         })
         return {
             "ok": True,
@@ -440,7 +439,7 @@ class RealModeManager:
             "cost_delta_yr": p.get("cost_delta_yr", 0.0),
             "status": "pending",
             "mode": "real",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "expires_in": "24h",
             "actions": p.get("actions", []),
         }
@@ -455,7 +454,7 @@ class RealModeManager:
         if not target:
             return {"ok": False, "error": "Proposal not found in Real World registry"}
         target["status"] = "approved" if decision.lower() in ("approve", "proceed") else "rejected"
-        target["decided_at"] = datetime.now(timezone.utc).isoformat()
+        target["decided_at"] = datetime.now(UTC).isoformat()
         self.add_real_event("resident", f"Proposal {decision}: {target['title']}", {"id": pid, "status": target["status"]})
         self._save()
         return {"ok": True, "proposal": target}
@@ -470,8 +469,8 @@ class RealModeManager:
             "actor": actor,
             "action": action,
             "detail": detail or {},
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "time_str": datetime.now().strftime("%I:%M:%S %p"),
+            "timestamp": datetime.now(UTC).isoformat(),
+            "time_str": datetime.now(UTC).strftime("%I:%M:%S %p"),
         }
         events = self._data.setdefault("events", [])
         events.insert(0, ev)

@@ -1,5 +1,6 @@
 """Vault: secrets never reach the model. {{vault:NAME}} placeholders + redaction."""
 from __future__ import annotations
+
 import os
 import re
 
@@ -32,7 +33,7 @@ def redact(text: str) -> str:
     red = PLACEHOLDER_RE.sub("•••", text)
     # AWS / GitHub / Slack / generic private keys
     red = re.sub(r"AKIA[0-9A-Z]{12,}", "AKIA•••", red)
-    red = re.sub(r"aws_secret_access_key\s*[:=]\s*\S+", "aws_secret_access_key •••", red, flags=re.I)
+    red = re.sub(r"aws_secret_access_key\s*[:=]\s*\S+", "aws_secret_access_key •••", red, flags=re.IGNORECASE)
     red = re.sub(r"gh[pousr]_[A-Za-z0-9]{8,}", "gh•••", red)
     red = re.sub(r"xox[bpars]-[A-Za-z0-9\-]{8,}", "xox•••", red)
     red = re.sub(r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]{0,200}?-----END", "•••PRIVATE KEY•••", red)

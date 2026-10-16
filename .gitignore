@@ -22,3 +22,8 @@ htmlcov/
 
 # JetBrains IDE project files (machine-local, never part of the submission)
 .idea/
+
+# Demo production intermediate segments, scratch frames and bulk audio
+demo_production/
+!demo_production/screenshots/
+*.mp4

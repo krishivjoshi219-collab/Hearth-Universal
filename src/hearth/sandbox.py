@@ -4,6 +4,7 @@ This is the "vibe code the app" primitive. Writes/exec are Tier-2: the human cha
 session is the authorization boundary (every call audited); background acts stay read-only.
 """
 from __future__ import annotations
+
 import os
 import re
 import subprocess
@@ -50,7 +51,7 @@ def _jail(rel: str) -> tuple[Path | None, str]:
     if not rel or "\x00" in rel or "%00" in rel.lower() or "%2e" in rel.lower():
         return None, "path must be relative and inside the workspace"
     low = rel.replace("\\", "/")
-    if low.startswith(("/", "~")) or low.startswith("c:/"):
+    if low.startswith(("/", "~", "c:/")):
         return None, "path must be relative and inside the workspace"
     if ".." in Path(low).parts:
         return None, "path must be relative and inside the workspace"
@@ -119,8 +120,9 @@ def execute(cmd: str, timeout: int = EXEC_TIMEOUT) -> dict:
     """Run a command jailed to the workspace root WITHOUT a shell (allowlisted
     binaries only). Shell metachars/pipes are rejected — use explicit argv.
     Audited, capped, timed out."""
-    from . import audit as _audit
     import shlex
+
+    from . import audit as _audit
     cmd = (cmd or "")[:2000].strip()
     if not cmd:
         return {"ok": False, "error": "empty command"}

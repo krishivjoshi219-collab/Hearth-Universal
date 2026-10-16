@@ -5,13 +5,15 @@ dispatch under feeder limit + marginal-contribution dividend split +
 time-varying emission factor. Default fixtures clear at $0.18/kWh.
 """
 from __future__ import annotations
+
 import secrets
 import time
-from typing import Any, Dict, List
+from typing import Any
+
 from . import audit
 
 
-def clear_double_auction(asks: List[Dict[str, Any]], bids: List[Dict[str, Any]]) -> tuple[float, float]:
+def clear_double_auction(asks: list[dict[str, Any]], bids: list[dict[str, Any]]) -> tuple[float, float]:
     """Uniform clearing price at supply/demand intersection; McAfee fallback on gap."""
     sa = sorted(asks, key=lambda a: a["price"])
     sb = sorted(bids, key=lambda b: -b["price"])
@@ -45,14 +47,14 @@ def clear_double_auction(asks: List[Dict[str, Any]], bids: List[Dict[str, Any]])
 
 class NeighborhoodSwarmGrid:
     def __init__(self) -> None:
-        self._last_dispatch: Dict[str, Any] | None = None
+        self._last_dispatch: dict[str, Any] | None = None
 
     def coordinate_microgrid(self, export_kw: float = 3.8,
-                             custom_peers: List[Dict[str, Any]] | None = None,
-                             bids: List[Dict[str, Any]] | None = None,
-                             asks: List[Dict[str, Any]] | None = None,
+                             custom_peers: list[dict[str, Any]] | None = None,
+                             bids: list[dict[str, Any]] | None = None,
+                             asks: list[dict[str, Any]] | None = None,
                              feeder_limit_kw: float = 10.0,
-                             emission_factor_kg_kwh: float = 0.85) -> Dict[str, Any]:
+                             emission_factor_kg_kwh: float = 0.85) -> dict[str, Any]:
         trade_id = f"vpp_{secrets.token_hex(6)}"
         now = int(time.time())
         nodes = custom_peers or [
@@ -125,7 +127,7 @@ class NeighborhoodSwarmGrid:
         self._last_dispatch = result
         return result
 
-    def get_latest_dispatch(self) -> Dict[str, Any]:
+    def get_latest_dispatch(self) -> dict[str, Any]:
         if self._last_dispatch:
             return self._last_dispatch
         return self.coordinate_microgrid()

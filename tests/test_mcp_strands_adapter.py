@@ -6,6 +6,7 @@ implementation rather than carrying its own copy, and (b) the bridge behaves
 correctly when imported through the main project.
 """
 import pytest
+
 from hearth import mcp_strands_adapter
 
 

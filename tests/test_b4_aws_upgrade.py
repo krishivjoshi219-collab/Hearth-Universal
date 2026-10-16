@@ -1,4 +1,5 @@
 """B4 AWS Builder upgrade tests (no live AWS calls -- moto-style mocks only)."""
+import itertools
 import os
 from unittest.mock import MagicMock, patch
 
@@ -36,7 +37,7 @@ def test_b4_router_claude_vs_nova_cross_region():
 
 def test_b4_adaptive_retry_config():
     brains.clear_bedrock_metrics()
-    mock_boto, mock_client = _mock_bedrock()
+    mock_boto, _mock_client = _mock_bedrock()
     fake_config_calls = {}
 
     class FakeConfig:
@@ -69,12 +70,14 @@ def test_b4_graceful_offline_fallback_no_flag_no_creds():
     mock_boto = MagicMock()
     mock_boto.Session.return_value.get_credentials.return_value = None
     mock_boto.client.return_value = MagicMock()
-    with patch.dict(os.environ, {"AWS_BEDROCK_ENABLED": "1", "AWS_BEDROCK_MODEL": "nova-pro"}), \
-         patch.dict("sys.modules", {"boto3": mock_boto, "botocore.config": MagicMock()}):
-        with patch.object(brains, "has_aws_credentials", return_value=False):
-            res = brains._call_bedrock([{"role": "user", "content": "hi"}], 50)
-            assert res.fallback is True
-            assert res.provider == "aws-bedrock-simulated"
+    with (
+        patch.dict(os.environ, {"AWS_BEDROCK_ENABLED": "1", "AWS_BEDROCK_MODEL": "nova-pro"}),
+        patch.dict("sys.modules", {"boto3": mock_boto, "botocore.config": MagicMock()}),
+        patch.object(brains, "has_aws_credentials", return_value=False),
+    ):
+        res = brains._call_bedrock([{"role": "user", "content": "hi"}], 50)
+        assert res.fallback is True
+        assert res.provider == "aws-bedrock-simulated"
 
 
 def test_b4_metrics_shape_latencyMs():
@@ -108,4 +111,4 @@ def test_b4_system_isolation_and_alternation():
     assert kwargs["system"] == [{"text": "You are secure."}]
     roles = [m["role"] for m in kwargs["messages"]]
     assert roles[0] == "user"
-    assert all(a != b for a, b in zip(roles, roles[1:]))
+    assert all(a != b for a, b in itertools.pairwise(roles))

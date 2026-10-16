@@ -4,6 +4,7 @@ Reconstructs WHY a proposal exists, WHAT decided it, and HOW to reverse it —
 from the proposal record + Merkle audit chain. Never mutates state.
 """
 from __future__ import annotations
+
 import json
 from typing import Any
 
@@ -74,9 +75,7 @@ def replay_decision(pid: str) -> dict[str, Any]:
         return {"ok": False, "error": f"Proposal '{pid}' not found"}
     trail = _audit_entries_for(pid)
     if prop.get("ts"):
-        trail = [{"ts": prop["ts"], "actor": "agent",
-                  "action": "proposal_staged",
-                  "hash": None}] + trail
+        trail = [{"ts": prop["ts"], "actor": "agent", "action": "proposal_staged", "hash": None}, *trail]
     status = prop.get("status")
     return {
         "ok": True,

@@ -5,11 +5,12 @@
   "addon": {
     "id": "amzn1.ask.addon.hearth.operations",
     "name": "Hearth Universal Operations Agent",
-    "version": "1.32.0",
+    "version": "1.33.0",
     "shortDescription": "Autonomous proactive home operations, digital twin resilience & pantry optimization.",
     "fullDescription": "Hearth Universal is an Alexa+ Add-on providing game-theoretic household arbitration, 7-day Monte Carlo future resilience forecasting, pantry depletion radar with 15% Subscribe & Save savings, and strict propose-never-execute safety guardrails.",
     "examplePhrases": [
-      "Alexa, ask Hearth to run an energy audit",
+      "Alexa, ask Hearth to save me $800 on renewals",
+      "Alexa, ask Hearth we are out of everything, fix groceries",
       "Alexa, ask Hearth to check the pantry replenishment radar",
       "Alexa, ask Hearth what the Family Arbiter recommends for the thermostat",
       "Alexa, ask Hearth to stage a 7-day weather resilience plan",

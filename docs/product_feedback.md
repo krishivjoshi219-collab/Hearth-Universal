@@ -41,7 +41,7 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 - **AWS Strands Multi-Agent Pattern**:
   - Structuring domain responsibilities into specialized sub-agents (`Arbiter`, `Replenishment`, `Guardian`) under a supervisor pattern dramatically improved plan coherence and reduced prompt token overhead.
 - **Local-First Zero-Config Testing**:
-  - Building an intelligent local offline fallback engine allowed our 272-test suite (`pytest`) to run offline without external network dependencies or API keys.
+  - Building an intelligent local offline fallback engine allowed our 283-test suite (`pytest`, 298 across all packages) to run offline without external network dependencies or API keys.
 
 ---
 
@@ -74,3 +74,10 @@ Track: **Alexa+** | Mini-Challenges: **AWS Builder**, **Open Source**
 
 **YES, absolutely.**
 - **Why**: The convergence of **MCP (Model Context Protocol)**, **AWS Strands Agents SDK**, **Bedrock AgentCore**, and **Amazon Alexa+** marks a genuine paradigm shift in ambient computing. We can now build assistants that proactively solve complex household problems—negotiating family climate conflicts, auditing subscriptions, restocking essentials before stockouts—while strictly guaranteeing safety through the **Propose-Never-Execute** contract and cryptographic SHA-256 Merkle audit receipts.
+
+---
+
+### 6. Feature Requests (optional Devpost field)
+
+1. **Cloud Skill Inspector for Alexa+ Streamable HTTP endpoints** — Priority: **Critical**. Why it matters: today we validate MCP 2025-11-25 against our own simulator; an interactive inspector on developer.amazon.com (send `initialize`/`tools/list`/`tools/call`, render MCP Apps cards) would cut the debug loop from hours to minutes for every Alexa+ builder.
+2. **Centralized Bedrock regional model-ID discovery endpoint** — Priority: **Important**. Why it matters: finding active cross-region inference IDs (Nova vs Claude 3.5 Sonnet v2, `us.*` prefixes) required hunting across doc tables; a single `ListFoundationModels`-style endpoint with region + profile status would remove the top onboarding papercut.

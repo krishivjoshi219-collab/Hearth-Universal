@@ -1,5 +1,6 @@
 """Tests for AWS Strands Multi-Agent SDK and Bedrock AgentCore Memory."""
 import pytest
+
 from hearth import agentcore, strands_agent
 
 
@@ -101,7 +102,7 @@ def test_strands_sdk_status_reports_backend_honestly():
                     reason="strands-agents optional extra not installed")
 def test_real_strands_agents_and_agents_as_tools_are_constructed():
     """The supervisor must build real strands.Agent objects wired with as_tool."""
-    from strands import Agent  # noqa: F401  -- proves the SDK is importable here
+    from strands import Agent
 
     sup = strands_agent.StrandsSupervisor()
     sup._build_sdk_agents()

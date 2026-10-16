@@ -1,5 +1,6 @@
 """Append-only hash-chained audit log. Proves restraint: what was proposed vs executed."""
 from __future__ import annotations
+
 import hashlib
 import hmac
 import json
@@ -136,10 +137,9 @@ def verify() -> bool:
         legacy = hashlib.sha256(body.encode()).hexdigest()
         if _chain_hash(body) != e.get("hash") and legacy != e.get("hash"):
             return False
-        if e.get("prev") != prev:
-            # Rotation checkpoints commit to the archive digest instead of GENESIS.
-            if not (first and str(e.get("prev", "")).startswith("ARCHIVED:")):
-                return False
+        # Rotation checkpoints commit to the archive digest instead of GENESIS.
+        if e.get("prev") != prev and not (first and str(e.get("prev", "")).startswith("ARCHIVED:")):
+            return False
         prev = e["hash"]
         first = False
     return True

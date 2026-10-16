@@ -6,14 +6,16 @@
 """
 import os
 import sys
+
 import pytest
 from starlette.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
-from hearth import forensics, acoustic, mediation, swarm, proposals
 import server
+
+from hearth import acoustic, forensics, mediation, proposals, swarm
 
 
 @pytest.fixture

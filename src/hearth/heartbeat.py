@@ -4,6 +4,7 @@ climate eco-pulses, subscription reorders, perimeter integrity checks) that give
 Hearth Universal its living, proactive intelligence.
 """
 from __future__ import annotations
+
 import copy
 import json
 import os
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from . import home_mock, proposals, commerce, audit
+from . import audit, commerce, home_mock, proposals
 
 STATE_DIR = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
 

@@ -3,6 +3,7 @@ Allows users to scrub through simulated future states (Bedtime, Deep Night, Morn
 to see predictive energy flows, climate shifts, security postures, and replenishment alerts.
 """
 from __future__ import annotations
+
 import time
 
 TIMELINE_PRESETS = {

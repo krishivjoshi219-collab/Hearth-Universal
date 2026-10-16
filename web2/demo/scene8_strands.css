@@ -1,0 +1,347 @@
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1920px;
+    height: 1080px;
+    background: #09090b;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 50px 70px 80px;
+  }
+
+  .top-strip {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 20px;
+  }
+  .brand-group {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .brand-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #a855f7, #7c3aed);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 900;
+    color: white;
+  }
+  .brand-name {
+    font-size: 28px;
+    font-weight: 800;
+  }
+  .brand-sub {
+    font-size: 13px;
+    color: #a1a1aa;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  .badges-row {
+    display: flex;
+    gap: 12px;
+  }
+  .badge {
+    padding: 6px 16px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid;
+  }
+  .badge-purple {
+    background: rgba(168, 85, 247, 0.12);
+    border-color: rgba(168, 85, 247, 0.4);
+    color: #c084fc;
+  }
+  .badge-gold {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.4);
+    color: #f59e0b;
+  }
+
+  /* Two Column Main Body */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+    margin: 20px 0;
+    flex: 1;
+  }
+  .panel {
+    background: rgba(24, 24, 27, 0.7);
+    border-radius: 18px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 14px;
+  }
+  .panel-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-badge {
+    font-size: 12px;
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  /* Left Panel: Strands Supervisor & Agents */
+  .agent-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .agent-node {
+    background: #18181b;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .agent-node.supervisor {
+    border-color: rgba(168, 85, 247, 0.5);
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), #18181b);
+  }
+  .agent-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .agent-desc {
+    font-size: 13px;
+    color: #a1a1aa;
+  }
+  .agent-status {
+    font-size: 12px;
+    font-weight: 700;
+    color: #10b981;
+  }
+
+  /* Right Panel: Open Source Contribution */
+  .code-box {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 18px 22px;
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: #c9d1d9;
+    flex: 1;
+    margin-bottom: 16px;
+  }
+
+  /* Supervisor routing trace - left panel */
+  .trace {
+    margin-top: 18px;
+    background: rgba(88, 166, 255, 0.06);
+    border: 1px solid rgba(88, 166, 255, 0.22);
+    border-radius: 12px;
+    padding: 14px 18px 16px;
+  }
+  .trace-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .trace-title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #79c0ff;
+  }
+  .trace-goal {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+    font-size: 12px;
+    color: #8b949e;
+  }
+  .trace-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .tstep {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #d4d4d8;
+  }
+  .tnum {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+    font-size: 11px;
+    color: #6e7681;
+    width: 20px;
+    flex-shrink: 0;
+  }
+  .tagent {
+    width: 128px;
+    flex-shrink: 0;
+    font-weight: 700;
+    color: #a5d6ff;
+  }
+  .ttext {
+    flex: 1;
+    color: #a1a1aa;
+  }
+  .tok {
+    flex-shrink: 0;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3fb950;
+  }
+
+  .friction-box {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* The friction log body: 6 real entries from docs/friction_logs.md. */
+  .friction-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fl-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 9px 14px;
+  }
+  .fl-num {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+    font-size: 12px;
+    font-weight: 800;
+    color: #f59e0b;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .fl-title {
+    flex: 1;
+    font-size: 15px;
+    color: #d4d4d8;
+    line-height: 1.3;
+  }
+  .fl-title code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, monospace;
+    font-size: 13px;
+    color: #a5d6ff;
+    background: rgba(88, 166, 255, 0.12);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .fl-tag {
+    flex-shrink: 0;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: #79c0ff;
+    background: rgba(121, 192, 255, 0.12);
+    border: 1px solid rgba(121, 192, 255, 0.3);
+    border-radius: 5px;
+    padding: 3px 9px;
+  }
+  .friction-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: #f59e0b;
+  }
+  .friction-sub {
+    font-size: 12px;
+    color: #d4d4d8;
+  }
+
+  /* Bottom Ledger */
+  .ledger-strip {
+    background: rgba(24, 24, 27, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ledger-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .ledger-hash {
+    font-family: ui-monospace, monospace;
+    font-size: 13px;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+
+/* --- generated from former style="" attributes --- */
+.u-color-3fb950-margin-top-10px { color:#3fb950; margin-top:10px; }
+
+.u-color-58a6ff-margin-bottom-6px { color:#58a6ff; margin-bottom:6px; }
+
+.u-color-79c0ff { color:#79c0ff; }
+
+.u-color-8b949e { color:#8b949e; }
+
+.u-color-a1a1aa-margin-left-8px { color:#a1a1aa; margin-left:8px; }
+
+.u-color-a5d6ff { color:#a5d6ff; }
+
+.u-color-ff7b72 { color:#ff7b72; }
+
+.u-color-white { color:white; }
+
+.u-font-size-13px-color-a1a1aa-margin-top-14px { font-size:13px; color:#a1a1aa; margin-top:14px; }
+
+.u-font-size-18px { font-size:18px; }
+
+.u-font-size-22px { font-size:22px; }
+
+.u-margin-6px-0 { margin:6px 0; }

@@ -1,8 +1,10 @@
 """Integration tests for new creative MCP tools and REST endpoints."""
+import os
+import sys
+
 import pytest
 from starlette.testclient import TestClient
 
-import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 import server
 

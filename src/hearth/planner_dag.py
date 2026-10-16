@@ -5,6 +5,7 @@ no keys required. Gating: unlock/order paths return approval_required
 via propose-never-execute (never executes directly).
 """
 from __future__ import annotations
+
 import json
 import os
 import time
@@ -241,9 +242,9 @@ def orchestrate(goal: str, session_id: str | None = None) -> dict:
     proposal instead of executing.
     """
     # Lazy imports to avoid circulars at module load.
+    from . import audit as _audit
     from . import planner as _planner
     from . import sentinel as _sentinel
-    from . import audit as _audit
 
     spec = decompose_goal(goal)
     sid = session_id or f"ses_{uuid.uuid4().hex[:8]}"
@@ -313,8 +314,7 @@ def orchestrate(goal: str, session_id: str | None = None) -> dict:
         # resume: keep prior history under session["history"]
         prev = store.get(sid, {})
         if prev:
-            session["history"] = prev.get("history", []) + [
-                {"goal": prev.get("goal"), "status": prev.get("status")}]
+            session["history"] = [*prev.get("history", []), {"goal": prev.get("goal"), "status": prev.get("status")}]
         store[sid] = session
         _save_all(store)
     except Exception:

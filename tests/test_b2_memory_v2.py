@@ -1,4 +1,5 @@
 """B2: context-aware memory v2 + Family Arbiter + goals tests (zero-config)."""
+import contextlib
 import importlib
 import os
 import sys
@@ -12,9 +13,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 def iso(tmp_path, monkeypatch):
     """Isolated STATE_DIR with freshly reloaded hearth modules."""
     monkeypatch.setenv("HEARTH_STATE_DIR", str(tmp_path))
-    import hearth.memory as memory
-    import hearth.goals as goals
     import hearth.family as family
+    import hearth.goals as goals
+    import hearth.memory as memory
     importlib.reload(memory)
     importlib.reload(goals)
     importlib.reload(family)
@@ -23,10 +24,8 @@ def iso(tmp_path, monkeypatch):
     # restore default state dir binding for other test modules
     monkeypatch.delenv("HEARTH_STATE_DIR", raising=False)
     for mod in (memory, goals, family):
-        try:
+        with contextlib.suppress(Exception):
             importlib.reload(mod)
-        except Exception:
-            pass
 
 
 class types:

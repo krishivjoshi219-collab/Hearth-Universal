@@ -110,8 +110,8 @@ def test_type_scale_is_much_larger_than_the_ops_cockpit():
 def test_touch_targets_meet_echo_minimum():
     css = _read(ECHO_CSS)
     # .btn (tray actions + mic) and .ask (phrase chips) are the touch surface.
-    btn = re.search(r"\.btn\s*\{[^}]*min-height:\s*(\d+)px", css, re.S)
-    ask = re.search(r"\.ask\s*\{[^}]*min-height:\s*(\d+)px", css, re.S)
+    btn = re.search(r"\.btn\s*\{[^}]*min-height:\s*(\d+)px", css, re.DOTALL)
+    ask = re.search(r"\.ask\s*\{[^}]*min-height:\s*(\d+)px", css, re.DOTALL)
     assert btn and ask, "expected min-height on .btn and .ask"
     assert int(btn.group(1)) >= 64
     assert int(ask.group(1)) >= 64
@@ -153,15 +153,52 @@ SHOWCASE = [
      ["covenants", "fairness_index_out_of_10", "nash_achievement",
       "cooperation_coverage_pct", "envy_gap", "projected_monthly_savings_usd"]),
     ("/api/acoustic/scan", {}, ["appliances", "voice_summary"]),
+    ("/api/commerce/autopilot-checkout",
+     {"utterance": "we are out of everything, fix groceries", "voice_confidence": 0.95},
+     ["proposal", "cart_preview", "message"]),
+    ("/api/renewals", {},
+     ["renewals", "potential_save_yr", "total_annual_spend"]),
+    ("/api/renewals/stage", {"id": "sub_streambox"},
+     ["ok", "staged", "proposal", "message"]),
 ]
+
+
+def test_echo_tray_approve_undo_roundtrip(client):
+    """The video's central action must work from the Echo surface's own endpoints."""
+    stage = client.post("/api/renewals/stage", json={"id": "sub_gamepass"}).json()
+    assert stage.get("staged") is True
+    pid = stage["proposal"]["id"]
+    tray = client.get("/api/proposals?limit=20").json()
+    assert any(p["id"] == pid and p["status"] == "pending" for p in tray["proposals"])
+    assert tray["pending_count"] >= 1
+    dec = client.post(f"/api/proposals/{pid}/decide", json={"approved": True}).json()
+    assert dec.get("ok", True) is not False
+    und = client.post(f"/api/proposals/{pid}/undo", json={}).json()
+    assert und.get("ok") is True
+
+
+def test_cockpit_persona_switch_drives_guardrail(client):
+    """Switching to Leo in the cockpit must actually engage the child guardrail
+    on chat turns (persona bridge), not just relabel the header."""
+    r = client.post("/api/persona", json={"id": "child"})
+    assert r.status_code == 200
+    try:
+        out = client.post("/api/chat", json={"message": "unlock the front door"}).json()
+        assert out.get("proposals_created", []) == []
+        assert "Blocked by the safety contract" in out.get("draft", "")
+        out2 = client.post("/api/chat", json={"message": "buy Robux"}).json()
+        assert out2.get("proposals_created", []) == []
+        assert "Blocked by the safety contract" in out2.get("draft", "")
+        stage_blocked = client.post("/api/renewals/stage", json={"id": "sub_streambox"})
+        assert stage_blocked.status_code == 403
+        assert stage_blocked.json().get("blocked") is True
+    finally:
+        client.post("/api/persona", json={"id": "admin"})
 
 
 def _showcase_buttons():
     html = _read(ECHO_HTML)
-    out = []
-    for m in re.finditer(r'<button class="ask"[^>]*data-go="([^"]+)"[^>]*data-body=\'([^\']*)\'', html):
-        out.append((m.group(1), json.loads(m.group(2))))
-    return out
+    return [(m.group(1), json.loads(m.group(2))) for m in re.finditer(r'<button class="ask"[^>]*data-go="([^"]+)"[^>]*data-body=\'([^\']*)\'', html)]
 
 
 def test_every_showcase_button_maps_to_a_tested_endpoint():
@@ -213,6 +250,27 @@ def test_supporting_endpoints_used_by_the_surface_respond(client):
     assert client.post("/api/chat", json={"message": "home state"}).status_code == 200
     assert client.get("/api/audit?limit=3").status_code == 200
     assert client.get("/health").status_code == 200
+
+
+def test_echo_child_persona_blocks_autopilot_checkout(client):
+    """Switching to Leo must block voice checkout with a clear guardrail verdict."""
+    client.post("/api/persona", json={"id": "child"})
+    try:
+        r = client.post("/api/commerce/autopilot-checkout",
+                        json={"utterance": "we are out of everything, fix groceries", "voice_confidence": 0.95})
+        assert r.status_code == 200
+        d = r.json()
+        assert d.get("blocked") is True
+        assert "Leo" in d.get("message", "")
+        assert d.get("proposal") is None
+    finally:
+        client.post("/api/persona", json={"id": "admin"})
+
+
+def test_echo_html_declares_persona_toggle():
+    html = _read(ECHO_HTML)
+    assert 'id="personaToggleBtn"' in html
+    assert 'data-persona="admin"' in html
 
 # ---------------------------------------------------------------------------
 # Atmosphere + performance discipline
@@ -275,7 +333,7 @@ def test_grain_avoids_full_viewport_blend_mode():
     grain_rule = grain_rule[:grain_rule.index("}")]
     # Strip comments first: the rule's own comment explains why blend mode is
     # avoided, and mentions it by name.
-    grain_decls = re.sub(r"/\*.*?\*/", "", grain_rule, flags=re.S)
+    grain_decls = re.sub(r"/\*.*?\*/", "", grain_rule, flags=re.DOTALL)
     assert "mix-blend-mode" not in grain_decls, (
         ".grain must not use mix-blend-mode; plain low-opacity is visually "
         "equivalent on a near-black base and far cheaper"

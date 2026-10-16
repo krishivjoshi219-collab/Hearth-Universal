@@ -1,14 +1,16 @@
 """Tests for the 8th innovation: Autopilot Checkout (voice-to-tray + proactive + glass receipt)."""
 import os
 import sys
+
 import pytest
 from starlette.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
-from hearth import commerce, proposals, heartbeat, planner, planner_dag, agent_skills
 import server
+
+from hearth import agent_skills, commerce, heartbeat, planner, planner_dag, proposals
 
 
 @pytest.fixture
@@ -102,8 +104,9 @@ class TestResourcesManifest:
     def test_tray_resource(self, client):
         commerce.build_autopilot_checkout(utterance="reorder coffee")
         # resources are mounted on the MCP app; exercise via direct import
-        from server import checkout_tray
         import json
+
+        from server import checkout_tray
         tray = json.loads(checkout_tray())
         assert "pending" in tray
         assert len(tray["pending"]) >= 1

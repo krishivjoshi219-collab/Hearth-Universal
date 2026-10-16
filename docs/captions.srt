@@ -1,0 +1,54 @@
+1
+00:00:00,500 --> 00:00:18,900
+Every family pays for subscriptions
+nobody uses. And every parent fears an
+AI that orders, or unlocks, without
+asking. Hearth is the Alexa Plus agent
+that found eight hundred dollars of
+waste in our home, and cannot spend one
+dollar until you tap once.
+
+2
+00:00:18,900 --> 00:00:56,700
+Watch. Alexa, ask Hearth to save me 800
+dollars. She audits five subscriptions
+live. StreamBox dormant sixty-eight
+days, Metro Fitness one visit in forty-
+five, Cloud Gaming untouched. Three
+cards: eight hundred three dollars and
+seventy-six cents a year. I stage one.
+Nothing is cancelled. I tap Approve.
+Sealed receipt. I tap Undo. Money back.
+Nothing moved until I tapped. Everything
+undoes.
+
+3
+00:00:56,700 --> 00:01:21,600
+Same contract for groceries. We are out
+of everything. Fix groceries. Coffee
+empties in two days. Five items, fifteen
+percent Subscribe and Save, Prime slot
+tomorrow eight to eleven. Still nothing
+ordered. One tap approves. One tap
+undoes. This maps straight onto Alexa
+Plus checkout and Subscribe and Save.
+
+4
+00:01:21,600 --> 00:01:35,800
+Leo cannot spend or unlock. By design,
+not by prompt. And at 3am Hearth does
+not scream sensor open. It proves why.
+Wind, pressure drop, zero thermal
+signatures. Intruder disproved, proof
+sealed.
+
+5
+00:01:35,800 --> 00:01:59,500
+Real Strands Agents SDK. Bedrock
+AgentCore memory. Fifty-one MCP tools
+over Streamable HTTP. Agent Skills. And
+our open-source Strands-to-MCP adapter.
+Clone, one script, no keys, no device.
+Hearth: Alexa that saves you eight
+hundred dollars, and never spends one
+without you. Thank you.

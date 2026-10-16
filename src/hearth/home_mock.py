@@ -3,6 +3,7 @@ Provides full multi-room simulation: living room, master bedroom, kitchen, entry
 Features lighting controls, HVAC climate, smart lock, ambient media, and real-time energy telemetry.
 """
 from __future__ import annotations
+
 import copy
 import json
 import os

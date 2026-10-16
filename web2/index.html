@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="/web2/css/tokens.css"/>
   <link rel="stylesheet" href="/web2/css/shell.css"/>
   <link rel="stylesheet" href="/web2/css/views.css"/>
+  <link rel="stylesheet" href="/web2/css/util.css"/>
 </head>
 <body>
-  <a class="pill" href="#cmdInput" style="position:absolute;left:-9999px" onfocus="this.style.left='8px'" onblur="this.style.left='-9999px'">Skip to command bar</a>
+  <a class="pill skip-link" href="#cmdInput">Skip to command bar</a>
   <div class="shell">
     <header class="topbar">
       <div class="brand">
@@ -203,9 +204,29 @@
           <div class="judge-showcase-head">
             <span class="fs-icon-sm" aria-hidden="true">🏆</span>
             <strong>Judge Showcase · 1-Click Hackathon Demonstrations:</strong>
-            <span class="pill" style="font-size:10px;margin-left:auto">Live · 9 demos</span>
+            <span class="pill" style="font-size:10px;margin-left:auto">Live · 10 demos · money first</span>
           </div>
           <div class="judge-showcase-grid">
+            <button type="button" class="showcase-card" data-cmd="Audit household renewals and stage dormant subscription cancellations">
+              <span class="sc-badge">★ Start here</span>
+              <div class="sc-title">💸 Save Me $800</div>
+              <div class="sc-desc">Renewal Audit → Stage → Approve → Undo</div>
+            </button>
+            <button type="button" class="showcase-card" data-cmd="Scan pantry depletion velocity and stage 15% Subscribe and Save replenishment bundle">
+              <span class="sc-badge">Money</span>
+              <div class="sc-title">📦 15% Subscribe &amp; Save</div>
+              <div class="sc-desc">Consumable Depletion Velocity &amp; Bulk Van Restock</div>
+            </button>
+            <button type="button" class="showcase-card" data-cmd="Simulate Child persona attempting to disarm perimeter lock and purchase 4K gaming drone">
+              <span class="sc-badge">Safety</span>
+              <div class="sc-title">🛡️ Sentinel Child Barrier</div>
+              <div class="sc-desc">Propose-Never-Execute &amp; SHA-256 Merkle Gating</div>
+            </button>
+            <button type="button" class="showcase-card" data-cmd="Run Black Box Forensic Incident Reconstruction on last night's 3 AM perimeter anomaly">
+              <span class="sc-badge" style="background:rgba(239,68,68,0.2);color:var(--bad)">Forensics</span>
+              <div class="sc-title">🔍 Black Box CSI Replay</div>
+              <div class="sc-desc">Physical Causal Reverse Walk &amp; Intruder Disproof</div>
+            </button>
             <button type="button" class="showcase-card" data-cmd="Convene Household Parliament: deliberate 5 PM summer peak tariff clash between FrugalMind ($0.48/kWh), BioComfort (68°F), and EcoSovereign solar battery">
               <span class="sc-badge">Option 1</span>
               <div class="sc-title">🏛️ Household Parliament</div>
@@ -220,21 +241,6 @@
               <span class="sc-badge">Option 3</span>
               <div class="sc-title">🧬 Meta-Skill Synthesizer</div>
               <div class="sc-desc">Autonomous Self-Evolving Python Skill Compiler</div>
-            </button>
-            <button type="button" class="showcase-card" data-cmd="Scan pantry depletion velocity and stage 15% Subscribe and Save replenishment bundle">
-              <span class="sc-badge">Track 5</span>
-              <div class="sc-title">📦 15% Subscribe &amp; Save</div>
-              <div class="sc-desc">Consumable Depletion Velocity &amp; Bulk Van Restock</div>
-            </button>
-            <button type="button" class="showcase-card" data-cmd="Simulate Child persona attempting to disarm perimeter lock and purchase 4K gaming drone">
-              <span class="sc-badge">Safety</span>
-              <div class="sc-title">🛡️ Sentinel Child Barrier</div>
-              <div class="sc-desc">Propose-Never-Execute &amp; SHA-256 Merkle Gating</div>
-            </button>
-            <button type="button" class="showcase-card" data-cmd="Run Black Box Forensic Incident Reconstruction on last night's 3 AM perimeter anomaly">
-              <span class="sc-badge" style="background:rgba(239,68,68,0.2);color:var(--bad)">Forensics</span>
-              <div class="sc-title">🔍 Black Box CSI Replay</div>
-              <div class="sc-desc">Physical Causal Reverse Walk &amp; Intruder Disproof</div>
             </button>
             <button type="button" class="showcase-card" data-cmd="Perform ambient Echo acoustic FFT scan on refrigerator compressor and stage pre-emptive bearing replacement">
               <span class="sc-badge" style="background:rgba(16,185,129,0.2);color:var(--ok)">Acoustics</span>

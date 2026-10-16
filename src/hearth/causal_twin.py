@@ -67,7 +67,7 @@ class SimulationResult:
 
 def tou_price(hour: int, heatwave: bool = False) -> float:
     """Time-of-use tariff: off .12 (22-6h), mid .28, peak .48-.58 (16-20h)."""
-    if 22 <= hour or hour < 6:
+    if hour >= 22 or hour < 6:
         p = 0.12
     elif 16 <= hour <= 20:
         p = 0.52
@@ -118,7 +118,7 @@ class CausalDigitalTwinEngine:
 
     def __init__(self, seed: int | None = None) -> None:
         env_seed = os.environ.get("HEARTH_SEED")
-        self.random_seed = int(seed if seed is not None else (env_seed if env_seed else 42))
+        self.random_seed = int(seed if seed is not None else (env_seed or 42))
 
     def run_simulation(self, days_ahead: int = 7, iterations: int = 250, seed: int | None = None) -> SimulationResult:
         t_start = time.time()
@@ -149,7 +149,7 @@ class CausalDigitalTwinEngine:
             cost_m = 0.0
             peak_seen = False
             brown = False
-            for d in range(days_ahead):
+            for _d in range(days_ahead):
                 # Truncated normal outdoor temp
                 t_base = 86.0 + heatwave_bias + rnd.gauss(0, 4.5)
                 t_base = max(60.0, min(108.0, t_base))
@@ -196,19 +196,30 @@ class CausalDigitalTwinEngine:
         prob_brown = round(brownouts / iterations * 100, 1)
         q_base = _quantiles_cvar(daily_cost_base)
         q_mit = _quantiles_cvar(daily_cost_mit)
-        avg_save = max(0.0, sum(b - m for b, m in zip(daily_cost_base, daily_cost_mit)) / iterations)
+        avg_save = max(0.0, sum(b - m for b, m in zip(daily_cost_base, daily_cost_mit, strict=False)) / iterations)
         avg_base = sum(daily_cost_base) / iterations
         avg_mit = sum(daily_cost_mit) / iterations
 
         # Pantry stockout probs with weekend acceleration (triangular-ish)
-        critic: list[dict[str, Any]] = []
-        for item in (depletion_items or [])[:3]:
-            dl = float(item.get("days_until_empty", 3))
-            if dl <= days_ahead:
-                accel = rnd.triangular(1.0, 1.3, 1.15)
-                eff_dl = dl / accel
-                prob = min(98.5, max(50.0, (1.0 - eff_dl / days_ahead) * 100 + rnd.uniform(5, 15)))
-                critic.append({"item": item.get("name", "Staple"), "days_left": dl, "prob_stockout": round(prob, 1)})
+        critic: list[dict[str, Any]] = [
+            {
+                "item": item.get("name", "Staple"),
+                "days_left": float(item.get("days_until_empty", 3)),
+                "prob_stockout": round(
+                    min(
+                        98.5,
+                        max(
+                            50.0,
+                            (1.0 - (float(item.get("days_until_empty", 3)) / rnd.triangular(1.0, 1.3, 1.15)) / days_ahead) * 100
+                            + rnd.uniform(5, 15),
+                        ),
+                    ),
+                    1,
+                ),
+            }
+            for item in (depletion_items or [])[:3]
+            if float(item.get("days_until_empty", 3)) <= days_ahead
+        ]
 
         signals: list[VulnerabilitySignal] = []
         if prob_tariff > 20:
@@ -236,14 +247,16 @@ class CausalDigitalTwinEngine:
                 contingency_action="Pre-cool at 14:00 solar; shift laundry to 22:30 off-peak $0.12/kWh",
                 p90=q_base["p90"], cvar=q_base["cvar95"], model="tou/rc",
             ))
-        for pv in critic:
-            signals.append(VulnerabilitySignal(
+        signals.extend(
+            VulnerabilitySignal(
                 hazard_type="pantry_depletion", probability_pct=pv["prob_stockout"],
                 timeframe=f"Within {pv['days_left']} days", impact_severity="medium",
                 root_cause=f"Consumption velocity of {pv['item']} exhausts supply (weekend accel)",
                 contingency_action=f"Bundle {pv['item']} into 15% S&S for Thursday delivery",
                 model="depletion",
-            ))
+            )
+            for pv in critic
+        )
 
         plans = [
             {"title": "Grid Surge Pre-Cool & Battery Reserve Shield",

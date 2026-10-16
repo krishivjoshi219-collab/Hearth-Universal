@@ -5,10 +5,12 @@ Use this document to quickly fill out the official **"Enter a Submission"** form
 ---
 
 ### Project Title
-**Hearth Universal — The Open Glass-Box Agent for Alexa+**
+**Hearth Universal — Tell Alexa "Save Me $800." She Proposes. You Tap Once. She Never Spends Without You.**
 
-### Tagline / Short Description (1-2 Sentences)
-An open-source, proactive personal operations agent for Amazon Alexa+ built on MCP 2025-11-25 Streamable HTTP. Features an AWS Strands multi-agent supervisor, Bedrock AgentCore persistent memory, multi-room digital twin orchestration, and Subscribe & Save replenishment under a strict propose-never-execute safety contract.
+### Tagline / Short Description (1-2 Sentences, keep Devpost tagline field ≤140 chars)
+Tell Alexa "Save Me $800." She finds $803.76/yr waste, proposes, you tap once — never spends $1 without you.
+
+Full short description: proactive agentic workflows (audit → propose → 1-tap approve → 1-tap undo) on MCP 2025-11-25 Streamable HTTP, with Strands multi-agent + Bedrock memory + MCP Apps cards under a Propose-Never-Execute safety contract.
 
 ---
 
@@ -21,18 +23,29 @@ An open-source, proactive personal operations agent for Amazon Alexa+ built on M
 
 ### Links & Video
 - **GitHub Repository URL**: `https://github.com/krishivjoshi219-collab/Hearth-Universal`  
-  *(Public repository with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar`)*
-- **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(See `docs/demo_video_script.md` for the exact storyboard)*
+  *(Public repository with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar` — add Oct 22, invites expire in 7 days)*
+- **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(See `docs/demo_video_script.md` for the exact storyboard. Must be Public + "Not for Kids", <3:00)*
+- **Try It Out URL**: `<deployed /echo URL — see battleplan>` *(fallback: clone + `./demo.sh`)*
+- **Built With tags**: `alexa-plus`, `mcp`, `streamable-http`, `strands-agents`, `bedrock`, `agentcore`, `nova`, `mcp-apps`, `agent-skills`, `oauth-2.1`, `fastapi`, `python`, `subscribe-and-save`, `echo-show`
+- **Thumbnail**: 3:2 JPG/PNG/GIF ≤5MB — Echo Show tray card with "$803.76/yr found" + big Approve button, not the logo.
 
 ---
 
 ### Devpost Project Description (Markdown)
 
 ```markdown
-## 💡 Inspiration
-Today's voice assistants are often trapped in two extremes: either they are basic trivia bots that execute single-turn commands, or they are closed "black-box" agents that lack transparent safety boundaries. Households want an assistant that proactively solves real problems—auditing forgotten recurring subscriptions, restocking essentials before they run out, and adjusting home climate when someone arrives early. But nobody wants an autonomous agent that silently charges their card, orders unwanted items, or unlocks doors without clear, transparent verification.
+## ⏱️ If you have 60 seconds (the whole product)
+Tap **"Save me $800"** → 3 waste cards ($803.76/yr in our demo household) → **Stage** → **Approve** → sealed receipt → **Undo**. Then tap **"Fix groceries"** → 5-item Subscribe & Save cart → Approve → Undo. Switch to Leo (9) → orders + unlocks blocked. Everything below is the engine room behind those 60 seconds.
 
-We built **Hearth Universal** to deliver the next generation of ambient intelligence for **Amazon Alexa+**: an autonomous, multi-agent operations agent built on the official **Model Context Protocol (MCP 2025-11-25)** over Streamable HTTP that operates under an uncompromising principle: **Propose-Never-Execute**.
+## 💡 Inspiration — the $803 bill every family pays
+
+Every family knows this bill: $239 for StreamBox nobody opened in 68 days. $30/mo for a gym nobody visits. A 9-year-old yelling "Alexa, buy Robux!" at 9pm. And black-box agents that either do nothing — or silently charge your card and unlock your door.
+
+We built **Hearth Universal** for **Alexa+** around one rule families instantly trust: **Propose-Never-Execute. Nothing moves money or locks without your tap. Every action undoes in one tap.**
+
+Say *"Alexa, save me $800 on renewals"* → she audits 5 subscriptions, finds **$803.76/yr** waste, stages 3 cards with exact before/after diffs → you tap once → SHA-256 receipt sealed. Say *"restock coffee"* → 15% Subscribe & Save cart staged, Prime slot booked, still nothing ordered until you tap. Switch to Leo (9) → orders + unlocks hard-blocked with a kind "ask a grown-up" card.
+
+Under that 60-second magic is real Alexa+ tech: self-hosted MCP 2025-11-25 Streamable HTTP (51 tools live), Strands multi-agent supervisor, Bedrock memory, MCP Apps cards, Agent Skills — all offline-first so a judge can run it with zero keys.
 
 ---
 
@@ -78,6 +91,16 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 - Implements the official **Alexa+ Agent Skills** specification (`skill/agent_skills_manifest.json`) for declarative skill discovery and capability handshakes.
 - Publishes **[`mcp-strands-adapter`](open-source-contribution/mcp-strands-adapter/)**: a standalone Apache-2.0 library exposing AWS Strands agents and tools *as* MCP 2025-11-25 tools over Streamable HTTP — the direction the Strands SDK does not cover. Reuses the SDK's `tool_spec`, reshapes `inputSchema.json` into MCP's flat `inputSchema`, and adapts `AgentTool.stream()` to synchronous `tools/call`.
 
+### 8. Modular Home Resilience & Extension Engines (Appendix)
+Beyond financial waste auditing and Subscribe & Save replenishments, Hearth provides modular resilience extensions operating under the same Propose-Never-Execute safety contract:
+- **Acoustic Mechanical Doctor**: Echo ambient FFT vibration diagnostics detecting refrigerator bearing wear and staging replacement parts before breakdown (`acoustic.py`).
+- **Black Box Forensic Reconstruction (Home CSI)**: Reverse causal physical walk disproving perimeter break-in false alarms from sensor telemetry (`forensics.py`).
+- **Household Parliament (Dialectic Deliberation)**: Cooperative Nash bargaining resolving multi-resident comfort vs. peak energy tariff conflicts (`parliament.py`).
+- **Causal Digital Twin (7-Day Stochastic Forecast)**: 150-iteration forward Monte Carlo thermal dynamics simulation anticipating grid vulnerabilities (`causal_twin.py`).
+- **Confidential Family Mediation**: Zero-knowledge domestic treaty synthesizer with salted covenants for domestic harmony (`mediation.py`).
+- **Neighborhood Swarm Grid (VPP)**: Localized solar peer-to-peer trading at $0.18/kWh over Streamable HTTP (`swarm.py`).
+- **Autopilot Checkout & Time-Travel Debugger**: Voice-to-tray staging with Merkle receipts, 1-tap undo, and non-mutating decision replay (`replay.py`).
+
 ---
 
 ## ⚙️ How We Built It
@@ -87,17 +110,33 @@ We built **Hearth Universal** to deliver the next generation of ambient intellig
 - **Bedrock AgentCore (`src/hearth/agentcore.py`)**: Persistent session turns and cross-session episodic context retrieval.
 - **Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers.
 - **Official Rubric Evaluator (`scripts/evaluate_rubric.py`)**: 1-second automated verification across all competition rubrics.
-- **Testing & Verification**: 272 automated unit, regression, contract, auth, UI-contract, and smoke tests passing.
+- **Testing & Verification**: 290 automated unit, regression, contract, auth, UI-contract, and smoke tests passing (+15 open-source adapter tests = 305 total, 100% pass rate).
 
 ---
 
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **272 Automated Tests**: 100% pass rate.
+- **290 Automated Tests (+15 adapter = 305 Total)**: 100% pass rate with high test coverage.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Open Source Contribution**: `mcp-strands-adapter` covers the direction the SDK does not ship — exposing Strands agents *as* MCP tools, reusing the SDK's own `tool_spec` rather than re-deriving schemas. Apache-2.0, 15 standalone tests, real `mcp` and `strands-agents` dependencies declared honestly.
+
+---
+
+## 🚧 Challenges we ran into
+
+- **Stateless session headers**: FastMCP in `stateless_http` mode tripped on proxy-injected `Mcp-Session-Id` — fixed with a session-tolerant middleware (see friction log #2, +10% bonus filed).
+- **Bedrock region IDs**: cross-region inference needs `us.`-prefixed model IDs that docs bury — normalized with automatic prefixing + offline fallback (friction log #3).
+- **Draft honesty**: our narrator once claimed "staged" for actions the guardrail blocked. Fixed at all 8 propose sites + locked with `test_child_persona_draft_never_claims_staged` — denials now read as denials.
+
+---
+
+## 🔮 What's next (beyond the hackathon)
+
+1. **Live pilot**: 50-home beta on the deployed URL measuring $ saved, tap-to-approve rate, and undo rate.
+2. **UCP checkout**: graduate the tray from staged proposals to Alexa+ Universal Commerce Protocol checkout sessions with dual-wallet.
+3. **Utility + insurer channels**: peak-tariff shifting (TOU) and verified benign-alarm proofs as paid APIs — the trust layer makes autonomy sellable.
 ```
 
 ---

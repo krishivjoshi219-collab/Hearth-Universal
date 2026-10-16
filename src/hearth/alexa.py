@@ -12,11 +12,13 @@ Provides native compliance with the Alexa Smart Home API:
 Enables zero-friction integration with Alexa Voice Service (AVS) and Alexa Skills Kit (ASK).
 """
 from __future__ import annotations
+
+import contextlib
 import time
 import uuid
 from typing import Any
 
-from . import home_mock, proposals, audit
+from . import audit, home_mock, proposals
 
 
 def _make_header(namespace: str, name: str, correlation_token: str = "") -> dict[str, Any]:
@@ -1045,10 +1047,8 @@ def simulate_voice_turn(utterance: str, correlation_token: str = "") -> dict[str
     _emit_react("thought", f"Heard: {utterance[:140]}", {"utterance": utterance})
     directive = _parse_utterance_to_directive(utterance)
     if correlation_token:
-        try:
+        with contextlib.suppress(KeyError, TypeError):
             directive["directive"]["header"]["correlationToken"] = correlation_token
-        except (KeyError, TypeError):
-            pass
     emit_light_wave("thinking")
     header = directive.get("directive", {}).get("header", {})
     _emit_react("action", f"{header.get('namespace')}.{header.get('name')}",

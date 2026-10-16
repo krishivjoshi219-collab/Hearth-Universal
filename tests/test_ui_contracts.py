@@ -158,7 +158,7 @@ def test_every_data_field_app_js_reads_is_a_known_identifier(client):
         "utility_sell_rate_usd_kwh", "vote", "why",
     }
     returned = set()
-    for method, path, fields_ in UI_CONTRACTS.values():
+    for method, path, _fields in UI_CONTRACTS.values():
         resp = client.post(path, json=META_SKILL_BODY if "meta-skills" in path else {}) \
             if method == "POST" else client.get(path)
         if resp.status_code == 200:

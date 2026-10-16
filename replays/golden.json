@@ -1,5 +1,5 @@
 {
-  "git_sha": "367f7b1",
+  "git_sha": "06329c0",
   "protocol": "2025-11-25",
   "seed": 42,
   "values": {
@@ -53,10 +53,10 @@
     },
     "mediation": {
       "covenants": 3,
-      "envy_gap": 0.023,
-      "fairness": 9.76,
-      "nash": 0.6994,
-      "savings_mo": 48.8
+      "envy_gap": 0.101,
+      "fairness": 9.19,
+      "nash": 9.8499,
+      "savings_mo": 35.25
     },
     "parliament": {
       "candidates": 150,

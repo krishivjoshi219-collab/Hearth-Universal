@@ -118,7 +118,7 @@ Per the official hackathon rules:
 Hearth Universal utilized Kiro Crew for:
 1. **Agentic Scaffolding**: Structured the multi-agent supervisor pattern, FastMCP Streamable HTTP protocol wrappers, and Sentinel security layers.
 2. **Adversarial Red-Teaming**: Synthesized boundary conditions for shell command jails, path traversal escapes, and vault token exfiltration vectors.
-3. **Automated Verification**: Engineered the pytest suite, now **272 tests passing in ~55s**.
+3. **Automated Verification**: Engineered the pytest suite, now **289 tests passing in ~88s** (304 across all packages).
 
 > **Note on evidence:** our local Kiro Crew working directory is `.kilo/`, which is gitignored, so
 > this repository carries no committed artefact of the Kiro configuration. If the panel asks for

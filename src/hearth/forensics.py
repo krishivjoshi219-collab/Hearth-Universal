@@ -6,10 +6,12 @@ equipment power starvation. Real orifice + wind-load + PIR thermal models,
 Gaussian likelihoods, log-odds Bayes update, Platt-lite calibration.
 """
 from __future__ import annotations
+
 import math
 import secrets
 import time
-from typing import Any, Dict
+from typing import Any
+
 from . import audit
 
 _RHO_AIR = 1.225
@@ -37,16 +39,16 @@ class BlackBoxForensics:
     """Aircraft flight-recorder style incident reconstructor for the home."""
 
     def __init__(self) -> None:
-        self._mock_incident_cache: Dict[str, Any] = {}
+        self._mock_incident_cache: dict[str, Any] = {}
 
     def reconstruct_incident(
         self,
         incident_type: str = "perimeter_anomaly",
         lookback_seconds: int = 3600,
         trigger_time: float | None = None,
-        sensor_readings: Dict[str, Any] | None = None,
-        priors: Dict[str, float] | None = None,
-    ) -> Dict[str, Any]:
+        sensor_readings: dict[str, Any] | None = None,
+        priors: dict[str, float] | None = None,
+    ) -> dict[str, Any]:
         t_event = float(trigger_time if trigger_time is not None else time.time())
         inc_id = f"csi_{secrets.token_hex(6)}"
         sr = dict(sensor_readings or {})
@@ -126,8 +128,8 @@ class BlackBoxForensics:
             countermeasures = [
                 "Engaged secondary smart deadbolt against gusts.",
                 f"Staged strike-plate realignment +{strike_mm:.0f}mm clearance.",
-                "Silenced intrusion siren; intruder hypothesis log-odds "
-                f"{math.log(max(1e-9, post['intruder']/max(1e-9, post['benign']))):+.1f}.",
+                ("Silenced intrusion siren; intruder hypothesis log-odds "
+                f"{math.log(max(1e-9, post['intruder']/max(1e-9, post['benign']))):+.1f}."),
             ]
             graph = {"nodes": ["hvac", "weather", "lock", "pir"],
                      "edges": [{"from": "weather", "to": "lock", "weight": round(min(1.0, wind_mph / 30), 2)},
@@ -147,11 +149,11 @@ class BlackBoxForensics:
             events = [
                 {"t_offset_s": -1800, "timestamp": time.strftime("%H:%M:%S", time.localtime(t_event - 1800)),
                  "subsystem": "energy_mesh", "event": f"Kitchen branch {amps:.1f}A inrush.",
-                 "causal_factor": "Blender + microwave simultaneous; P(equip|E)=%.2f." % pe,
+                 "causal_factor": f"Blender + microwave simultaneous; P(equip|E)={pe:.2f}.",
                  "telemetry": {"branch_amperage": amps, "breaker_status": "tripped"}},
                 {"t_offset_s": -600, "timestamp": time.strftime("%H:%M:%S", time.localtime(t_event - 600)),
                  "subsystem": "pantry_sensors", "event": f"Freezer {ftemp:.1f}C above -18C baseline.",
-                 "causal_factor": "Thaw +0.08C/min; posterior %.2f." % pe,
+                 "causal_factor": f"Thaw +0.08C/min; posterior {pe:.2f}.",
                  "telemetry": {"freezer_temp_c": ftemp, "thaw_rate_c_min": 0.08}},
             ]
             summary = f"Freezer starvation: tripped GFCI during breakfast inrush (P={pe:.2f})."
@@ -177,7 +179,7 @@ class BlackBoxForensics:
         self._mock_incident_cache[inc_id] = result
         return result
 
-    def get_latest_incident(self) -> Dict[str, Any]:
+    def get_latest_incident(self) -> dict[str, Any]:
         if self._mock_incident_cache:
             return self._mock_incident_cache[list(self._mock_incident_cache.keys())[-1]]
         return self.reconstruct_incident("perimeter_anomaly")

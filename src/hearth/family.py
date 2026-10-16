@@ -17,6 +17,8 @@ Builds on :mod:`hearth.arbiter` (pure Pareto math) and :mod:`hearth.memory`
 Zero-config, no external keys.
 """
 from __future__ import annotations
+
+import contextlib
 import time
 
 from . import arbiter, memory
@@ -110,21 +112,19 @@ def negotiate_climate(parties: list[dict] | None = None,
             sp1 = round(_clamp(sp0, CHILD_SAFE_MIN_C, CHILD_SAFE_MAX_C), 1)
             result["compromise"]["target_setpoint"] = sp1
             result["proposed_action"]["setpoint"] = sp1
-            result["compromise"]["child_safe_band"] = f"{CHILD_SAFE_MIN_C:.1f}–{CHILD_SAFE_MAX_C:.1f}°C enforced"
+            result["compromise"]["child_safe_band"] = f"{CHILD_SAFE_MIN_C:.1f}-{CHILD_SAFE_MAX_C:.1f}°C enforced"
         except (KeyError, TypeError, ValueError):
             pass
     result["requested_by"] = who
     result["child_guardrails"] = child_involved
     # Persist the outcome for context continuity (best-effort, never fatal).
-    try:
+    with contextlib.suppress(Exception):
         memory.remember(
             "arbiter_climate_last",
             f"{result['compromise'].get('target_setpoint')}°C via {result.get('resolution_badge', 'Pareto')} "
             f"({', '.join(p['name'] for p in norm)})",
             owner="household",
         )
-    except Exception:
-        pass
     return result
 
 
@@ -151,15 +151,13 @@ def shift_load(device: str = "dishwasher", requester: str = "household",
         }
     result = arbiter.arbitrate_tariff_load_shifting(params)
     result["requested_by"] = who
-    try:
+    with contextlib.suppress(Exception):
         memory.remember(
             "arbiter_tariff_last",
             f"{dev} delayed {result['compromise'].get('delay_minutes')}min "
             f"saves ${-float(result['proposed_action'].get('cost_delta', 0)):.2f}",
             owner="household",
         )
-    except Exception:
-        pass
     return result
 
 

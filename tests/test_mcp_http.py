@@ -53,6 +53,21 @@ def test_mcp_http_smoke():
         assert {"planner_orchestrate", "home_toggle_lock", "actions_decide", "audit_verify"} <= names
         scan = _rpc("tools/call", {"name": "inbox_scan", "arguments": {}}, rid=3)
         assert scan["result"]["isError"] is False
+        # Frontier input-sensitivity over the wire (not just TestClient):
+        # forensics must flip to intruder with intruder-like sensors.
+        csi = _rpc("tools/call", {"name": "forensic_incident_reconstruct", "arguments": {
+            "incident_type": "perimeter_anomaly",
+            "sensor_readings": {"wind_mph": 4.0, "hvac_cfm": 60.0, "torque_nm": 1.4,
+                                "applied_force_n": 65.0,
+                                "intruder_biometric_confidence": 0.88}}}, rid=6)
+        assert csi["result"]["isError"] is False
+        assert "INTRUDER_LIKELY_ENTRY" in json.dumps(csi["result"])
+        # acoustic must go healthy on fault override <= 0.
+        fft = _rpc("tools/call", {"name": "acoustic_diagnostics_scan", "arguments": {
+            "target_appliance": "all", "stage_remedy": False,
+            "fault_hz_override": 0.0}}, rid=7)
+        assert fft["result"]["isError"] is False
+        assert "HEALTHY" in json.dumps(fft["result"])
         # Unlock over bare MCP must NOT execute — approval_required instead.
         gated = _rpc("tools/call", {"name": "home_toggle_lock",
                                     "arguments": {"door": "front_door", "locked": False}}, rid=4)

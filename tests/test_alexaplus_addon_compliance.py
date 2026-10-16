@@ -15,14 +15,16 @@ import hashlib
 import json
 import os
 import sys
+
 import pytest
 from starlette.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
-from hearth.alexaplus_addon import alexaplus_engine
 import server
+
+from hearth.alexaplus_addon import alexaplus_engine
 
 
 @pytest.fixture

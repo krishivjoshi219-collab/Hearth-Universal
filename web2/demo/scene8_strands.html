@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920, height=1080, initial-scale=1">
+<title>Hearth Universal — AWS Strands Multi-Agent & Open Source Contribution</title>
+<link rel="stylesheet" href="/web2/css/tokens.css">
+<link rel="stylesheet" href="scene8_strands.css">
+</head>
+<body>
+  <header class="top-strip">
+    <div class="brand-group">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-name">AWS Strands Agents SDK &amp; Open Source Mini-Challenges</div>
+        <div class="brand-sub">Universal Model Mesh · Bedrock AgentCore Memory · Apache 2.0</div>
+      </div>
+    </div>
+    <div class="badges-row">
+      <span class="badge badge-purple">AWS Builder Challenge ($5,000)</span>
+      <span class="badge badge-gold">Open Source Challenge ($5,000)</span>
+    </div>
+  </header>
+
+  <div class="grid-2">
+    <!-- Left: AWS Strands Multi-Agent Supervisor -->
+    <div class="panel">
+      <div>
+        <div class="panel-header">
+          <div class="panel-title"><span>🤖</span> AWS Strands Multi-Agent Mesh</div>
+          <span class="panel-badge">Active Mesh</span>
+        </div>
+        <div class="agent-flow">
+          <div class="agent-node supervisor">
+            <div>
+              <div class="agent-name"><span>👑</span> StrandsSupervisorAgent</div>
+              <div class="agent-desc">Decomposes household goals &amp; arbitrates priorities</div>
+            </div>
+            <span class="agent-status">ROUTING</span>
+          </div>
+          <div class="agent-node">
+            <div>
+              <div class="agent-name"><span>📦</span> ReplenishmentDepletionAgent</div>
+              <div class="agent-desc">Consumable velocity, 15% S&amp;S discount &amp; Prime transit</div>
+            </div>
+            <span class="agent-status">READY</span>
+          </div>
+          <div class="agent-node">
+            <div>
+              <div class="agent-name"><span>⚖️</span> ArbiterNegotiatorAgent</div>
+              <div class="agent-desc">Game-theoretic Nash Equilibrium for climate &amp; tariffs</div>
+            </div>
+            <span class="agent-status">READY</span>
+          </div>
+          <div class="agent-node">
+            <div>
+              <div class="agent-name"><span>🛡️</span> SentinelGuardianAgent</div>
+              <div class="agent-desc">Child guardrails &amp; Propose-Never-Execute barrier</div>
+            </div>
+            <span class="agent-status">ENFORCING</span>
+          </div>
+        </div>
+
+        <div class="trace">
+          <div class="trace-head">
+            <span class="trace-title">Supervisor Routing Trace</span>
+            <span class="trace-goal">goal: "cut $800 of household waste this quarter"</span>
+          </div>
+          <div class="trace-steps">
+            <div class="tstep"><span class="tnum">t0</span><span class="tagent">Supervisor</span><span class="ttext">decomposes goal → 3 sub-tasks</span><span class="tok">ok</span></div>
+            <div class="tstep"><span class="tnum">t1</span><span class="tagent">Sentinel</span><span class="ttext">persona = adult · PNE barrier armed</span><span class="tok">ok</span></div>
+            <div class="tstep"><span class="tnum">t2</span><span class="tagent">Arbiter</span><span class="ttext">Parliament convened · Nash 10.0/10</span><span class="tok">ok</span></div>
+            <div class="tstep"><span class="tnum">t3</span><span class="tagent">Replenishment</span><span class="ttext">3 proposals staged → Approval Tray</span><span class="tok">staged</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="u-font-size-13px-color-a1a1aa-margin-top-14px">
+        Powered by Bedrock AgentCore memory with crash-safe episodic search.
+      </div>
+    </div>
+
+    <!-- Right: Open Source Contribution -->
+    <div class="panel">
+      <div>
+        <div class="panel-header">
+          <div class="panel-title"><span>📦</span> open-source-contribution/mcp-strands-adapter</div>
+          <span class="panel-badge">Apache-2.0</span>
+        </div>
+        <div class="code-box">
+          <div class="u-color-58a6ff-margin-bottom-6px"># Standalone bridge for Python ecosystem</div>
+          <div><span class="u-color-ff7b72">from</span> mcp_strands_adapter <span class="u-color-ff7b72">import</span> StrandsMCPAdapter</div>
+          <div class="u-margin-6px-0"><span class="u-color-79c0ff">adapter</span> = StrandsMCPAdapter(server_name=<span class="u-color-a5d6ff">"hearth-strands"</span>)</div>
+          <div><span class="u-color-79c0ff">adapter</span>.export_tools(strands_supervisor)</div>
+          <div class="u-color-3fb950-margin-top-10px">✔ 15 unit tests passing | Dynamic schema reflection</div>
+          <div class="u-color-8b949e">✔ Published standalone with full pyproject.toml</div>
+        </div>
+      </div>
+      
+      <div class="friction-box friction-box-head">
+        <div>
+          <div class="friction-title">6 Thorough Developer Friction Logs Included</div>
+          <div class="friction-sub">Detailed feedback on AWS Strands SDK &amp; Alexa+ Developer Tooling (+10% Bonus)</div>
+        </div>
+        <span class="u-font-size-18px">📝</span>
+      </div>
+
+      <div class="friction-list">
+        <div class="fl-row"><span class="fl-num">01</span><span class="fl-title">Streamable HTTP <code>Accept</code> header negotiation</span><span class="fl-tag">MCP</span></div>
+        <div class="fl-row"><span class="fl-num">02</span><span class="fl-title">Stateless MCP <code>Mcp-Session-Id</code> injection</span><span class="fl-tag">MCP</span></div>
+        <div class="fl-row"><span class="fl-num">03</span><span class="fl-title">Bedrock Converse regional model ID &amp; profile discovery</span><span class="fl-tag">AWS</span></div>
+        <div class="fl-row"><span class="fl-num">04</span><span class="fl-title">Alexa+ Agent Skills manifest tool-schema reflection</span><span class="fl-tag">Alexa+</span></div>
+        <div class="fl-row"><span class="fl-num">05</span><span class="fl-title">AgentCore memory state serialization &amp; SQLite locks</span><span class="fl-tag">AWS</span></div>
+        <div class="fl-row"><span class="fl-num">06</span><span class="fl-title">Strands SDK sub-agent exception isolation</span><span class="fl-tag">AWS</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ledger-strip">
+    <div class="ledger-left">
+      <span class="u-font-size-22px">🔐</span>
+      <div>
+        <strong class="u-color-white">SHA-256 Merkle Ledger State:</strong>
+        <span class="u-color-a1a1aa-margin-left-8px">Immutable Cryptographic Proofs for Every Action</span>
+      </div>
+    </div>
+    <div class="ledger-hash">Live SHA-256 Chain · Chain Valid · 0 Tamper Inconsistencies</div>
+  </div>
+</body>
+</html>

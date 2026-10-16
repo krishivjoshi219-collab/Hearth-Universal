@@ -9,7 +9,7 @@
   },
   "skillPackage": {
     "id": "amzn1.ask.skill.hearth.operations",
-    "version": "1.32.0",
+    "version": "1.33.0",
     "title": "Hearth Universal Operations Agent for Alexa+",
     "description": "Proactive household operations agent for Amazon Alexa+ providing AWS Strands multi-agent orchestration, pantry depletion radar, Family Arbiter Pareto optimization, and propose-never-execute safety gating."
   },

@@ -51,8 +51,8 @@ def _gc_expired(now: float | None = None) -> None:
 def _load_oauth_clients() -> dict[str, str]:
     raw = os.environ.get("HEARTH_OAUTH_CLIENTS", "").strip()
     out: dict[str, str] = {}
-    for pair in raw.split(","):
-        pair = pair.strip()
+    for raw_pair in raw.split(","):
+        pair = raw_pair.strip()
         if ":" in pair:
             cid, sec = pair.split(":", 1)
             cid, sec = cid.strip(), sec.strip()
@@ -87,9 +87,7 @@ def _redirect_allowed(redirect_uri: str) -> bool:
     host = (p.hostname or "").lower()
     if p.scheme == "http" and host in ("localhost", "127.0.0.1", "::1"):
         return True
-    if p.scheme == "https" and host in ("localhost", "127.0.0.1"):
-        return True
-    return False
+    return bool(p.scheme == "https" and host in ("localhost", "127.0.0.1"))
 
 
 def _b64url_decode(s: str) -> bytes:
@@ -190,7 +188,7 @@ class AlexaPlusAddonEngine:
         if not client_id:
             raise ValueError("client_id is required")
         # OAuth 2.1: PKCE S256 is REQUIRED. Reject missing/plain.
-        if code_challenge_method not in ("S256",):
+        if code_challenge_method != "S256":
             raise ValueError("code_challenge_method must be S256")
         if not code_challenge or len(code_challenge) < 43:
             raise ValueError("code_challenge (S256) is required")
@@ -456,11 +454,12 @@ class AlexaPlusAddonEngine:
             "addon": {
                 "id": "amzn1.ask.addon.hearth.operations",
                 "name": "Hearth Universal Operations Agent",
-                "version": "1.32.0",
+                "version": "1.33.0",
                 "shortDescription": "Autonomous proactive home operations, digital twin resilience & pantry optimization.",
                 "fullDescription": "Hearth Universal is an Alexa+ Add-on providing game-theoretic household arbitration, 7-day Monte Carlo future resilience forecasting, pantry depletion radar with 15% Subscribe & Save savings, and strict propose-never-execute safety guardrails.",
                 "examplePhrases": [
-                    "Alexa, ask Hearth to run an energy audit",
+                    "Alexa, ask Hearth to save me $800 on renewals",
+                    "Alexa, ask Hearth we are out of everything, fix groceries",
                     "Alexa, ask Hearth to check the pantry replenishment radar",
                     "Alexa, ask Hearth what the Family Arbiter recommends for the thermostat",
                     "Alexa, ask Hearth to stage a 7-day weather resilience plan",

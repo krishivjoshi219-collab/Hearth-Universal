@@ -27,14 +27,15 @@ import random
 import re
 import secrets
 import time
-from typing import Any, Dict, List
+from typing import Any
+
 from . import audit, proposals
 
 # Contested household domains, in concession-priority order.
 _DIMS = ["chores", "budget", "climate", "screen"]
 
 # Keyword lexicon per domain. Weighted: strong markers first.
-_LEX: Dict[str, List[tuple]] = {
+_LEX: dict[str, list[tuple]] = {
     "chores": [
         ("kitchen cleanup", 3), ("doing all the", 3), ("cleaning", 2), ("cleanup", 2),
         ("chores", 3), ("dishes", 2), ("dishwasher", 2), ("kitchen", 1),
@@ -90,28 +91,28 @@ _CHORE_NOUNS = [
 ]
 
 
-def _lex_score(low: str, phrases: List[tuple]) -> float:
+def _lex_score(low: str, phrases: list[tuple]) -> float:
     return float(sum(w for p, w in phrases if p in low))
 
 
-def _pick_noun(low: str, table: List[tuple], fallback: str) -> str:
+def _pick_noun(low: str, table: list[tuple], fallback: str) -> str:
     for key, label in table:
         if key in low:
             return label
     return fallback
 
 
-def extract_utilities(statements: Dict[str, str]) -> Dict[str, List[float]]:
+def extract_utilities(statements: dict[str, str]) -> dict[str, list[float]]:
     """Map each resident's private statement to a normalized weight vector.
 
     Weight = keyword evidence + bonus for *quantified* asks (an explicit
     "68F" or "$400" is a far stronger signal than a bare topic mention).
     Normalized to sum 1.0 so residents are comparable across households.
     """
-    out: Dict[str, List[float]] = {}
+    out: dict[str, list[float]] = {}
     for resident, text in statements.items():
         low = (text or "").lower()
-        vec: List[float] = []
+        vec: list[float] = []
         for dim in _DIMS:
             w = _lex_score(low, _LEX[dim])
             if dim == "budget":
@@ -131,14 +132,14 @@ def extract_utilities(statements: Dict[str, str]) -> Dict[str, List[float]]:
     return out
 
 
-def extract_quotes(statements: Dict[str, str]) -> Dict[str, Dict[str, Any]]:
+def extract_quotes(statements: dict[str, str]) -> dict[str, dict[str, Any]]:
     """Pull the concrete quantities a resident actually named.
 
     These are rendered into that resident's OWN covenant only. They never
     cross to another resident, which is what makes the zero-knowledge
     guarantee meaningful rather than decorative.
     """
-    out: Dict[str, Dict[str, Any]] = {}
+    out: dict[str, dict[str, Any]] = {}
     for resident, text in statements.items():
         raw = text or ""
         low = raw.lower()
@@ -163,7 +164,7 @@ def salted_hash(text: str) -> tuple[str, str]:
     return hashlib.sha256((salt + text).encode()).hexdigest()[:16], salt
 
 
-def dominant_dimension(weights: List[float]) -> tuple[int, float]:
+def dominant_dimension(weights: list[float]) -> tuple[int, float]:
     """Index and strength of a resident's strongest domain.
 
     Ties break toward the earlier domain in _DIMS, which is ordered by how
@@ -174,11 +175,11 @@ def dominant_dimension(weights: List[float]) -> tuple[int, float]:
     return idx, float(weights[idx])
 
 
-def _candidate_concessions() -> List[Dict[str, float]]:
+def _candidate_concessions() -> list[dict[str, float]]:
     """Every concession vector within the finite household budget."""
-    out: List[Dict[str, float]] = []
+    out: list[dict[str, float]] = []
 
-    def walk(i: int, acc: Dict[str, float], spent: float) -> None:
+    def walk(i: int, acc: dict[str, float], spent: float) -> None:
         if spent > CONCESSION_BUDGET + 1e-9:
             return
         if i == len(_DIMS):
@@ -196,8 +197,8 @@ def _candidate_concessions() -> List[Dict[str, float]]:
     return out
 
 
-def domain_shares(weights: Dict[str, List[float]], residents: List[str],
-                  concession: Dict[str, float]) -> Dict[str, Dict[str, float]]:
+def domain_shares(weights: dict[str, list[float]], residents: list[str],
+                  concession: dict[str, float]) -> dict[str, dict[str, float]]:
     """Divide each conceded domain's pool across the residents who claimed it.
 
     The pool for domain d has size `concession[d]`. It is split *proportionally
@@ -205,13 +206,13 @@ def domain_shares(weights: Dict[str, List[float]], residents: List[str],
     allocation: nobody receives a smaller share of a domain than a peer who
     values it less. Returns {resident: {domain: received_share}}.
     """
-    claimants: Dict[str, List[str]] = {d: [] for d in _DIMS}
+    claimants: dict[str, list[str]] = {d: [] for d in _DIMS}
     for r in residents:
         for i, d in enumerate(_DIMS):
             if weights[r][i] > 0:
                 claimants[d].append(r)
 
-    shares: Dict[str, Dict[str, float]] = {r: {} for r in residents}
+    shares: dict[str, dict[str, float]] = {r: {} for r in residents}
     for d in _DIMS:
         pool = concession.get(d, 0.0)
         group = claimants[d]
@@ -225,8 +226,8 @@ def domain_shares(weights: Dict[str, List[float]], residents: List[str],
     return shares
 
 
-def _resident_utility(shares: Dict[str, float], weights: List[float],
-                      quotes: Dict[str, Any], concession: Dict[str, float]) -> float:
+def _resident_utility(shares: dict[str, float], weights: list[float],
+                      quotes: dict[str, Any], concession: dict[str, float]) -> float:
     """Satisfaction of one resident: their cut of every conceded domain, plus
     a general-harmony credit weighted by the domains they actually care about.
 
@@ -241,14 +242,14 @@ def _resident_utility(shares: Dict[str, float], weights: List[float],
     own_demand = sum(
         weights[i] * concession.get(_DIMS[i], 0.0) for i in range(len(_DIMS))
     )
-    top = sum(sorted(weights, reverse=True)[: int(round(CONCESSION_BUDGET))]) or 1.0
+    top = sum(sorted(weights, reverse=True)[: round(CONCESSION_BUDGET)]) or 1.0
     harmony = 0.22 * (own_demand / top)
     specificity = 0.85 if (quotes.get("money_usd") or quotes.get("hours")
                             or quotes.get("temp_f")) else 1.0
     return received + harmony * specificity
 
 
-def _ideal_utility(weights: List[float]) -> float:
+def _ideal_utility(weights: list[float]) -> float:
     """Best utility this resident could reach *within the household budget* if
     the household optimized exclusively for them: concede their three most
     valued domains in full.
@@ -258,22 +259,22 @@ def _ideal_utility(weights: List[float]) -> float:
     look like a failure.
     """
     ordered = sorted(weights, reverse=True)
-    take = ordered[: int(round(CONCESSION_BUDGET))]
+    take = ordered[: round(CONCESSION_BUDGET)]
     return sum(take) + 0.22
 
 
-def _build_covenants(residents: List[str], weights: Dict[str, List[float]],
-                     quotes: Dict[str, Dict[str, Any]],
-                     concession: Dict[str, float],
-                     satisfaction: Dict[str, float]) -> List[Dict[str, Any]]:
+def _build_covenants(residents: list[str], weights: dict[str, list[float]],
+                     quotes: dict[str, dict[str, Any]],
+                     concession: dict[str, float],
+                     satisfaction: dict[str, float]) -> list[dict[str, Any]]:
     """Generate one covenant per resident from their own domain + quantities."""
     # How many residents compete for each domain -> drives the reciprocal ask.
-    claimants: Dict[str, List[str]] = {d: [] for d in _DIMS}
+    claimants: dict[str, list[str]] = {d: [] for d in _DIMS}
     for r in residents:
         d_idx, _ = dominant_dimension(weights[r])
         claimants[_DIMS[d_idx]].append(r)
 
-    covenants: List[Dict[str, Any]] = []
+    covenants: list[dict[str, Any]] = []
     for r in residents:
         d_idx, strength = dominant_dimension(weights[r])
         dim = _DIMS[d_idx]
@@ -332,11 +333,11 @@ def _build_covenants(residents: List[str], weights: Dict[str, List[float]],
 
 class ConfidentialFamilyMediator:
     def __init__(self) -> None:
-        self._active_treaty: Dict[str, Any] | None = None
+        self._active_treaty: dict[str, Any] | None = None
 
-    def draft_household_treaty(self, private_statements: Dict[str, str] | None = None,
+    def draft_household_treaty(self, private_statements: dict[str, str] | None = None,
                                topic: str = "monthly_household_equilibrium",
-                               dp_epsilon: float | None = None, dp_seed: int | None = None) -> Dict[str, Any]:
+                               dp_epsilon: float | None = None, dp_seed: int | None = None) -> dict[str, Any]:
         treaty_id = f"treaty_{secrets.token_hex(6)}"
         now = int(time.time())
         scenario = private_statements is None
@@ -361,9 +362,9 @@ class ConfidentialFamilyMediator:
 
         # Constrained Nash bargaining: maximize the product of shifted utilities
         # over every concession vector inside the household budget.
-        best_concession: Dict[str, float] = {d: 0.0 for d in _DIMS}
-        best_utils: Dict[str, float] = {r: 0.0 for r in residents}
-        best_shares: Dict[str, Dict[str, float]] = {r: {} for r in residents}
+        best_concession: dict[str, float] = {d: 0.0 for d in _DIMS}
+        best_utils: dict[str, float] = {r: 0.0 for r in residents}
+        best_shares: dict[str, dict[str, float]] = {r: {} for r in residents}
         best_prod = -1.0
         candidates = _candidate_concessions()
         for concession in candidates:
@@ -420,8 +421,8 @@ class ConfidentialFamilyMediator:
             satisfaction = {r: round(max(0.0, min(10.0, v + rnd.gauss(0, scale * 0.08))), 2)
                             for r, v in satisfaction.items()}
 
-        hashes: Dict[str, str] = {}
-        salts: Dict[str, str] = {}
+        hashes: dict[str, str] = {}
+        salts: dict[str, str] = {}
         for r, t in inputs.items():
             h, s = salted_hash(t)
             hashes[r] = h
@@ -505,7 +506,7 @@ class ConfidentialFamilyMediator:
         self._active_treaty = result
         return result
 
-    def get_active_treaty(self) -> Dict[str, Any]:
+    def get_active_treaty(self) -> dict[str, Any]:
         if self._active_treaty:
             return self._active_treaty
         return self.draft_household_treaty()

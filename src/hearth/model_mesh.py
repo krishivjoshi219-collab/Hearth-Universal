@@ -83,6 +83,21 @@ DEFAULT_PROVIDERS = {
         discovered_models=["gpt-4o", "gpt-4o-mini", "o3-mini"],
         status="unknown",
     ),
+    "inkstone": ProviderEndpoint(
+        name="Intern InkStone (DeepSeek)",
+        base_url="https://discovery-api.intern-ai.org.cn/v1",
+        provider_type="openai-compatible",
+        api_key_ref="INKSTONE_API_KEY",
+        is_active=False,
+        discovered_models=[
+            "deepseek-v4-pro-0813",
+            "deepseek-v4-flash-0731",
+            "glm-5.3",
+            "kimi-k2.6",
+            "minimax-m3",
+        ],
+        status="online",
+    ),
 }
 
 DEFAULT_MODEL = "us.amazon.nova-pro-v1:0"
@@ -104,7 +119,7 @@ class ModelMeshEngine:
             self._save()
             return
         try:
-            with open(self.config_path, "r", encoding="utf-8") as f:
+            with open(self.config_path, encoding="utf-8") as f:
                 data = json.load(f)
             self.active_provider = data.get("active_provider", DEFAULT_PROVIDER_NAME)
             self.active_model = data.get("active_model", DEFAULT_MODEL)
@@ -204,17 +219,29 @@ class ModelMeshEngine:
 
     def discover_all_models(self) -> dict[str, Any]:
         """Discovers models across all registered APIs and reports health."""
+        # Imported here to avoid a hard dependency cycle at module load.
+        try:
+            from . import brains as _brains
+            _bedrock_live = bool(_brains.is_bedrock_enabled())
+        except Exception:
+            _bedrock_live = False
         results = {}
         for slug, ep in list(self.providers.items()):
             resolved_key = vault.resolve(ep.api_key_ref) if ep.api_key_ref else ""
             if ep.provider_type == "bedrock":
-                # Bedrock built-in model suite
+                # Honest status: without AWS_BEDROCK_ENABLED=1 + creds this is
+                # the local simulated suite, not a live cloud ping.
+                ep.status = "online" if _bedrock_live else "simulated-offline"
+                ep.last_ping_ms = 1.2 if _bedrock_live else 0.0
                 results[slug] = {
                     "name": ep.name,
-                    "status": "online",
+                    "status": ep.status,
                     "models": ep.discovered_models,
-                    "latency_ms": 1.2,
+                    "latency_ms": ep.last_ping_ms,
                     "is_active": slug == self.active_provider,
+                    "live": _bedrock_live,
+                    "note": ("live Bedrock" if _bedrock_live
+                             else "simulated suite (set AWS_BEDROCK_ENABLED=1 + creds for live)"),
                 }
             else:
                 ping_res = self.ping_endpoint(ep.base_url, api_key=resolved_key, timeout=1.5)

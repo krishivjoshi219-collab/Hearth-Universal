@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
 import server
+
 from hearth import audit, commerce, proposals
 
 
@@ -66,7 +67,7 @@ def test_concurrent_reschedule_storm():
     def worker(slot):
         try:
             outs.append(commerce.reschedule_delivery_slot(slot, reason="storm"))
-        except Exception as e:  # noqa: BLE001 — storm must not raise
+        except Exception as e:
             outs.append({"ok": False, "error": str(e)})
     threads = [threading.Thread(target=worker,
                                 args=("slot_overnight_urgent" if i % 2 else "slot_tuesday_household",))

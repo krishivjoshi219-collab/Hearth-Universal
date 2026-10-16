@@ -9,13 +9,15 @@ Tests:
 """
 import os
 import sys
+
 import pytest
 from starlette.testclient import TestClient
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "mcp-server"))
 
-from hearth import causal_twin, meta_skill, model_mesh, parliament, agent_skills
 import server
+
+from hearth import agent_skills, causal_twin, meta_skill, model_mesh, parliament
 
 
 @pytest.fixture

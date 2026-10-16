@@ -6,11 +6,13 @@ Production-grade: physically-synthesized bearing vibration signals
 crest health scoring, exponential RUL model.
 """
 from __future__ import annotations
+
 import math
 import random
 import secrets
 import time
-from typing import Any, Dict
+from typing import Any
+
 from . import audit, proposals
 
 try:
@@ -108,15 +110,20 @@ def kurtosis(x: list[float]) -> float:
 
 class AcousticDiagnosticDoctor:
     def __init__(self) -> None:
-        self._last_scan: Dict[str, Any] | None = None
+        self._last_scan: dict[str, Any] | None = None
 
     def scan_appliance_acoustics(self, target_appliance: str = "all", stage_remedy: bool = True,
-                                 synth_seed: int = 42) -> Dict[str, Any]:
+                                 synth_seed: int = 42, fault_hz_override: float | None = None) -> dict[str, Any]:
         scan_id = f"fft_{secrets.token_hex(6)}"
         now = int(time.time())
+        # fault_hz_override=None -> default fixture (124.5 Hz bearing fault).
+        # fault_hz_override<=0  -> force healthy (no fault tone).
+        # fault_hz_override>0   -> inject that fault frequency instead.
+        fridge_fault: float | None = 124.5 if fault_hz_override is None else (
+            None if fault_hz_override <= 0 else float(fault_hz_override))
         profiles = [
             {"id": "app_fridge_01", "name": "Kitchen Sub-Zero Refrigerator Compressor",
-             "f0": 60.0, "fault_hz": 124.5, "harmonics": 4, "snr_db": 6.0, "seed": synth_seed,
+             "f0": 60.0, "fault_hz": fridge_fault, "harmonics": 4, "snr_db": 6.0, "seed": synth_seed,
              "part": ("OEM Compressor Damper Seal & Heavy-Duty Drive Belt Kit", "B09SZBELT1", 14.99)},
             {"id": "app_hvac_01", "name": "Carrier Variable-Speed HVAC Blower Motor",
              "f0": 120.0, "fault_hz": None, "harmonics": 2, "snr_db": 22.0, "seed": synth_seed + 1, "part": None},
@@ -131,7 +138,9 @@ class AcousticDiagnosticDoctor:
             if p["id"] == "app_fridge_01":
                 bins_src = (freqs, mags)
             # fault-band peak vs fundamental (healthy units: report fundamental)
-            fpk, mpk = peak_interp(freqs, mags, 100.0, 150.0)
+            # Window 100..260 covers the full bearing-fault band so an injected
+            # fault_hz_override tracks instead of clipping at 150 Hz.
+            fpk, mpk = peak_interp(freqs, mags, 100.0, 260.0)
             ff0, mf0 = peak_interp(freqs, mags, p["f0"] - 5, p["f0"] + 5)
             if not p["fault_hz"]:
                 fpk, mpk = ff0, mf0
@@ -174,11 +183,10 @@ class AcousticDiagnosticDoctor:
         if bins_src:
             freqs, mags = bins_src
             for hz in range(10, 260, 5):
-                near = [m for f, m in zip(freqs, mags) if abs(f - hz) <= 2.5]
+                near = [m for f, m in zip(freqs, mags, strict=False) if abs(f - hz) <= 2.5]
                 spectrum_bins.append({"hz": hz, "db": round(sum(near) / len(near), 1) if near else 18.0})
         else:
-            for hz in range(10, 260, 5):
-                spectrum_bins.append({"hz": hz, "db": 24.0})
+            spectrum_bins.extend({"hz": hz, "db": 24.0} for hz in range(10, 260, 5))
 
         staged_id = None
         fridge = next((a for a in appliances if a["id"] == "app_fridge_01"), None)
@@ -209,7 +217,7 @@ class AcousticDiagnosticDoctor:
         self._last_scan = result
         return result
 
-    def get_latest_scan(self) -> Dict[str, Any]:
+    def get_latest_scan(self) -> dict[str, Any]:
         if self._last_scan:
             return self._last_scan
         return self.scan_appliance_acoustics(stage_remedy=False)

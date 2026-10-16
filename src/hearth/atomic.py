@@ -3,6 +3,7 @@ State files (proposals, home twin, audit chain) stay consistent even if two
 requests — or two server processes — write at the same moment.
 """
 from __future__ import annotations
+
 import fcntl
 import os
 from contextlib import contextmanager

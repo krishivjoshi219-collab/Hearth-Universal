@@ -4,13 +4,31 @@ enforces Sentinel 3-tier safety guardrails, and synthesizes grounded contextual 
 Supports live Amazon Bedrock Converse API, OpenAI function calling, and an intelligent semantic tool router.
 """
 from __future__ import annotations
+
 import json
 import os
 import re
 import time
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
-from . import brains, sentinel, memory, home_mock, proposals, commerce, audit, webtools, sandbox, arbiter, timemachine, forensics, acoustic, mediation, swarm
+from . import (
+    acoustic,
+    arbiter,
+    audit,
+    brains,
+    commerce,
+    forensics,
+    home_mock,
+    mediation,
+    memory,
+    proposals,
+    sandbox,
+    sentinel,
+    swarm,
+    timemachine,
+    webtools,
+)
 
 
 def _mcp_app_with_card(kind: str, base: dict) -> dict:
@@ -545,7 +563,19 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
     memory.chat_history_append("user", goal_str)
 
     # 1. Sentinel Interception (Pre-execution security gate)
-    persona_check = "child" if (any(w in goal_str.lower() for w in ("as leo", "from leo", "i am leo", "i'm leo", "kid mode", "child mode", "child persona", "kid persona")) or str(os.environ.get("HEARTH_ACTIVE_PERSONA", "admin")).lower() in ("child", "leo", "kid")) else os.environ.get("HEARTH_ACTIVE_PERSONA", "admin")
+    low_goal = goal_str.lower()
+    is_child = (
+        str(os.environ.get("HEARTH_ACTIVE_PERSONA", "admin")).lower() in ("child", "leo", "kid")
+        or any(w in low_goal for w in (
+            "as leo", "from leo", "i am leo", "i'm leo", "im leo",
+            "kid mode", "child mode", "child persona", "kid persona",
+            "hey leo", "leo says", "leo wants", "for leo", "persona: leo",
+            "leo:", "leo,", "leo -"
+        ))
+        or bool(re.search(r"^(?:leo|child|kid)\b\s*[:,-]?\s*", low_goal))
+        or bool(re.search(r"\b(?:as|from|i am|i'm)\s+(?:leo|child|kid)\b", low_goal))
+    )
+    persona_check = "child" if is_child else os.environ.get("HEARTH_ACTIVE_PERSONA", "admin")
     sec_verdict = sentinel.judge("goal_input", {"text": goal_str, "persona": persona_check})
     if sec_verdict.decision == "deny":
         audit_entry = audit.append("sentinel", "security_blocked", {
@@ -649,8 +679,7 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
     )
     messages_payload.append({"role": "system", "content": system_prompt})
     
-    for c in conversation:
-        messages_payload.append({"role": c["role"], "content": c["content"]})
+    messages_payload.extend({"role": c["role"], "content": c["content"]} for c in conversation)
         
     tool_grounding = f"\n[Live System Observations from Executed Tools]:\n{semantic_res.get('context_dump', '')}"
     messages_payload[-1]["content"] += tool_grounding
@@ -658,9 +687,7 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
     brain_res = brains.chat(messages_payload, preferred_provider=preferred_provider)
     
     # In local agent mode or fallback, use our real executed tool synthesis
-    if brain_res.provider in ("local-agent", "local-fallback", "sentinel-blocked") and semantic_res.get("grounded_synthesis"):
-        final_text = semantic_res["grounded_synthesis"]
-    elif brain_res.fallback and semantic_res.get("grounded_synthesis"):
+    if (brain_res.provider in ("local-agent", "local-fallback", "sentinel-blocked") and semantic_res.get("grounded_synthesis")) or (brain_res.fallback and semantic_res.get("grounded_synthesis")):
         final_text = semantic_res["grounded_synthesis"]
     else:
         final_text = brain_res.text or semantic_res.get("grounded_synthesis", "")
@@ -703,13 +730,11 @@ def _requires_approval(tool_name: str, args: dict) -> bool:
         return False
     if tool_name == "home_toggle_lock":
         return args.get("locked", True) is False  # unlock=gated, lock=autonomous
-    if tool_name in ("home_update_device", "home_set_scene", "home_routine",
-                     "goals_create", "memory_remember", "web_search", "web_fetch",
-                     "workspace_read", "workspace_list",
-                     "forensic_incident_reconstruct", "acoustic_diagnostics_scan",
-                     "family_mediation_treaty", "grid_swarm_coordinate"):
-        return False
-    return True  # fail-closed default (workspace_exec/write, unknown tools)
+    return tool_name not in ("home_update_device", "home_set_scene", "home_routine",
+                                "goals_create", "memory_remember", "web_search", "web_fetch",
+                                "workspace_read", "workspace_list",
+                                "forensic_incident_reconstruct", "acoustic_diagnostics_scan",
+                                "family_mediation_treaty", "grid_swarm_coordinate")  # fail-closed default (workspace_exec/write, unknown tools)
 
 
 def _stage_gated_proposal(tool_name: str, args: dict) -> dict:
@@ -890,7 +915,12 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
     # --------------------------------------------------------------------------
     # A. Financial Optimization & Subscription Auditing
     # --------------------------------------------------------------------------
-    elif any(k in low for k in ("save", "renew", "subscription", "money", "waste", "cost", "bill", "$")) and not any(k in low for k in ("bundle", "optimize bundle", "tier discount", "prime max")):
+    elif any(k in low for k in (
+        "save", "renew", "subscription", "money", "waste", "cost", "bill", "$",
+        "streaming", "services", "expenses", "expense", "netflix", "cancel",
+        "memberships", "membership", "charges", "streambox", "fitness",
+        "recurring", "gym", "unused", "dormant", "audit", "paying for", "cut down"
+    )) and not any(k in low for k in ("bundle", "optimize bundle", "tier discount", "prime max")):
         intent = "FINANCIAL_OPTIMIZATION"
         
         # 2. Real scan of subscriptions
@@ -907,7 +937,13 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         
         cancellable = [s for s in subs if s.get("recommendation") == "cancel"]
         downgradable = [s for s in subs if s.get("recommendation") == "downgrade"]
-        
+
+        # A denial returns {"ok": False} with NO "proposal" key; a successful
+        # staging returns {"ok": False, "approval_required": True, "proposal": {...}}.
+        # Never count or narrate a denial as a staged card (draft honesty).
+        blocked_reasons: list[str] = []
+        new_before = len(proposals_created)
+
         for item in cancellable:
             title = f"Cancel {item['name']}"
             if title not in pending_titles:
@@ -920,7 +956,10 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "diff": f"Current: ${item['cost_yr']}/yr -> After: $0/yr (Saves ${item['savings_yr']}/yr).",
                     "meta": {"service_id": item["id"]}
                 }, f"Draft cancellation proposal for dormant service {item['name']}")
-                proposals_created.append(created)
+                if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+                    blocked_reasons.append(str(created.get("error", "blocked by safety contract")))
+                else:
+                    proposals_created.append(created)
 
         for item in downgradable:
             title = f"Downgrade {item['name']} to Standard"
@@ -934,19 +973,28 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "diff": f"Current: ${item['cost_yr']}/yr -> Downgrade: Saves ${item['savings_yr']}/yr.",
                     "meta": {"service_id": item["id"]}
                 }, f"Draft downgrade proposal for underutilized service {item['name']}")
-                proposals_created.append(created)
+                if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+                    blocked_reasons.append(str(created.get("error", "blocked by safety contract")))
+                else:
+                    proposals_created.append(created)
 
         context_lines.append(f"SubCount={len(subs)}, TotalSpend=${total_spend}/yr, PotentialSavings=${potential_save}/yr")
         tray_pending = len(proposals.list_proposals("pending"))
-        grounded_synthesis = (
-            f"I completed an automated audit of your **{len(subs)} recurring household subscriptions** (total annual expenditure: **${total_spend:.2f}/yr**).\n\n"
-            f"• **StreamBox 4K**: Dormant for 68 days with zero household playback -> **Recommendation: CANCEL**\n"
-            f"• **Metro Fitness Plus**: Only 1 visit in 45 days -> **Recommendation: DOWNGRADE** to Standard ($35/mo)\n"
-            f"• **Ultra Cloud Gaming**: Inactive library -> **Recommendation: CANCEL**\n"
-            f"• **Echo Music HD & Cloud Storage**: Active daily household utilization confirmed -> **KEEP**\n\n"
-            f"💰 **Total Projected Savings: ${potential_save:.2f}/year**.\n"
-            f"🛡️ **Propose-Never-Execute**: {len(proposals_created)} new cards drafted, **{tray_pending} total awaiting your review** in the **Approval Tray**. Tap Approve to apply changes."
-        )
+        if blocked_reasons and len(proposals_created) == new_before:
+            grounded_synthesis = (
+                f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {blocked_reasons[0]} "
+                f"Nothing was staged, cancelled, or spent."
+            )
+        else:
+            grounded_synthesis = (
+                f"I completed an automated audit of your **{len(subs)} recurring household subscriptions** (total annual expenditure: **${total_spend:.2f}/yr**).\n\n"
+                f"• **StreamBox 4K**: Dormant for 68 days with zero household playback -> **Recommendation: CANCEL**\n"
+                f"• **Metro Fitness Plus**: Only 1 visit in 45 days -> **Recommendation: DOWNGRADE** to Standard ($35/mo)\n"
+                f"• **Ultra Cloud Gaming**: Inactive library -> **Recommendation: CANCEL**\n"
+                f"• **Echo Music HD & Cloud Storage**: Active daily household utilization confirmed -> **KEEP**\n\n"
+                f"💰 **Total Projected Savings: ${potential_save:.2f}/year**.\n"
+                f"🛡️ **Propose-Never-Execute**: {len(proposals_created) - new_before} new cards drafted, **{tray_pending} total awaiting your review** in the **Approval Tray**. Tap Approve to apply changes."
+            )
 
     # --------------------------------------------------------------------------
     # B. Smart Home Device & Scene Actuation
@@ -1017,8 +1065,12 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "diff": "Front door: Locked -> Unlocked. Auto-lock re-engages after 5 minutes.",
                     "meta": {"door": "front_door", "locked": False}
                 }, "Stage door unlock proposal in Approval Tray")
-                proposals_created.append(created)
-                grounded_synthesis = "🔒 **Physical Security Gate**: Unlocking the front door requires human confirmation. I have staged an approval card in your **Approval Tray**. Tap Approve to unlock."
+                if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+                    grounded_synthesis = (f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                                         f"The door stays locked. Nothing was staged.")
+                else:
+                    proposals_created.append(created)
+                    grounded_synthesis = "🔒 **Physical Security Gate**: Unlocking the front door requires human confirmation. I have staged an approval card in your **Approval Tray**. Tap Approve to unlock."
             else:
                 call_tool("home_toggle_lock", {"door": "front_door", "locked": True}, "Engage front door lock")
                 grounded_synthesis = "✓ Front door smart lock verified and **LOCKED** (Security mode: Armed Home)."
@@ -1058,18 +1110,22 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             "diff": f"Regular ${pricing.get('regular_total', 108.97):.2f} -> Bundle ${opt_price:.2f} (Saved ${savings:.2f})",
             "meta": {"bundle_id": bundle_res.get("bundle_id"), "price": opt_price, "bundle_optimized": True}
         }, "Stage optimized 5+ items Subscribe & Save bundle order")
-        proposals_created.append(created)
-        media_card = commerce.stage_amazon_cart(bundle_optimized=True)
-        
-        grounded_synthesis = (
-            f"📦 **Amazon Subscribe & Save Bundle Optimization**:\n\n"
-            f"• **Tier Status**: {bundle_res.get('tier_badge', 'Prime Max 5+ Tier Active')}\n"
-            f"• **Items Included ({bundle_res.get('item_count', 5)})**: {', '.join(i['name'].split('(')[0].strip() for i in bundle_res.get('items', [])[:4])} + more\n"
-            f"• **Pull-Forward Items**: {', '.join(bundle_res.get('pull_forward_items', [])) or 'None needed'}\n"
-            f"• **Financial Impact**: Saved **${savings:.2f}** ({pricing.get('savings_pct', 32.4)}% off regular price)\n"
-            f"• **Environmental Impact**: **{eco.get('boxes_saved', 4)} boxes eliminated** (-{eco.get('carbon_offset_kg', 3.4)} kg CO2e)\n\n"
-            f"I staged an **Optimized Bundle Card** in your Approval Tray. Tap Approve to schedule the consolidated delivery."
-        )
+        if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+            grounded_synthesis = (f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                                 f"Nothing was staged or ordered.")
+        else:
+            proposals_created.append(created)
+            media_card = commerce.stage_amazon_cart(bundle_optimized=True)
+
+            grounded_synthesis = (
+                f"📦 **Amazon Subscribe & Save Bundle Optimization**:\n\n"
+                f"• **Tier Status**: {bundle_res.get('tier_badge', 'Prime Max 5+ Tier Active')}\n"
+                f"• **Items Included ({bundle_res.get('item_count', 5)})**: {', '.join(i['name'].split('(')[0].strip() for i in bundle_res.get('items', [])[:4])} + more\n"
+                f"• **Pull-Forward Items**: {', '.join(bundle_res.get('pull_forward_items', [])) or 'None needed'}\n"
+                f"• **Financial Impact**: Saved **${savings:.2f}** ({pricing.get('savings_pct', 32.4)}% off regular price)\n"
+                f"• **Environmental Impact**: **{eco.get('boxes_saved', 4)} boxes eliminated** (-{eco.get('carbon_offset_kg', 3.4)} kg CO2e)\n\n"
+                f"I staged an **Optimized Bundle Card** in your Approval Tray. Tap Approve to schedule the consolidated delivery."
+            )
 
     # --------------------------------------------------------------------------
     # C-2. Subscribe & Save Delivery Slot Re-Scheduling
@@ -1092,9 +1148,13 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             "diff": resched_res.get("diff", "Schedule updated"),
             "meta": resched_res
         }, "Stage delivery slot reschedule confirmation in Approval Tray")
-        proposals_created.append(created)
-        
-        grounded_synthesis = (
+        if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+            grounded_synthesis = (f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                                 f"Nothing was staged.")
+        else:
+            proposals_created.append(created)
+
+            grounded_synthesis = (
             f"🚚 **Amazon Delivery Slot Rescheduled**:\n\n"
             f"• **New Delivery Window**: {resched_res.get('new_slot')} ({resched_res.get('delivery_window')})\n"
             f"• **Arrival Date**: {resched_res.get('scheduled_date')}\n"
@@ -1106,45 +1166,118 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
     # --------------------------------------------------------------------------
     # C. Pantry Consumables & E-Commerce Reordering
     # --------------------------------------------------------------------------
-    elif any(k in low for k in ("order", "reorder", "coffee", "detergent", "buy", "deal", "pantry", "inventory", "stock", "cart")):
+    elif any(k in low for k in (
+        "order", "reorder", "coffee", "detergent", "buy", "deal", "pantry", "inventory",
+        "stock", "cart", "groceries", "grocery", "fridge", "food", "milk", "eggs",
+        "essentials", "low on", "out of", "running low", "shopping list", "supermarket",
+        "supplies", "consumables", "replenish", "restock"
+    )):
         intent = "HOUSEHOLD_COMMERCE"
         
         # 1. Read inventory
         inv_res = call_tool("commerce_list_inventory", {}, "Read household pantry consumable stock levels")
+        inventory = inv_res.get("inventory", [])
+        low_stock = inv_res.get("low_stock", [])
         
         # 2. Check deals
         deal_res = call_tool("commerce_scan_deals", {}, "Search Subscribe & Save replenishment bundles")
-        
         deals = deal_res.get("deals", [])
         
+        # Distinguish between checking status/inventory vs explicit order/purchase
+        is_explicit_order = any(w in low for w in ("reorder", "cart", "fix groceries", "checkout", "restock", "buy now", "place order", "bundle")) or (
+            any(w in low for w in ("order", "buy")) and not any(w in low for w in ("how much", "check", "do we have", "are we", "what do we need", "status", "inventory", "list", "what is", "whats in", "what's in"))
+        )
+        
         # Propose order if reorder requested
-        if any(w in low for w in ("order", "reorder", "buy", "cart")):
-            deal = deals[0] if deals else None
-            deal_title = deal["title"] if deal else "Household Consumables Reorder"
-            deal_price = deal["bundle_price"] if deal else 32.99
-            
-            created = call_tool("actions_propose", {
-                "kind": "commerce_order",
-                "title": f"Reorder: {deal_title}",
-                "reasons": "Organic Arabica Coffee is at 15% (Low); Eco Laundry Pods is at 10% (Critical).",
-                "cost_delta_yr": -deal_price,
-                "risk_level": "medium",
-                "diff": f"Cart Total: ${deal_price:.2f} (Includes Subscribe & Save instant discount).",
-                "meta": {"deal_id": deal["id"] if deal else "bundle_standard", "price": deal_price}
-            }, "Stage replenishment order proposal in Approval Tray")
-            proposals_created.append(created)
-            media_card = commerce.stage_amazon_cart()
+        if is_explicit_order:
+            # Child persona safety gate check
+            if persona_check in ("child", "leo", "kid"):
+                created = call_tool("actions_propose", {
+                    "kind": "commerce_order",
+                    "title": "Household Consumables Reorder",
+                    "reasons": "Child requested consumable order. Requires adult authorization.",
+                    "cost_delta_yr": -32.99,
+                    "risk_level": "medium",
+                    "diff": "Cart Total: $32.99",
+                    "meta": {"bundle_id": "bundle_standard", "price": 32.99}
+                }, "Stage replenishment order proposal in Approval Tray")
+                grounded_synthesis = (
+                    f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                    f"Nothing was staged or ordered."
+                )
+            else:
+                # Check if user asked for an explicit untracked item (e.g. toy, robux, pizza, drone)
+                untracked_match = re.search(r"\b(?:buy|order|purchase)\s+(?:a\s+|an\s+|some\s+)?(toy|robux|drone|pizza|burger|shoes|laptop|car|book|game|ticket|gift)\b", low)
+                if untracked_match and not any(k in low for k in ("coffee", "detergent", "pods", "filter", "dish", "pantry", "groceries", "essentials")):
+                    untracked_name = untracked_match.group(1)
+                    grounded_synthesis = (
+                        f"I couldn't find **\"{untracked_name}\"** in your tracked household pantry inventory. "
+                        "Hearth Universal automates tracked household consumables (coffee, laundry pods, filters, dishwasher tabs) with Subscribe & Save discounts. "
+                        "For general Amazon purchases, please use the Amazon app or say *'Fix groceries'* to restock household essentials."
+                    )
+                else:
+                    deal = deals[0] if deals else None
+                    deal_title = deal["title"] if deal else "Household Consumables Reorder"
+                    deal_price = deal["bundle_price"] if deal else 32.99
 
-            grounded_synthesis = (
-                f"I reviewed your consumable pantry inventory:\n\n"
-                f"• **Organic Arabica Coffee (2 lb)**: Stock is at **15%** (Low — last ordered 38 days ago)\n"
-                f"• **Eco Laundry Pods (80 ct)**: Stock is at **10%** (Critical)\n"
-                f"• **Active Promotion**: 'Pantry & Cleaning Essentials Bundle' saves **$7.50** via Subscribe & Save\n\n"
-                f"📦 I have staged a **${deal_price:.2f} Cart Checkout Card** in your **Approval Tray**. Tap Approve to place the delivery."
-            )
+                    created = call_tool("actions_propose", {
+                        "kind": "commerce_order",
+                        "title": f"Reorder: {deal_title}",
+                        "reasons": "Organic Arabica Coffee is at 15% (Low); Eco Laundry Pods is at 10% (Critical).",
+                        "cost_delta_yr": -deal_price,
+                        "risk_level": "medium",
+                        "diff": f"Cart Total: ${deal_price:.2f} (Includes Subscribe & Save instant discount).",
+                        "meta": {"deal_id": deal["id"] if deal else "bundle_standard", "price": deal_price}
+                    }, "Stage replenishment order proposal in Approval Tray")
+                    if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+                        grounded_synthesis = (
+                            f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                            f"Nothing was staged or ordered."
+                        )
+                    else:
+                        proposals_created.append(created)
+                        media_card = commerce.stage_amazon_cart()
+
+                        grounded_synthesis = (
+                            f"I reviewed your consumable pantry inventory:\n\n"
+                            f"• **Organic Arabica Coffee (2 lb)**: Stock is at **15%** (Low — last ordered 38 days ago)\n"
+                            f"• **Eco Laundry Pods (80 ct)**: Stock is at **10%** (Critical)\n"
+                            f"• **Active Promotion**: 'Pantry & Cleaning Essentials Bundle' saves **$7.50** via Subscribe & Save\n\n"
+                            f"📦 I have staged a **${deal_price:.2f} Cart Checkout Card** in your **Approval Tray**. Tap Approve to place the delivery."
+                        )
         else:
-            item_list = "\n".join([f"• **{i['name']}**: {i['level_pct']}% ({i['status'].upper()})" for i in inv_res.get("inventory", [])])
-            grounded_synthesis = f"Here is your current household consumables inventory:\n\n{item_list}\n\nSay *'Reorder low essentials'* to draft a replenishment cart."
+            # Inquiry path: check if specific item was mentioned
+            queried_item = None
+            for it in inventory:
+                it_name_low = it.get("name", "").lower()
+                it_id_low = it.get("id", "").lower()
+                for part in ("coffee", "detergent", "laundry", "pod", "filter", "hepa", "dishwasher", "dish", "olive oil", "soap", "paper", "tissue"):
+                    if part in low and (part in it_name_low or part in it_id_low):
+                        queried_item = it
+                        break
+                if queried_item:
+                    break
+            
+            if queried_item:
+                status_str = queried_item.get('status', 'good').upper()
+                grounded_synthesis = (
+                    f"Pantry check for **{queried_item['name']}**:\n\n"
+                    f"• **Current Stock**: {queried_item.get('level_pct', 0)}% ({status_str})\n"
+                    f"• **Pacing**: Estimated {queried_item.get('days_until_empty', 'N/A')} days until empty (last ordered {queried_item.get('last_ordered', 'recently')})\n"
+                    f"• **Pricing**: ${queried_item.get('subscribe_and_save_price', queried_item.get('price', 0.0)):.2f} via Subscribe & Save (15% off)\n\n"
+                    f"Say *'Reorder'* or *'Fix groceries'* to stage a replenishment delivery."
+                )
+            elif any(w in low for w in ("egg", "eggs", "milk", "bread", "butter", "cheese", "apple", "banana")):
+                m_item = "Eggs" if "egg" in low else ("Milk" if "milk" in low else "Selected item")
+                low_lines = "\n".join([f"• **{i['name']}**: {i['level_pct']}% ({i['status'].upper()})" for i in low_stock[:3]])
+                grounded_synthesis = (
+                    f"**{m_item}** is not currently in your tracked smart pantry inventory.\n\n"
+                    f"Currently tracked low-stock consumables:\n{low_lines}\n\n"
+                    f"Say *'Fix groceries'* or *'Reorder low essentials'* to stage a 1-tap replenishment cart."
+                )
+            else:
+                item_list = "\n".join([f"• **{i['name']}**: {i['level_pct']}% ({i['status'].upper()})" for i in inventory])
+                grounded_synthesis = f"Here is your current household consumables inventory:\n\n{item_list}\n\nSay *'Reorder low essentials'* to draft a replenishment cart."
 
     # --------------------------------------------------------------------------
     # D. Household Memory Facts
@@ -1249,6 +1382,7 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             created = None
             book_title = f"Book {origin} → {dest} trip ({days} days)"
             pending_titles = {p.get("title") for p in proposals.list_proposals("pending")}
+            trip_blocked = None
             if book_title not in pending_titles:
                 created = call_tool("actions_propose", {
                     "kind": "trip_booking",
@@ -1258,15 +1392,23 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "diff": "Bookings are staged only — providers charge nothing until you approve each leg.",
                     "meta": {"origin": origin, "dest": dest, "budget": budget, "days": days}
                 }, "Stage trip booking proposal")
-                proposals_created.append(created)
+                if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+                    trip_blocked = str(created.get("error", "blocked"))
+                    context_lines.append(f"TripResearch origin={origin} dest={dest} days={days} blocked=True")
+                else:
+                    proposals_created.append(created)
 
             def _fmt(items):
                 return "\n".join(f"• **{r['title']}** — {r['url']}" for r in items[:3])
-            grounded_synthesis = (
-                f"Researched live for **{origin} → {dest}** ({days} days{(', budget ' + budget) if budget else ''}):\n\n"
-                f"✈️ Flights:\n{_fmt(flights)}\n\n🏨 Stays:\n{_fmt(hotels)}\n\n🗺️ Ideas:\n{_fmt(ideas)}"
-                f"{fetched}\n\n📋 Staged a **booking proposal** in your tray — approve to proceed leg by leg. Nothing is booked or charged yet."
-            )
+            if trip_blocked:
+                grounded_synthesis = (f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {trip_blocked}. "
+                                      f"Nothing was staged or booked.")
+            else:
+                grounded_synthesis = (
+                    f"Researched live for **{origin} → {dest}** ({days} days{(', budget ' + budget) if budget else ''}):\n\n"
+                    f"✈️ Flights:\n{_fmt(flights)}\n\n🏨 Stays:\n{_fmt(hotels)}\n\n🗺️ Ideas:\n{_fmt(ideas)}"
+                    f"{fetched}\n\n📋 Staged a **booking proposal** in your tray — approve to proceed leg by leg. Nothing is booked or charged yet."
+                )
         context_lines.append(f"TripResearch origin={origin} dest={dest} days={days}")
 
     # --------------------------------------------------------------------------
@@ -1324,15 +1466,19 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             "diff": plan['proposed_action'].get('diff', ''),
             "meta": plan
         }, "Stage arbitrated household compromise in Approval Tray")
-        proposals_created.append(created)
-        grounded_synthesis = (
-            f"⚖️ **Family Arbiter Conflict Resolution**:\n\n"
-            f"• **Conflict**: {plan['title']}\n"
-            f"• **Parties**: {', '.join(p['name'] for p in plan['parties'])}\n"
-            f"• **Pareto Compromise**: {plan['compromise'].get('energy_impact', 'Balanced utility')}\n"
-            f"• **Resident Satisfaction**: {plan['compromise'].get('satisfaction_index', 'Balanced')}\n\n"
-            f"I have staged an **Arbitration Action Card** in your Approval Tray with the recommended compromise. Tap Approve to apply."
-        )
+        if isinstance(created, dict) and created.get("ok") is False and not created.get("proposal"):
+            grounded_synthesis = (f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: {created.get('error', 'blocked')}. "
+                                 f"Nothing was staged.")
+        else:
+            proposals_created.append(created)
+            grounded_synthesis = (
+                f"⚖️ **Family Arbiter Conflict Resolution**:\n\n"
+                f"• **Conflict**: {plan['title']}\n"
+                f"• **Parties**: {', '.join(p['name'] for p in plan['parties'])}\n"
+                f"• **Pareto Compromise**: {plan['compromise'].get('energy_impact', 'Balanced utility')}\n"
+                f"• **Resident Satisfaction**: {plan['compromise'].get('satisfaction_index', 'Balanced')}\n\n"
+                f"I have staged an **Arbitration Action Card** in your Approval Tray with the recommended compromise. Tap Approve to apply."
+            )
 
     # --------------------------------------------------------------------------
     # J. Glass-Box Time Machine & Predictive Future Projection
@@ -1387,7 +1533,7 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             f"• **Climate**: Living room is at **{temp}°C** in Eco comfort mode\n"
             f"• **Security**: Front door is securely **{lock}** (perimeter armed)\n"
             f"• **Clean Energy**: Generating **{solar} kW** solar power\n\n"
-            "How can I help you today? You can ask me to run an energy audit, restock groceries, adjust room scenes, or stage a pre-emptive resilience plan."
+            "How can I help you today? You can ask me to save $800 on renewals, fix groceries, adjust room scenes, or stage a pre-emptive resilience plan."
         )
 
     # --------------------------------------------------------------------------
@@ -1499,10 +1645,9 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
         lock = home.get("lock", {}).get("state", "locked")
         persona_name = os.environ.get("HEARTH_ACTIVE_PERSONA", "Krishiv").split()[0]
         grounded_synthesis = (
-            f"Understood, {persona_name}. I checked our live home telemetry (living room is {temp}°C, front door {lock}).\n\n"
-            f"Regarding **\"{goal}\"**: I have analyzed your household preferences and active policies. "
-            "Safe status reads have run; if completing this requires hardware adjustments or financial spend, "
-            "I will stage a proposal in your Approval Tray for your 1-tap confirmation."
+            f"Understood, {persona_name}. I checked live smart home telemetry (living room is {temp}°C, front door {lock}).\n\n"
+            f"Regarding **\"{goal}\"**: I have verified your household preferences and active security policies. "
+            "Safe status reads have run; you can ask me to audit subscriptions ('Save me $800'), restock pantry essentials ('Fix groceries'), or adjust climate and lighting."
         )
 
     return {

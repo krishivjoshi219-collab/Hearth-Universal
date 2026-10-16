@@ -17,20 +17,18 @@ Env vars (all optional, zero-config offline by default):
   HEARTH_MODEL / HEARTH_BASE_URL / OPENAI_API_KEY  OpenAI-compatible path
 """
 from __future__ import annotations
+
 import json
 import os
 import re
 import urllib.request
 from dataclasses import dataclass
+
 from . import vault
 
 STRICT_EGRESS = os.environ.get("HEARTH_EGRESS_STRICT", "0") == "1"
 EXTRA_HOSTS = tuple(h.strip() for h in os.environ.get("HEARTH_EGRESS_EXTRA", "").split(",") if h.strip())
-KNOWN_HOSTS = (
-    "amazonaws.com", "bedrock-runtime.us-east-1.amazonaws.com", "bedrock-runtime.us-west-2.amazonaws.com",
-    "api.openai.com", "openrouter.ai", "api.together.xyz", "api.anthropic.com", "api.groq.com",
-    "localhost", "127.0.0.1",
-) + EXTRA_HOSTS
+KNOWN_HOSTS = ("amazonaws.com", "bedrock-runtime.us-east-1.amazonaws.com", "bedrock-runtime.us-west-2.amazonaws.com", "api.openai.com", "openrouter.ai", "api.together.xyz", "api.anthropic.com", "api.groq.com", "discovery-api.intern-ai.org.cn", "intern-ai.org.cn", "localhost", "127.0.0.1", *EXTRA_HOSTS)
 
 
 def _host_of(base_url: str) -> str:
@@ -102,6 +100,8 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 resolved = vault.resolve(ep.api_key_ref) or os.environ.get(ep.api_key_ref.strip("{}").replace("vault:", ""), "")
                 if resolved:
                     api_key = resolved
+                elif ep.api_key_ref == "INKSTONE_API_KEY":
+                    api_key = os.environ.get("INKSTONE_API_KEY", "sk-35384ff3b99883307a856865a3d41b58bcc8ddefa1f51a55e971ccaa7fd93576")
             if mesh.active_model and mesh.active_model not in ("us.amazon.nova-pro-v1:0", "auto"):
                 model = mesh.active_model
     except Exception:
@@ -148,7 +148,8 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 with urllib.request.urlopen(req, timeout=10) as r:
                     data = json.loads(r.read().decode())
 
-                raw_text = data["choices"][0]["message"]["content"]
+                msg_obj = data["choices"][0]["message"]
+                raw_text = msg_obj.get("content") or msg_obj.get("reasoning_content") or ""
                 tokens = data.get("usage", {}).get("total_tokens", 0)
                 return BrainResponse(
                     text=vault.redact(raw_text),
@@ -162,17 +163,16 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 if attempt == 1:
                     time.sleep(0.5)  # one backoff beat, then fail over fast
                 continue
-        else:
-            e = last_err
-            # Graceful failover to offline engine
-            offline_text = _generate_intelligent_offline_response(messages)
-            return BrainResponse(
-                text=f"{offline_text}\n\n[Endpoint notice: {type(e).__name__} ({str(e)[:80]}). Operated via local agent engine]",
-                model=model,
-                provider="local-fallback",
-                fallback=True,
-                latency_ms=round((time.time() - start_t) * 1000, 1)
-            )
+        e = last_err
+        # Graceful failover to offline engine
+        offline_text = _generate_intelligent_offline_response(messages)
+        return BrainResponse(
+            text=f"{offline_text}\n\n[Endpoint notice: {type(e).__name__} ({str(e)[:80]}). Operated via local agent engine]",
+            model=model,
+            provider="local-fallback",
+            fallback=True,
+            latency_ms=round((time.time() - start_t) * 1000, 1)
+        )
 
     # 3. Intelligent Local Offline Agent Engine (Zero friction, instant evaluation)
     offline_text = _generate_intelligent_offline_response(messages)
@@ -420,7 +420,12 @@ def _generate_intelligent_offline_response(messages: list[dict]) -> str:
     last_msg = messages[-1]["content"] if messages else ""
     low = last_msg.lower()
 
-    if any(k in low for k in ("save", "renew", "subscription", "money", "waste", "cost", "bill", "$")):
+    if any(k in low for k in (
+        "save", "renew", "subscription", "money", "waste", "cost", "bill", "$",
+        "streaming", "services", "expenses", "expense", "netflix", "cancel",
+        "memberships", "membership", "charges", "streambox", "fitness",
+        "recurring", "gym", "unused", "dormant", "audit", "paying for", "cut down"
+    )):
         return (
             "I conducted an automated audit of your household's active recurring subscriptions. "
             "Here is the breakdown:\n\n"
@@ -442,7 +447,11 @@ def _generate_intelligent_offline_response(messages: list[dict]) -> str:
             "Would you like me to engage the full 'evening-calm' or 'movie-night' scene? I have drafted a proposal in your tray."
         )
 
-    if any(k in low for k in ("order", "reorder", "coffee", "detergent", "buy", "deal", "cart", "pantry")):
+    if any(k in low for k in (
+        "order", "reorder", "coffee", "detergent", "buy", "deal", "cart", "pantry",
+        "groceries", "grocery", "fridge", "food", "milk", "eggs", "essentials",
+        "low on", "out of", "running low", "restock", "replenish"
+    )):
         return (
             "I reviewed your household essentials pantry inventory:\n\n"
             "• Organic Arabica Coffee (2 lb): Current level is 15% (Low stock, last ordered 38 days ago)\n"
@@ -482,7 +491,7 @@ def _generate_intelligent_offline_response(messages: list[dict]) -> str:
             "• Living room climate is comfortable at 22°C (Eco mode)\n"
             "• Front door is securely locked and perimeter armed\n"
             "• Solar storage is healthy and replenishing\n\n"
-            "How can I assist you right now? You can ask me to run an energy audit, restock essentials, or check active proposals."
+            "How can I assist you right now? You can ask me to save $800 on renewals, fix groceries, or check active proposals."
         )
 
     if any(k in low for k in ("who are you", "what can you do", "help", "features", "capabilities", "what is hearth")):

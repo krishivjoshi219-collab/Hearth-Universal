@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=1280, initial-scale=1" />
 <title>Hearth — Echo Show Surface</title>
 <link rel="stylesheet" href="/web2/css/echo.css" />
+<link rel="stylesheet" href="/web2/css/util.css" />
 </head>
 <body data-display="inline">
 
@@ -33,6 +34,7 @@
       <button class="chip" type="button" data-mode="fullscreen" aria-pressed="false">Fullscreen</button>
       <button class="chip" type="button" data-mode="hydrated" aria-pressed="false">Hydrated</button>
       <button class="chip" type="button" data-mode="voice-only" aria-pressed="false">Voice only</button>
+      <button class="chip" type="button" id="personaToggleBtn" data-persona="admin" aria-pressed="false" title="Switch between adult (Alex) and child (Leo) persona">👤 Alex (Adult)</button>
       <a class="chip" href="/web2/index.html" title="Open the full ops cockpit">Ops cockpit &rarr;</a>
     </div>
 
@@ -94,7 +96,7 @@
       <!-- Spoken turn + rich response -->
       <div class="speech">
         <div class="said" id="said">
-          <span class="q">&ldquo;</span>Alexa, ask Hearth to run an energy audit<span class="q">&rdquo;</span>
+          <span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>
         </div>
         <div id="response" class="reply">
           Tap a suggestion, or speak. Nothing is bought, unlocked or changed without your approval.
@@ -118,16 +120,37 @@
           <span class="pill num" id="trayCount" hidden>0</span>
         </div>
         <div id="trayBody">
-          <div class="empty">Nothing waiting. Consequential actions appear here first.</div>
+          <div class="empty">Nothing has run without you. Consequential actions appear here first — and undo in one tap.</div>
         </div>
       </div>
     </aside>
 
   </div>
 
+  <!-- ----------------------------------------------- tour splash -->
+  <div class="splash" id="splash" hidden>
+    <div class="splash-kicker">HEARTH UNIVERSAL · ALEXA+ TRACK</div>
+    <div class="splash-title">Save me $800.</div>
+    <div class="splash-sub">She proposes. You tap once. She never spends $1 without you.</div>
+  </div>
+
+  <!-- ------------------------------------------------- tour captions -->
+  <div class="tourbar" id="tourbar" hidden>
+    <span class="tour-kicker">GUIDED TOUR · ?tour=1</span>
+    <span class="tour-cap" id="tourCap"></span>
+  </div>
+
   <!-- ------------------------------------------------------------- askrow -->
   <footer class="askrow">
     <span class="lead">Try</span>
+
+    <button class="ask hero" type="button" data-go="/api/renewals" data-body='{}' data-ask="Alexa, ask Hearth to save me $800 on renewals">
+      <span class="ico" aria-hidden="true">💸</span> Save me $800
+    </button>
+
+    <button class="ask hero" type="button" data-go="/api/commerce/autopilot-checkout" data-body='{"utterance":"we are out of everything, fix groceries","voice_confidence":0.95}' data-ask="Alexa, ask Hearth we are out of everything, fix groceries">
+      <span class="ico" aria-hidden="true">&#129717;</span> Fix groceries
+    </button>
 
     <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type":"perimeter_anomaly"}' data-ask="Alexa, ask Hearth why the patio door alarm went off at 3 AM">
       <span class="ico" aria-hidden="true">&#128269;</span> Was someone breaking in?
@@ -158,6 +181,34 @@
     </button>
   </footer>
 
+</div>
+
+<!-- Glass Receipt Modal (single-use execution verification) -->
+<div class="receipt-backdrop" id="receiptBackdrop" hidden>
+  <div class="receipt-card" id="receiptCard" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
+    <div class="receipt-glow" aria-hidden="true"></div>
+    <div class="receipt-header">
+      <div class="receipt-badge">
+        <span class="receipt-dot"></span>
+        <span class="receipt-status">VERIFIED PROPOSAL RECEIPT</span>
+      </div>
+      <button class="receipt-close" id="receiptCloseBtn" type="button" aria-label="Close receipt">&times;</button>
+    </div>
+    <div class="receipt-code num mono" id="receiptCode">HEARTH-RC-0000</div>
+    <h3 class="receipt-title" id="receiptTitle">Action Applied</h3>
+    <div class="receipt-sub" id="receiptSub">Zero-touch ambient operations &middot; Guaranteed reversible</div>
+    
+    <div class="receipt-body" id="receiptBody">
+      <!-- Itemized breakdown injected dynamically -->
+    </div>
+
+    <div class="receipt-footer">
+      <button class="btn ghost danger" id="receiptUndoBtn" type="button" data-pid="">
+        <span class="ico">&#8630;</span> 1-Tap Undo Reversal
+      </button>
+      <button class="btn primary" id="receiptDoneBtn" type="button">Dismiss</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast" role="status"></div>

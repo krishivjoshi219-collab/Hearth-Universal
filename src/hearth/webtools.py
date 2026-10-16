@@ -3,6 +3,7 @@ No API keys needed. Every outbound host is audited; loopback, metadata
 endpoints, and private ranges are hard-blocked (SSRF-proof).
 """
 from __future__ import annotations
+
 import html as _html
 import ipaddress
 import re
@@ -69,7 +70,7 @@ def _search_ddg_html(q: str, count: int) -> tuple[list, str]:
     except Exception:
         return [], "ddg-html-error"
     results = []
-    for m in re.finditer(r'class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?(?:class="result__snippet"[^>]*>(.*?)</a>)?', page, re.S):
+    for m in re.finditer(r'class="result__a"[^>]*href="([^"]+)"[^>]*>(.*?)</a>.*?(?:class="result__snippet"[^>]*>(.*?)</a>)?', page, re.DOTALL):
         link, title, snippet = m.group(1), m.group(2), m.group(3) or ""
         title = re.sub(r"<[^>]+>", "", title).strip()
         title = _html.unescape(title)[:200]
@@ -114,7 +115,7 @@ def _search_ddg_ia(q: str, count: int) -> tuple[list, str]:
     return results, "ddg-instant-answer"
 
 
-_TAG_RE = re.compile(r"<(script|style|nav|footer|header|aside|noscript)[^>]*>.*?</\1>", re.S | re.I)
+_TAG_RE = re.compile(r"<(script|style|nav|footer|header|aside|noscript)[^>]*>.*?</\1>", re.DOTALL | re.IGNORECASE)
 
 
 class NoRedirectHandler(urllib.request.HTTPRedirectHandler):

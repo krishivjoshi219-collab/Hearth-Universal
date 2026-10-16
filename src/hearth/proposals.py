@@ -3,14 +3,16 @@ The agent advises and constructs rich, verifiable proposals.
 The human decides. Nothing modifies subscriptions, moves money, or alters locks without explicit user consent.
 """
 from __future__ import annotations
+
+import contextlib
 import json
 import math
 import os
 import secrets
 import time
 from pathlib import Path
-from . import commerce
-from . import atomic
+
+from . import atomic, commerce
 
 STATE_DIR = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
 
@@ -74,10 +76,8 @@ def propose(
             if not isinstance(items, list):
                 items = []
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 os.replace(p, STATE_DIR / f"proposals.corrupt.{int(time.time())}.json")
-            except Exception:
-                pass
             items = []
 
         now = int(time.time())
@@ -186,10 +186,8 @@ def decide(pid: str, approved: bool) -> dict:
             if not isinstance(items, list):
                 items = []
         except Exception:
-            try:
+            with contextlib.suppress(Exception):
                 os.replace(p, STATE_DIR / f"proposals.corrupt.{int(time.time())}.json")
-            except Exception:
-                pass
             items = []
 
         for it in items:
@@ -211,10 +209,8 @@ def decide(pid: str, approved: bool) -> dict:
             receipt = _execute_approved_action(target)
         except Exception as exc:
             receipt = {"applied": False, "at": int(time.time()), "error": str(exc)}
-        try:
+        with contextlib.suppress(Exception):
             _audit.append("executor", "execution_applied", {"id": pid, "execution": receipt})
-        except Exception:
-            pass
         with atomic.locked(p):
             try:
                 items = json.loads(p.read_text())
@@ -228,10 +224,8 @@ def decide(pid: str, approved: bool) -> dict:
         target["execution"] = receipt
         return target
     if not approved:
-        try:
+        with contextlib.suppress(Exception):
             _audit.append("human", "proposal_rejected", {"id": pid, "title": target.get("title") if target else ""})
-        except Exception:
-            pass
     return target if target is not None else {"ok": False, "error": f"Proposal '{pid}' not found"}
 
 
@@ -274,9 +268,25 @@ def _execute_approved_action(proposal: dict) -> dict:
         lock_status = meta.get("locked", True)
         res = home_mock.toggle_lock(door=meta.get("door", "front_door"), locked=lock_status)
         return {"applied": bool(res.get("ok")), "at": now, "note": f"door {res.get('status')}" if res.get("ok") else res.get("error", "lock failed")}
-    elif kind in ("cancel_subscription", "downgrade_subscription"):
-        return {"applied": True, "at": now,
-                "note": f"recorded {kind} for '{proposal.get('title')}' saving ${proposal.get('cost_delta_yr', 0):.2f}/yr (provider call simulated — no live billing API in sandbox)"}
+    elif kind in ("subscription_cancel", "cancel_subscription", "downgrade_subscription"):
+        save_yr = abs(proposal.get("cost_delta_yr", 0))
+        receipt_code = f"HEARTH-RC-SUB-{str(proposal.get('id', 'p?')).upper()}-{now:X}"
+        portal_url = meta.get("portal_url", "")
+        support_phone = meta.get("support_phone", "")
+        return {
+            "applied": True,
+            "at": now,
+            "receipt_code": receipt_code,
+            "savings_yr": save_yr,
+            "service_name": meta.get("service_name") or proposal.get("title"),
+            "portal_url": portal_url,
+            "support_phone": support_phone,
+            "glass": True,
+            "undo_before": "billing_cycle",
+            "undo_via": f"/api/undo {proposal.get('id')} | actions_undo",
+            "note": f"Recorded cancellation/downgrade for '{proposal.get('title')}' saving ${save_yr:.2f}/yr. Provider call simulated — no live billing API in sandbox.",
+            "sandbox": True,
+        }
     elif kind == "commerce_order":
         cart = (meta.get("cart_preview") or {})
         receipt_code = f"HEARTH-RC-{str(proposal.get('id', 'p?')).upper()}-{now:X}"
@@ -369,7 +379,7 @@ def undo(pid: str) -> dict:
                         from . import home_mock
                         home_mock.update_device("living_room", "climate", {"target_c": 22.0, "mode": "comfort"})
                         reversal_note = "Thermostat restored to baseline 22.0°C comfort"
-                    elif kind in ("cancel_subscription", "downgrade_subscription"):
+                    elif kind in ("subscription_cancel", "cancel_subscription", "downgrade_subscription"):
                         reversal_note = f"Subscription modification for '{it.get('title')}' rolled back (active status maintained)"
                     elif kind == "commerce_order":
                         reversal_note = f"Cart replenishment for '{it.get('title')}' cancelled before dispatch"

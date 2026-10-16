@@ -6,12 +6,12 @@ brain switches require proof of adulthood. Tokens bind request identity
 server-side so `owner` can never be spoofed from a request body.
 """
 from __future__ import annotations
+
 import hashlib
 import hmac
 import json
 import os
 from dataclasses import dataclass
-
 
 FULL_SCOPES = ("admin", "partner")
 LIMITED_SCOPES = ("child", "guest")
@@ -55,8 +55,8 @@ def _load_tokens() -> dict[str, str]:
         except Exception:
             return {}
     out: dict[str, str] = {}
-    for pair in raw.split(","):
-        pair = pair.strip()
+    for raw_pair in raw.split(","):
+        pair = raw_pair.strip()
         if ":" in pair:
             tok, persona = pair.split(":", 1)
             tok, persona = tok.strip(), persona.strip().lower()
