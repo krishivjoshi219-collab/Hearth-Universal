@@ -298,6 +298,11 @@
       .trim();
   }
 
+  function setVoiceWave(active) {
+    const w = document.getElementById("voiceWave");
+    if (w) w.hidden = !active;
+  }
+
   function speak(text) {
     const clean = sanitizeForVoice(text);
     el.live.textContent = clean;
@@ -308,8 +313,14 @@
       u.rate = 1.02;
       u.pitch = 1.0;
       u.volume = 1.0;
+      setVoiceWave(true);
+      u.onend = () => setVoiceWave(false);
+      u.onerror = () => setVoiceWave(false);
       window.speechSynthesis.speak(u);
-    } catch (_) { /* speech unavailable; live region still updated */ }
+    } catch (_) {
+      setVoiceWave(false);
+      /* speech unavailable; live region still updated */
+    }
   }
 
   function listening(on) {
@@ -393,10 +404,11 @@
           (c) =>
             '<div class="card"><div class="top">' +
             '<span class="name">' + esc(c.name) + "</span>" +
-            (c.tag ? '<span class="tag">' + esc(c.tag) + "</span>" : "") +
+            (c.tag ? '<span class="tag ' + esc(c.tagClass || c.tag) + '">' + esc(c.tag) + "</span>" : "") +
             (c.score != null ? '<span class="score num">' + esc(c.score) + "</span>" : "") +
             "</div>" +
             (c.body ? '<div class="body">' + c.body + "</div>" : "") +
+            (c.action ? '<div class="card-action-bar">' + c.action + "</div>" : "") +
             "</div>"
         )
         .join("") +
@@ -555,8 +567,12 @@
       const cards = (d.renewals || []).map((s) => ({
         name: s.name,
         tag: s.recommendation === "cancel" ? "cancel" : "downgrade",
+        tagClass: s.recommendation === "cancel" ? "cancel" : "downgrade",
         score: "+$" + num(s.savings_yr, 2) + "/yr",
         body: "<em>" + esc(s.usage_status || "") + "</em><br/>" + esc(s.reason || ""),
+        action: '<button type="button" class="card-action-btn" data-sub="' + esc(s.id) + '">' +
+                (s.recommendation === "cancel" ? 'Stage Cancellation' : 'Stage Downgrade') +
+                ' &middot; Save $' + num(s.savings_yr, 2) + '/yr &rarr;</button>',
       }));
       const stageRow = '<div class="stage-row">' + (d.renewals || []).map((s) =>
         '<button type="button" class="btn ghost" data-sub="' + esc(s.id) + '">Stage +$' +
@@ -585,16 +601,19 @@
         );
       }
       const cart = d.cart_preview || {};
+      const slot = cart.delivery_schedule?.slot_name || "Amazon Prime Dedicated Box · Tomorrow, 7:00 AM - 11:00 AM";
       const items = (cart.items || []).map((it) => ({
         name: it.name,
-        tag: "Subscribe & Save",
+        tag: "Subscribe & Save (15%)",
+        tagClass: "subscribe",
         score: "$" + num(it.unit_price, 2),
-        body: "was $" + num(it.original_price, 2) + " · <em>" + esc(it.prime_delivery || "") + "</em>",
+        body: "was $" + num(it.original_price, 2) + " · <em>" + esc(it.prime_delivery || "Amazon Prime") + "</em>",
       }));
       return (
-        verdictBanner("🛒", "CART STAGED — NOTHING ORDERED",
+        verdictBanner("🛒", "CART STAGED — NOTHING CHARGED",
           "$" + num(cart.final_total, 2) + " (saves $" + num(cart.savings, 2) + ")",
           "") +
+        '<div class="reply"><strong>📦 ' + esc(slot) + '</strong><br/>Consolidated Subscribe & Save bundle with automated replenishment.</div>' +
         cardList(items) +
         '<div class="reply">Tap Approve in the tray to order · one tap undoes. ' +
         esc(d.message || "") + "</div>"
@@ -1091,6 +1110,87 @@
       } catch (err) {
         toast("Could not switch persona", true);
       }
+    });
+  }
+
+  // --------------------------------------------------- interactive hero tiles
+  const lockTile = document.getElementById("heroLockTile");
+  if (lockTile) {
+    lockTile.addEventListener("click", async () => {
+      if (busy) return;
+      const curLocked = (el.heroLock.textContent || "").trim().toLowerCase() === "locked";
+      try {
+        if (curLocked) {
+          const res = await call("/api/home/lock", { locked: false });
+          if (res.approval_required) {
+            playEarcon("stage");
+            toast("Front door unlock proposal staged in tray for human approval.");
+            speak("Front door unlock staged in the approval tray.");
+            await refreshTray();
+          }
+        } else {
+          const res = await call("/api/home/lock", { locked: true });
+          if (res.ok) {
+            playEarcon("approve");
+            toast("Front door locked and secured.");
+            speak("Front door locked.");
+            await refreshAmbient();
+          }
+        }
+      } catch (err) {
+        playEarcon("block");
+        toast("Lock action restricted.", true);
+      }
+    });
+  }
+
+  const toggleClimate = async () => {
+    if (busy) return;
+    const curText = el.heroTarget.textContent || "";
+    const isComfort = curText.includes("72") || curText.includes("22");
+    const nextTarget = isComfort ? 20.0 : 22.2;
+    const nextMode = isComfort ? "eco" : "comfort";
+    try {
+      await call("/api/home/device", {
+        room: "living_room",
+        device: "climate",
+        state: { target_c: nextTarget, mode: nextMode }
+      });
+      playEarcon("approve");
+      const fVal = Math.round(nextTarget * 9 / 5 + 32);
+      toast("Living room set to " + fVal + "°F (" + nextMode.toUpperCase() + ")");
+      speak("Thermostat adjusted to " + fVal + " degrees.");
+      await refreshAmbient();
+    } catch (_) {
+      toast("Climate adjustment unavailable.", true);
+    }
+  };
+  const targetRow = document.getElementById("heroTargetRow");
+  const tempRing = document.getElementById("heroTempRing");
+  if (targetRow) targetRow.addEventListener("click", toggleClimate);
+  if (tempRing) tempRing.addEventListener("click", toggleClimate);
+
+  const mPantry = document.getElementById("mPantry");
+  if (mPantry) {
+    mPantry.addEventListener("click", () => {
+      const btn = document.querySelector("button[data-go='/api/commerce/autopilot-checkout']");
+      if (btn) btn.click();
+    });
+  }
+
+  const mSolar = document.getElementById("mSolar");
+  if (mSolar) {
+    mSolar.addEventListener("click", () => {
+      const btn = document.querySelector("button[data-go='/api/swarm/grid']");
+      if (btn) btn.click();
+    });
+  }
+
+  const mEnergy = document.getElementById("mEnergy");
+  if (mEnergy) {
+    mEnergy.addEventListener("click", () => {
+      const btn = document.querySelector("button[data-go='/api/parliament/deliberate']");
+      if (btn) btn.click();
     });
   }
 

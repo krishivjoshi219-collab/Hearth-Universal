@@ -53,12 +53,12 @@
       <!-- Ambient resting state -->
       <div class="ambient" id="ambient">
         <div class="hero">
-          <div class="ring" role="img" aria-label="Indoor temperature">
+          <div class="ring interactive-tile" id="heroTempRing" role="button" tabindex="0" title="Tap to toggle comfort / eco climate" aria-label="Indoor temperature">
             <div class="val num" id="heroTemp">--</div>
             <div class="unit">&deg;F</div>
           </div>
           <div class="detail">
-            <div class="row">
+            <div class="row interactive-row" id="heroTargetRow" role="button" tabindex="0" title="Tap to toggle target temperature (Eco 68°F / Comfort 72°F)">
               <span class="rk">Target</span>
               <span class="rv num" id="heroTarget">&mdash;</span>
             </div>
@@ -68,24 +68,24 @@
             </div>
           </div>
 
-          <div class="where">
+          <div class="where interactive-tile" id="heroLockTile" role="button" tabindex="0" title="Tap to secure or unlock front door">
             <div class="label">Front door</div>
             <div class="val" id="heroLock">&mdash;</div>
           </div>
         </div>
 
         <div class="metrics">
-          <div class="metric" id="mEnergy" data-accent="emerald">
+          <div class="metric interactive-tile" id="mEnergy" data-accent="emerald" role="button" tabindex="0" title="Tap to inspect grid distribution">
             <div class="k">Energy</div>
             <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
           </div>
-          <div class="metric" id="mSolar" data-accent="sky">
+          <div class="metric interactive-tile" id="mSolar" data-accent="sky" role="button" tabindex="0" title="Tap to coordinate neighborhood solar sharing">
             <div class="k">Solar</div>
             <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
           </div>
-          <div class="metric" id="mPantry" data-accent="amber">
+          <div class="metric interactive-tile" id="mPantry" data-accent="amber" role="button" tabindex="0" title="Tap to restock essentials with Subscribe & Save">
             <div class="k">Pantry</div>
             <div class="v num" data-v>&mdash;</div>
             <div class="s" data-s>&nbsp;</div>
@@ -95,8 +95,13 @@
 
       <!-- Spoken turn + rich response -->
       <div class="speech">
-        <div class="said" id="said">
-          <span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>
+        <div class="speech-header">
+          <div class="said" id="said">
+            <span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>
+          </div>
+          <div class="voice-wave" id="voiceWave" aria-hidden="true" hidden>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
         </div>
         <div id="response" class="reply">
           Tap a suggestion, or speak. Nothing is bought, unlocked or changed without your approval.
