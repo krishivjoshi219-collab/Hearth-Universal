@@ -2,11 +2,17 @@
    Inline style="" attributes are stripped by the server's
    `style-src 'self'` CSP, so JS-built markup uses these classes. */
 
+/* Note: four hoisted slug() collisions (card boxes, header rows) were
+   split into unique names by hand: u-s2-box / u-s2-box-row /
+   u-s2-box-sm / u-s2-box-sm-row, u-row-between-mb10 /
+   u-row-between-card / u-row-between-gap, u-fs-micro-t1-mb8.
+   Do not re-run hoist_inline_styles.py without re-checking collisions. */
+
 .u-background-var-s2-border-1px-solid-var-line-bord { background:var(--s2);border:1px solid var(--line);border-radius:8px;padding:12px; }
-.u-background-var-s2-border-1px-solid-var-line-bord { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:11px;margin-bottom:8px; }
-.u-background-var-s2-border-1px-solid-var-line-bord { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:space-between; }
-.u-background-var-s2-border-1px-solid-var-line-bord { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px; }
-.u-background-var-s2-border-1px-solid-var-line-bord { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;font-size:11px; }
+.u-s2-box { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;font-size:11px;margin-bottom:8px; }
+.u-s2-box-row { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:space-between; }
+.u-s2-box-sm { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:11px; }
+.u-s2-box-sm-row { background:var(--s2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:flex;justify-content:space-between;align-items:center;font-size:11px; }
 .u-background-var-s2-padding-10px-border-radius-6px { background:var(--s2);padding:10px;border-radius:6px;margin:10px 0;font-size:12px; }
 .u-background-var-s3-padding-2px-5px-border-radius- { background:var(--s3);padding:2px 5px;border-radius:4px;font-size:0.9em;color:var(--amber); }
 .u-background-var-s3-padding-8px-12px-border-radius { background:var(--s3);padding:8px 12px;border-radius:6px;overflow-x:auto;margin:6px 0;font-size:var(--fs-micro);line-height:1.4; }
@@ -35,15 +41,15 @@
 .u-display-flex-align-items-center-gap-6px-margin-b { display:flex;align-items:center;gap:6px;margin-bottom:8px; }
 .u-display-flex-align-items-center-gap-8px-margin-b { display:flex;align-items:center;gap:8px;margin-bottom:4px; }
 .u-display-flex-align-items-center-justify-content- { display:flex;align-items:center;justify-content:space-between;margin-bottom:12px; }
-.u-display-flex-align-items-center-justify-content- { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
-.u-display-flex-align-items-center-justify-content- { display:flex;align-items:center;justify-content:space-between;padding:10px var(--sp3);background:var(--s2);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:8px; }
+.u-row-between-mb10 { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.u-row-between-card { display:flex;align-items:center;justify-content:space-between;padding:10px var(--sp3);background:var(--s2);border:1px solid var(--line);border-radius:var(--r-card);margin-bottom:8px; }
 .u-display-flex-flex-direction-column-gap-10px { display:flex;flex-direction:column;gap:10px; }
 .u-display-flex-flex-direction-column-gap-6px { display:flex;flex-direction:column;gap:6px; }
 .u-display-flex-flex-direction-column-gap-6px-margi { display:flex;flex-direction:column;gap:6px;margin-bottom:8px; }
 .u-display-flex-gap-12px-margin-bottom-10px-font-si { display:flex;gap:12px;margin-bottom:10px;font-size:11px; }
 .u-display-flex-gap-8px { display:flex;gap:8px; }
 .u-display-flex-justify-content-space-between-align { display:flex;justify-content:space-between;align-items:center;margin-bottom:6px; }
-.u-display-flex-justify-content-space-between-align { display:flex;justify-content:space-between;align-items:center;gap:8px; }
+.u-row-between-gap { display:flex;justify-content:space-between;align-items:center;gap:8px; }
 .u-display-flex-justify-content-space-between-margi { display:flex;justify-content:space-between;margin-bottom:2px; }
 .u-flex-1 { flex:1; }
 .u-font-size-10-5px-color-var-t3-margin-bottom-8px { font-size:10.5px;color:var(--t3);margin-bottom:8px; }
@@ -67,7 +73,7 @@
 .u-font-size-var-fs-body { font-size:var(--fs-body); }
 .u-font-size-var-fs-micro { font-size:var(--fs-micro); }
 .u-font-size-var-fs-micro-color-var-t1-margin-botto { font-size:var(--fs-micro);color:var(--t1);margin-bottom:10px;line-height:1.4; }
-.u-font-size-var-fs-micro-color-var-t1-margin-botto { font-size:var(--fs-micro);color:var(--t1);margin-bottom:8px; }
+.u-fs-micro-t1-mb8 { font-size:var(--fs-micro);color:var(--t1);margin-bottom:8px; }
 .u-font-size-var-fs-micro-color-var-t2 { font-size:var(--fs-micro);color:var(--t2); }
 .u-font-size-var-fs-micro-color-var-t2-margin-botto { font-size:var(--fs-micro);color:var(--t2);margin-bottom:12px; }
 .u-font-weight-700 { font-weight:700; }
@@ -89,7 +95,3 @@
 /* --- runtime-valued styles, previously inline and CSP-stripped --- */
 .u-bg-ok { background: var(--ok); }
 .u-bg-amber { background: var(--amber); }
-.u-color-var-ok { color: var(--ok); }
-.u-color-var-amber { color: var(--amber); }
-.u-color-var-bad { color: var(--bad); }
-.u-color-var-t2 { color: var(--t2); }

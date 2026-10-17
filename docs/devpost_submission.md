@@ -45,7 +45,7 @@ We built **Hearth Universal** for **Alexa+** around one rule families instantly 
 
 Say *"Alexa, save me $800 on renewals"* → she audits 5 subscriptions, finds **$803.76/yr** waste, stages 3 cards with exact before/after diffs → you tap once → SHA-256 receipt sealed. Say *"restock coffee"* → 15% Subscribe & Save cart staged, Prime slot booked, still nothing ordered until you tap. Switch to Leo (9) → orders + unlocks hard-blocked with a kind "ask a grown-up" card.
 
-Under that 60-second magic is real Alexa+ tech: self-hosted MCP 2025-11-25 Streamable HTTP (51 tools live), Strands multi-agent supervisor, Bedrock memory, MCP Apps cards, Agent Skills — all offline-first so a judge can run it with zero keys.
+Under that 60-second magic is real Alexa+ tech: self-hosted MCP 2025-11-25 Streamable HTTP (51 tools live), Strands multi-agent supervisor, Bedrock memory, MCP Apps cards, Agent Skills — all offline-first so a judge can run it with zero keys. Bring your own key in the preview (🧠 Connect AI) and free-form questions route through **your** provider — OpenAI, Groq, OpenRouter, Ollama, any OpenAI-compatible endpoint, or Bedrock — with the key stored server-side only.
 
 ---
 
@@ -110,14 +110,14 @@ Beyond financial waste auditing and Subscribe & Save replenishments, Hearth prov
 - **Bedrock AgentCore (`src/hearth/agentcore.py`)**: Persistent session turns and cross-session episodic context retrieval.
 - **Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers.
 - **Official Rubric Evaluator (`scripts/evaluate_rubric.py`)**: 1-second automated verification across all competition rubrics.
-- **Testing & Verification**: 290 automated unit, regression, contract, auth, UI-contract, and smoke tests passing (+15 open-source adapter tests = 305 total, 100% pass rate).
+- **Testing & Verification**: 305 automated unit, regression, contract, auth, UI-contract, and smoke tests passing (+15 open-source adapter tests = 320 total, 100% pass rate).
 
 ---
 
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **290 Automated Tests (+15 adapter = 305 Total)**: 100% pass rate with high test coverage.
+- **305 Automated Tests (+15 adapter = 320 Total)**: 100% pass rate with high test coverage.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Open Source Contribution**: `mcp-strands-adapter` covers the direction the SDK does not ship — exposing Strands agents *as* MCP tools, reusing the SDK's own `tool_spec` rather than re-deriving schemas. Apache-2.0, 15 standalone tests, real `mcp` and `strands-agents` dependencies declared honestly.

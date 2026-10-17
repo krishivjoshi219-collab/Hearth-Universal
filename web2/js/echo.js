@@ -40,11 +40,42 @@
     receiptUndoBtn: $("#receiptUndoBtn"),
     receiptCloseBtn: $("#receiptCloseBtn"),
     receiptDoneBtn: $("#receiptDoneBtn"),
+    brainBtn: $("#brainBtn"),
+    brainCallout: $("#brainCallout"),
+    calloutConnectBtn: $("#calloutConnectBtn"),
+    askForm: $("#askForm"),
+    askText: $("#askText"),
+    askSend: $("#askSend"),
+    keyBackdrop: $("#keyBackdrop"),
+    keyCard: $("#keyCard"),
+    keyCloseBtn: $("#keyCloseBtn"),
+    keyProvider: $("#keyProvider"),
+    keyBaseUrlField: $("#keyBaseUrlField"),
+    keyBaseUrl: $("#keyBaseUrl"),
+    keyModelField: $("#keyModelField"),
+    keyModel: $("#keyModel"),
+    keyApiKeyField: $("#keyApiKeyField"),
+    keyApiKey: $("#keyApiKey"),
+    keyRegionField: $("#keyRegionField"),
+    keyRegion: $("#keyRegion"),
+    keyAccessField: $("#keyAccessField"),
+    keyAccess: $("#keyAccess"),
+    keySecretField: $("#keySecretField"),
+    keySecret: $("#keySecret"),
+    keyNote: $("#keyNote"),
+    keyStatus: $("#keyStatus"),
+    keyClearBtn: $("#keyClearBtn"),
+    keyTestBtn: $("#keyTestBtn"),
+    keySaveBtn: $("#keySaveBtn"),
   };
 
   let displayMode = "inline";
   let busy = false;
   let toastTimer = null;
+
+  /* Bring-your-own-AI state, hydrated from /api/brain/connect. The server
+   * stores the key itself; the browser only ever sees a masked hint. */
+  let brainState = { configured: false, presets: [] };
 
   // ---------------------------------------------------------------- helpers
 
@@ -72,6 +103,40 @@
       esc(label) + "</span>";
   }
 
+  /* A reply longer than the card fades at its bottom edge; scrolling marks it
+   * "at end" so the fade disappears exactly when there is nothing more to see. */
+  function markScrollable() {
+    const host = el.response && el.response.parentElement;
+    if (!host || !el.response) return;
+    const more = el.response.scrollHeight > el.response.clientHeight + 4;
+    host.classList.toggle("scrollable", more);
+    host.classList.toggle(
+      "at-end",
+      !more || el.response.scrollTop + el.response.clientHeight >= el.response.scrollHeight - 6
+    );
+  }
+
+  if (el.response) {
+    el.response.addEventListener("scroll", markScrollable);
+  }
+
+  /* The TRY strip overflows on narrow screens; fade its right edge while more
+   * chips are waiting, so the cut chip reads as "scroll me", not "broken". */
+  const askScroll = $(".ask-scroll");
+  if (askScroll) {
+    const syncAskScroll = () => {
+      const max = askScroll.scrollWidth - askScroll.clientWidth;
+      askScroll.classList.toggle(
+        "fade-end",
+        max > 6 && askScroll.scrollLeft < max - 6
+      );
+    };
+    askScroll.addEventListener("scroll", syncAskScroll, { passive: true });
+    if (window.ResizeObserver) new ResizeObserver(syncAskScroll).observe(askScroll);
+    window.addEventListener("resize", syncAskScroll);
+    syncAskScroll();
+  }
+
   async function call(path, body) {
     const res = await fetch(path, {
       method: "POST",
@@ -91,6 +156,286 @@
   function setConn(state, text) {
     el.connDot.className = "dot " + (state || "");
     el.connText.textContent = text;
+  }
+
+  /* ============================================== connect your own AI ===
+   * The preview ships with a zero-config offline engine so nothing breaks
+   * without a key. Connecting a key turns free-form questions into live
+   * provider answers; the key itself lives server-side (state/brain_config
+   * .json, chmod 600) and is never echoed back to this page. */
+
+  const BRAIN_STATUS_PATH = "/api/brain/connect";
+
+  function presetById(id) {
+    return (brainState.presets || []).find((p) => p.id === id) || null;
+  }
+
+  function brainChip() {
+    if (el.brainBtn) {
+      const label = brainState.configured
+        ? "🧠 " + (brainState.model || brainState.provider_name || "AI ready")
+        : "🧠 Connect AI";
+      el.brainBtn.textContent = label.length > 34 ? label.slice(0, 33) + "…" : label;
+      el.brainBtn.classList.toggle("on", !!brainState.configured);
+      el.brainBtn.title = brainState.configured
+        ? "Connected via " + (brainState.provider_name || brainState.provider) +
+          ". Tap to change or disconnect."
+        : "Connect your own AI key so free-form questions get live answers";
+    }
+    if (el.brainCallout) el.brainCallout.hidden = !!brainState.configured;
+  }
+
+  async function refreshBrain() {
+    try {
+      const r = await fetch(BRAIN_STATUS_PATH);
+      if (r.ok) brainState = await r.json();
+    } catch (_) { /* keep the last known state; ask still works offline */ }
+    brainChip();
+  }
+
+  function fillKeyForm(presetId) {
+    const p = presetById(presetId) || {};
+    const isBedrock = p.kind === "bedrock";
+    el.keyBaseUrlField.hidden = isBedrock;
+    el.keyApiKeyField.hidden = isBedrock;
+    el.keyRegionField.hidden = !isBedrock;
+    el.keyAccessField.hidden = !isBedrock;
+    el.keySecretField.hidden = !isBedrock;
+    el.keyBaseUrl.value = p.base_url || "";
+    el.keyModel.value = p.model || "";
+    el.keyApiKey.value = "";
+    if (isBedrock) el.keyRegion.value = el.keyRegion.value || "us-east-1";
+    let note = p.note || "";
+    if (!isBedrock && presetId === "openai" && brainState.env_key_available) {
+      note = "An OpenAI key is already set on this machine — leave the field blank to use it.";
+    }
+    el.keyNote.textContent = note;
+    el.keyNote.hidden = !note;
+    el.keyNote.classList.toggle("env", !!brainState.env_key_available && !isBedrock);
+  }
+
+  function populateProviders() {
+    if (!el.keyProvider || el.keyProvider.options.length) return;
+    (brainState.presets || []).forEach((p) => {
+      const o = document.createElement("option");
+      o.value = p.id;
+      o.textContent = p.name;
+      el.keyProvider.appendChild(o);
+    });
+  }
+
+  function openKeyModal() {
+    populateProviders();
+    if (brainState.configured && presetById(brainState.provider)) {
+      el.keyProvider.value = brainState.provider;
+    }
+    fillKeyForm(el.keyProvider.value || "openai");
+    el.keyStatus.className = "key-status" + (brainState.configured ? " ok" : "");
+    el.keyStatus.textContent = brainState.configured
+      ? "Connected via " + (brainState.provider_name || brainState.provider) +
+        (brainState.key_hint ? " (" + brainState.key_hint + ")" : "")
+      : "";
+    el.keyClearBtn.hidden = !brainState.configured;
+    el.keyBackdrop.hidden = false;
+    el.keyApiKey.focus();
+  }
+
+  function closeKeyModal() {
+    el.keyBackdrop.hidden = true;
+  }
+
+  function keyPayload(extra) {
+    const pid = el.keyProvider.value;
+    const p = presetById(pid) || {};
+    const payload = { provider: pid, model: el.keyModel.value.trim() };
+    if (p.kind === "bedrock") {
+      payload.region = el.keyRegion.value.trim();
+      payload.access_key_id = el.keyAccess.value.trim();
+      payload.secret_access_key = el.keySecret.value.trim();
+    } else {
+      payload.base_url = el.keyBaseUrl.value.trim();
+      payload.api_key = el.keyApiKey.value;
+    }
+    return Object.assign(payload, extra || {});
+  }
+
+  async function saveKey(doTest) {
+    el.keySaveBtn.disabled = true;
+    el.keyTestBtn.disabled = true;
+    el.keyStatus.className = "key-status";
+    el.keyStatus.textContent = doTest ? "Testing your provider…" : "Saving…";
+    try {
+      const res = await fetch(BRAIN_STATUS_PATH, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(keyPayload({ test: !!doTest })),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+      brainState = data;
+      brainChip();
+      el.keyClearBtn.hidden = !data.configured;
+      const t = data.test;
+      if (t) {
+        el.keyStatus.className = "key-status " + (t.ok ? "ok" : "err");
+        el.keyStatus.textContent = t.ok
+          ? (t.detail || "Reached your provider") + " — ready."
+          : "Saved, but the test failed: " + (t.error || "unknown error");
+      } else {
+        el.keyStatus.className = "key-status ok";
+        el.keyStatus.textContent = data.message || "Connected.";
+      }
+      toast(t && !t.ok ? "Saved — check the test result" : "AI connected — ask me anything", t && !t.ok);
+    } catch (err) {
+      el.keyStatus.className = "key-status err";
+      el.keyStatus.textContent = String(err.message || err);
+    } finally {
+      el.keySaveBtn.disabled = false;
+      el.keyTestBtn.disabled = false;
+    }
+  }
+
+  async function disconnectKey() {
+    el.keyClearBtn.disabled = true;
+    try {
+      const res = await fetch("/api/brain/disconnect", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      el.keyStatus.className = "key-status";
+      el.keyStatus.textContent = data.message || "Disconnected.";
+      brainState = data;
+      brainChip();
+      el.keyClearBtn.hidden = true;
+      toast("Disconnected — the offline engine still answers");
+    } catch (err) {
+      el.keyStatus.className = "key-status err";
+      el.keyStatus.textContent = String(err.message || err);
+    } finally {
+      el.keyClearBtn.disabled = false;
+    }
+  }
+
+  function wireBrain() {
+    if (el.brainBtn) el.brainBtn.addEventListener("click", openKeyModal);
+    if (el.calloutConnectBtn) el.calloutConnectBtn.addEventListener("click", openKeyModal);
+    if (el.keyCloseBtn) el.keyCloseBtn.addEventListener("click", closeKeyModal);
+    if (el.keyBackdrop) {
+      el.keyBackdrop.addEventListener("click", (e) => {
+        if (e.target === el.keyBackdrop) closeKeyModal();
+      });
+    }
+    if (el.keyProvider) {
+      el.keyProvider.addEventListener("change", () => {
+        el.keyStatus.textContent = "";
+        el.keyStatus.className = "key-status";
+        fillKeyForm(el.keyProvider.value);
+      });
+    }
+    if (el.keySaveBtn) el.keySaveBtn.addEventListener("click", () => saveKey(false));
+    if (el.keyTestBtn) el.keyTestBtn.addEventListener("click", () => saveKey(true));
+    if (el.keyClearBtn) el.keyClearBtn.addEventListener("click", disconnectKey);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && el.keyBackdrop && !el.keyBackdrop.hidden) closeKeyModal();
+    });
+    if (el.askForm) {
+      el.askForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const text = el.askText.value.trim();
+        if (!text) {
+          toast("Type a question first", true);
+          return;
+        }
+        el.askText.value = "";
+        askFree(text);
+      });
+    }
+  }
+
+  /* Free-form turn: the planner (MCP tools + optional live brain) answers,
+   * stages any consequential proposal in the tray, and never executes one. */
+  async function askFree(message) {
+    const text = String(message || "").trim();
+    if (!text || busy) return;
+    busy = true;
+    document.querySelectorAll(".ask").forEach((b) => (b.disabled = true));
+    if (el.askSend) el.askSend.disabled = true;
+    el.said.innerHTML =
+      '<span class="q">&ldquo;</span>' + esc(text) + '<span class="q">&rdquo;</span>';
+    el.eyebrow.textContent = "Live answer";
+    thinking("Thinking it through…");
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+      el.response.innerHTML = renderAskAnswer(data);
+      document.body.classList.add("has-result");
+      el.response.scrollTop = 0;
+      requestAnimationFrame(markScrollable);
+      el.said.parentElement.scrollTop = 0;
+      speak(data.draft || "Here is what I found.");
+      await refreshTray();
+    } catch (err) {
+      el.response.innerHTML =
+        '<div class="answer">I could not complete that: ' + esc(err.message) + "</div>" +
+        (brainState.configured
+          ? ""
+          : '<div class="meta-line">Tip: connect your own AI key for live free-form answers.</div>');
+      if (!brainState.configured && el.brainCallout) el.brainCallout.hidden = false;
+      speak("Sorry, that did not work.");
+    } finally {
+      busy = false;
+      document.querySelectorAll(".ask").forEach((b) => (b.disabled = false));
+      if (el.askSend) el.askSend.disabled = false;
+    }
+  }
+
+  function toolChip(step) {
+    const t = String(step.tool || "");
+    const icon =
+      /home|scene|light|lock|climate|thermostat/i.test(t) ? "🏠" :
+      /web_search|search/i.test(t) ? "🔎" :
+      /renew|subscription/i.test(t) ? "💸" :
+      /commerce|grocery|order|cart|checkout/i.test(t) ? "🛒" :
+      /forensic|security|incident/i.test(t) ? "🔍" :
+      /acoustic|appliance|fridge/i.test(t) ? "🩺" :
+      /solar|grid|swarm|energy/i.test(t) ? "⚡" :
+      /parliament|vote|deliberate/i.test(t) ? "🏛️" :
+      /mediation|treaty/i.test(t) ? "🤝" :
+      /causal|simulat|forecast/i.test(t) ? "🔮" :
+      /memory|remember/i.test(t) ? "🧠" : "•";
+    const label = humanize(t).replace(/^(handlers?|semantic|exec|tools?)\s+/i, "");
+    return (
+      '<span class="step' + (step.status === "blocked" ? " blocked" : "") + '">' +
+      esc(icon) + " " + esc(label || "step") + "</span>"
+    );
+  }
+
+  function renderAskAnswer(d) {
+    // Escape first, then light markdown: the planner's drafts use **bold**.
+    const text = esc(d.draft || "…").replace(/\*\*([^*\n]{1,80})\*\*/g, "<strong>$1</strong>");
+    const bits = ['<div class="answer">' + text + "</div>"];
+    const steps = Array.isArray(d.dag) ? d.dag.filter((s) => s && s.tool).slice(0, 6) : [];
+    if (steps.length) bits.push('<div class="steps">' + steps.map(toolChip).join("") + "</div>");
+    const n = Array.isArray(d.proposals_created) ? d.proposals_created.length : 0;
+    if (n) {
+      bits.push(
+        '<div class="staged-note">' + n + " proposal" + (n === 1 ? "" : "s") +
+        " staged in your approval tray — nothing runs until you approve.</div>"
+      );
+    }
+    const raw = d.provider || "local";
+    const pretty =
+      raw === "openai-compatible" ? (d.fallback ? "built-in engine" : "your AI") :
+      raw === "sentinel-blocked" ? "blocked by policy" :
+      raw === "local" || raw === "local-fallback" ? "built-in engine" : raw;
+    const meta = d.fallback
+      ? pretty + " · offline"
+      : pretty + (d.model ? " · " + d.model : "");
+    bits.push('<div class="meta-line num">' + esc(meta) + "</div>");
+    return bits.join("");
   }
 
   // ------------------------------------------------------------------- clock
@@ -380,10 +725,10 @@
   async function handleUtterance(phrase) {
     const hit = UTTERANCE_ROUTES.find((r) => r.re.test(phrase));
     if (!hit) {
-      const msg =
-        "I did not match that to a capability. Try asking about a break-in, the household parliament, a seven day forecast, selling solar, the family treaty, or restocking groceries.";
-      el.response.textContent = msg;
-      speak(msg);
+      // No showcase match: hand the sentence to the planner as a free-form
+      // question. It answers from live tools (and the connected brain when
+      // one is configured) instead of a canned "I did not match that".
+      await askFree(phrase);
       return;
     }
     const body = hit.passPhrase
@@ -692,6 +1037,8 @@
       // Recede the ambient hero so the reply owns the stage, and start the
       // reply region scrolled to the top of the new content.
       document.body.classList.add("has-result");
+      el.response.scrollTop = 0;
+      requestAnimationFrame(markScrollable);
       el.said.parentElement.scrollTop = 0;
       speak(speechLineFor(path, data));
       el.eyebrow.textContent = label || "Result";
@@ -946,7 +1293,7 @@
         '<div class="receipt-row"><span class="receipt-rk">Delivery Window</span><span class="receipt-rv">' + esc(sched) + '</span></div>' +
         '<div class="receipt-row"><span class="receipt-rk">Replenishment Total</span><span class="receipt-rv highlight num">$' + num(tot, 2) + '</span></div>' +
         (sav > 0 ? '<div class="receipt-row"><span class="receipt-rk">Subscribe & Save Discount (15%)</span><span class="receipt-rv highlight num">-$' + num(sav, 2) + '</span></div>' : '') +
-        (items.length ? '<div class="receipt-items-list">' + items.map(it => '<div class="receipt-item-line"><span>' + esc(it.name || it.item_id) + '</span><span class="num mono">$' + num(it.price, 2) + '</span></div>').join('') + '</div>' : '') +
+        (items.length ? '<div class="receipt-items-list">' + items.map(it => '<div class="receipt-item-line"><span>' + esc(it.name || it.item_id) + '</span><span class="num mono">$' + num((it.unit_price ?? it.price ?? 0) * (it.quantity || 1), 2) + '</span></div>').join('') + '</div>' : '') +
         '<div class="receipt-row"><span class="receipt-rk">Human Reversibility</span><span class="receipt-rv">Reversible in 1 tap prior to fulfillment dispatch</span></div>';
     } else {
       html =
@@ -1104,7 +1451,7 @@
             speak("Switched to adult profile. Full household authorization enabled.");
             el.said.innerHTML = '<span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>';
             el.response.innerHTML =
-              '<div class="reply">Tap a suggestion, or speak. Nothing is bought, unlocked or changed without your approval.</div>';
+              '<div class="reply">Ask for anything above, or tap the microphone. Nothing runs without your approval — and every approval undoes in one tap.</div>';
           }
         }
       } catch (err) {
@@ -1197,6 +1544,8 @@
   tickClock();
   setInterval(tickClock, 15000);
   setupMic();
+  wireBrain();
+  refreshBrain();
   refreshAmbient();
   refreshTray();
   setInterval(() => { refreshAmbient(); refreshTray(); }, 20000);

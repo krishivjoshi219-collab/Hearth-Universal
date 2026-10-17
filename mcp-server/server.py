@@ -56,6 +56,7 @@ from hearth import (
     arbiter,
     audit,
     auth,
+    brain_config,
     brains,
     causal_twin,
     commerce,
@@ -1879,6 +1880,57 @@ async def api_brain(request: Request):
         return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
 
 
+@mcp.custom_route("/api/brain/connect", methods=["GET", "POST"])
+async def api_brain_connect(request: Request):
+    """Bring-your-own-key: connect the household's own AI brain.
+
+    GET  -> redacted status + provider presets (never the raw key).
+    POST -> validate + persist to state/brain_config.json (0600) + apply.
+            ``{"test": true}`` additionally pre-flights the endpoint so the
+            preview can show a live OK before the first question.
+    """
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    if request.method == "GET":
+        return JSONResponse(brain_config.status())
+    gate = _adult_or_403(request, "brain_connect")
+    if gate is not None:
+        return gate
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON payload"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
+    try:
+        out = brain_config.save(body)
+    except ValueError as e:
+        _bump("brain_connect_rejected")
+        return JSONResponse({"ok": False, "error": str(e)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": brain_config.vault_redact(str(e))}, status_code=400)
+    audit.append("human", "brain_connect", {
+        "provider": out.get("provider"), "model": out.get("model"), "host": out.get("host"),
+    })
+    if body.get("test"):
+        out["test"] = brain_config.test_connection()
+    return JSONResponse(out)
+
+
+@mcp.custom_route("/api/brain/disconnect", methods=["POST"])
+async def api_brain_disconnect(request: Request):
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "brain_disconnect")
+    if gate is not None:
+        return gate
+    out = brain_config.clear()
+    audit.append("human", "brain_disconnect", {})
+    return JSONResponse(out)
+
+
 @mcp.custom_route("/api/metrics", methods=["GET"])
 async def api_metrics(request: Request):
     """Bedrock-native telemetry: metrics.latencyMs series + counts (no PII)."""
@@ -2827,13 +2879,20 @@ async def vendor_static(request: Request):
 
 @mcp.custom_route("/", methods=["GET"])
 async def index(request: Request):
-    idx = os.path.join(WEB_DIR, "index.html")
+    """Consumer landing page: what Hearth is, what it does, and a Get Started
+    path into the live product (/echo). Falls back to the ops cockpit when the
+    landing page is absent, so the root URL never dead-ends for a judge."""
+    landing = os.path.join(WEB2_DIR, "landing.html")
+    if os.path.exists(landing):
+        return FileResponse(landing, headers={"Cache-Control": "no-store", **_SECURITY_HEADERS})
+    idx = os.path.join(WEB2_DIR, "index.html")
     if os.path.exists(idx):
-        return FileResponse(idx, headers={"Cache-Control": "no-store"})
+        return FileResponse(idx, headers={"Cache-Control": "no-store", **_SECURITY_HEADERS})
     return PlainTextResponse("Hearth Universal MCP 2025-11-25 at /mcp.")
 
 
 if __name__ == "__main__":
+    brain_config.load()  # bring-your-own-key config survives restarts
     print(f"Hearth Universal on :{_PORT} | MCP {PROTOCOL} Streamable HTTP stateless | /mcp + /health + /")
     print(f"brain provider={brains._get_active_provider()} model={os.environ.get('HEARTH_MODEL', 'default')} "
           f"scheduler={'on' if os.environ.get('HEARTH_SCHEDULER') == '1' else 'off'} "

@@ -347,7 +347,7 @@ on("roi", (r) => {
     '<br><button class="btn u-min-height-36px-margin-top-8px" id="roiGo" >Review in Approvals</button></div></div>' +
     items.slice(0, 4).map((s) =>
       '<div class="insight"><div class="txt">' + esc(s.name || s.id) + '<br><span class="mono">' +
-      esc(s.usage_status || s.detail || "") + "</span></div><div class='mono' style='color:var(--ok)'>$" +
+      esc(s.usage_status || s.detail || "") + "</span></div><div class='mono u-color-var-ok'>$" +
       esc(s.savings_yr ?? "?") + "/yr</div></div>"
     ).join("");
   const go = $("#roiGo");
@@ -428,9 +428,9 @@ on("proposals", (res) => {
     el.querySelector('[data-a="mine"]').addEventListener("click", () => decide(p.id, false, el, "Noted — marked as handled by you."));
     el.querySelector('[data-a="inspect"]').addEventListener("click", () =>
       openDialog(p.title || p.kind,
-        "<p style='color:var(--t2)'>" + esc((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "")) + "</p>" +
+        "<p class='u-color-var-t2'>" + esc((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "")) + "</p>" +
         '<div class="diff">' + esc(p.diff || p.detail || JSON.stringify(p.meta || {}, null, 1)) + "</div>" +
-        "<p class='mono' style='color:var(--t3)'>id " + esc(p.id) + " · kind " + esc(p.kind) + "</p>",
+        "<p class='mono u-color-var-t3'>id " + esc(p.id) + " · kind " + esc(p.kind) + "</p>",
         [
           { label: "Proceed", primary: true, onClick: () => decide(p.id, true, el) },
           { label: "⏪ Time Travel", onClick: () => replayDecision(p.id) },
@@ -460,13 +460,13 @@ async function replayDecision(id) {
     ' · ' + esc(t.actor) + ' · ' + esc(t.action) + '</div>'
   ).join("") || '<div class="muted-sm">No audit entries yet</div>';
   openDialog("⏪ Time Travel: " + (data.title || data.kind),
-    "<p style='color:var(--amber);font-weight:700'>" + esc(data.replay_note || "") + "</p>" +
-    "<p style='color:var(--t1);margin:8px 0'><strong>Why:</strong> " +
+    "<p class='u-color-var-amber-font-weight-700'>" + esc(data.replay_note || "") + "</p>" +
+    "<p class='u-color-var-t1-margin-8px-0'><strong>Why:</strong> " +
     esc(JSON.stringify(data.why || {}, null, 1)) + "</p>" +
-    (data.execution ? "<p class='receipt' style='color:var(--ok)'>Receipt: " +
+    (data.execution ? "<p class='receipt u-color-var-ok'>Receipt: " +
       esc(data.execution.receipt_code || data.execution.note || "") + "</p>" : "") +
     '<div class="diff u-margin-12px-0-max-height-220px-overflow-y-auto" >' + trail + "</div>" +
-    "<p class='mono' style='color:var(--t3)'>chain " +
+    "<p class='mono u-color-var-t3'>chain " +
     (data.chain_valid ? "valid ✓" : "BROKEN") + " · undo " +
     (data.undo_available ? "available" : "n/a") + "</p>",
     data.undo_available
@@ -614,8 +614,8 @@ async function handleUserChat(msg) {
     ).join("  ·  ");
     row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><div class="what">' +
       formatMarkdown(text) + "</div></div>" +
-      (dag ? "<details open><summary>How it reasoned</summary><div class='mono' style='color:var(--t2)'>" + dag + "</div></details>" : "") +
-      (data.blocked ? "<div class='receipt' style='color:var(--bad)'>Blocked: " + esc(data.reason || "") + "</div>" : "");
+      (dag ? "<details open><summary>How it reasoned</summary><div class='mono u-color-var-t2'>" + dag + "</div></details>" : "") +
+      (data.blocked ? "<div class='receipt u-color-var-bad'>Blocked: " + esc(data.reason || "") + "</div>" : "");
     logEl.prepend(row);
   }
   
@@ -1046,7 +1046,7 @@ on("forensics", (f) => {
     '<span class="u-font-size-11px-color-var-amber" >' + esc(f.verdict || "ATMOSPHERIC_DELTA_P") + '</span>' +
     '</div>' +
     '<p class="u-font-size-var-fs-micro-color-var-t1-margin-botto" >' + esc(f.summary || "") + '</p>' +
-    '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+    '<div class="u-s2-box" >' +
     factors.slice(0, 3).map((pf) =>
       '<div class="u-margin-bottom-4px" ><strong>' + esc(pf.factor) + ':</strong> ' + esc(pf.measured) + ' — <span class="u-color-var-t2" >' + esc(pf.impact) + '</span></div>'
     ).join("") +
@@ -1104,8 +1104,8 @@ on("acoustic", (a) => {
     '<div><span class="u-font-size-11px-color-var-t2" >Friction Index:</span> <strong class="mono u-color-var-bad" >' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong></div>' +
     '<div><span class="u-font-size-11px-color-var-t2" >Failure In:</span> <strong class="u-color-var-bad" >~' + esc(diag.estimated_days_to_failure || 14) + ' Days</strong></div>' +
     '</div>' +
-    '<p class="u-font-size-var-fs-micro-color-var-t1-margin-botto" >' + esc(diag.recommended_action || "") + '</p>' +
-    (diag.part_asin ? '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+    '<p class="u-fs-micro-t1-mb8" >' + esc(diag.recommended_action || "") + '</p>' +
+    (diag.part_asin ? '<div class="u-s2-box-row" >' +
       '<span class="u-font-size-11px" >📦 Part: <strong class="mono">' + esc(diag.part_asin) + '</strong> (15% Subscribe &amp; Save)</span>' +
       (diag.staged_proposal_id ? '<span class="pill u-color-var-ok-font-size-10px" >Staged in Tray</span>' : '') +
       '</div>' : '');
@@ -1163,7 +1163,7 @@ on("mediation", (m) => {
     esc((m.domains_conceded || []).join(", ") || "none") + '</div>' +
     '<div class="u-display-flex-flex-direction-column-gap-6px-margi" >' +
     covs.map((c) =>
-      '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+      '<div class="u-s2-box-sm" >' +
       '<div class="u-display-flex-justify-content-space-between-margi" >' +
       '<strong>' + esc((c.domain || "").replace(/_/g, " ").toUpperCase()) + '</strong>' +
       '<span class="u-color-var-t2" >' + esc(c.resident || "") + '</span>' +
@@ -1191,7 +1191,7 @@ if (mediationBtn) {
       // "undefined" in this dialog.
       const covHtml = (data.covenants || []).map((c) =>
         '<div class="u-margin-bottom-10px-padding-10px-background-var-s" >' +
-        '<div class="u-display-flex-justify-content-space-between-align" >' +
+        '<div class="u-row-between-gap" >' +
         '<strong>' + esc(c.resident || "") + '</strong>' +
         '<span class="u-color-var-t2-font-size-11px-text-transform-upper" >' + esc((c.domain || "").replace(/_/g, " ")) + '</span>' +
         '<span class="num u-color-var-ok-font-weight-600" >' + esc(c.satisfaction_pct) + '%</span>' +
@@ -1248,7 +1248,7 @@ on("swarm", (s) => {
   const arb = s.economic_arbitrage || {};
   const nodes = s.nodes || [];
   box.innerHTML =
-    '<div class="u-display-flex-align-items-center-justify-content-" >' +
+    '<div class="u-row-between-mb10" >' +
     '<span class="u-font-size-var-fs-micro-color-var-t2" >Settlement Rate: <strong class="u-color-var-ok" >$' + esc(s.local_clearing_price_usd_kwh) + '/kWh</strong> <small>(vs utility $' + esc(s.utility_sell_rate_usd_kwh) + ')</small></span>' +
     '<span class="pill u-color-var-ok" >● ' + nodes.length + ' P2P Nodes</span>' +
     '</div>' +
@@ -1259,7 +1259,7 @@ on("swarm", (s) => {
     '</div>' +
     '<div class="u-display-flex-flex-direction-column-gap-6px" >' +
     nodes.slice(1).map((n) =>
-      '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
+      '<div class="u-s2-box-sm-row" >' +
       '<div><strong>' + esc(n.address) + '</strong> (' + esc(n.asset || n.role) + ')</div>' +
       '<span class="mono u-color-var-amber" >' + esc(n.power_kw) + ' kW (' + esc(n.battery_soc_pct) + '% SOC)</span>' +
       '</div>'
@@ -1549,7 +1549,7 @@ function renderRealDevices(devices) {
     settingsList.innerHTML = devices.map((d) => {
       const icon = domainIcons[d.domain] || "🔌";
       return (
-        '<div class="u-display-flex-align-items-center-justify-content-" >' +
+        '<div class="u-row-between-card" >' +
         '<div class="u-display-flex-align-items-center-gap-10px" >' +
         '<span class="u-font-size-18px" >' + icon + '</span>' +
         '<div><strong>' + esc(d.name) + '</strong><small class="u-display-block-color-var-t2" >' + esc(d.room) + ' · ' + esc(d.protocol) + ' (' + esc(d.state) + ')</small></div>' +

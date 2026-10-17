@@ -11,12 +11,12 @@
 [![Transport](https://img.shields.io/badge/Transport-Streamable%20HTTP%20(:8787)-blue?style=flat-square)](https://modelcontextprotocol.io)
 [![RFC 9728](https://img.shields.io/badge/OAuth-RFC%209728%20PRM-orange?style=flat-square)](https://datatracker.ietf.org/doc/rfc9728/)
 [![OAuth 2.1](https://img.shields.io/badge/Auth-OAuth%202.1%20PKCE%20S256-blueviolet?style=flat-square)](https://oauth.net/2.1/)
-[![Tests: 290 Passed](https://img.shields.io/badge/Tests-290%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
+[![Tests: 305 Passed](https://img.shields.io/badge/Tests-305%20Passed%20(100%25)-emerald?style=flat-square)](tests/)
 [![Coverage](https://img.shields.io/badge/Coverage-74.65%25-brightgreen?style=flat-square)](pyproject.toml)
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-3776ab?style=flat-square&logo=python)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
-**🎬 Judge in 60 seconds:** watch the 2:30 video (link above) → tap `💰 Save me $800` in `/echo` → Approve once → Undo once → switch to Leo (9) and try to buy. That's the whole product.
+**🎬 Judge in 60 seconds:** open `/` (consumer home page: what Hearth is and does) → hit **Get started** → in `/echo` tap `💰 Save me $800` → Approve once → Undo once → switch to Leo (9) and try to buy. That's the whole product.
 
 [🎬 Video script (shooting now — 2:30 WIN CUT)](docs/demo_video_script.md) · [⚡ 1-Click Judge Demo](#-1-click-interactive-judge-demo-fastest-way-to-test) · [🏆 Judging Criteria Mapping](#-how-this-maps-to-the-official-judging-criteria) · [🏗️ Architecture](#-system-architecture) · [💡 5 Consumer Pillars](#-what-hearth-actually-does-for-your-family-the-5-core-consumer-pillars) · [🔬 Resilience Engines](#-modular-home-resilience--extension-engines-appendix) · [🛡️ Safety Contract](#-propose-never-execute-safety--reversibility-contract) · [🛠️ Tool Catalog (51 Tools)](#-complete-fastmcp-tool-catalog-51-tools)
 
@@ -63,7 +63,10 @@ cd Hearth-Universal
 3. **Verifies Alexa+ Compliance**: Executes [`tests/test_alexaplus_addon_compliance.py`](tests/test_alexaplus_addon_compliance.py) validating RFC 9728 PRM, OAuth 2.1 PKCE S256 two-tier authentication, and `addon.json`.
 4. **Validates Frontier Innovations**: Executes [`tests/test_frontier_innovations.py`](tests/test_frontier_innovations.py) (18 tests verifying Forensics, Acoustics, Treaty, and Swarm VPP).
 5. **Proves the hero flow over live HTTP**: Stages the "out of everything" Subscribe & Save cart via `POST /api/commerce/autopilot-checkout` and prints the Tier-2 gated result.
-6. **Runs the full suite**: 290 tests green, then prints judge links (`/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
+6. **Runs the full suite**: 305 tests green, then prints judge links (`/`, `/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
+
+### Bring Your Own Key (Optional)
+The preview answers every free-form question out of the box with the zero-config local engine. To route those answers through your own model, click the **🧠 Connect AI** chip in the `/echo` header (or the callout on first load) and enter a key for OpenAI, Groq, OpenRouter, Ollama (no key needed), any OpenAI-compatible endpoint, or Amazon Bedrock. The key is written to `state/brain_config.json` (chmod 0600, gitignored), applied server-side over `brains.chat`, and never echoed back to the browser — status only ever shows a masked hint. `make clean` removes it. Wrong keys or dead endpoints degrade to the offline engine with an honest notice; they never 500 the household.
 
 ---
 
@@ -87,7 +90,7 @@ score — the panel does that.
 | Official criterion | What we built | Run this to verify |
 |---|---|---|
 | **Tech Implementation** — how well built, how effectively the required tech is used | Self-hosted MCP server on the real `mcp` SDK: 51 tools / 8 resources / 3 prompts, spec `2025-11-25`, RFC 9728 PRM, OAuth 2.1 with PKCE S256 (client-credentials + auth-code + refresh tiers). Real algorithms, not stubs: constrained Nash bargaining (`parliament.py`), 1R1C thermal + battery integration with quantiles/CVaR (`causal_twin.py`), log-odds Bayesian hypothesis testing over orifice/wind-load physics (`forensics.py`), numpy FFT with parabolic peak interpolation (`acoustic.py`), uniform-price double auction (`swarm.py`). | `pytest` · `python3 scripts/evaluate_rubric.py` · `python3 tests/test_creative_mcp_endpoints.py` |
-| **Design** — complete, coherent product experience; intuitive for the target device | Two surfaces: an **Echo Show viewport** (`/echo`, 1280×800, glanceable cards, large touch targets, voice-first turn flow with live TTS) and a dense **ops cockpit** (`/web2`) for deep inspection. The backend implements all four display modes (`inline`, `fullscreen`, `hydrated`, `voice-only`) plus MCP Apps resource descriptors. | Open `/echo`, then `/web2` |
+| **Design** — complete, coherent product experience; intuitive for the target device | Three surfaces that read as one product: a **consumer home page** (`/` — professional intro, plain-language benefits, live figures from the running engine, pricing, FAQ, Get Started hand-off), an **Echo Show viewport** (`/echo`, 1280×800, glanceable cards, 64px+ touch targets, voice-first turn flow with live TTS) and a dense **ops cockpit** (`/web2`) for deep inspection. The backend implements all four display modes (`inline`, `fullscreen`, `hydrated`, `voice-only`) plus MCP Apps resource descriptors. | Open `/`, then `/echo` and `/web2` |
 | **Potential Impact** — credible, specific case; could serve an audience beyond the hackathon | Propose-Never-Execute with 1-tap undo, child-persona guardrails, and an HMAC-chained audit ledger make autonomous control of a physical home defensible. Purchasing (voice-to-tray → glass receipt → undo) maps onto the Payments/checkout surface Alexa+ is building. Offline-first means it runs in a judge room with no cloud account. | `./replay.sh` (deterministic decision replay) · `/api/audit/replay` |
 | **Quality of the Idea** — creative, imaginative, genuine ecosystem understanding | The judges' own "creative" bar for Alexa+ is *"agentic workflow that orchestrates across services autonomously, context-aware add-on that maintains state across sessions, purchasing capabilities, MCP Apps, Agent Skills."* Hearth targets each: multi-agent orchestration, cross-session memory, checkout, MCP Apps resources, and a **Meta-Skill Synthesizer** that compiles and hot-mounts new skills at runtime behind an AST validator. | `python3 -c "…meta_skill.meta_synthesizer.synthesize('…')"` |
 
@@ -383,9 +386,9 @@ Hearth enforces a zero-trust safety boundary for physical smart homes:
 
 ---
 
-## 🖥️ Interactive Web Experience (`/echo` + `web2/`)
+## 🖥️ Interactive Web Experience (`/` + `/echo` + `web2/`)
 
-Hearth ships two surfaces: an **Echo Show viewport** at `/echo` (1280×800, large type, glanceable cards, voice-first turn flow) for the Alexa+ experience, and the dense **ops cockpit** in `web2/` for deep inspection.
+Hearth ships three surfaces that read as one product: the **consumer home page** at `/` (a professional introduction — what Hearth is, what it does, how it works, trust guarantees, pricing, and a **Get started** button into the live product), the **Echo Show viewport** at `/echo` (1280×800, large type, glanceable cards, voice-first turn flow) for the Alexa+ experience, and the dense **ops cockpit** in `web2/` for deep inspection.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -419,7 +422,7 @@ Hearth ships two surfaces: an **Echo Show viewport** at `/echo` (1280×800, larg
 
 Hearth’s **Universal Model Mesh** (`/api/models/mesh`) provides complete model freedom:
 
-1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 290-test suite green (305 across all packages).
+1. **Offline-First Judge Default**: Runs 100% locally with zero keys — deterministic local brain, real game-theory/physics engines, full 305-test suite green. Bring your own AI key in the `/echo` preview (🧠 chip) and the same free-form channel switches to your live provider.
 2. **Amazon Bedrock Optional (Emulated Unless Enabled)**: Set `AWS_BEDROCK_ENABLED=1` + creds for live **Amazon Nova Pro** (300k context) with fallback to **Claude 3.5 Sonnet** / **Nova Lite**. Without creds the mesh honestly reports `aws-bedrock-simulated` fallback — never fakes a cloud call.
 3. **Connect Any Remote LLM or Local Endpoint**:
    * **Ollama**: `http://localhost:11434/v1`
@@ -563,7 +566,7 @@ All 51 tools are exposed over Streamable HTTP at `/mcp` conforming to MCP protoc
 
 ---
 
-## 🧪 Comprehensive Automated Test Suite (290 / 290 PASSED; 305 with Adapter)
+## 🧪 Comprehensive Automated Test Suite (305 / 305 PASSED; 320 with Adapter)
 
 The test suite validates every layer of the architecture, from protocol handshakes to multi-agent game theory:
 
@@ -584,6 +587,7 @@ tests/test_b5_commerce.py ................... [5 passed]
 tests/test_b6_autopilot_checkout.py ......... [12 passed]
 tests/test_b7_time_travel.py ................ [9 passed]
 tests/test_bedrock.py ....................... [3 passed]
+tests/test_brain_connect.py ................. [13 passed]
 tests/test_contracts.py ..................... [7 passed]
 tests/test_creative_mcp_endpoints.py ........ [3 passed]
 tests/test_echo_surface.py .................. [28 passed]
@@ -601,12 +605,12 @@ tests/test_winning_parliament_causal_meta.py ... [14 passed]
 tests/test_input_sensitivity_10.py .... [4 passed]
 
 ==============================================================
-290 passed (plus 15 in open-source adapter = 305 total passed)
+305 passed (plus 15 in open-source adapter = 320 total passed)
 TOTAL                                5294   1184   1510    313    75%
 Required test coverage of 70.0% reached. Total coverage: 74.65%
 ```
 
-* **Mostly In-Memory Testing**: 289 of 290 tests use Starlette's `TestClient` with no socket binding. The one exception (`tests/test_mcp_http.py`) deliberately spawns a real server on port 8799 and tears it down — it proves the protocol over a real socket, including input-sensitive roundtrips (`forensic_incident_reconstruct` flipping to intruder, `acoustic_diagnostics_scan` going healthy on override) rather than through an in-process shim.
+* **Mostly In-Memory Testing**: 304 of 305 tests use Starlette's `TestClient` with no socket binding. The exceptions (`tests/test_mcp_http.py` spawns a real server on port 8799; `test_brain_connect.py` runs a mock OpenAI-compatible provider on a loopback socket) deliberately prove the wire, not an in-process shim.
 
 ---
 

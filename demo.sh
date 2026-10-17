@@ -202,8 +202,9 @@ echo -e "${BOLD}${CYAN}=========================================================
 echo -e "${BOLD}${GREEN}✓ ALL HACKATHON CHECKS VERIFIED — READY FOR JUDGING${NC}"
 echo -e "${BOLD}${CYAN}================================================================================${NC}"
 echo -e "${BOLD}Interactive Surfaces & Discovery Endpoints:${NC}"
-echo -e "  🖥️  Ops Cockpit (desktop):        ${CYAN}http://localhost:8787/web2/index.html${NC}"
+echo -e "  🏠  Consumer Home (start here):  ${CYAN}http://localhost:8787/${NC}"
 echo -e "  🔊  Echo Show Surface:           ${CYAN}http://localhost:8787/echo${NC}"
+echo -e "  🖥️  Ops Cockpit (desktop):        ${CYAN}http://localhost:8787/web2/index.html${NC}"
 echo -e "  ⚡  Streamable HTTP MCP (2025):   ${CYAN}http://localhost:8787/mcp${NC}"
 echo -e "  📦  Add-on Manifest:             ${CYAN}http://localhost:8787/addon.json${NC}"
 echo -e "  🛡️  RFC 9728 Protected Metadata: ${CYAN}http://localhost:8787/.well-known/oauth-protected-resource${NC}"
@@ -212,14 +213,15 @@ echo -e "  📊  Health & Diagnostics:       ${CYAN}http://localhost:8787/health
 echo -e "  📈  Live Diagnostics:            ${CYAN}http://localhost:8787/api/diagnostics${NC}"
 echo -e ""
 echo -e "${BOLD}Recommended 3-Minute Judge Flow:${NC}"
-echo -e "  1. Open ${CYAN}http://localhost:8787/echo${NC} ${DIM}(Echo Show surface — start here)${NC}"
-echo -e "  2. Tap an example phrase to trigger a real MCP tool call"
-echo -e "  3. Approve something in the tray, then hit Undo to show reversibility"
-echo -e "  4. Open ${CYAN}/web2${NC} for the full ops cockpit (Parliament, Causal Twin, CSI, Swarm)"
-echo -e "  5. ${CYAN}/api/diagnostics${NC} shows live backend state (Strands SDK, Bedrock, model mesh)"
+echo -e "  1. Open ${CYAN}http://localhost:8787/${NC} ${DIM}(consumer home page — what Hearth is)${NC}"
+echo -e "  2. Hit ${CYAN}Get started${NC} to enter ${CYAN}/echo${NC} ${DIM}(Echo Show surface)${NC}"
+echo -e "  3. Tap an example phrase to trigger a real MCP tool call"
+echo -e "  4. Approve something in the tray, then hit Undo to show reversibility"
+echo -e "  5. Open ${CYAN}/web2${NC} for the full ops cockpit (Parliament, Causal Twin, CSI, Swarm)"
+echo -e "  6. ${CYAN}/api/diagnostics${NC} shows live backend state (Strands SDK, Bedrock, model mesh)"
 echo -e "================================================================================"
 
 if command -v xdg-open > /dev/null 2>&1 && [ -n "$DISPLAY" ]; then
-  echo -e "${DIM}Opening the Echo Show surface in your default browser...${NC}"
-  xdg-open "http://localhost:8787/echo" > /dev/null 2>&1 || true
+  echo -e "${DIM}Opening the Hearth home page in your default browser...${NC}"
+  xdg-open "http://localhost:8787/" > /dev/null 2>&1 || true
 fi

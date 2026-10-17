@@ -14,7 +14,7 @@ verify:
 
 clean:
 	rm -rf __pycache__ .pytest_cache *.egg-info build dist .coverage htmlcov
-	rm -f state/proposals.json state/audit.jsonl state/heartbeat.json
+	rm -f state/proposals.json state/audit.jsonl state/heartbeat.json state/brain_config.json
 	find state -name "memory.corrupt.*.db" -delete 2>/dev/null; true
 
 docker-build:

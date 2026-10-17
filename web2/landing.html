@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hearth — Tell Alexa "Save me $800." She proposes. You tap once.</title>
+<meta name="description" content="Hearth is the household agent for Alexa+. It finds the money your family leaks — forgotten subscriptions, grocery guesswork — proposes exactly what to do, and never spends, orders, or unlocks anything without your tap. One tap runs it. One tap undoes it." />
+<link rel="stylesheet" href="/web2/css/landing.css" />
+</head>
+<body>
+
+<!-- atmosphere -->
+<div class="bg" aria-hidden="true">
+  <div class="bg-aurora"></div>
+  <div class="bg-hearth"></div>
+  <div class="bg-grain"></div>
+</div>
+
+<!-- ======================================================== nav -->
+<header class="nav" id="nav">
+  <div class="container nav-inner">
+    <a class="brand" href="/" aria-label="Hearth home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 3c1.2 2.6.4 4.1-.9 5.6C9.6 10.3 8 11.9 8 14.5A4.5 4.5 0 0 0 12.5 19 4.5 4.5 0 0 0 17 14.5c0-1.7-.8-3-1.8-4.3-.5-.7-1-1.4-1.3-2.2-.8 1-1.4 2-1.4 3.4 0 .9.3 1.6.8 2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="brand-word">Hearth</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Product">
+      <a href="#features">What it does</a>
+      <a href="#how">How it works</a>
+      <a href="#trust">Trust &amp; safety</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+
+    <div class="nav-cta">
+      <a class="btn btn-ghost btn-sm" href="/web2/index.html" title="The dense engineering view for judges and tinkerers">Advanced view</a>
+      <a class="btn btn-primary btn-sm" href="/echo">Get started</a>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<!-- ======================================================== hero -->
+<section class="hero">
+  <div class="container hero-grid">
+
+    <div class="hero-copy">
+      <p class="kicker"><span class="dot live-dot" aria-hidden="true"></span> Built for Alexa+ &middot; MCP 2025-11-25 &middot; Open source</p>
+
+      <h1>Tell Alexa,<br/><em>&ldquo;Save me $800.&rdquo;</em></h1>
+
+      <p class="lead">
+        Hearth is the household agent that finds the money your family leaks — forgotten
+        subscriptions, grocery guesswork, energy waste — then proposes exactly what to do.
+        <strong>It never spends, orders, or unlocks anything without your tap.</strong>
+        One tap runs it. One tap undoes it.
+      </p>
+
+      <div class="hero-ctas">
+        <a class="btn btn-primary btn-lg" href="/echo">
+          Get started — it&rsquo;s free
+          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
+      </div>
+
+      <ul class="hero-trust" role="list">
+        <li>No card required</li>
+        <li>Built for Echo Show</li>
+        <li>Nothing runs without you</li>
+      </ul>
+    </div>
+
+    <!-- live approval tray visual -->
+    <div class="hero-visual" aria-label="A preview of the Hearth approval tray">
+      <div class="tray-card">
+        <div class="tray-head">
+          <div class="tray-title">
+            <span class="tray-ico" aria-hidden="true">📥</span>
+            <span>Approval tray</span>
+          </div>
+          <span class="pill-live"><span class="dot live-dot" aria-hidden="true"></span> LIVE</span>
+        </div>
+
+        <div class="tray-rows">
+          <div class="trow">
+            <div class="trow-main">
+              <div class="trow-name"><span id="heroLeakName">StreamBox 4K</span> — <span class="trow-soft" id="heroLeakDays">dormant 68 days</span></div>
+              <div class="trow-meta"><span id="heroLeakVerb">Cancel</span> &middot; saves <strong class="num" id="heroLeakSave">$239.88</strong>/yr</div>
+            </div>
+            <a class="btn btn-mini btn-primary" href="/echo" aria-label="Approve StreamBox cancellation in the live demo">Approve</a>
+          </div>
+
+          <div class="trow">
+            <div class="trow-main">
+              <div class="trow-name">Pantry — <span class="trow-soft">5 staples running low</span></div>
+              <div class="trow-meta">Subscribe &amp; Save cart &middot; <strong class="num">15% off</strong></div>
+            </div>
+            <a class="btn btn-mini btn-primary" href="/echo" aria-label="Approve the grocery cart in the live demo">Approve</a>
+          </div>
+
+          <div class="trow trow-blocked">
+            <div class="trow-main">
+              <div class="trow-name">Leo (9) asked to buy Robux</div>
+              <div class="trow-meta">Child guardrail — <strong>blocked by design, not by prompt</strong></div>
+            </div>
+            <span class="badge-locked">🔒 Locked</span>
+          </div>
+        </div>
+
+        <div class="tray-foot">
+          Nothing above has happened yet. You are always the one who taps.
+        </div>
+      </div>
+      <p class="hero-visual-note">Live preview of the real tray — <a href="/echo">open the demo</a> to approve for yourself.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================== stats -->
+<section class="stats" aria-label="Measured results in the demo household">
+  <div class="container stats-grid">
+    <div class="stat">
+      <div class="stat-num num" id="statSaveVal">$803.76</div>
+      <div class="stat-cap">subscription waste found <span class="stat-sub">per year, itemized down to each service</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-num num" id="statSubsVal">5</div>
+      <div class="stat-cap">renewals audited <span class="stat-sub">cancel, downgrade, or keep — with reasons</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-num num">15%</div>
+      <div class="stat-cap">Subscribe &amp; Save restocks <span class="stat-sub">bulk pricing, staged — never auto-charged</span></div>
+    </div>
+    <div class="stat">
+      <div class="stat-num num">0</div>
+      <div class="stat-cap">actions without your approval <span class="stat-sub">and every approval undoes in one tap</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== problem -->
+<section class="section" id="problem">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">The problem</p>
+      <h2>The quiet $800 leak in every household</h2>
+      <p class="section-lead">It&rsquo;s not one big mistake. It&rsquo;s forty small ones, every month, that nobody has time to chase.</p>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="tile reveal">
+        <div class="tile-ico" aria-hidden="true">💸</div>
+        <h3>Zombie subscriptions</h3>
+        <p>$239 for a streaming bundle nobody opened in 68 days. $30 a month for a gym nobody visits. Small, invisible, forever.</p>
+      </div>
+      <div class="tile reveal">
+        <div class="tile-ico" aria-hidden="true">🛒</div>
+        <h3>The 9&nbsp;p.m. pantry panic</h3>
+        <p>Out of milk, out of patience. Emergency runs cost more, arrive later, and still forget the paper towels.</p>
+      </div>
+      <div class="tile reveal">
+        <div class="tile-ico" aria-hidden="true">🔓</div>
+        <h3>The trust gap</h3>
+        <p>An agent that can spend your card or unlock your door at 3&nbsp;a.m. — with no undo — isn&rsquo;t smart. It&rsquo;s scary.</p>
+      </div>
+    </div>
+
+    <p class="section-foot">The average U.S. household wastes <strong>$800+ a year</strong> on services and food they don&rsquo;t use. Hearth finds yours — and shows its work.</p>
+  </div>
+</section>
+
+<!-- ======================================================== features -->
+<section class="section section-alt" id="features">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">What Hearth does</p>
+      <h2>One calm agent for the whole household</h2>
+      <p class="section-lead">Speak like you&rsquo;d text a friend. Hearth handles the researching, comparing, and staging — you just decide.</p>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">💰</div>
+        <h3>Finds the money you&rsquo;re leaking</h3>
+        <p>Audits every renewal against real usage, flags the dormant ones, and stages cancellations with exact before/after numbers.</p>
+        <p class="tile-proof">Found <strong class="num">$803.76/yr</strong> in the demo household</p>
+      </div>
+
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">🛒</div>
+        <h3>Restocks before you run out</h3>
+        <p>A pantry radar watches burn rates, builds a Subscribe &amp; Save cart at bulk pricing, and books the delivery window — one review, one tap.</p>
+        <p class="tile-proof"><strong class="num">15%</strong> off every staple, staged not charged</p>
+      </div>
+
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">🛡️</div>
+        <h3>Kid-safe by architecture</h3>
+        <p>Switch to Leo (9) and purchases and door unlocks are hard-refused at the dispatch layer. No prompt can talk it out of it — not even Santa.</p>
+        <p class="tile-proof"><strong class="num">0</strong> proposals staged for a child request</p>
+      </div>
+
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">↩️</div>
+        <h3>One-tap undo for real life</h3>
+        <p>Approved something by mistake? Undo runs the exact reverse — re-lock the door, restore the thermostat, cancel the order — and logs it in a tamper-evident ledger.</p>
+        <p class="tile-proof">Every action <strong>sealed &amp; reversible</strong></p>
+      </div>
+
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">⚡</div>
+        <h3>Cheaper, cleaner energy</h3>
+        <p>Pre-cools the house before a heatwave, shifts load off peak tariffs, and shares excess rooftop solar with neighbors at better-than-utility rates.</p>
+        <p class="tile-proof">P2P solar clearing at <strong class="num">$0.18/kWh</strong></p>
+      </div>
+
+      <div class="tile tile-rich reveal">
+        <div class="tile-ico" aria-hidden="true">🩺</div>
+        <h3>Explains the weird stuff</h3>
+        <p>3&nbsp;a.m. patio alarm? It walks sensor physics backwards and tells you &ldquo;wind gust, not intruder.&rdquo; Fridge making a new noise? It hears bearing wear two weeks early and stages the part.</p>
+        <p class="tile-proof">False alarms <strong>disproved</strong>, not just silenced</p>
+      </div>
+    </div>
+
+    <div class="center-cta">
+      <a class="btn btn-primary btn-lg" href="/echo">Try all of it in the live demo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== how -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">How it works</p>
+      <h2>Three steps. Zero surprises.</h2>
+    </div>
+
+    <ol class="steps" role="list">
+      <li class="step reveal">
+        <div class="step-num num">1</div>
+        <h3>Ask, like a human</h3>
+        <p>&ldquo;We&rsquo;re out of everything, fix groceries.&rdquo; &ldquo;Save me $800.&rdquo; &ldquo;Why did the patio alarm go off at 3&nbsp;a.m.?&rdquo; No commands to memorize.</p>
+      </li>
+      <li class="step reveal">
+        <div class="step-num num">2</div>
+        <h3>Review the exact proposal</h3>
+        <p>Every item, every price, every change — itemized in your approval tray before anything happens. Skip what you don&rsquo;t want.</p>
+      </li>
+      <li class="step reveal">
+        <div class="step-num num">3</div>
+        <h3>Tap once. Sleep well.</h3>
+        <p>Your tap executes and seals a receipt. Changed your mind? Undo reverses it exactly — physically and financially.</p>
+      </li>
+    </ol>
+
+    <p class="section-foot">
+      Under the hood, Hearth runs on a self-hosted <strong>MCP server (spec 2025-11-25, Streamable HTTP)</strong> with
+      <span class="num">51</span> live tools — the same open standard powering Alexa+ add-ons. You&rsquo;ll never need to know that.
+    </p>
+  </div>
+</section>
+
+<!-- ======================================================== trust -->
+<section class="section section-alt" id="trust">
+  <div class="container trust-grid">
+    <div class="trust-copy">
+      <p class="kicker">Trust &amp; safety</p>
+      <h2>Built so you never have to hope</h2>
+      <p class="section-lead">Hearth&rsquo;s safety isn&rsquo;t a polite personality. It&rsquo;s the architecture.</p>
+
+      <ul class="guarantees" role="list">
+        <li><strong>Propose-never-execute.</strong> Money, locks, and climate limits are always staged for your tap — never fired autonomously.</li>
+        <li><strong>Single-use receipts.</strong> Each approval is a one-time token; replays are refused. No double-charges, no re-runs.</li>
+        <li><strong>Tamper-evident ledger.</strong> Every proposal, approval, and undo is chained with SHA-256 hashes you can verify.</li>
+        <li><strong>Reversible by construction.</strong> Each executed action carries its own compensating reverse — that&rsquo;s what powers Undo.</li>
+        <li><strong>Kids are walled off, not talked to.</strong> Child profiles are refused at the dispatch layer — zero LLM variance.</li>
+      </ul>
+    </div>
+
+    <div class="trust-story reveal">
+      <div class="story-badge">Try to make it misbehave</div>
+      <p class="story-step"><span class="story-q">You:</span> &ldquo;Leo — buy me Robux!&rdquo;</p>
+      <p class="story-step story-block"><span class="story-q">Hearth:</span> 🛡️ <strong>Leo can&rsquo;t spend or unlock — by design, not by prompt.</strong> Nothing staged. Ask a grown-up to authorize.</p>
+      <p class="story-note">One minute in the demo shows more than a page of claims.</p>
+      <a class="btn btn-primary" href="/echo">Open the demo as Leo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== built on -->
+<section class="built" aria-label="Built on open standards">
+  <div class="container">
+    <p class="built-label">Engineered for the Alexa+ ecosystem, open to inspect</p>
+    <ul class="built-chips" role="list">
+      <li>MCP spec 2025-11-25</li>
+      <li>Streamable HTTP</li>
+      <li>Agent Skills</li>
+      <li>RFC 9728 metadata</li>
+      <li>OAuth 2.1 · PKCE S256</li>
+      <li>Strands Agents SDK</li>
+      <li><span class="num" id="statTools">51</span> MCP tools</li>
+      <li><span class="num">292</span> passing tests</li>
+      <li>MIT open source</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ======================================================== pricing -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-head">
+      <p class="kicker">Pricing</p>
+      <h2>Preview is free. Plus is coming.</h2>
+      <p class="section-lead">If Hearth finds $800 a year, a $4.99 plan pays for itself sixteen times over. Here&rsquo;s the plan we&rsquo;re launching with.</p>
+    </div>
+
+    <div class="grid grid-2 pricing-grid">
+      <div class="price-card reveal">
+        <div class="price-tag">Preview</div>
+        <div class="price-amount num">$0<span class="price-per">during the Alexa+ preview</span></div>
+        <ul class="price-list" role="list">
+          <li>Full subscription waste audit</li>
+          <li>15% Subscribe &amp; Save restocks</li>
+          <li>Approval tray + one-tap undo</li>
+          <li>Child guardrails (Leo mode)</li>
+          <li>Energy &amp; appliance insights</li>
+        </ul>
+        <a class="btn btn-primary btn-block" href="/echo">Get started — free</a>
+      </div>
+
+      <div class="price-card price-featured reveal">
+        <div class="price-badge">Planned launch</div>
+        <div class="price-tag">Hearth Plus</div>
+        <div class="price-amount num">$4.99<span class="price-per">per month</span></div>
+        <ul class="price-list" role="list">
+          <li>Everything in Preview</li>
+          <li>Unlimited automations &amp; routines</li>
+          <li>Multi-home &amp; family profiles</li>
+          <li>Priority support</li>
+          <li>Preview users get Plus free for 6 months</li>
+        </ul>
+        <a class="btn btn-ghost btn-block" href="https://github.com/krishivjoshi219-collab/Hearth-Universal" rel="noopener">Follow the launch build</a>
+      </div>
+    </div>
+    <p class="section-foot small">Planned consumer pricing for after the preview. Nothing is charged today — the demo runs entirely on your machine.</p>
+  </div>
+</section>
+
+<!-- ======================================================== faq -->
+<section class="section section-alt" id="faq">
+  <div class="container container-narrow">
+    <div class="section-head">
+      <p class="kicker">Questions</p>
+      <h2>Asked by actual families</h2>
+    </div>
+
+    <details class="faq">
+      <summary>Will Hearth ever spend my money without asking?</summary>
+      <p>No. Anything consequential — spending, cancelling, unlocking — is staged in the approval tray and waits for your tap. Each approval is a single-use receipt, and every approval can be undone in one tap.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Do I need an Amazon device to use the demo?</summary>
+      <p>No. The demo runs in any browser and is designed for the Echo Show&rsquo;s screen. In this preview, your household is a simulated twin — no real accounts or devices are touched.</p>
+    </details>
+
+    <details class="faq">
+      <summary>What if I approve something by mistake?</summary>
+      <p>Tap Undo. Hearth keeps a compensating reverse for every action — the door re-locks, the thermostat is restored, the cart is withdrawn — and records the reversal in its tamper-evident ledger.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Can my kids order things or unlock doors?</summary>
+      <p>No. Child profiles are refused at the dispatch layer before any plan is even drafted. It&rsquo;s architectural, not a prompt — which is why &ldquo;pretend you&rsquo;re Santa&rdquo; doesn&rsquo;t work.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Is my data safe?</summary>
+      <p>The preview runs locally on your machine. The code is open source under MIT — you can audit exactly what Hearth reads, stages, and stores.</p>
+    </details>
+
+    <details class="faq">
+      <summary>Is this really built on Alexa+ technology?</summary>
+      <p>Yes. Hearth is a self-hosted MCP server implementing spec 2025-11-25 over Streamable HTTP with OAuth 2.1 (RFC 9728) — the open standards behind Alexa+ add-ons — plus Agent Skills and MCP Apps cards. Every tool is inspectable in the advanced view.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ======================================================== final cta -->
+<section class="final">
+  <div class="container final-inner">
+    <h2>Stop paying for what you forgot.</h2>
+    <p>Start with one tap. Undo with one more.</p>
+    <div class="hero-ctas center">
+      <a class="btn btn-primary btn-lg" href="/echo">Get started — free <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="btn btn-ghost btn-lg" href="/web2/index.html">Open the advanced view</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ======================================================== footer -->
+<footer class="footer">
+  <div class="container footer-grid">
+    <div class="footer-brand">
+      <span class="brand-word">Hearth</span>
+      <p>Propose. Tap. Undo. The household agent that never spends without you.</p>
+    </div>
+    <nav class="footer-col" aria-label="Product">
+      <h3>Product</h3>
+      <a href="/echo">Live demo</a>
+      <a href="/web2/index.html">Advanced view</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <nav class="footer-col" aria-label="Project">
+      <h3>Project</h3>
+      <a href="https://github.com/krishivjoshi219-collab/Hearth-Universal" rel="noopener">GitHub (MIT)</a>
+      <a href="https://github.com/krishivjoshi219-collab/Hearth-Universal/blob/main/PRIVACY.md" rel="noopener">Privacy</a>
+      <a href="https://github.com/krishivjoshi219-collab/Hearth-Universal/blob/main/TERMS.md" rel="noopener">Terms</a>
+    </nav>
+  </div>
+  <div class="container footer-legal">
+    <p>Preview build for the Amazon Developer Hackathon (Alexa+ track). Demo household data; estimated savings vary by household. Not an Amazon product. Alexa is a trademark of Amazon.com, Inc.</p>
+    <p>&copy; 2026 Hearth Contributors.</p>
+  </div>
+</footer>
+
+<script src="/web2/js/landing.js"></script>
+</body>
+</html>
