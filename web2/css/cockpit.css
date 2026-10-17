@@ -644,3 +644,318 @@ select.persona:focus,
   .tabs-spacer { display: none; }
   .tab-nav { order: 10; }
 }
+
+/* ==========================================================================
+   13 · Content views — the deep pass
+   Timeline entries, approval cards, insights rows, settings, chat.
+   ========================================================================== */
+
+::selection { background: oklch(82% 0.125 74 / 0.35); }
+
+/* --- shared: gentle life on hover, stagger on view switch --- */
+.panel { transition: border-color 0.2s var(--ease); }
+.panel:hover { border-color: oklch(100% 0 0 / 0.13); }
+
+.view:not([hidden]) > * {
+  animation: rise 0.32s var(--ease) both;
+}
+.view:not([hidden]) > *:nth-child(2) { animation-delay: 40ms; }
+.view:not([hidden]) > *:nth-child(3) { animation-delay: 80ms; }
+.view:not([hidden]) > *:nth-child(4) { animation-delay: 120ms; }
+.view:not([hidden]) > *:nth-child(5) { animation-delay: 160ms; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* signature accent tick in every panel head */
+.panel-head::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 3px;
+  height: 15px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--amber), oklch(62% 0.19 46));
+  box-shadow: 0 0 10px oklch(76% 0.14 72 / 0.55);
+}
+
+/* --- stat tiles: icon disc + lift --- */
+.status-strip .stat {
+  transition: transform 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+.status-strip .stat:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+
+.status-strip .stat::after {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: var(--glass), oklch(100% 0 0 / 0.05);
+  border: 1px solid var(--line);
+}
+.status-strip .stat:nth-child(1)::after { content: "🌡"; }
+.status-strip .stat:nth-child(2)::after { content: "🔒"; }
+.status-strip .stat:nth-child(3)::after { content: "⚡"; }
+.status-strip .stat:nth-child(4)::after { content: "🥫"; }
+
+/* --- empty states: gem orb --- */
+.empty {
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  padding: 30px 20px;
+  border-radius: 16px;
+}
+.empty::before {
+  content: "✨";
+  width: 48px;
+  height: 48px;
+  margin-bottom: 9px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: var(--glass), var(--s2);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+.empty strong { font-size: 14.5px; }
+
+/* --- activity timeline --- */
+#timeline { display: grid; gap: 10px; }
+
+.event {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--glass), var(--s2);
+  transition: border-color 0.16s var(--ease), transform 0.16s var(--ease);
+}
+.event:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+
+.event-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+
+.event .actor {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: oklch(100% 0 0 / 0.05);
+  color: var(--t2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.event .what { flex: 1; font-weight: 600; color: var(--t1); letter-spacing: -0.01em; }
+.event .when { font-family: var(--font-mono); font-size: 11px; color: var(--t3); }
+
+.event details { border-top: 1px dashed var(--line); padding: 10px 14px 12px; }
+
+/* Audit events sometimes carry only a filtered `detail` key — an expandable
+   "Why this happened" with nothing inside reads as broken, so hide it. */
+.event details:has(> .why:empty):not(:has(.conf)) { display: none; }
+
+.event summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--t2);
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 0.15s var(--ease);
+}
+.event summary::-webkit-details-marker { display: none; }
+.event summary:hover { color: var(--t1); }
+.event summary::before {
+  content: "›";
+  font-size: 15px;
+  line-height: 1;
+  color: var(--amber);
+  transition: transform 0.16s var(--ease);
+}
+.event details[open] summary::before { transform: rotate(90deg); }
+
+.event .why { display: grid; gap: 6px; margin-top: 10px; }
+.event .why > div {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 12px;
+  align-items: baseline;
+  padding: 7px 11px;
+  border-radius: 9px;
+  background: oklch(100% 0 0 / 0.035);
+}
+.event .why dt {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.event .why dd { color: var(--t1); font-size: 12.5px; overflow-wrap: anywhere; }
+
+.event .conf {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ok);
+  background: var(--ok-dim);
+}
+
+/* actor colour-coding (the .event class carries the actor slug) */
+.event.causal_digital_twin .actor { color: #c084fc; border-color: rgba(168, 85, 247, 0.35); background: rgba(168, 85, 247, 0.12); }
+.event.forensic_investigator .actor { color: #f87171; border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.12); }
+.event.acoustic_doctor .actor { color: #34d399; border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.12); }
+.event.family_mediator .actor { color: #f0abfc; border-color: rgba(217, 70, 239, 0.35); background: rgba(217, 70, 239, 0.12); }
+.event.swarm_grid .actor { color: #60a5fa; border-color: rgba(59, 130, 246, 0.35); background: rgba(59, 130, 246, 0.12); }
+.event.sentinel .actor,
+.event.security .actor { color: #fbbf24; border-color: rgba(245, 165, 36, 0.4); background: var(--amber-dim); }
+.event.you .actor { color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.12); }
+.event.hearth .actor { color: var(--amber); border-color: rgba(245, 165, 36, 0.4); background: var(--amber-dim); }
+
+/* --- approvals --- */
+#intentList { display: grid; gap: 12px; }
+
+.intent {
+  position: relative;
+  overflow: hidden;
+  padding-left: 3px;
+}
+.intent::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--line-strong);
+}
+.intent:has(.risk.high)::before { background: linear-gradient(180deg, #f87171, rgba(239, 68, 68, 0.25)); }
+.intent:has(.risk.medium)::before { background: linear-gradient(180deg, var(--amber), rgba(245, 165, 36, 0.25)); }
+.intent:has(.risk.low)::before { background: linear-gradient(180deg, #34d399, rgba(16, 185, 129, 0.25)); }
+.intent:hover { transform: translateY(-1px); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32); }
+
+.intent-top h4 { font-size: 14.5px; }
+
+.intent-reasons {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.risk {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+}
+.risk.high { color: #f87171; background: var(--bad-dim); }
+.risk.medium { color: var(--amber); background: var(--amber-dim); }
+.risk.low { color: #34d399; background: var(--ok-dim); }
+
+.intent-actions .btn[data-a="1"]::before { content: "✓"; margin-right: 8px; font-weight: 800; }
+.intent-actions .btn[data-a="inspect"]::before { content: "🔍"; margin-right: 7px; font-size: 12px; }
+.intent-actions .btn[data-a="mine"]::before { content: "🙌"; margin-right: 7px; font-size: 12px; }
+
+/* --- insights --- */
+.insight { transition: background 0.15s var(--ease); border-radius: 10px; padding: 13px 10px; }
+.insight:hover { background: oklch(100% 0 0 / 0.03); }
+
+.insight .big {
+  font-size: 26px;
+  background: linear-gradient(120deg, #d1fae5, #34d399 55%, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.minister-card { transition: transform 0.16s var(--ease), border-color 0.16s var(--ease); }
+.minister-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+.minister-card .util { padding: 2px 8px; border-radius: 6px; background: var(--amber-dim); }
+
+.diag-item { transition: border-color 0.16s var(--ease); }
+.diag-item:hover { border-color: var(--line-strong); }
+
+/* --- settings --- */
+.setrow { border-radius: 10px; transition: background 0.15s var(--ease); }
+.setrow:hover { background: oklch(100% 0 0 / 0.02); }
+.setrow .lab strong { font-size: 13.5px; }
+
+.meta-skill-item { border-left: 3px solid rgba(245, 165, 36, 0.5); }
+.meta-skill-item .title { font-weight: 600; }
+
+.dial button[aria-pressed="true"] {
+  box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.4), 0 10px 26px oklch(76% 0.14 72 / 0.12);
+}
+
+.provider-tag { transition: border-color 0.15s var(--ease); }
+.provider-tag:hover { border-color: var(--line-strong); }
+
+/* --- floating chat: bubbles --- */
+.chat-bullet .bullet-content {
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: oklch(100% 0 0 / 0.04);
+  border: 1px solid var(--line);
+}
+.chat-bullet .bullet-dot { margin-top: 8px; }
+
+.chat-icon { font-size: 16px; }
+.chat-label { font-weight: 700; letter-spacing: -0.01em; }
+.mode-icon { font-size: 12px; }
+.amazon-logo { height: 22px; width: auto; display: block; }
+
+/* --- home conversation stream (#chatLog) reads as chat, not a timeline --- */
+#chatLog { display: grid; gap: 10px; }
+#chatLog .event .what { line-height: 1.55; }
+#chatLog .event .what p + p { margin-top: 8px; }
+#chatLog .event.human .what { color: oklch(92% 0.02 274); }
+#chatLog .event details { border-top-color: var(--line); }
+
+.event.human .actor { color: #7dd3fc; border-color: rgba(56, 189, 248, 0.35); background: rgba(56, 189, 248, 0.12); }
+.event.agent .actor { color: var(--amber); border-color: rgba(245, 165, 36, 0.4); background: var(--amber-dim); }
+
+/* --- approvals rhythm: the grid gap owns the spacing --- */
+#intentList .intent { margin-bottom: 0; }
+
+/* --- floating chat: invite copy when the thread is empty --- */
+.widget-body:empty { display: grid; place-items: center; align-content: center; gap: 3px; }
+.widget-body:empty::before {
+  content: "💬";
+  width: 44px;
+  height: 44px;
+  margin-bottom: 7px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  background: var(--glass), var(--s2);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
+}
+.widget-body:empty::after {
+  content: "Ask about anything in the house —\AI run it by you first.";
+  white-space: pre-line;
+  text-align: center;
+  color: var(--t3);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
