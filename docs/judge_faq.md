@@ -8,6 +8,6 @@
 6. **How is it more than a Q&A bot?** One utterance chains memory → inbox audit → bundle optimizer → cart proposal → tray → receipt → ledger across sessions — agentic workflow with state, purchasing, and MCP Apps cards.
 7. **Where's the open-source contribution?** `open-source-contribution/mcp-strands-adapter/` (Apache-2.0, 15 tests): exposes Strands agents *as* MCP tools, reusing the SDK's own `tool_spec`.
 8. **What AWS services?** Bedrock Converse (Nova Pro/Claude router, opt-in), AgentCore-compatible memory with live-sync, Strands multi-agent supervisor. `/api/diagnostics` reports exactly which backend ran.
-9. **Reproducibility?** `./demo.sh` cold-start → rubric 100/100 → 305 tests green. `./replay.sh` replays decisions deterministically.
+9. **Reproducibility?** `./demo.sh` cold-start → rubric 100/100 → 309 tests green. `./replay.sh` replays decisions deterministically.
 10. **Do I need an API key?** No — the 1-click demo runs fully offline. If you *want* free-form answers on your own model, click **🧠 Connect AI** in `/echo` and paste a key (OpenAI, Groq, OpenRouter, Ollama, any OpenAI-compatible base URL, or Bedrock). It is stored at `state/brain_config.json` (0600, gitignored) and never leaves the machine except to the provider you chose.
 11. **Beyond the hackathon, who pays?** Grocers/retailers (S&S attach + fewer stockouts), property managers (sub-$200 fix flow), care orgs (adherence proof) — anywhere trust blocks autonomous purchase.

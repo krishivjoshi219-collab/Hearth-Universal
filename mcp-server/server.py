@@ -5,6 +5,7 @@ Verifies via curl POST /mcp initialize -> protocolVersion 2025-11-25.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import os
 import sys
@@ -152,10 +153,8 @@ _COUNTERS = {"chat": 0, "decide": 0, "chat_rate_limited": 0,
 
 
 def _bump(key: str) -> None:
-    try:
+    with contextlib.suppress(Exception):
         _COUNTERS[key] = _COUNTERS.get(key, 0) + 1
-    except Exception:
-        pass
 
 
 def _validate_env() -> None:
@@ -240,6 +239,11 @@ mcp = FastMCP(
     host="0.0.0.0",
     port=_PORT,
 )
+
+# Request ids, no-cache JSON APIs, and non-leaky 500s for every app instance.
+from http_hardening import install_hardening
+
+install_hardening(mcp)
 
 
 # ==============================================================================
@@ -1624,10 +1628,8 @@ async def api_home_lock(request: Request):
             p = proposals.get_proposal(proposal_id)
             if p and p.get("status") == "approved" and p.get("kind") == "home_lock" and not p.get("consumed_at"):
                 res = home_mock.toggle_lock(locked=False)
-                try:
+                with contextlib.suppress(Exception):
                     proposals.mark_consumed(proposal_id, "home_toggle_lock:unlock")
-                except Exception:
-                    pass
                 audit.append("human", "home_toggle_lock", {"locked": False, "via": proposal_id})
                 return JSONResponse(res)
             return JSONResponse({"ok": False, "error": "proposal_id is not an approved unused home_lock proposal"}, status_code=403)
@@ -2806,7 +2808,7 @@ async def web2_static(request: Request):
             ctype = "application/javascript"
         elif target.endswith(".json"):
             ctype = "application/json"
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": ctype, **_SECURITY_HEADERS})
+        return FileResponse(target, headers={"Cache-Control": "no-cache", "Content-Type": ctype, **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
@@ -2814,7 +2816,7 @@ async def web2_static(request: Request):
 async def web2_index(request: Request):
     idx = os.path.join(WEB2_DIR, "index.html")
     if os.path.exists(idx):
-        return FileResponse(idx, headers={"Cache-Control": "no-store"})
+        return FileResponse(idx, headers={"Cache-Control": "no-cache"})
     return PlainTextResponse("web2 UI not built yet.", status_code=404)
 
 
@@ -2832,7 +2834,7 @@ async def echo_surface(request: Request):
     """
     page = os.path.join(WEB2_DIR, "echo.html")
     if os.path.exists(page):
-        return FileResponse(page, headers={"Cache-Control": "no-store", **_SECURITY_HEADERS})
+        return FileResponse(page, headers={"Cache-Control": "no-cache", **_SECURITY_HEADERS})
     return PlainTextResponse("Echo surface not built yet.", status_code=404)
 
 
@@ -2841,7 +2843,7 @@ async def css_static(request: Request):
     rel = request.path_params.get("path", "")
     target = _safe_join(os.path.join(WEB_DIR, "css"), rel)
     if target:
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "text/css", **_SECURITY_HEADERS})
+        return FileResponse(target, headers={"Cache-Control": "no-cache", "Content-Type": "text/css", **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
@@ -2850,7 +2852,7 @@ async def js_static(request: Request):
     rel = request.path_params.get("path", "")
     target = _safe_join(os.path.join(WEB_DIR, "js"), rel)
     if target:
-        return FileResponse(target, headers={"Cache-Control": "no-store", "Content-Type": "application/javascript", **_SECURITY_HEADERS})
+        return FileResponse(target, headers={"Cache-Control": "no-cache", "Content-Type": "application/javascript", **_SECURITY_HEADERS})
     return PlainTextResponse("Not Found", status_code=404)
 
 
@@ -2859,8 +2861,8 @@ async def app_js(request: Request):
     # Live UI is web2/js/app.js (modular); fallback web2/app.js
     modular_js = os.path.join(WEB_DIR, "js", "app.js")
     if os.path.exists(modular_js):
-        return FileResponse(modular_js, headers={"Cache-Control": "no-store", "Content-Type": "application/javascript"})
-    return FileResponse(os.path.join(WEB_DIR, "app.js"), headers={"Cache-Control": "no-store", "Content-Type": "application/javascript"})
+        return FileResponse(modular_js, headers={"Cache-Control": "no-cache", "Content-Type": "application/javascript"})
+    return FileResponse(os.path.join(WEB_DIR, "app.js"), headers={"Cache-Control": "no-cache", "Content-Type": "application/javascript"})
 
 
 @mcp.custom_route("/manifest.json", methods=["GET"])
@@ -2884,10 +2886,10 @@ async def index(request: Request):
     landing page is absent, so the root URL never dead-ends for a judge."""
     landing = os.path.join(WEB2_DIR, "landing.html")
     if os.path.exists(landing):
-        return FileResponse(landing, headers={"Cache-Control": "no-store", **_SECURITY_HEADERS})
+        return FileResponse(landing, headers={"Cache-Control": "no-cache", **_SECURITY_HEADERS})
     idx = os.path.join(WEB2_DIR, "index.html")
     if os.path.exists(idx):
-        return FileResponse(idx, headers={"Cache-Control": "no-store", **_SECURITY_HEADERS})
+        return FileResponse(idx, headers={"Cache-Control": "no-cache", **_SECURITY_HEADERS})
     return PlainTextResponse("Hearth Universal MCP 2025-11-25 at /mcp.")
 
 

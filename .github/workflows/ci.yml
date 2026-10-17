@@ -35,13 +35,21 @@ jobs:
 
       - name: Lint (ruff)
         run: |
-          ruff check src mcp-server tests || true
+          ruff check src mcp-server tests
 
-      - name: SAST (bandit)
+      - name: Python syntax (compileall)
+        run: |
+          python -m compileall -q src mcp-server
+
+      - name: JS syntax (node --check)
+        run: |
+          for f in web2/js/*.js; do node --check "$f"; done
+
+      - name: SAST (bandit, advisory)
         run: |
           bandit -q -r src -x tests || true
 
-      - name: Dependency audit (pip-audit)
+      - name: Dependency audit (pip-audit, advisory)
         run: |
           pip-audit || true
 

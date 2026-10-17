@@ -145,7 +145,8 @@ def execute(cmd: str, timeout: int = EXEC_TIMEOUT) -> dict:
            "LANG": "C.UTF-8", "PYTHONPATH": "src"}
     try:
         proc = subprocess.run(argv, shell=False, cwd=str(root()), env=env,
-                              capture_output=True, text=True, timeout=timeout)
+                              capture_output=True, text=True, timeout=timeout,
+                              check=False)
     except subprocess.TimeoutExpired:
         _audit.append("agent", "workspace_exec", {"cmd": cmd[:200], "timeout": True})
         return {"ok": False, "error": f"timed out after {timeout}s"}

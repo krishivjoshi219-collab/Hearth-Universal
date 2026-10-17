@@ -50,6 +50,22 @@ line-length = 120
 select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "ASYNC", "DTZ", "PERF", "PIE", "PLW", "RUF", "ISC", "FURB"]
 ignore = ["E501", "S", "BLE"]
 
+[tool.ruff.lint.per-file-ignores]
+# Module-level singletons and monotonic counters are a deliberate, documented
+# pattern (one process, one household); `global` is the honest way to mutate
+# them. home_mock's late import avoids a circular import at module load.
+"src/hearth/alexa.py" = ["PLW0603"]
+"src/hearth/commerce.py" = ["PLW0603"]
+"src/hearth/heartbeat.py" = ["PLW0603"]
+"src/hearth/home_mock.py" = ["PLW0603", "E402"]
+"src/hearth/strands_agent.py" = ["PLW0603"]
+
+# The server bootstraps env/config before importing the library, mutates one
+# process-level persona singleton, and reads small local JSON state files
+# synchronously inside async routes. All deliberate for a single-node
+# household deployment; documented in docs/production_readiness.md.
+"mcp-server/server.py" = ["E402", "PLW0603", "PERF401", "SIM115", "ASYNC230", "ASYNC240"]
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true

@@ -8,6 +8,8 @@ import os
 import time
 from pathlib import Path
 
+from . import atomic
+
 STATE_DIR = Path(os.environ.get("HEARTH_STATE_DIR", "state"))
 
 
@@ -31,13 +33,9 @@ def _log_path() -> Path:
     return STATE_DIR / "audit.jsonl"
 
 
-from . import atomic
-
 # Retention: the chain is append-only, but the file is not infinite.
 # Past this many lines the ledger archives (hash-linked checkpoint) and restarts.
 AUDIT_MAX_LINES = 10000
-
-
 def count() -> int:
     path = _log_path()
     try:

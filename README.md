@@ -63,7 +63,7 @@ cd Hearth-Universal
 3. **Verifies Alexa+ Compliance**: Executes [`tests/test_alexaplus_addon_compliance.py`](tests/test_alexaplus_addon_compliance.py) validating RFC 9728 PRM, OAuth 2.1 PKCE S256 two-tier authentication, and `addon.json`.
 4. **Validates Frontier Innovations**: Executes [`tests/test_frontier_innovations.py`](tests/test_frontier_innovations.py) (18 tests verifying Forensics, Acoustics, Treaty, and Swarm VPP).
 5. **Proves the hero flow over live HTTP**: Stages the "out of everything" Subscribe & Save cart via `POST /api/commerce/autopilot-checkout` and prints the Tier-2 gated result.
-6. **Runs the full suite**: 305 tests green, then prints judge links (`/`, `/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
+6. **Runs the full suite**: 309 tests green, then prints judge links (`/`, `/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
 
 ### Bring Your Own Key (Optional)
 The preview answers every free-form question out of the box with the zero-config local engine. To route those answers through your own model, click the **🧠 Connect AI** chip in the `/echo` header (or the callout on first load) and enter a key for OpenAI, Groq, OpenRouter, Ollama (no key needed), any OpenAI-compatible endpoint, or Amazon Bedrock. The key is written to `state/brain_config.json` (chmod 0600, gitignored), applied server-side over `brains.chat`, and never echoed back to the browser — status only ever shows a masked hint. `make clean` removes it. Wrong keys or dead endpoints degrade to the offline engine with an honest notice; they never 500 the household.
@@ -610,7 +610,7 @@ TOTAL                                5294   1184   1510    313    75%
 Required test coverage of 70.0% reached. Total coverage: 74.65%
 ```
 
-* **Mostly In-Memory Testing**: 304 of 305 tests use Starlette's `TestClient` with no socket binding. The exceptions (`tests/test_mcp_http.py` spawns a real server on port 8799; `test_brain_connect.py` runs a mock OpenAI-compatible provider on a loopback socket) deliberately prove the wire, not an in-process shim.
+* **Mostly In-Memory Testing**: 308 of 309 tests use Starlette's `TestClient` with no socket binding. The exceptions (`tests/test_mcp_http.py` spawns a real server on port 8799; `test_brain_connect.py` runs a mock OpenAI-compatible provider on a loopback socket) deliberately prove the wire, not an in-process shim.
 
 ---
 
@@ -629,6 +629,7 @@ For private repository evaluation, please add the official Amazon hackathon revi
 * [Open Source Contribution Package](open-source-contribution/mcp-strands-adapter/)
 * [Demo Video Script](docs/demo_video_script.md)
 * [Devpost Submission Text](docs/devpost_submission.md)
+* [Production Readiness Runbook](docs/production_readiness.md)
 
 ---
 

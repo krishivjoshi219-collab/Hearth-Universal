@@ -114,6 +114,14 @@
   box-shadow: var(--shadow-card);
 }
 
+/* ARIA: a tablist may only contain tabs; the back-links live beside it. */
+.tablist {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .tab {
   display: inline-flex;
   align-items: center;

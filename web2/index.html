@@ -47,12 +47,14 @@
       </div>
     </header>
 
-    <nav class="tabs" role="tablist" aria-label="Views">
-      <button class="tab" role="tab" data-view="home" aria-selected="true">Home</button>
-      <button class="tab" role="tab" data-view="activity" aria-selected="false">Activity</button>
-      <button class="tab" role="tab" data-view="approvals" aria-selected="false">Approvals<span class="count" id="apprCount" hidden>0</span></button>
-      <button class="tab" role="tab" data-view="insights" aria-selected="false">Insights</button>
-      <button class="tab" role="tab" data-view="settings" aria-selected="false">Settings</button>
+    <nav class="tabs" aria-label="Views">
+      <div class="tablist" role="tablist" aria-label="Views">
+        <button class="tab" role="tab" data-view="home" aria-selected="true" aria-controls="view-home">Home</button>
+        <button class="tab" role="tab" data-view="activity" aria-selected="false" aria-controls="view-activity">Activity</button>
+        <button class="tab" role="tab" data-view="approvals" aria-selected="false" aria-controls="view-approvals">Approvals<span class="count" id="apprCount" hidden>0</span></button>
+        <button class="tab" role="tab" data-view="insights" aria-selected="false" aria-controls="view-insights">Insights</button>
+        <button class="tab" role="tab" data-view="settings" aria-selected="false" aria-controls="view-settings">Settings</button>
+      </div>
       <span class="tabs-spacer"></span>
       <a class="tab-nav" href="/echo" title="The room surface — voice-first Echo Show experience">✦ Echo Show</a>
       <a class="tab-nav" href="/" title="The Hearth home page">⌂ Home page</a>

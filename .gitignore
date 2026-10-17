@@ -27,3 +27,4 @@ htmlcov/
 demo_production/
 !demo_production/screenshots/
 *.mp4
+backups/

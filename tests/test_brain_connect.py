@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(ROOT, "mcp-server"))
 
 import server  # noqa: E402
+
 from hearth import brain_config  # noqa: E402
 
 ECHO_HTML = os.path.join(ROOT, "web2", "echo.html")
@@ -119,7 +120,7 @@ def mock_provider():
     thread = threading.Thread(target=srv.serve_forever, daemon=True)
     thread.start()
     try:
-        yield "http://127.0.0.1:%d/v1" % srv.server_address[1]
+        yield f"http://127.0.0.1:{srv.server_address[1]}/v1"
     finally:
         srv.shutdown()
         srv.server_close()

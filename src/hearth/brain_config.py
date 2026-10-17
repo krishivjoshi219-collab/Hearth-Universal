@@ -21,6 +21,7 @@ an honest notice (see ``brains.chat``).
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import re
@@ -301,10 +302,8 @@ def clear() -> dict[str, Any]:
             if f.exists():
                 f.unlink()
     except Exception:
-        try:
+        with contextlib.suppress(Exception):
             f.unlink(missing_ok=True)
-        except Exception:
-            pass
     _unapply()
     out = status()
     out["message"] = "Disconnected. The built-in offline engine is still active."
@@ -345,7 +344,7 @@ def test_connection(timeout: float = 6.0) -> dict[str, Any]:
             return {"ok": True, "provider": "bedrock",
                     "detail": "Credentials present. A live call happens on your first question."}
 
-        from . import brains, vault
+        from . import brains
         base_url = str(cfg.get("base_url") or "")
         host = brains._host_of(base_url).lower()
         if brains.STRICT_EGRESS and not brains._egress_allowed(host):
