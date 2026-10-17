@@ -149,7 +149,8 @@ def _throttled(request: Request):
 
 # Lightweight ops counters (in-memory; exposed via /api/metrics, no PII).
 _COUNTERS = {"chat": 0, "decide": 0, "chat_rate_limited": 0,
-             "global_limited": 0, "chat_timeout": 0, "auth_denied": 0}
+             "global_limited": 0, "chat_timeout": 0, "auth_denied": 0,
+             "forge_synthesized": 0, "forge_invoked": 0}
 
 
 def _bump(key: str) -> None:
@@ -244,6 +245,74 @@ mcp = FastMCP(
 from http_hardening import install_hardening
 
 install_hardening(mcp)
+
+
+# ==============================================================================
+# Hearth Forge — compile a household rule into a REAL MCP tool at runtime.
+# The skill compiler (intent -> schema -> code -> Sentinel -> AST -> smoke) is
+# src/hearth/meta_skill.py; this layer makes the result visible to every MCP
+# client by registering it in the live tool catalog, and rehydrates forged
+# tools on boot so they survive restarts.
+# ==============================================================================
+_FORGE_BUILTINS = {"abs": abs, "min": min, "max": max, "round": round, "sum": sum, "len": len,
+                   "dict": dict, "list": list, "float": float, "int": int, "bool": bool, "str": str}
+_FORGED_TOOLS: dict[str, dict] = {}
+_FORGE_MAX_TOOLS = 25
+
+
+def _forge_handler(skill: dict):
+    """Rebuild the synthesized skill's handler in a stripped namespace."""
+    ns: dict = {"__builtins__": _FORGE_BUILTINS}
+    exec(compile(str(skill.get("code_snippet", "")), "<forge>", "exec"), ns)
+    handle, plan = ns.get("handle"), ns.get("execute_plan")
+
+    def call(params=None, **kwargs):
+        merged = dict(params or {})
+        merged.update(kwargs)
+        if callable(handle):
+            return handle("execute", merged)
+        if callable(plan):
+            return plan(merged)
+        raise RuntimeError("forged tool has no handler")
+
+    return call
+
+
+def _forge_register(skill: dict) -> str:
+    """Expose a synthesized skill as an MCP tool with its real parameter schema."""
+    tool_name = "hearth_forge_" + str(skill["skill_id"]).rsplit(".", 1)[-1]
+    props = (skill.get("parameters_schema") or {}).get("properties") or {}
+    pytypes = {"integer": "int", "number": "float", "boolean": "bool", "string": "str"}
+    args, pairs = [], []
+    for key, spec in props.items():
+        pytype = pytypes.get(str(spec.get("type", "string")), "object")
+        default = spec.get("default")
+        args.append(f"{key}: {pytype} = {default!r}" if default is not None else f"{key}: {pytype} = None")
+        pairs.append(f"{key!r}: {key}")
+    src = (
+        f"def {tool_name}({', '.join(args)}) -> dict:\n"
+        f"    return _call({{{', '.join(pairs)}}})\n"
+    )
+    ns: dict = {"_call": _forge_handler(skill)}
+    exec(compile(src, "<forge-tool>", "exec"), ns)  # vetted template, not user text
+    fn = ns[tool_name]
+    fn.__doc__ = str(skill.get("description") or "Forged household tool")
+    if any(t.name == tool_name for t in mcp._tool_manager.list_tools()):
+        mcp.remove_tool(tool_name)
+    mcp.add_tool(fn, name=tool_name, description=fn.__doc__)
+    _FORGED_TOOLS[tool_name] = {"skill_id": skill["skill_id"], "handler": ns["_call"], "callable": fn}
+    return tool_name
+
+
+def _rehydrate_forged_tools() -> None:
+    for skill in meta_skill.meta_synthesizer.list_synthesized_skills():
+        try:
+            _forge_register(skill)
+        except Exception as exc:  # a broken stored skill must never block boot
+            print(f"forge rehydrate warn: {skill.get('skill_id')}: {exc}")
+
+
+_rehydrate_forged_tools()
 
 
 # ==============================================================================
@@ -1946,6 +2015,124 @@ async def api_metrics(request: Request):
     m["http"] = dict(_COUNTERS)
     m["audit_events"] = audit.count()
     return JSONResponse(m)
+
+
+@mcp.custom_route("/api/forge/synthesize", methods=["POST"])
+async def api_forge_synthesize(request: Request):
+    """Compile a household rule into a real MCP tool, live."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "forge:synthesize")
+    if gate is not None:
+        return gate
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON payload"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
+    requirement = str(body.get("requirement", ""))[:400].strip()
+    if len(requirement) < 8:
+        return JSONResponse(
+            {"ok": False, "error": "Describe the household rule in a little more detail"},
+            status_code=400,
+        )
+    if len(_FORGED_TOOLS) >= _FORGE_MAX_TOOLS:
+        return JSONResponse(
+            {"ok": False, "error": f"Forge catalog is full ({_FORGE_MAX_TOOLS} tools)"},
+            status_code=409,
+        )
+    started = _time.time()
+    # Synthesis runs exec/AST/smoke work; keep it off the event loop.
+    result = await asyncio.to_thread(
+        meta_skill.meta_synthesizer.synthesize, requirement, ACTIVE_PERSONA
+    )
+    if not result.get("ok"):
+        return JSONResponse(result, status_code=422)
+    skill = next(
+        (s for s in meta_skill.meta_synthesizer.list_synthesized_skills()
+         if s.get("skill_id") == result.get("skill_id")),
+        None,
+    )
+    if skill is None:
+        return JSONResponse(
+            {"ok": False, "error": "Skill compiled but not found in catalog"}, status_code=500
+        )
+    tool_name = _forge_register(skill)
+    _bump("forge_synthesized")
+    return JSONResponse({
+        **result,
+        "mcp_tool": tool_name,
+        "description": skill.get("description"),
+        "code": skill.get("code_snippet"),
+        "schema": skill.get("parameters_schema"),
+        "ast_report": skill.get("ast_report"),
+        "test_report": skill.get("test_report"),
+        "tools_count": len(mcp._tool_manager.list_tools()),
+        "latency_ms": round((_time.time() - started) * 1000, 1),
+    })
+
+
+@mcp.custom_route("/api/forge/tools", methods=["GET"])
+async def api_forge_tools(request: Request):
+    """The live forged-tool catalog (what MCP clients can call right now)."""
+    stored = {s.get("skill_id"): s for s in meta_skill.meta_synthesizer.list_synthesized_skills()}
+    items = []
+    for name, meta in _FORGED_TOOLS.items():
+        skill = stored.get(meta["skill_id"], {})
+        items.append({
+            "name": name,
+            "skill_id": meta["skill_id"],
+            "description": skill.get("description", ""),
+            "created_at": skill.get("created_at"),
+            "schema": skill.get("parameters_schema", {}),
+            "savings_formula": skill.get("savings_formula", ""),
+        })
+    items.sort(key=lambda i: i.get("created_at") or 0, reverse=True)
+    return JSONResponse({
+        "ok": True,
+        "tools": items,
+        "tools_count": len(mcp._tool_manager.list_tools()),
+        "max_tools": _FORGE_MAX_TOOLS,
+    })
+
+
+@mcp.custom_route("/api/forge/invoke", methods=["POST"])
+async def api_forge_invoke(request: Request):
+    """Call a forged tool directly (same handler MCP clients hit)."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON payload"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
+    name = str(body.get("tool", "")).strip()
+    params = body.get("params") or {}
+    if name not in _FORGED_TOOLS:
+        return JSONResponse({"ok": False, "error": f"Unknown forged tool: {name}"}, status_code=404)
+    if not isinstance(params, dict):
+        return JSONResponse({"ok": False, "error": "params must be an object"}, status_code=400)
+    stored = {s.get("skill_id"): s for s in meta_skill.meta_synthesizer.list_synthesized_skills()}
+    skill = stored.get(_FORGED_TOOLS[name]["skill_id"], {})
+    allowed = set((skill.get("parameters_schema") or {}).get("properties") or {})
+    filtered = {k: v for k, v in params.items() if k in allowed}
+    started = _time.time()
+    try:
+        out = await asyncio.to_thread(_FORGED_TOOLS[name]["callable"], **filtered)
+    except Exception as exc:
+        return JSONResponse({"ok": False, "error": f"Tool failed: {exc}"}, status_code=422)
+    _bump("forge_invoked")
+    return JSONResponse({
+        "ok": True,
+        "tool": name,
+        "result": out,
+        "duration_ms": round((_time.time() - started) * 1000, 1),
+        "tools_count": len(mcp._tool_manager.list_tools()),
+    })
 
 
 @mcp.custom_route("/api/export", methods=["GET"])

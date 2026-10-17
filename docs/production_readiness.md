@@ -20,6 +20,7 @@ limits are.
 | Non-leaky errors | ✅ enforced | `http_hardening.RequestHardeningMiddleware` converts uncaught exceptions to JSON 500 with `X-Request-Id`; tracebacks stay in server logs |
 | Security headers + CSP | ✅ enforced | `script-src 'self'` (no inline JS), `frame-ancestors 'none'`, nosniff, referrer policy |
 | BYO API key at rest | ✅ enforced | `state/brain_config.json`, `chmod 0600`, atomic write, masked hints only, wiped by `make clean` |
+| Runtime tool synthesis | ✅ gated | Hearth Forge: adult gate in production, Sentinel + AST + sandbox smoke before mount, 25-tool cap, hash-chained audit, rehydrates on restart |
 | Health & metrics | ✅ present | `/health` (state writable, DB ok, audit chain ok), `/api/metrics` counters |
 | Cache correctness | ✅ present | Static assets revalidate (`no-cache` + ETag/304); `/api/*` is `no-store` |
 | Graceful shutdown | ✅ present | Uvicorn drain + `tini` as PID 1 in the container |

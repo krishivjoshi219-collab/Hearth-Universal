@@ -73,15 +73,19 @@ def parse_intent(requirement: str) -> dict[str, Any]:
         if any(k in low for k in keys):
             domain = d
             break
-    m_hour = re.search(r"(\d{1,2})\s*(am|pm|h|:00)?", low)
+    m_ampm = re.search(r"(\d{1,2})\s*(am|pm)\b", low)
+    m_clock = re.search(r"\b(\d{1,2}):00\b", low)
     hour_hint = None
-    if m_hour:
-        try:
-            hour_hint = max(0, min(23, int(m_hour.group(1))))
-            if m_hour.group(2) == "pm" and hour_hint < 12:
-                hour_hint += 12
-        except Exception:
-            hour_hint = None
+    if m_ampm:
+        hour_hint = int(m_ampm.group(1))
+        if m_ampm.group(2) == "pm" and hour_hint < 12:
+            hour_hint += 12
+        if m_ampm.group(2) == "am" and hour_hint == 12:
+            hour_hint = 0
+    elif m_clock:
+        hour_hint = int(m_clock.group(1))
+    if hour_hint is not None:
+        hour_hint = max(0, min(23, hour_hint))
     return {
         "domain": domain,
         "hour_hint": hour_hint if hour_hint is not None else 14,
@@ -120,8 +124,9 @@ def generate_code(intent: dict[str, Any], schema: dict[str, Any], requirement: s
     d = intent["domain"]
     if d == "ev":
         body = ("kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14));"
+                " cap = float(params.get('max_price', 0.28));"
                 " peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28);"
-                " savings = round(max(0.0, (0.52 - peak)) * kwh, 2)")
+                " savings = round(max(0.0, (0.52 - peak)) * kwh, 2) if peak <= cap else 0.0")
     elif d == "greenhouse":
         body = ("span = float(params.get('max_temp_c', 28.0)) - float(params.get('min_temp_c', 18.0));"
                 " savings = round(max(0.0, min(12.0, span * 0.4)), 2)")

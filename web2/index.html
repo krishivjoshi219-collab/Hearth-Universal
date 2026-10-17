@@ -95,6 +95,39 @@
         </div>
       </div>
 
+      <!-- Hearth Forge: compile a household rule into a live MCP tool -->
+      <div class="panel mt-4 forge-panel" id="forgePanel">
+        <div class="panel-head">
+          <h3>Hearth Forge</h3>
+          <span class="forge-badge">LIVE TOOL SYNTHESIS</span>
+          <span class="spacer"></span>
+          <span class="pill" id="forgeCount">51 MCP tools live</span>
+        </div>
+        <div class="panel-body">
+          <p class="muted-sm mb-3">Type a household rule Hearth has never seen. It compiles a real MCP tool, passes the Sentinel safety gate, AST check and sandbox smoke test, then mounts it into the live agent — in seconds.</p>
+          <form class="forge-bar" id="forgeForm">
+            <input id="forgeInput" maxlength="300" autocomplete="off"
+                   value="Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh"
+                   aria-label="Household rule to compile into a tool"/>
+            <button class="btn btn-primary" id="forgeGo" type="submit">⚒ Forge tool</button>
+          </form>
+          <div class="forge-steps" id="forgeSteps" aria-live="polite"></div>
+          <div class="forge-out" id="forgeOut" hidden>
+            <div class="forge-code-wrap">
+              <div class="forge-code-head"><span>Generated tool source</span><code id="forgeToolName"></code></div>
+              <pre class="forge-code" id="forgeCode" tabindex="0"></pre>
+            </div>
+            <div class="forge-side">
+              <div class="forge-kv"><span>Safety</span><strong id="forgeSafety">–</strong></div>
+              <div class="forge-kv"><span>Smoke test</span><strong id="forgeSmoke">–</strong></div>
+              <button class="btn btn-primary" id="forgeCall" type="button">▶ Call it now</button>
+              <pre class="forge-result" id="forgeResult" tabindex="0" hidden></pre>
+            </div>
+          </div>
+          <div class="forge-catalog" id="forgeCatalog" aria-live="polite"></div>
+        </div>
+      </div>
+
       <!-- Real World Alexa+ Authentication Portal (Shown when mode == real and !alexa_logged_in) -->
       <div class="panel auth-portal" id="realAuthPortal" hidden>
         <div class="panel-body auth-body">
@@ -640,5 +673,6 @@
   <div class="toasts" id="toasts" aria-live="polite"></div>
 
   <script type="module" src="/web2/js/app.js"></script>
+  <script type="module" src="/web2/js/forge.js"></script>
 </body>
 </html>
