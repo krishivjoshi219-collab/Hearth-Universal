@@ -72,6 +72,7 @@ from hearth import (
     planner,
     proposals,
     real_mode,
+    receipts,
     replay,
     sandbox,
     sentinel,
@@ -2128,6 +2129,19 @@ async def api_forge_invoke(request: Request):
     except Exception as exc:
         return JSONResponse({"ok": False, "error": f"Tool failed: {exc}"}, status_code=422)
     _bump("forge_invoked")
+    # Proof Engine: every applied call gets a receipt anchored to a fresh
+    # audit event, so the ledger line opens to a verifiable source.
+    try:
+        result_view = out if isinstance(out, dict) else {"status": "returned"}
+        ev = audit.append("mcp_client", "forge_tool_applied", {
+            "tool": name,
+            "params": filtered,
+            "result": {k: result_view.get(k) for k in
+                       ("status", "applied_hour", "savings_usd")},
+        })
+        receipts.record_tool_applied(name, filtered, result_view, ev.get("hash", ""))
+    except Exception:
+        pass
     return JSONResponse({
         "ok": True,
         "tool": name,
@@ -2135,6 +2149,45 @@ async def api_forge_invoke(request: Request):
         "duration_ms": round((_time.time() - started) * 1000, 1),
         "tools_count": len(mcp._tool_manager.list_tools()),
     })
+
+
+@mcp.custom_route("/api/receipts", methods=["GET"])
+async def api_receipts(request: Request):
+    """Proof Engine: hash-chained receipts + the verified household ledger."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        limit = max(1, min(50, int(request.query_params.get("limit", "8"))))
+    except ValueError:
+        limit = 8
+    added = await asyncio.to_thread(receipts.rebuild)
+    data = await asyncio.to_thread(receipts.list_receipts, limit)
+    return JSONResponse({"ok": True, "rebuild_added": added, **data})
+
+
+@mcp.custom_route("/api/receipts/verify", methods=["POST"])
+async def api_receipts_verify(request: Request):
+    """Re-derive a receipt's SHA-256 from its fields; optionally demonstate a
+    hand-edit (tamper) failing the exact same check."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON payload"}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
+    receipt_id = str(body.get("receipt_id", "")).strip()
+    if not receipt_id:
+        return JSONResponse({"ok": False, "error": "receipt_id required"}, status_code=400)
+    tamper = bool(body.get("tamper", False))
+    res = await asyncio.to_thread(receipts.verify_receipt, receipt_id, tamper)
+    if res is None:
+        return JSONResponse({"ok": False, "error": f"Unknown receipt: {receipt_id}"},
+                            status_code=404)
+    return JSONResponse(res)
 
 
 @mcp.custom_route("/api/export", methods=["GET"])

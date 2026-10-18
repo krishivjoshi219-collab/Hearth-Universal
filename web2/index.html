@@ -144,6 +144,38 @@
         </div>
       </div>
 
+      <!-- Proof Engine: hash-chained receipts, live verification, tamper demo -->
+      <div class="panel mt-4 proof-panel" id="proofPanel">
+        <div class="panel-head">
+          <h3>Proof Engine</h3>
+          <span class="forge-badge">HASH-CHAINED RECEIPTS</span>
+          <span class="spacer"></span>
+          <span class="pill" id="proofCount">— receipts</span>
+        </div>
+        <div class="panel-body">
+          <p class="muted-sm mb-3">Every settled action issues a receipt: the terms Hearth was working from, what actually happened, and a SHA-256 that re-derives from the fields themselves. Edit one number by hand and the same check fails.</p>
+          <div class="proof-ledger">
+            <div class="proof-total">
+              <span class="proof-total-label">Verified household money</span>
+              <strong id="proofTotal">$—</strong>
+              <span class="proof-total-break" id="proofBreak">loading ledger…</span>
+            </div>
+            <div class="proof-head">
+              <span class="proof-head-label">Chain head</span>
+              <code id="proofHead">—</code>
+              <span class="proof-chain-ok" id="proofChainOk"></span>
+            </div>
+          </div>
+          <div class="proof-list" id="proofList" aria-live="polite"></div>
+          <div class="proof-actions">
+            <button class="btn btn-primary" id="proofVerify" type="button">🔍 Verify receipt</button>
+            <button class="btn proof-btn-fake" id="proofTamper" type="button">✎ Try to fake this receipt</button>
+            <span class="muted-sm" id="proofHint">Each line opens to a real recorded event — pick one, then verify it or fake it.</span>
+          </div>
+          <pre class="proof-result" id="proofResult" tabindex="0" hidden></pre>
+        </div>
+      </div>
+
       <!-- Real World Alexa+ Authentication Portal (Shown when mode == real and !alexa_logged_in) -->
       <div class="panel auth-portal" id="realAuthPortal" hidden>
         <div class="panel-body auth-body">
@@ -690,5 +722,6 @@
 
   <script type="module" src="/web2/js/app.js"></script>
   <script type="module" src="/web2/js/forge.js"></script>
+  <script type="module" src="/web2/js/proof.js"></script>
 </body>
 </html>

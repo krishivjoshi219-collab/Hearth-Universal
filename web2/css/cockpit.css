@@ -1257,3 +1257,121 @@ select.persona:focus,
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: none; }
 }
+
+/* ---------------------------------------------------------------------------
+   Proof Engine: verified ledger, receipts, live verification + tamper demo
+--------------------------------------------------------------------------- */
+
+.proof-panel .panel-body { display: grid; gap: 12px; }
+
+.proof-ledger {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid oklch(80% 0.125 163 / 0.3);
+  border-radius: var(--r-card);
+  background: linear-gradient(180deg, oklch(30% 0.05 163 / 0.16), transparent 75%);
+}
+
+.proof-total { display: grid; gap: 2px; }
+.proof-total-label {
+  color: var(--t3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.proof-total strong { color: var(--ok); font-size: 30px; font-weight: 700; letter-spacing: -0.02em; }
+.proof-total-break { color: var(--t2); font-size: 12px; }
+
+.proof-head { display: grid; gap: 2px; text-align: right; }
+.proof-head-label {
+  color: var(--t3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.proof-head code { color: var(--t2); font-family: var(--font-mono); font-size: 11.5px; }
+.proof-chain-ok { color: var(--ok); font-size: 12px; font-weight: 600; }
+.proof-chain-ok.is-bad { color: var(--bad); }
+
+.proof-list { display: grid; gap: 6px; }
+
+.proof-item {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  grid-template-areas: "kind claim money" "kind sub sub";
+  align-items: center;
+  gap: 2px 12px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--s1);
+  color: var(--t1);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.proof-item:hover { border-color: oklch(82% 0.125 74 / 0.4); transform: translateY(-1px); }
+.proof-item.is-selected { border-color: oklch(82% 0.125 74 / 0.6); background: var(--s2); }
+
+.proof-kind {
+  grid-area: kind;
+  justify-self: start;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--t2);
+}
+.proof-kind-vpp_dispatch { color: var(--ok); border-color: oklch(80% 0.125 163 / 0.4); }
+.proof-kind-tool_applied { color: var(--amber); border-color: oklch(82% 0.125 74 / 0.4); }
+.proof-kind-order_staged { color: var(--t2); }
+
+.proof-claim { grid-area: claim; font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proof-money { grid-area: money; font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; }
+.proof-money.is-good { color: var(--ok); }
+.proof-money.is-spent { color: var(--amber); }
+.proof-money.is-none { color: var(--t3); font-weight: 400; }
+
+.proof-sub {
+  grid-area: sub;
+  color: var(--t3);
+  font-size: 10.5px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.proof-sub code { font-family: var(--font-mono); font-size: 10.5px; color: var(--t2); }
+
+.proof-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.proof-btn-fake { border-color: oklch(70% 0.155 18 / 0.4); }
+.proof-btn-fake:hover { border-color: oklch(70% 0.155 18 / 0.7); color: var(--bad); }
+
+.proof-result {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: var(--s0);
+  color: var(--t2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+.proof-result strong { display: block; margin-bottom: 6px; font-size: 14px; letter-spacing: 0.06em; }
+.proof-result.is-good { border-color: oklch(80% 0.125 163 / 0.5); }
+.proof-result.is-good strong { color: var(--ok); }
+.proof-result.is-bad { border-color: oklch(70% 0.155 18 / 0.55); background: oklch(25% 0.05 18 / 0.25); }
+.proof-result.is-bad strong { color: var(--bad); }
+.proof-result.is-waiting strong { color: var(--amber); }
