@@ -1375,3 +1375,101 @@ select.persona:focus,
 .proof-result.is-bad { border-color: oklch(70% 0.155 18 / 0.55); background: oklch(25% 0.05 18 / 0.25); }
 .proof-result.is-bad strong { color: var(--bad); }
 .proof-result.is-waiting strong { color: var(--amber); }
+
+/* ---------------------------------------------------------------------------
+   Pillar 3: Household Replay — 24h scrubber, narration, jump markers
+--------------------------------------------------------------------------- */
+
+.replay-panel { margin-bottom: 18px; }
+.replay-panel .panel-body { display: grid; gap: 12px; }
+
+.replay-stage {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "clock narration" "chips chips";
+  gap: 6px 22px;
+  align-items: center;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: linear-gradient(180deg, oklch(30% 0.05 74 / 0.1), transparent 75%);
+  transition: border-color 0.3s ease;
+}
+.replay-stage.is-pulse { border-color: oklch(82% 0.125 74 / 0.8); }
+
+.replay-clock { grid-area: clock; display: grid; gap: 0; text-align: center; }
+.replay-clock strong {
+  font-family: var(--font-mono);
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--t1);
+  line-height: 1.05;
+}
+.replay-clock span { color: var(--t3); font-size: 11.5px; }
+
+.replay-narration { grid-area: narration; margin: 0; color: var(--t1); font-size: 15px; line-height: 1.45; }
+
+.replay-chips { grid-area: chips; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.replay-chip {
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--s2);
+  color: var(--t2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+}
+.replay-chip.is-alert { color: var(--bad); border-color: oklch(70% 0.155 18 / 0.4); }
+.replay-chip.is-forge { color: var(--amber); border-color: oklch(82% 0.125 74 / 0.4); }
+.replay-chip.is-money { color: var(--ok); border-color: oklch(80% 0.125 163 / 0.4); }
+
+.replay-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.replay-speeds { display: flex; gap: 6px; }
+.replay-speed {
+  appearance: none;
+  padding: 5px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--s2);
+  color: var(--t2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.replay-speed:hover { color: var(--t1); }
+.replay-speed.is-active { color: var(--amber); border-color: oklch(82% 0.125 74 / 0.55); }
+
+#replayScrub {
+  flex: 1;
+  min-width: 220px;
+  accent-color: var(--amber);
+  cursor: pointer;
+}
+
+.replay-markers { display: flex; flex-wrap: wrap; gap: 8px; }
+.replay-marker {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--s1);
+  color: var(--t2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+.replay-marker:hover { color: var(--t1); border-color: oklch(82% 0.125 74 / 0.5); transform: translateY(-1px); }
+.replay-marker .replay-marker-icon { font-size: 13px; }
+.replay-marker.is-safety { border-color: oklch(70% 0.155 18 / 0.35); }
+.replay-marker.is-forensics { border-color: oklch(65% 0.1 240 / 0.45); }
+.replay-marker.is-money { border-color: oklch(80% 0.125 163 / 0.4); }
+
+@media (max-width: 900px) {
+  .replay-stage { grid-template-columns: 1fr; grid-template-areas: "clock" "narration" "chips"; }
+}

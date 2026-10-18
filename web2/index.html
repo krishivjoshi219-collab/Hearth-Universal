@@ -384,6 +384,30 @@
 
     <!-- ACTIVITY -->
     <section class="view" id="view-activity" role="tabpanel" hidden>
+      <div class="panel replay-panel" id="replayPanel">
+        <div class="panel-head">
+          <h3>Household Replay</h3>
+          <span class="forge-badge">24H LEDGER SCRUBBER</span>
+          <span class="spacer"></span>
+          <span class="pill" id="replayMoney">+$0.00 today</span>
+        </div>
+        <div class="panel-body">
+          <div class="replay-stage" id="replayStage">
+            <div class="replay-clock">
+              <strong id="replayTime">--:--</strong>
+              <span id="replayDate">reading the ledger…</span>
+            </div>
+            <p class="replay-narration" id="replayNarration">Rebuilding the last 24 hours from real recorded events…</p>
+            <div class="replay-chips" id="replayChips"></div>
+          </div>
+          <div class="replay-controls">
+            <button class="btn btn-primary" id="replayPlay" type="button">▶ Play the day</button>
+            <div class="replay-speeds" id="replaySpeeds" role="group" aria-label="Playback speed"></div>
+            <input type="range" id="replayScrub" min="0" max="23" value="23" step="1" aria-label="Scrub over the last 24 hours"/>
+          </div>
+          <div class="replay-markers" id="replayMarkers" aria-label="Jump markers"></div>
+        </div>
+      </div>
       <p class="section-label">Agent timeline · every entry shows its reasoning</p>
       <div id="timeline"><div class="empty"><strong>No activity yet</strong>Ask Hearth something below and watch it think out loud.</div></div>
     </section>
@@ -723,5 +747,6 @@
   <script type="module" src="/web2/js/app.js"></script>
   <script type="module" src="/web2/js/forge.js"></script>
   <script type="module" src="/web2/js/proof.js"></script>
+  <script type="module" src="/web2/js/replay.js"></script>
 </body>
 </html>

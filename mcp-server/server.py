@@ -2190,6 +2190,20 @@ async def api_receipts_verify(request: Request):
     return JSONResponse(res)
 
 
+@mcp.custom_route("/api/replay/day", methods=["GET"])
+async def api_replay_day(request: Request):
+    """Pillar 3: replay the household's last N hours from the ledger (read-only)."""
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    try:
+        hours = max(6, min(72, int(request.query_params.get("hours", "24"))))
+    except ValueError:
+        hours = 24
+    data = await asyncio.to_thread(replay.day_frames, hours)
+    return JSONResponse({"ok": True, **data})
+
+
 @mcp.custom_route("/api/export", methods=["GET"])
 async def api_export(request: Request):
     _t = _throttled(request)
