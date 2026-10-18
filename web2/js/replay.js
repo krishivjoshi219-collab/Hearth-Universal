@@ -22,16 +22,16 @@ if (panel) {
     { v: 3600, label: "3600×" },
   ];
   const ACTION_VIEW = {
-    microgrid_dispatch_settled: ["⚡", "VPP settlement", ""],
-    fft_scan_completed: ["🎧", "sonar sweep", ""],
-    incident_reconstructed: ["🔍", "reconstruction", ""],
-    household_treaty_synthesized: ["🏛", "treaty draft", ""],
-    simulation_completed: ["🔮", "simulation", ""],
-    execution_applied: ["✅", "executed", ""],
-    actions_propose: ["📋", "proposal staged", ""],
-    synthesis_refused_privileged: ["⚠", "Sentinel refusal", "is-alert"],
-    skill_synthesized_and_mounted: ["⚒", "tool forged", "is-forge"],
-    forge_tool_applied: ["🔧", "tool applied", "is-forge"],
+    microgrid_dispatch_settled: ["•", "solar sold to the street", ""],
+    fft_scan_completed: ["•", "listened to the kitchen", ""],
+    incident_reconstructed: ["•", "replayed the night", ""],
+    household_treaty_synthesized: ["•", "treaty drawn up", ""],
+    simulation_completed: ["•", "week looked ahead", ""],
+    execution_applied: ["•", "done", ""],
+    actions_propose: ["•", "ready for your OK", ""],
+    synthesis_refused_privileged: ["•", "the house said no", "is-alert"],
+    skill_synthesized_and_mounted: ["•", "learned something new", "is-forge"],
+    forge_tool_applied: ["•", "put a new habit to work", "is-forge"],
   };
 
   let frames = [];
@@ -59,7 +59,7 @@ if (panel) {
     if (!f) return;
     idx = i;
     timeEl.textContent = f.label;
-    dateEl.textContent = `${f.day} · ${f.events} event${f.events === 1 ? "" : "s"} recorded`;
+    dateEl.textContent = `${f.day} · ${f.events} thing${f.events === 1 ? "" : "s"} happened`;
     narrationEl.textContent = f.narration;
     chipsEl.innerHTML = "";
     const entries = Object.entries(f.by_action || {}).slice(0, 4);
@@ -67,13 +67,13 @@ if (panel) {
       const [icon, label, cls] = ACTION_VIEW[action] || ["•", action.replace(/_/g, " "), ""];
       const chip = document.createElement("span");
       chip.className = "replay-chip" + (cls ? " " + cls : "");
-      chip.textContent = `${icon} ${count} ${label}`;
+      chip.textContent = `${icon} ${count} × ${label}`;
       chipsEl.appendChild(chip);
     });
     if (!entries.length) {
       const quiet = document.createElement("span");
       quiet.className = "replay-chip";
-      quiet.textContent = "🌙 quiet hour";
+      quiet.textContent = "a quiet hour";
       chipsEl.appendChild(quiet);
     }
     const cum = cumulativeMoney(i);
@@ -84,13 +84,13 @@ if (panel) {
   function stopPlay() {
     if (timer) clearInterval(timer);
     timer = null;
-    playBtn.textContent = "▶ Play the day";
+    playBtn.textContent = "Play the day";
   }
 
   function startPlay() {
     if (timer) return stopPlay();
     if (idx >= frames.length - 1) idx = -1;
-    playBtn.textContent = "⏸ Pause";
+    playBtn.textContent = "Pause";
     const ms = Math.max(120, Math.round((3600 * 1000) / speed));
     timer = setInterval(() => {
       if (idx >= frames.length - 1) {
@@ -108,8 +108,7 @@ if (panel) {
       b.type = "button";
       b.className = "replay-speed" + (v === speed ? " is-active" : "");
       b.textContent = label;
-      b.title = `a day plays back in ${Math.round((24 * 3600) / v / 60)} minute(s)`;
-      b.addEventListener("click", () => {
+      b.title = `a day plays back in ${Math.round((24 * 3600) / v / 60)} minute(s)`;      b.addEventListener("click", () => {
         speed = v;
         paintSpeeds();
         if (timer) {
@@ -164,7 +163,7 @@ if (panel) {
       paintMarkers();
       paintFrame(frames.length - 1);
     } catch {
-      narrationEl.textContent = "Replay offline — the ledger could not be read.";
+      narrationEl.textContent = "Replay is offline — the record couldn't be read.";
     }
   }
 

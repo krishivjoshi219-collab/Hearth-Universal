@@ -114,19 +114,19 @@ def replay_decision(pid: str) -> dict[str, Any]:
 _HOUR = 3600
 
 _NARRATION = {
-    "microgrid_dispatch_settled": "sold stored solar into the community VPP",
-    "fft_scan_completed": "swept the house for appliance signatures",
-    "incident_reconstructed": "rebuilt the night's incident graph",
-    "household_treaty_synthesized": "drafted a household treaty",
-    "simulation_completed": "ran resilience simulations days ahead",
-    "execution_applied": "executed an approved action",
-    "actions_propose": "staged new proposals for approval",
-    "synthesis_refused_privileged": "refused a privileged rule (Sentinel)",
-    "skill_synthesized_and_mounted": "forged and mounted a new MCP tool",
-    "forge_tool_applied": "applied a forged MCP tool",
-    "user_account_linked_token_granted": "linked accounts",
-    "inbox_scan": "scanned the inbox",
-    "event_commerce": "watched order events",
+    "microgrid_dispatch_settled": "sold spare solar to the street",
+    "fft_scan_completed": "listened to the kitchen for odd hums",
+    "incident_reconstructed": "replayed the night from the house's own senses",
+    "household_treaty_synthesized": "drew up a family deal",
+    "simulation_completed": "played the week ahead, many ways",
+    "execution_applied": "did what you approved",
+    "actions_propose": "left new offers for your say-so",
+    "synthesis_refused_privileged": "held a rule back — it needed a person",
+    "skill_synthesized_and_mounted": "taught itself a new ability",
+    "forge_tool_applied": "put a new ability to work",
+    "user_account_linked_token_granted": "connected your Amazon account",
+    "inbox_scan": "checked the inbox",
+    "event_commerce": "watched for order updates",
 }
 
 
@@ -140,9 +140,11 @@ def _narrate(hour: dict[str, Any]) -> str:
     if phrase:
         if top[0] == "microgrid_dispatch_settled":
             kw = hour.get("vpp_kw", 0)
-            base = f"Hearth {phrase} — {kw:g} kW across {top[1]} settlements."
+            base = (f"Hearth {phrase} — {kw:g} kW across {top[1]} "
+                    f"settlement{'s' if top[1] != 1 else ''}.")
         else:
-            base = f"Hearth {phrase}" + (f" ×{top[1]}." if top[1] > 1 else ".")
+            base = (f"Hearth {phrase} — {top[1]} times." if top[1] > 1
+                    else f"Hearth {phrase}.")
     else:
         base = f"{top[1]} × {top[0].replace('_', ' ')}."
     bits = []
@@ -256,22 +258,22 @@ def day_frames(hours: int = 24) -> dict[str, Any]:
     if first_refusal:
         ts, d = first_refusal
         markers.append({"ts": ts, "frame": _frame_idx(ts), "icon": "⚠", "kind": "safety",
-                        "label": f"Sentinel refused: {str(d.get('reason') or 'privileged rule')[:64]}"})
+                        "label": f"The house said no — {str(d.get('reason') or 'that one needed a person')[:64]}"})
 
     recon = [ts for ts, a, _d in marker_sources if a == "incident_reconstructed"]
     if recon:
         pick = min(recon, key=lambda ts: abs(time.localtime(ts).tm_hour - 3))
         markers.append({"ts": pick, "frame": _frame_idx(pick), "icon": "🔍", "kind": "forensics",
-                        "label": f"Reconstruct {time.strftime('%H:%M', time.localtime(pick))} — "
-                                 f"rebuilt the night, hypotheses tested"})
+                        "label": f"Replayed {time.strftime('%H:%M', time.localtime(pick))} — "
+                                 f"rebuilt the night, nothing left unexplained"})
 
     forged = [(ts, d) for ts, a, d in marker_sources if a == "skill_synthesized_and_mounted"]
     if forged:
         ts, d = forged[-1]
         tools = d.get("tools") if isinstance(d.get("tools"), list) else []
-        name = tools[0] if tools else str(d.get("name", "tool"))[:48]
+        name = str(d.get("name") or (tools[0] if tools else "a new habit"))[:48]
         markers.append({"ts": ts, "frame": _frame_idx(ts), "icon": "⚒", "kind": "forge",
-                        "label": f"Forged & mounted {name}"})
+                        "label": f"Learned a new ability: {name}"})
 
     best_i, best_v = 0, 0.0
     for i, f in enumerate(frames):

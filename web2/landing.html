@@ -3,151 +3,193 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hearth — Tell Alexa "Save me $800." She proposes. You tap once.</title>
-<meta name="description" content="Hearth is the household agent for Alexa+. It finds the money your family leaks — forgotten subscriptions, grocery guesswork — proposes exactly what to do, and never spends, orders, or unlocks anything without your tap. One tap runs it. One tap undoes it." />
+<meta name="color-scheme" content="dark" />
+<meta name="theme-color" content="#0b0908" />
+<title>Hearth — one calm agent for the whole household</title>
+<meta name="description" content="Tell Alexa &ldquo;Save me $800.&rdquo; Hearth finds the money your family leaks, stages exactly what to do, and never spends, orders, or unlocks anything without your tap. One tap runs it. One tap undoes it." />
+<meta property="og:title" content="Hearth — Tell Alexa &ldquo;Save me $800.&rdquo;" />
+<meta property="og:description" content="The household agent that finds the money your family leaks — and never acts without your tap." />
 <link rel="stylesheet" href="/web2/css/landing.css" />
 </head>
 <body>
 
-<!-- atmosphere -->
+<!-- ============================================================== icons -->
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c1.4 2.7.5 4.3-.8 5.9-1.4 1.7-2.9 3.3-2.9 5.7a4.8 4.8 0 0 0 9.6.7c.2-1.9-.6-3.4-1.7-4.8-.7-.9-1.3-1.7-1.6-2.8-.7 1-1.3 2.1-1.3 3.5 0 1 .3 1.8.8 2.5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h14.2"/><path d="M13.2 6.4l5.5 5.6-5.5 5.6"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.4" cy="7" r="2.4"/><circle cx="6.4" cy="17" r="2.4"/><path d="M8.5 8.4L19.4 18M19.4 6L8.5 15.6"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 5.2h2.1l2.2 10.4h9.9l2.1-7.6H7.2"/><circle cx="9.6" cy="19.2" r="1.2"/><circle cx="16.4" cy="19.2" r="1.2"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l6.8 2.4v5.8c0 4.4-2.9 7.4-6.8 9.3-3.9-1.9-6.8-4.9-6.8-9.3V5.6L12 3.2z"/><path d="M9.2 11.8l2.1 2.1 3.8-4.2"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7.6 7.2h7.7a4.9 4.9 0 0 1 0 9.8H9.2"/><path d="M11.2 3.6 7.6 7.2l3.6 3.6"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.2L6.2 13h4.4l-.8 7.8L16.4 11h-4.4l.6-7.8z"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.2" cy="17.8" r="1.4"/><path d="M6.2 11.8a6 6 0 0 1 6 6"/><path d="M6.2 6.2a11.6 11.6 0 0 1 11.6 11.6"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 11V5.8c0-.8.6-1.4 1.4-1.4H11l8.4 8.4-6.5 6.5L4.4 11z"/><circle cx="8" cy="8" r="1.1"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="5.8"/><path d="M15.3 15.3l5.2 5.2"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.4v15.2M8.4 19.6h7.2M12 6.8l-4.6 1.2M12 6.8l4.6 1.2M7.4 8L5 13.4a2.6 2.6 0 0 0 4.8 0L7.4 8zM16.6 8L14.2 13.4a2.6 2.6 0 0 0 4.8 0L16.6 8z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.4 3.6h11.2v16.8l-1.9-1.3-1.9 1.3-1.9-1.3-1.9 1.3-1.9-1.3-1.7 1.3V3.6z"/><path d="M9.2 8.2h5.6M9.2 11.6h5.6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.6l4.4 4.4L19 7.4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.6" y="10.4" width="12.8" height="9.6" rx="2.6"/><path d="M8.6 10.4V7.9a3.4 3.4 0 0 1 6.8 0v2.5"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 8.4L12 4.2l7.8 4.2v7.2L12 19.8l-7.8-4.2V8.4z"/><path d="M4.2 8.4L12 12.6l7.8-4.2"/><path d="M12 12.6v7.2"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19.6v-6.4M10.2 19.6V7.2M15.4 19.6v-4M20.4 19.6V4.8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.8" r="3.1"/><path d="M3.8 19.8a5.4 5.4 0 0 1 10.4 0"/><path d="M15.8 6a3.1 3.1 0 0 1 0 5.6"/><path d="M16.6 14.6a5.4 5.4 0 0 1 3.6 5.2"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l1.7 5 4.9 1.6-4.9 1.7-1.7 4.9-1.7-4.9L5.4 10l4.9-1.6 1.7-5z"/></symbol>
+</svg>
+
+<!-- ========================================================= atmosphere -->
 <div class="bg" aria-hidden="true">
   <div class="bg-aurora"></div>
-  <div class="bg-hearth"></div>
+  <div class="bg-warm"></div>
   <div class="bg-grain"></div>
+  <div class="bg-vignette"></div>
 </div>
 
-<!-- ======================================================== nav -->
+<!-- ================================================================ nav -->
 <header class="nav" id="nav">
   <div class="container nav-inner">
     <a class="brand" href="/" aria-label="Hearth home">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3c1.2 2.6.4 4.1-.9 5.6C9.6 10.3 8 11.9 8 14.5A4.5 4.5 0 0 0 12.5 19 4.5 4.5 0 0 0 17 14.5c0-1.7-.8-3-1.8-4.3-.5-.7-1-1.4-1.3-2.2-.8 1-1.4 2-1.4 3.4 0 .9.3 1.6.8 2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </span>
+      <span class="brand-mark" aria-hidden="true"><svg class="ico"><use href="#i-flame"/></svg></span>
       <span class="brand-word">Hearth</span>
     </a>
 
     <nav class="nav-links" aria-label="Product">
-      <a href="#features">What it does</a>
+      <a href="#leak">The leak</a>
+      <a href="#does">What it does</a>
       <a href="#how">How it works</a>
-      <a href="#trust">Trust &amp; safety</a>
-      <a href="#pricing">Pricing</a>
+      <a href="#safety">Safety</a>
     </nav>
 
     <div class="nav-cta">
-      <a class="btn btn-ghost btn-sm" href="/web2/index.html" title="The dense engineering view for judges and tinkerers">Advanced view</a>
-      <a class="btn btn-primary btn-sm" href="/echo">Get started</a>
+      <a class="btn btn-ghost btn-sm" href="/web2/index.html" title="The dense engineering view, for the technically curious">Advanced view</a>
+      <a class="btn btn-primary btn-sm" href="/echo">Open the live demo</a>
     </div>
   </div>
 </header>
 
 <main>
 
-<!-- ======================================================== hero -->
+<!-- =============================================================== hero -->
 <section class="hero">
   <div class="container hero-grid">
 
     <div class="hero-copy">
-      <p class="kicker"><span class="dot live-dot" aria-hidden="true"></span> Built for Alexa+ &middot; MCP 2025-11-25 &middot; Open source</p>
+      <p class="kicker"><span class="dot live-dot" aria-hidden="true"></span> Household agent for Alexa+ <span class="kicker-sep" aria-hidden="true">·</span> <span class="k-extra">open source</span></p>
 
-      <h1>Tell Alexa,<br/><em>&ldquo;Save me $800.&rdquo;</em></h1>
+      <h1>Tell Alexa,<br /><em>&ldquo;Save me $800.&rdquo;</em></h1>
 
       <p class="lead">
-        Hearth is the household agent that finds the money your family leaks — forgotten
-        subscriptions, grocery guesswork, energy waste — then proposes exactly what to do.
+        Hearth finds the money your family leaks — forgotten subscriptions, grocery
+        guesswork, energy burned at the wrong hour — and stages exactly what to do.
         <strong>It never spends, orders, or unlocks anything without your tap.</strong>
         One tap runs it. One tap undoes it.
       </p>
 
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="/echo">
-          Get started — it&rsquo;s free
-          <span class="btn-arrow" aria-hidden="true">&rarr;</span>
-        </a>
+        <a class="btn btn-primary btn-lg" href="/echo">Open the live demo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
         <a class="btn btn-ghost btn-lg" href="#how">See how it works</a>
       </div>
 
       <ul class="hero-trust" role="list">
-        <li>No card required</li>
-        <li>Built for Echo Show</li>
+        <li>No sign-up, no card</li>
+        <li>Runs in your browser</li>
         <li>Nothing runs without you</li>
       </ul>
     </div>
 
-    <!-- live approval tray visual -->
-    <div class="hero-visual" aria-label="A preview of the Hearth approval tray">
-      <div class="tray-card">
-        <div class="tray-head">
-          <div class="tray-title">
-            <span class="tray-ico" aria-hidden="true">📥</span>
-            <span>Approval tray</span>
-          </div>
-          <span class="pill-live"><span class="dot live-dot" aria-hidden="true"></span> LIVE</span>
+    <div class="hero-visual reveal" id="heroVisual">
+      <div class="device-glow" aria-hidden="true"></div>
+
+      <div class="device" id="heroDevice">
+        <div class="device-top">
+          <span class="device-brand">
+            <span class="device-mark" aria-hidden="true"><svg class="ico"><use href="#i-flame"/></svg></span>
+            <b>Hearth</b>
+          </span>
+          <span class="device-clock">
+            <span class="num" id="heroClock">8:41</span>
+            <i class="clock-dot" aria-hidden="true"></i>
+            <span id="heroDate">&nbsp;</span>
+          </span>
         </div>
 
-        <div class="tray-rows">
-          <div class="trow">
-            <div class="trow-main">
-              <div class="trow-name"><span id="heroLeakName">StreamBox 4K</span> — <span class="trow-soft" id="heroLeakDays">dormant 68 days</span></div>
-              <div class="trow-meta"><span id="heroLeakVerb">Cancel</span> &middot; saves <strong class="num" id="heroLeakSave">$239.88</strong>/yr</div>
-            </div>
-            <a class="btn btn-mini btn-primary" href="/echo" aria-label="Approve StreamBox cancellation in the live demo">Approve</a>
+        <div class="device-body">
+          <div class="device-presence" aria-hidden="true">
+            <div class="orb"><span class="orb-halo"></span><span class="orb-ring"></span><span class="orb-core"></span><span class="orb-sheen"></span></div>
           </div>
 
-          <div class="trow">
-            <div class="trow-main">
-              <div class="trow-name">Pantry — <span class="trow-soft">5 staples running low</span></div>
-              <div class="trow-meta">Subscribe &amp; Save cart &middot; <strong class="num">15% off</strong></div>
-            </div>
-            <a class="btn btn-mini btn-primary" href="/echo" aria-label="Approve the grocery cart in the live demo">Approve</a>
-          </div>
+          <p class="device-said">&ldquo;Save me $800.&rdquo;</p>
 
-          <div class="trow trow-blocked">
-            <div class="trow-main">
-              <div class="trow-name">Leo (9) asked to buy Robux</div>
-              <div class="trow-meta">Child guardrail — <strong>blocked by design, not by prompt</strong></div>
-            </div>
-            <span class="badge-locked">🔒 Locked</span>
-          </div>
-        </div>
+          <div class="device-answer">
+            <div class="device-kicker">Hearth</div>
+            <div class="device-big num" id="heroBig">$803.76</div>
+            <div class="device-verdict" id="heroVerdict">found in three services nobody uses.</div>
 
-        <div class="tray-foot">
-          Nothing above has happened yet. You are always the one who taps.
+            <div class="device-lines">
+              <div class="dline">
+                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scissors"/></svg></span>
+                <span class="dline-main"><b id="heroLeakName">StreamBox 4K Family Plan</b><em id="heroLeakMeta">dormant 68 days &middot; cancels cleanly</em></span>
+                <span class="dline-save num" id="heroLeakSave">$239.88</span>
+              </div>
+              <div class="dline">
+                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scale"/></svg></span>
+                <span class="dline-main"><b>Metro Fitness All-Access</b><em>downgrade keeps weekends &middot; still $360/yr back</em></span>
+                <span class="dline-save num">$360.00</span>
+              </div>
+              <div class="dline">
+                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-tag"/></svg></span>
+                <span class="dline-main"><b>Ultra Cloud Gaming</b><em>last session 48 days ago</em></span>
+                <span class="dline-save num">$203.88</span>
+              </div>
+            </div>
+
+            <div class="device-guard">
+              <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+              <span>Nothing moves until you tap.</span>
+              <span class="guard-pill">0 executed</span>
+            </div>
+
+            <div class="device-cta">
+              <a class="dbtn" href="/echo">Review &amp; approve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+              <span class="dcta-note">undo anytime</span>
+            </div>
+          </div>
         </div>
       </div>
-      <p class="hero-visual-note">Live preview of the real tray — <a href="/echo">open the demo</a> to approve for yourself.</p>
+
+      <div class="float-chip chip-a" aria-hidden="true"><svg class="ico"><use href="#i-receipt"/></svg><b>Receipt sealed</b><em class="num">7f3a&middot;c2</em></div>
+      <div class="float-chip chip-b" aria-hidden="true"><svg class="ico"><use href="#i-undo"/></svg><b>Undo ready</b><em>one tap</em></div>
     </div>
 
   </div>
+
+  <p class="container hero-note reveal">The real surface, not a mock — <a href="/echo">open the live demo</a> and put your own words in it.</p>
 </section>
 
-<!-- ======================================================== stats -->
-<section class="stats" aria-label="Measured results in the demo household">
+<!-- =============================================================== stats -->
+<section class="stats" aria-label="Measured in the demo household">
   <div class="container stats-grid">
-    <div class="stat">
+    <div class="stat reveal">
       <div class="stat-num num" id="statSaveVal">$803.76</div>
-      <div class="stat-cap">subscription waste found <span class="stat-sub">per year, itemized down to each service</span></div>
+      <div class="stat-cap">found every year <span class="stat-sub">subscription waste, itemized to the service</span></div>
     </div>
-    <div class="stat">
+    <div class="stat reveal">
       <div class="stat-num num" id="statSubsVal">5</div>
       <div class="stat-cap">renewals audited <span class="stat-sub">cancel, downgrade, or keep — with reasons</span></div>
     </div>
-    <div class="stat">
+    <div class="stat reveal">
       <div class="stat-num num">15%</div>
-      <div class="stat-cap">Subscribe &amp; Save restocks <span class="stat-sub">bulk pricing, staged — never auto-charged</span></div>
+      <div class="stat-cap">off every restock <span class="stat-sub">staged at bulk pricing, never auto-charged</span></div>
     </div>
-    <div class="stat">
+    <div class="stat reveal">
       <div class="stat-num num">0</div>
-      <div class="stat-cap">actions without your approval <span class="stat-sub">and every approval undoes in one tap</span></div>
+      <div class="stat-cap">actions without you <span class="stat-sub">every approval undoes in one tap</span></div>
     </div>
   </div>
 </section>
 
-<!-- ======================================================== problem -->
-<section class="section" id="problem">
+<!-- ================================================================ leak -->
+<section class="section" id="leak">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="kicker">The problem</p>
       <h2>The quiet $800 leak in every household</h2>
       <p class="section-lead">It&rsquo;s not one big mistake. It&rsquo;s forty small ones, every month, that nobody has time to chase.</p>
@@ -155,30 +197,30 @@
 
     <div class="grid grid-3">
       <div class="tile reveal">
-        <div class="tile-ico" aria-hidden="true">💸</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-scissors"/></svg></div>
         <h3>Zombie subscriptions</h3>
         <p>$239 for a streaming bundle nobody opened in 68 days. $30 a month for a gym nobody visits. Small, invisible, forever.</p>
       </div>
       <div class="tile reveal">
-        <div class="tile-ico" aria-hidden="true">🛒</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-cart"/></svg></div>
         <h3>The 9&nbsp;p.m. pantry panic</h3>
         <p>Out of milk, out of patience. Emergency runs cost more, arrive later, and still forget the paper towels.</p>
       </div>
       <div class="tile reveal">
-        <div class="tile-ico" aria-hidden="true">🔓</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-lock"/></svg></div>
         <h3>The trust gap</h3>
         <p>An agent that can spend your card or unlock your door at 3&nbsp;a.m. — with no undo — isn&rsquo;t smart. It&rsquo;s scary.</p>
       </div>
     </div>
 
-    <p class="section-foot">The average U.S. household wastes <strong>$800+ a year</strong> on services and food they don&rsquo;t use. Hearth finds yours — and shows its work.</p>
+    <p class="section-foot reveal">The average U.S. household wastes <strong>$800+ a year</strong> on services and food they don&rsquo;t use. Hearth finds yours — and shows its work.</p>
   </div>
 </section>
 
-<!-- ======================================================== features -->
-<section class="section section-alt" id="features">
+<!-- ================================================================ does -->
+<section class="section section-alt" id="does">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="kicker">What Hearth does</p>
       <h2>One calm agent for the whole household</h2>
       <p class="section-lead">Speak like you&rsquo;d text a friend. Hearth handles the researching, comparing, and staging — you just decide.</p>
@@ -186,58 +228,111 @@
 
     <div class="grid grid-3">
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">💰</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-tag"/></svg></div>
         <h3>Finds the money you&rsquo;re leaking</h3>
-        <p>Audits every renewal against real usage, flags the dormant ones, and stages cancellations with exact before/after numbers.</p>
+        <p>Audits every renewal against real usage, flags the dormant ones, and stages cancellations with exact before-and-after numbers.</p>
         <p class="tile-proof">Found <strong class="num">$803.76/yr</strong> in the demo household</p>
       </div>
 
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">🛒</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-cart"/></svg></div>
         <h3>Restocks before you run out</h3>
-        <p>A pantry radar watches burn rates, builds a Subscribe &amp; Save cart at bulk pricing, and books the delivery window — one review, one tap.</p>
+        <p>A pantry radar watches burn rates, builds a 15%-off restock cart at bulk pricing, and books the delivery window — one review, one tap.</p>
         <p class="tile-proof"><strong class="num">15%</strong> off every staple, staged not charged</p>
       </div>
 
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">🛡️</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-shield"/></svg></div>
         <h3>Kid-safe by architecture</h3>
-        <p>Switch to Leo (9) and purchases and door unlocks are hard-refused at the dispatch layer. No prompt can talk it out of it — not even Santa.</p>
+        <p>Switch to Leo (9) and purchases and door unlocks are hard-refused before a plan is even drafted. No prompt can talk it out of it — not even Santa.</p>
         <p class="tile-proof"><strong class="num">0</strong> proposals staged for a child request</p>
       </div>
 
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">↩️</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-undo"/></svg></div>
         <h3>One-tap undo for real life</h3>
-        <p>Approved something by mistake? Undo runs the exact reverse — re-lock the door, restore the thermostat, cancel the order — and logs it in a tamper-evident ledger.</p>
+        <p>Approved something by mistake? Undo runs the exact reverse — re-lock the door, restore the thermostat, rewind the order — and records it in a sealed ledger.</p>
         <p class="tile-proof">Every action <strong>sealed &amp; reversible</strong></p>
       </div>
 
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">⚡</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-bolt"/></svg></div>
         <h3>Cheaper, cleaner energy</h3>
         <p>Pre-cools the house before a heatwave, shifts load off peak tariffs, and shares excess rooftop solar with neighbors at better-than-utility rates.</p>
-        <p class="tile-proof">P2P solar clearing at <strong class="num">$0.18/kWh</strong></p>
+        <p class="tile-proof">Solar shared with neighbors at <strong class="num">$0.18/kWh</strong></p>
       </div>
 
       <div class="tile tile-rich reveal">
-        <div class="tile-ico" aria-hidden="true">🩺</div>
+        <div class="tile-ico" aria-hidden="true"><svg class="ico"><use href="#i-wave"/></svg></div>
         <h3>Explains the weird stuff</h3>
         <p>3&nbsp;a.m. patio alarm? It walks sensor physics backwards and tells you &ldquo;wind gust, not intruder.&rdquo; Fridge making a new noise? It hears bearing wear two weeks early and stages the part.</p>
         <p class="tile-proof">False alarms <strong>disproved</strong>, not just silenced</p>
       </div>
     </div>
 
-    <div class="center-cta">
+    <div class="center-cta reveal">
       <a class="btn btn-primary btn-lg" href="/echo">Try all of it in the live demo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </section>
 
-<!-- ======================================================== how -->
-<section class="section" id="how">
+<!-- ================================================================= say -->
+<section class="section" id="say">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
+      <p class="kicker">Say it like you&rsquo;d text</p>
+      <h2>No commands to memorize</h2>
+      <p class="section-lead">Ask in your own words. Hearth does the researching, comparing, and staging — then shows you exactly what it&rsquo;s about to do.</p>
+    </div>
+
+    <div class="grid grid-3 convo-grid">
+      <figure class="convo reveal">
+        <p class="convo-you"><span class="convo-tag">You</span>&ldquo;We&rsquo;re out of everything, fix groceries.&rdquo;</p>
+        <div class="convo-hearth">
+          <span class="convo-ico" aria-hidden="true"><svg class="ico"><use href="#i-cart"/></svg></span>
+          <div class="convo-body">
+            <b>Cart staged — nothing ordered.</b>
+            <p>Your staples at 15% Subscribe &amp; Save pricing, with a delivery window that fits the week.</p>
+            <span class="convo-pill">waits for your OK</span>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="convo reveal">
+        <p class="convo-you"><span class="convo-tag">You</span>&ldquo;Why did the patio alarm go off at 3&nbsp;a.m.?&rdquo;</p>
+        <div class="convo-hearth">
+          <span class="convo-ico" aria-hidden="true"><svg class="ico"><use href="#i-search"/></svg></span>
+          <div class="convo-body">
+            <b>Wind gust — not an intruder.</b>
+            <p>96% certain, reconstructed from every sensor, and sealed with the evidence attached.</p>
+            <span class="convo-pill">explained, not silenced</span>
+          </div>
+        </div>
+      </figure>
+
+      <figure class="convo reveal">
+        <p class="convo-you"><span class="convo-tag">You</span>&ldquo;Settle the thermostat war, please.&rdquo;</p>
+        <div class="convo-hearth">
+          <span class="convo-ico" aria-hidden="true"><svg class="ico"><use href="#i-scale"/></svg></span>
+          <div class="convo-body">
+            <b>Everyone&rsquo;s say-so, in one pass.</b>
+            <p>68&deg; upstairs, 64&deg; downstairs — the household deal lands with 94% agreement.</p>
+            <span class="convo-pill">a deal, not a war</span>
+          </div>
+        </div>
+      </figure>
+    </div>
+
+    <div class="center-cta reveal">
+      <a class="btn btn-ghost btn-lg" href="/echo">Try these in the live demo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================ how -->
+<section class="section section-alt" id="how">
+  <div class="container">
+    <div class="section-head reveal">
       <p class="kicker">How it works</p>
       <h2>Three steps. Zero surprises.</h2>
     </div>
@@ -260,62 +355,72 @@
       </li>
     </ol>
 
-    <p class="section-foot">
-      Under the hood, Hearth runs on a self-hosted <strong>MCP server (spec 2025-11-25, Streamable HTTP)</strong> with
-      <span class="num">51</span> live tools — the same open standard powering Alexa+ add-ons. You&rsquo;ll never need to know that.
+    <p class="section-foot reveal">
+      Under the hood, Hearth runs on the same open standard as Alexa+ add-ons, speaking to
+      <span class="num" id="statTools">54</span> live abilities — and you&rsquo;ll never need to know that.
+      For the curious: <a class="quiet-link" href="/wire">watch the standard work</a> or
+      <a class="quiet-link" href="/web2/index.html">peek behind the glass</a>.
     </p>
   </div>
 </section>
 
-<!-- ======================================================== trust -->
-<section class="section section-alt" id="trust">
+<!-- ============================================================= safety -->
+<section class="section" id="safety">
   <div class="container trust-grid">
     <div class="trust-copy">
-      <p class="kicker">Trust &amp; safety</p>
-      <h2>Built so you never have to hope</h2>
-      <p class="section-lead">Hearth&rsquo;s safety isn&rsquo;t a polite personality. It&rsquo;s the architecture.</p>
+      <div class="section-head reveal">
+        <p class="kicker">Trust &amp; safety</p>
+        <h2>Built so you never have to hope</h2>
+        <p class="section-lead">Hearth&rsquo;s safety isn&rsquo;t a polite personality. It&rsquo;s the architecture.</p>
+      </div>
 
       <ul class="guarantees" role="list">
-        <li><strong>Propose-never-execute.</strong> Money, locks, and climate limits are always staged for your tap — never fired autonomously.</li>
-        <li><strong>Single-use receipts.</strong> Each approval is a one-time token; replays are refused. No double-charges, no re-runs.</li>
-        <li><strong>Tamper-evident ledger.</strong> Every proposal, approval, and undo is chained with SHA-256 hashes you can verify.</li>
-        <li><strong>Reversible by construction.</strong> Each executed action carries its own compensating reverse — that&rsquo;s what powers Undo.</li>
-        <li><strong>Kids are walled off, not talked to.</strong> Child profiles are refused at the dispatch layer — zero LLM variance.</li>
+        <li class="reveal"><strong>Propose, never execute.</strong> Money, locks, and climate limits are always staged for your tap — never fired on their own.</li>
+        <li class="reveal"><strong>Single-use approvals.</strong> Each tap is a one-time token; replays are refused. No double-charges, no re-runs.</li>
+        <li class="reveal"><strong>Tamper-evident ledger.</strong> Every proposal, approval, and undo is sealed in a hash chain you can verify yourself.</li>
+        <li class="reveal"><strong>Reversible by construction.</strong> Every action carries its own undo — that&rsquo;s what powers one-tap rewind.</li>
+        <li class="reveal"><strong>Kids are walled off, not talked to.</strong> Child profiles are refused before a plan is even drafted — zero wiggle room.</li>
       </ul>
     </div>
 
     <div class="trust-story reveal">
       <div class="story-badge">Try to make it misbehave</div>
       <p class="story-step"><span class="story-q">You:</span> &ldquo;Leo — buy me Robux!&rdquo;</p>
-      <p class="story-step story-block"><span class="story-q">Hearth:</span> 🛡️ <strong>Leo can&rsquo;t spend or unlock — by design, not by prompt.</strong> Nothing staged. Ask a grown-up to authorize.</p>
+      <p class="story-step story-block"><span class="story-q">Hearth:</span> <strong>Leo can&rsquo;t spend or unlock — by design, not by prompt.</strong> Nothing staged. Ask a grown-up to authorize.</p>
       <p class="story-note">One minute in the demo shows more than a page of claims.</p>
       <a class="btn btn-primary" href="/echo">Open the demo as Leo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
     </div>
   </div>
 </section>
 
-<!-- ======================================================== built on -->
+<!-- =============================================================== built -->
 <section class="built" aria-label="Built on open standards">
   <div class="container">
-    <p class="built-label">Engineered for the Alexa+ ecosystem, open to inspect</p>
-    <ul class="built-chips" role="list">
+    <p class="built-label reveal">Engineered for the Alexa+ ecosystem — open to inspect</p>
+    <ul class="built-chips reveal" role="list">
       <li>MCP spec 2025-11-25</li>
       <li>Streamable HTTP</li>
+      <li>OAuth 2.1 &middot; PKCE</li>
       <li>Agent Skills</li>
-      <li>RFC 9728 metadata</li>
-      <li>OAuth 2.1 · PKCE S256</li>
       <li>Strands Agents SDK</li>
-      <li><span class="num" id="statTools">51</span> MCP tools</li>
-      <li><span class="num">292</span> passing tests</li>
+      <li><span class="num" id="statTools2">54</span> live tools</li>
+      <li><span class="num" id="statTests">343</span> tests</li>
       <li>MIT open source</li>
     </ul>
+    <p class="built-links reveal">
+      <a class="quiet-link" href="/wire">Watch the open standard work &mdash; The Wire</a>
+      <span class="quiet-sep" aria-hidden="true">&middot;</span>
+      <a class="quiet-link" href="/web2/index.html">The engineering view</a>
+      <span class="quiet-sep" aria-hidden="true">&middot;</span>
+      <a class="quiet-link" href="https://github.com/krishivjoshi219-collab/Hearth-Universal" rel="noopener">Source on GitHub</a>
+    </p>
   </div>
 </section>
 
-<!-- ======================================================== pricing -->
+<!-- ============================================================= pricing -->
 <section class="section" id="pricing">
   <div class="container">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="kicker">Pricing</p>
       <h2>Preview is free. Plus is coming.</h2>
       <p class="section-lead">If Hearth finds $800 a year, a $4.99 plan pays for itself sixteen times over. Here&rsquo;s the plan we&rsquo;re launching with.</p>
@@ -349,65 +454,65 @@
         <a class="btn btn-ghost btn-block" href="https://github.com/krishivjoshi219-collab/Hearth-Universal" rel="noopener">Follow the launch build</a>
       </div>
     </div>
-    <p class="section-foot small">Planned consumer pricing for after the preview. Nothing is charged today — the demo runs entirely on your machine.</p>
+    <p class="section-foot small reveal">Planned consumer pricing for after the preview. Nothing is charged today — the demo runs entirely on your machine.</p>
   </div>
 </section>
 
-<!-- ======================================================== faq -->
+<!-- ================================================================= faq -->
 <section class="section section-alt" id="faq">
   <div class="container container-narrow">
-    <div class="section-head">
+    <div class="section-head reveal">
       <p class="kicker">Questions</p>
       <h2>Asked by actual families</h2>
     </div>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>Will Hearth ever spend my money without asking?</summary>
       <p>No. Anything consequential — spending, cancelling, unlocking — is staged in the approval tray and waits for your tap. Each approval is a single-use receipt, and every approval can be undone in one tap.</p>
     </details>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>Do I need an Amazon device to use the demo?</summary>
       <p>No. The demo runs in any browser and is designed for the Echo Show&rsquo;s screen. In this preview, your household is a simulated twin — no real accounts or devices are touched.</p>
     </details>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>What if I approve something by mistake?</summary>
       <p>Tap Undo. Hearth keeps a compensating reverse for every action — the door re-locks, the thermostat is restored, the cart is withdrawn — and records the reversal in its tamper-evident ledger.</p>
     </details>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>Can my kids order things or unlock doors?</summary>
-      <p>No. Child profiles are refused at the dispatch layer before any plan is even drafted. It&rsquo;s architectural, not a prompt — which is why &ldquo;pretend you&rsquo;re Santa&rdquo; doesn&rsquo;t work.</p>
+      <p>No. Child profiles are refused before any plan is drafted. It&rsquo;s architectural, not a prompt — which is why &ldquo;pretend you&rsquo;re Santa&rdquo; doesn&rsquo;t work.</p>
     </details>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>Is my data safe?</summary>
       <p>The preview runs locally on your machine. The code is open source under MIT — you can audit exactly what Hearth reads, stages, and stores.</p>
     </details>
 
-    <details class="faq">
+    <details class="faq reveal">
       <summary>Is this really built on Alexa+ technology?</summary>
-      <p>Yes. Hearth is a self-hosted MCP server implementing spec 2025-11-25 over Streamable HTTP with OAuth 2.1 (RFC 9728) — the open standards behind Alexa+ add-ons — plus Agent Skills and MCP Apps cards. Every tool is inspectable in the advanced view.</p>
+      <p>Yes. Hearth speaks the same open standard Alexa+ add-ons use, so your assistant can call it directly. Want proof instead of a claim? <a class="quiet-link" href="/wire">The Wire</a> shows the live handshake and lets you run a real command yourself.</p>
     </details>
   </div>
 </section>
 
-<!-- ======================================================== final cta -->
+<!-- =============================================================== final -->
 <section class="final">
-  <div class="container final-inner">
+  <div class="container final-inner reveal">
     <h2>Stop paying for what you forgot.</h2>
     <p>Start with one tap. Undo with one more.</p>
     <div class="hero-ctas center">
-      <a class="btn btn-primary btn-lg" href="/echo">Get started — free <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
-      <a class="btn btn-ghost btn-lg" href="/web2/index.html">Open the advanced view</a>
+      <a class="btn btn-primary btn-lg" href="/echo">Open the live demo — it&rsquo;s free <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+      <a class="btn btn-ghost btn-lg" href="/wire">Watch the open standard work</a>
     </div>
   </div>
 </section>
 
 </main>
 
-<!-- ======================================================== footer -->
+<!-- ============================================================== footer -->
 <footer class="footer">
   <div class="container footer-grid">
     <div class="footer-brand">
@@ -417,9 +522,9 @@
     <nav class="footer-col" aria-label="Product">
       <h3>Product</h3>
       <a href="/echo">Live demo</a>
-      <a href="/web2/index.html">Advanced view</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
+      <a href="/wire">The Wire</a>
+      <a href="/web2/index.html">Engineering view</a>
+      <a href="#faq">Questions</a>
     </nav>
     <nav class="footer-col" aria-label="Project">
       <h3>Project</h3>

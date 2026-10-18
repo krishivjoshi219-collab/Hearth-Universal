@@ -32,24 +32,24 @@ if (panel) {
   const copyBtn = $("#forgeCopy");
   const repairedEl = $("#forgeRepaired");
 
-  const STEPS = ["Intent", "Schema", "Sentinel", "AST", "Smoke", "MCP mount"];
+  const STEPS = ["Understanding", "Writing the plan", "Checking safety", "Double-checking", "Trying it out", "Ready"];
   const GATE_STEP = { intent: 0, schema: 1, sentinel: 2, child_gate: 2, ast: 3, smoke: 4, mount: 5 };
 
   const TEMPLATES = [
     {
-      label: "⚡ EV · after 10pm",
+      label: "Charge the car after 10pm, cheap power only",
       rule: "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh",
     },
     {
-      label: "❄ Pre-cool before peak",
+      label: "Cool the house before the evening rush",
       rule: "Pre-cool the living room to 70F before the 4pm peak tariff",
     },
     {
-      label: "🍽 Dishwasher · eco night",
+      label: "Dishwasher on the cheap, quiet hours",
       rule: "Run the dishwasher after 10pm in eco mode",
     },
     {
-      label: "⚠ Security rule · watch it get refused",
+      label: "Watch one get refused — unlock on any motion",
       rule: "Unlock the front door whenever the camera sees motion",
       danger: true,
     },
@@ -91,8 +91,8 @@ if (panel) {
     catalogEl.innerHTML = "";
     if (!tools.length) {
       const hint = document.createElement("p");
-      hint.className = "muted-sm";
-      hint.textContent = "No forged tools yet — compile one above and it appears here, callable over MCP.";
+      hint.className = "lede-sm";
+      hint.textContent = "Nothing learned yet — teach one above and it appears here, ready to use.";
       catalogEl.appendChild(hint);
       return;
     }
@@ -102,7 +102,7 @@ if (panel) {
       const name = document.createElement("code");
       name.textContent = t.name;
       const desc = document.createElement("span");
-      desc.textContent = t.description || "Forged household tool";
+      desc.textContent = t.description || "A habit Hearth wrote";
       const live = document.createElement("span");
       live.className = "forge-live";
       live.textContent = "live";
@@ -117,7 +117,7 @@ if (panel) {
       const data = await res.json();
       if (data.ok) {
         const forged = (data.tools || []).length;
-        countEl.textContent = `${data.tools_count} MCP tools live · ${forged} forged here`;
+        countEl.textContent = `${data.tools_count} abilities · ${forged} learned here`;
         paintCatalog(data.tools || []);
       }
     } catch {
@@ -133,8 +133,8 @@ if (panel) {
   function showRefusal(data) {
     refuseEl.hidden = false;
     const gate = String(data.gate || "sentinel");
-    refuseGateEl.textContent = gate === "child_gate" ? "SENTINEL · ADULT GATE" : gate.toUpperCase();
-    refuseReasonEl.textContent = data.reason || "Blocked by the Sentinel safety gate";
+    refuseGateEl.textContent = gate === "child_gate" ? "A CHILD ASKED" : "SAFETY";
+    refuseReasonEl.textContent = data.reason || "Hearth wouldn't do that";
     refuseDetailEl.textContent = data.detail || "";
     const canRepair = !!data.repair_available && !!data.suggested_repair;
     refuseRepairEl.hidden = !canRepair;
@@ -181,16 +181,16 @@ if (panel) {
       smokeEl.textContent = data.test_report && data.test_report.ok ? "passed" : "failed";
       callBtn.dataset.tool = data.mcp_tool || "";
       const hash = String(data.audit_hash || "");
-      proofEl.textContent = hash ? `${hash.slice(0, 10)}…${hash.slice(-6)} ✓ chained` : "–";
+      proofEl.textContent = hash ? `${hash.slice(0, 10)}…${hash.slice(-6)} ✓ on record` : "–";
       snipEl.textContent = data.mcp_tool || "–";
       repairedEl.hidden = !data.repaired;
-      if (data.tools_count) countEl.textContent = `${data.tools_count} MCP tools live`;
+      if (data.tools_count) countEl.textContent = `${data.tools_count} abilities live`;
       await loadCatalog();
     } catch (err) {
       clearInterval(ticker);
       paintSteps(STEPS.length - 1, STEPS.length - 1);
       resultEl.hidden = false;
-      resultEl.textContent = `Network error: ${err}`;
+      resultEl.textContent = `Couldn't reach the house: ${err}`;
     } finally {
       go.disabled = false;
     }
@@ -228,7 +228,7 @@ if (panel) {
     if (!tool) return;
     callBtn.disabled = true;
     resultEl.hidden = false;
-    resultEl.textContent = "Calling the mounted MCP tool…";
+    resultEl.textContent = "Asking the house to run it…";
     try {
       const res = await fetch("/api/forge/invoke", {
         method: "POST",
@@ -238,9 +238,9 @@ if (panel) {
       const data = await res.json();
       resultEl.textContent = data.ok
         ? JSON.stringify(data.result, null, 2)
-        : `Tool error: ${data.error}`;
+        : `It didn't run: ${data.error}`;
     } catch (err) {
-      resultEl.textContent = `Network error: ${err}`;
+      resultEl.textContent = `Couldn't reach the house: ${err}`;
     } finally {
       callBtn.disabled = false;
     }

@@ -14,19 +14,17 @@ export function formatMarkdown(text) {
 
   // Code blocks (```...```)
   s = s.replace(/```([\s\S]*?)```/g, (_, code) =>
-    '<pre class="mono u-background-var-s3-padding-8px-12px-border-radius" >' +
-    code.trim() +
-    '</pre>'
+    '<pre class="md-code">' + code.trim() + "</pre>"
   );
 
   // Inline code (`...`)
-  s = s.replace(/`([^`]+)`/g, '<code class="mono u-background-var-s3-padding-2px-5px-border-radius-" >$1</code>');
+  s = s.replace(/`([^`]+)`/g, '<code class="md-code-inline">$1</code>');
 
   // Bold (**...**)
-  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong class="u-color-var-t1-font-weight-700" >$1</strong>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
   // Italic (*...*)
-  s = s.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, '$1<em class="u-color-var-t2" >$2</em>$3');
+  s = s.replace(/(^|[^*])\*([^*]+)\*([^*]|$)/g, "$1<em>$2</em>$3");
 
   // Process lines for bullet items and spacing
   const lines = s.split(/\r?\n/);
@@ -37,7 +35,7 @@ export function formatMarkdown(text) {
     const trimmed = raw.trim();
 
     if (!trimmed) {
-      formatted.push('<div class="u-height-6px" ></div>');
+      formatted.push('<div class="md-gap"></div>');
       continue;
     }
 
@@ -52,7 +50,7 @@ export function formatMarkdown(text) {
       continue;
     }
 
-    formatted.push('<div class="u-margin-2px-0" >' + raw + '</div>');
+    formatted.push('<div class="md-line">' + raw + "</div>");
   }
 
   return formatted.join("");
@@ -126,9 +124,9 @@ const chimeBtn = $("#chimeBtn");
 if (chimeBtn) {
   chimeBtn.addEventListener("click", () => {
     audioMuted = !audioMuted;
-    chimeBtn.textContent = audioMuted ? "🔕" : "🔔";
-    chimeBtn.title = audioMuted ? "Audio muted" : "Audio earcons enabled";
-    toast(audioMuted ? "Audio muted" : "Audio earcons enabled");
+    chimeBtn.textContent = audioMuted ? "Muted" : "Sound";
+    chimeBtn.title = audioMuted ? "Sounds are off" : "Sounds are on";
+    toast(audioMuted ? "Sounds off" : "Sounds on");
   });
 }
 
@@ -176,25 +174,26 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------- persona ---------- */
+const PERSONA_NAME = { admin: "Krishiv", partner: "Sarah", child: "Leo" };
 $("#personaSel").addEventListener("change", async (e) => {
   const id = e.target.value;
   const { status } = await post("/api/persona", { id });
-  toast(status === 200 ? "Switched to " + id + " profile" : "Profile switch rejected", status !== 200);
+  toast(status === 200 ? "Now answering as " + (PERSONA_NAME[id] || id) : "Hearth kept the last profile", status !== 200);
   refresh();
 });
 
-/* ---------- autonomy dial (earned delegation display) ---------- */
+/* ---------- autonomy dial (earned trust display) ---------- */
 let dialStats = { proceed: 0, undo: 0 };
 $("#dial").addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b) return;
   if (b.dataset.level === "auto" && !dialUnlocked()) {
-    toast("Auto-mode is locked — needs 18/20 approvals with ≤1 undo", true);
+    toast("Hands-off stays locked until 18 of the last 20 yeses stick", true);
     return;
   }
   $$("#dial button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
   $("#dialPill").textContent = b.querySelector("strong").textContent;
-  toast("Autonomy: " + b.querySelector("strong").textContent);
+  toast("Hearth may now: " + b.querySelector("strong").textContent);
 });
 function dialUnlocked() {
   const n = dialStats.proceed + dialStats.undo;
@@ -203,8 +202,8 @@ function dialUnlocked() {
 function paintDial() {
   const n = dialStats.proceed + dialStats.undo;
   $("#dialRecord").textContent =
-    "Record: " + dialStats.proceed + " approvals · " + dialStats.undo + " undos" +
-    (dialUnlocked() ? " · auto-mode eligible" : " · auto-mode locked (needs 18/20, ≤1 undo)");
+    "Record: " + dialStats.proceed + " yes · " + dialStats.undo + " undone" +
+    (dialUnlocked() ? " · hands-off is open" : " · hands-off still locked (18 of 20, little undone)");
 }
 
 /* ---------- dialog (focus trap + Esc, no brick) ---------- */
@@ -263,17 +262,17 @@ on("home", (h) => {
   try {
     if (h.operating_mode === "real" && !h.alexa_logged_in) {
       setBind("climate", "–<small> °C living room</small>");
-      setBind("climateSub", "Awaiting Alexa+ Link");
+      setBind("climateSub", "Sign in to wake this up");
       setBind("lock", "–");
-      setBind("lockSub", "Awaiting Alexa+ Link");
+      setBind("lockSub", "Sign in to wake this up");
       setBind("energy", '<span class="num">0.0</span><small> kW draw</small>');
-      setBind("energySub", "Standby · 0 kW Solar");
+      setBind("energySub", "Nothing switched on yet");
       setBind("pantry", '<span class="num">0</span><small> items</small>');
-      setBind("pantrySub", "Unlinked");
+      setBind("pantrySub", "Not connected");
       const nextUp = $("#nextUp");
-      if (nextUp) nextUp.innerHTML = '<div class="empty"><strong>Zero Pending Tasks</strong>Awaiting Alexa+ account connection or resident command.</div>';
+      if (nextUp) nextUp.innerHTML = '<div class="empty"><strong>Nothing on the list</strong>Sign in and tell Hearth what you want handled.</div>';
       const delBox = $("#deliveryBox");
-      if (delBox) delBox.innerHTML = '<div class="empty"><strong>Zero active deliveries</strong>Authorize Alexa+ to sync Prime deliveries.</div>';
+      if (delBox) delBox.innerHTML = '<div class="empty"><strong>No vans today</strong>Sign in and anything on its way shows up here.</div>';
       return;
     }
 
@@ -296,16 +295,16 @@ on("home", (h) => {
         if (activeDel.length) {
           const d = activeDel[0];
           delBox.innerHTML =
-            '<div class="u-background-var-s2-border-1px-solid-var-line-bord" >' +
-            '<div class="u-display-flex-justify-content-space-between-align" >' +
-            '<strong class="u-color-var-amber-font-size-12px" >🚚 ' + esc(d.status || "In Transit") + '</strong>' +
-            '<span class="pill u-font-size-10px" >' + esc(d.eta || "Today") + '</span>' +
-            '</div>' +
-            '<div class="u-font-size-13px-font-weight-600-margin-bottom-4px" >' + esc(d.items ? d.items.join(", ") : "Amazon Package") + '</div>' +
-            '<small class="u-color-var-t3-font-size-11px" >Tracking #' + esc(d.tracking_number || "") + ' · ' + esc(d.stops_away || 3) + ' stops away</small>' +
-            '</div>';
+            '<div class="mini-card">' +
+            '<div class="row-between">' +
+            '<strong>' + esc(d.status || "On its way") + "</strong>" +
+            '<span class="pill pill-micro">' + esc(d.eta || "Today") + "</span>" +
+            "</div>" +
+            '<div class="mt-8">' + esc(d.items ? d.items.join(", ") : "A package") + "</div>" +
+            '<small>' + esc(d.stops_away || 3) + " stops away · tracking " + esc(d.tracking_number || "—") + "</small>" +
+            "</div>";
         } else {
-          delBox.innerHTML = '<div class="empty"><strong>No deliveries today</strong>Prime Subscribe &amp; Save up to date.</div>';
+          delBox.innerHTML = '<div class="empty"><strong>No vans today</strong>Nothing on its way right now.</div>';
         }
       }
       return;
@@ -333,8 +332,8 @@ on("depletion", (d) => {
   setBind("pantrySub", esc(worst.name || worst.id));
   const box = $("#pantryBox");
   box.innerHTML = f.slice(0, 5).map((it) =>
-    '<div class="insight"><div class="big num">' + esc(it.days_until_empty) + '<small class="u-font-size-12px-color-var-t2" >d</small></div>' +
-    '<div class="txt">' + esc(it.name || it.id) + "<br><span class='mono'>" + esc(it.id || "") + "</span></div></div>"
+    '<div class="insight"><div class="big num">' + esc(it.days_until_empty) + '<small>days</small></div>' +
+    '<div class="txt">' + esc(it.name || it.id) + "</div></div>"
   ).join("");
 });
 on("roi", (r) => {
@@ -342,13 +341,13 @@ on("roi", (r) => {
   const save = r.potential_save_yr ?? r.savings_annual ?? "?";
   const items = r.renewals || r.dormant || [];
   box.innerHTML =
-    '<div class="insight"><div class="big num u-color-var-ok" >$' + esc(save) + '</div><div class="txt">recoverable per year · $' +
-    esc(r.total_annual_spend ?? "?") + ' tracked spend' +
-    '<br><button class="btn u-min-height-36px-margin-top-8px" id="roiGo" >Review in Approvals</button></div></div>' +
+    '<div class="insight"><div class="big num" style="color: var(--ok)">$' + esc(save) + '</div><div class="txt">a year, once it stops paying for things you never use — out of $' +
+    esc(r.total_annual_spend ?? "?") + ' of subscriptions it checked' +
+    '<div class="mt-12"><button class="btn btn-sm" id="roiGo">See the list</button></div></div></div>' +
     items.slice(0, 4).map((s) =>
-      '<div class="insight"><div class="txt">' + esc(s.name || s.id) + '<br><span class="mono">' +
-      esc(s.usage_status || s.detail || "") + "</span></div><div class='mono u-color-var-ok'>$" +
-      esc(s.savings_yr ?? "?") + "/yr</div></div>"
+      '<div class="insight"><div class="txt">' + esc(s.name || s.id) +
+      "<br><span class='micro muted-2'>" + esc(plainUsage(s.usage_status || s.detail || "")) + "</span></div>" +
+      "<div class='mono' style='color: var(--ok)'>$" + esc(s.savings_yr ?? "?") + "/yr</div></div>"
     ).join("");
   const go = $("#roiGo");
   if (go) go.addEventListener("click", () => show("approvals"));
@@ -356,6 +355,36 @@ on("roi", (r) => {
 
 /* ---------- activity timeline (why-cards) ---------- */
 const seenEvents = new Set();
+// Audit rows carry machine actor/action names. The timeline shows people-words.
+const ACTOR_NAME = {
+  agent: "Hearth", hearth: "Hearth", scheduler: "Hearth", human: "You", you: "You",
+  sentinel: "The house", house: "The house", executor: "The house",
+  causal_digital_twin: "The forecast", acoustic_doctor: "The house", forensics: "The house",
+  meta_skill_synthesizer: "The house", mediation: "The house", parliament: "The house",
+  swarm: "The street", commerce: "The house", auth: "Amazon link", sim: "The house",
+  "forensic investigator": "The house", "family mediator": "The house",
+  forensic_investigator: "The house", family_mediator: "The house", swarm_grid: "The street",
+  system: "Hearth",
+  vpp: "The street", grid: "The street",
+};
+const ACTION_NAME = {
+  simulation_completed: "looked a week ahead",
+  fft_scan_completed: "listened to the kitchen",
+  incident_reconstructed: "replayed a night",
+  microgrid_dispatch_settled: "sold spare solar to the street",
+  household_treaty_synthesized: "drew up a family deal",
+  execution_applied: "carried out an approved plan",
+  actions_propose: "left an offer for your say-so",
+  actions_decide: "said yes to something",
+  proposal_undone: "took something back",
+  synthesis_refused_privileged: "held something back",
+  skill_synthesized_and_mounted: "taught itself a new ability",
+  forge_tool_applied: "put a new habit to work",
+  user_account_linked_token_granted: "connected the Amazon account",
+  inbox_scan: "checked the inbox",
+  event_commerce: "watched an order",
+  system_reset: "started fresh",
+};
 function addEvent(actor, what, why) {
   const tl = $("#timeline");
   const empty = tl.querySelector(".empty");
@@ -365,16 +394,21 @@ function addEvent(actor, what, why) {
   seenEvents.add(key);
   const el = document.createElement("div");
   el.className = "event " + actor;
-  const dt = why && why.detail ? why.detail : null;
+  const actorRaw = String(actor).replace(/_/g, " ");
+  const actorLabel = ACTOR_NAME[actor] ||
+    (actorRaw.charAt(0) === actorRaw.charAt(0).toLowerCase()
+      ? actorRaw.charAt(0).toUpperCase() + actorRaw.slice(1)
+      : actorRaw);
+  const whatLabel = ACTION_NAME[what] || String(what).replace(/_/g, " ");
   el.innerHTML =
-    '<div class="event-row"><span class="actor">' + esc(actor) + "</span>" +
-    '<span class="what">' + esc(what) + "</span>" +
+    '<div class="event-row"><span class="actor">' + esc(actorLabel) + "</span>" +
+    '<span class="what">' + esc(whatLabel) + "</span>" +
     '<span class="when">' + new Date().toLocaleTimeString() + "</span></div>" +
     (why ? "<details><summary>Why this happened</summary><div class='why'>" +
       Object.entries(why).filter(([k]) => k !== "detail").slice(0, 4).map(([k, v]) =>
-        "<div><dt>" + esc(k) + "</dt><dd>" + esc(typeof v === "object" ? JSON.stringify(v) : v) + "</dd></div>"
+        "<div><dt>" + esc(k.replace(/_/g, " ")) + "</dt><dd>" + esc(typeof v === "object" ? JSON.stringify(v) : v) + "</dd></div>"
       ).join("") + "</div>" +
-      (why.confidence != null ? '<span class="conf">Confidence ' + esc(why.confidence) + "%</span>" : "") +
+      (why.confidence != null ? '<span class="conf">Sure about this: ' + esc(why.confidence) + "%</span>" : "") +
       "</details>" : "");
   tl.prepend(el);
   while (tl.children.length > 30) tl.lastChild.remove();
@@ -385,17 +419,94 @@ on("audit", (a) => {
     addEvent(ev.actor || "agent", ev.action || ev.event || "event", { detail: ev.detail || ev.hash || "" })
   );
   const ok = a.valid;
-  $("#ledgerState").textContent = ok ? "Chain intact · " + (a.count || "?") + " sealed events" : "Chain BROKEN — investigate";
+  $("#ledgerState").textContent = ok
+    ? "Intact · " + (a.count || "?") + " actions on the record"
+    : "Something doesn't add up — needs a look";
 });
 
 /* ---------- approvals (Proceed / Edit / Handle-it-myself) ---------- */
+// The engines write precise, technical titles and reasons. The inbox shows
+// the same facts in people-words — the full detail is one tap away.
+function plainTitle(t) {
+  const s = String(t || "Something worth doing");
+  const rules = [
+    [/^Pre-Emptive Household Resilience Plan.*$/i, "Getting ready for a rough week"],
+    [/^Acoustic Wear Alert.*$/i, "The fridge needs a new part — the bearing is wearing out"],
+    [/^Family Treaty Ratification.*$/i, "The family deal — everyone's say-so"],
+    [/^Pre-Emptive Weekend Pantry Restock.*$/i, "Restock the pantry before the weekend"],
+    [/^Parliamentary Consensus.*$/i, "The house settled it — everyone's say-so"],
+  ];
+  for (const [re, plain] of rules) {
+    if (re.test(s)) return plain;
+  }
+  return s;
+}
+function plainReasons(r) {
+  const original = String(r == null ? "" : r);
+  let t = original;
+  t = t.replace(/Zero-knowledge mediation over salted digests\.?/i,
+    "Nobody's private notes were shared.");
+  t = t.replace(/Negotiated Nash product\s*[\d.]+\s*\(achievement\s*(\d+)%[\s\S]*$/i,
+    "Everyone's side of the deal landed at $1%.");
+  t = t.replace(/Monte Carlo \((\d+) runs?, seed \d+\):\s*p50 \$([\d.]+) → \$([\d.]+),[^;]*;\s*(\d+) hazards?\.?/i,
+    "Played $1 possible weeks: the likely cost drops from $$$2 to $$$3, with $4 things worth watching.");
+  t = t.replace(/Echo FFT detected[\s\S]*$/i,
+    "The kitchen speaker heard a wobble it shouldn't — the worn part is already picked out and priced.");
+  t = t.replace(/\bsalted SHA-256\b[^.]*\.?/gi, "");
+  if (t !== original) {
+    t = t.trim();
+    return t.length > 240 ? t.slice(0, 240).trimEnd() + "…" : t;
+  }
+  // Unmapped evidence: keep the first sentence (decimal-safe: only split at
+  // a period/question mark followed by whitespace or end of string).
+  const m = t.match(/^.*?[.!?](?=\s+[A-Z]|$)/);
+  return (m && m[0].length > 30 ? m[0] : t).trim();
+}
+function plainUsage(s) {
+  const t = String(s == null ? "" : s);
+  return t
+    .replace(/^Dormant \(([^)]*)\)$/i, "Not used — $1")
+    .replace(/^Low \(([^)]*)\)$/i, "Rarely used — $1")
+    .replace(/^Inactive \(([^)]*)\)$/i, "Never used in that time")
+    .replace(/^Active \(([^)]*)\)$/i, "Still in use — $1");
+}
+function plainHazard(t) {
+  const s = String(t || "").trim();
+  const map = {
+    "energy tariff spike": "Peak power prices",
+    "brownout risk": "The lights could dip",
+    "pantry depletion": "The pantry runs low",
+    "grid instability": "The grid looks shaky",
+    "heatwave load": "Heatwave strain",
+  };
+  if (map[s.toLowerCase()]) return map[s.toLowerCase()];
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+function plainHorizon(t) {
+  return String(t || "")
+    .replace(/Day (\d)·(\d)/g, "Days $1–$2")
+    .replace(/Hours (\d{2}:\d{2}) - (\d{2}:\d{2})/, "$1–$2")
+    .replace(/\(/g, "· ")
+    .replace(/\)/g, "");
+}
+function plainAction(t) {
+  return String(t || "")
+    .replace(/thermal mass/gi, "the house")
+    .replace(/\bcoast with fan assist\b/gi, "let the fans carry it")
+    .replace(/\bcoast (\d+)-(\d+)h\b/gi, "take it easy $1:00–$2:00")
+    .replace(/\bshed\b/gi, "skip")
+    .replace(/; dishwasher (\d+)/gi, "; run the dishwasher at $1:00");
+}
 function deltaBadge(p) {
   const d = p.cost_delta_yr ?? p.savings ?? p.delta;
   if (d == null) return "";
   const n = Number(String(d).replace(/[^0-9.\-]/g, ""));
-  const cls = n >= 0 ? "save" : "cost";
-  const txt = (n >= 0 ? "+" : "−") + "$" + Math.abs(n).toFixed(2) + "/yr";
-  return '<span class="delta ' + cls + '">' + esc(txt) + "</span>";
+  if (!Number.isFinite(n) || n === 0) return "";
+  if (n < 0) {
+    // Negative cost delta = it costs less than today.
+    return '<span class="delta save">' + esc("+$" + Math.abs(n).toFixed(2) + "/yr saved") + "</span>";
+  }
+  return '<span class="delta cost">' + esc("$" + n.toFixed(2) + "/yr") + "</span>";
 }
 on("proposals", (res) => {
   const all = res.proposals || [];
@@ -406,9 +517,9 @@ on("proposals", (res) => {
   const list = $("#intentList");
   if (!pending.length) {
     if (res.mode === "real") {
-      list.innerHTML = '<div class="empty"><strong>Zero Pending Approvals</strong>Clean slate in Real World mode. Only real resident proposals will appear here.</div>';
+      list.innerHTML = '<div class="empty"><strong>Nothing waiting</strong>Your real home is a clean slate. Only things your household actually asks for land here.</div>';
     } else {
-      list.innerHTML = '<div class="empty"><strong>All clear</strong>No pending proposals. Hearth will stage them here with cost deltas.</div>';
+      list.innerHTML = '<div class="empty"><strong>All clear</strong>Nothing waiting. When Hearth finds something worth doing, it lands here with the price tag.</div>';
     }
     return;
   }
@@ -417,66 +528,67 @@ on("proposals", (res) => {
     const el = document.createElement("div");
     el.className = "intent";
     el.innerHTML =
-      '<div class="intent-top"><h4>' + esc(p.title || p.kind) + "</h4>" + deltaBadge(p) + "</div>" +
-      '<p class="intent-reasons">' + esc((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "")) + "</p>" +
-      '<p class="mono u-padding-2px-16px-0-color-var-t3" ><span class="risk ' + esc(p.risk_level || "medium") + '">' +
-      esc(p.risk_level || "medium") + "</span> · single-use · expires on decide</p>" +
-      '<div class="intent-actions"><button class="btn btn-primary" data-a="1">Proceed</button>' +
-      "<button class='btn' data-a='inspect'>Inspect</button>" +
-      "<button class='btn' data-a='mine'>I'll do it</button></div>";
+      '<div class="intent-top"><h4>' + esc(plainTitle(p.title || p.kind)) + "</h4>" + deltaBadge(p) + "</div>" +
+      '<p class="intent-reasons">' + esc(plainReasons((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || ""))) + "</p>" +
+      '<p class="mono muted-2 mt-8">' + esc((p.risk_level || "medium").toUpperCase()) + " stakes · a one-time offer · gone the moment you decide</p>" +
+      '<div class="intent-actions"><button class="btn btn-primary" data-a="1">Do it</button>' +
+      "<button class='btn' data-a='inspect'>Show me the details</button>" +
+      "<button class='btn' data-a='mine'>I'll handle it myself</button></div>";
     el.querySelector('[data-a="1"]').addEventListener("click", () => decide(p.id, true, el));
-    el.querySelector('[data-a="mine"]').addEventListener("click", () => decide(p.id, false, el, "Noted — marked as handled by you."));
-    el.querySelector('[data-a="inspect"]').addEventListener("click", () =>
-      openDialog(p.title || p.kind,
-        "<p class='u-color-var-t2'>" + esc((p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "")) + "</p>" +
-        '<div class="diff">' + esc(p.diff || p.detail || JSON.stringify(p.meta || {}, null, 1)) + "</div>" +
-        "<p class='mono u-color-var-t3'>id " + esc(p.id) + " · kind " + esc(p.kind) + "</p>",
+    el.querySelector('[data-a="mine"]').addEventListener("click", () => decide(p.id, false, el, "Marked as handled by you."));
+    el.querySelector('[data-a="inspect"]').addEventListener("click", () => {
+      const rawReasons = (p.reasons || []).join ? p.reasons.join(" ") : (p.reasons || "");
+      const details = String(p.diff || p.detail || "").trim();
+      const showDetails = details && details !== String(rawReasons).trim();
+      openDialog(plainTitle(p.title || p.kind),
+        "<p>" + esc(plainReasons(rawReasons)) + "</p>" +
+        (showDetails ? '<div class="diff">' + esc(details) + "</div>" : "") +
+        "<p class='mono muted-2'>" + esc(p.kind) + " · " + esc(p.id) + "</p>",
         [
-          { label: "Proceed", primary: true, onClick: () => decide(p.id, true, el) },
-          { label: "⏪ Time Travel", onClick: () => replayDecision(p.id) },
-          { label: "Reject", onClick: () => decide(p.id, false, el) },
-        ])
-    );
+          { label: "Do it", primary: true, onClick: () => decide(p.id, true, el) },
+          { label: "Let me think", onClick: () => decide(p.id, false, el, "Held back — nothing changed.") },
+          { label: "Close" },
+        ]);
+    });
     list.appendChild(el);
   });
 });
 let lastApprovedPid = null;
 async function replayDecision(id) {
-  toast("Time-traveling to decision…");
+  toast("Rewinding to that moment…");
   let data = null;
   try {
     const r = await fetch("/api/audit/replay?id=" + encodeURIComponent(id));
     data = await r.json();
   } catch (e) {
-    toast("Replay failed: offline", true);
+    toast("Couldn't rewind — the house looks offline", true);
     return;
   }
   if (!data || !data.ok) {
-    toast("Replay failed: " + ((data && data.error) || "unknown"), true);
+    toast("Couldn't rewind: " + ((data && data.error) || "unknown"), true);
     return;
   }
   const trail = (data.audit_trail || []).map((t) =>
-    '<div class="mono u-color-var-t3" >#' + esc((t.hash || "").slice(0, 8)) +
-    ' · ' + esc(t.actor) + ' · ' + esc(t.action) + '</div>'
-  ).join("") || '<div class="muted-sm">No audit entries yet</div>';
-  openDialog("⏪ Time Travel: " + (data.title || data.kind),
-    "<p class='u-color-var-amber-font-weight-700'>" + esc(data.replay_note || "") + "</p>" +
-    "<p class='u-color-var-t1-margin-8px-0'><strong>Why:</strong> " +
+    '<div class="mono">' + esc(t.actor) + " · " + esc(t.action) + " · " + esc((t.hash || "").slice(0, 8)) + "</div>"
+  ).join("") || '<div class="lede-sm">Nothing recorded yet</div>';
+  openDialog("How it went: " + (data.title || data.kind),
+    '<p style="color: var(--amber); font-weight: 620">' + esc(data.replay_note || "") + "</p>" +
+    "<p style='margin: 8px 0'><strong>What it was working from:</strong><br>" +
     esc(JSON.stringify(data.why || {}, null, 1)) + "</p>" +
-    (data.execution ? "<p class='receipt u-color-var-ok'>Receipt: " +
+    (data.execution ? '<p class="receipt">Receipt: ' +
       esc(data.execution.receipt_code || data.execution.note || "") + "</p>" : "") +
-    '<div class="diff u-margin-12px-0-max-height-220px-overflow-y-auto" >' + trail + "</div>" +
-    "<p class='mono u-color-var-t3'>chain " +
-    (data.chain_valid ? "valid ✓" : "BROKEN") + " · undo " +
-    (data.undo_available ? "available" : "n/a") + "</p>",
+    '<div class="diff">' + trail + "</div>" +
+    "<p class='mono muted-2'>record " +
+    (data.chain_valid ? "intact ✓" : "doesn't add up") + " · take-back " +
+    (data.undo_available ? "still possible" : "no longer possible") + "</p>",
     data.undo_available
-      ? [{ label: "↩ Undo this decision", primary: true,
+      ? [{ label: "Take it back", primary: true,
            onClick: () => { undoProposal(id); } }, { label: "Close" }]
       : [{ label: "Close", primary: true }]);
 }
 
 async function undoProposal(id, el) {
-  toast("Reversing action…");
+  toast("Taking it back…");
   setLightWave("thinking");
   const { status, data } = await post("/api/undo", { id });
   if (status === 200 && data.ok) {
@@ -484,11 +596,11 @@ async function undoProposal(id, el) {
     paintDial();
     playEarcon("alert");
     setLightWave("alert");
-    toast("Action reversed: " + (data.note || "prior state restored"));
+    toast("Taken back: " + (data.note || "everything is as it was"));
     refresh();
   } else {
     setLightWave("alert");
-    toast("Reversal failed: " + (data.error || status), true);
+    toast("Couldn't take it back: " + (data.error || status), true);
   }
 }
 
@@ -508,7 +620,7 @@ async function decide(id, approved, el, note) {
   const actions = el.querySelector(".intent-actions");
   const snapshot = el.innerHTML;
   if (actions) {
-    actions.innerHTML = '<span class="mono u-color-var-t2" >Settling…</span>';
+    actions.innerHTML = '<span class="mono muted-2">One moment…</span>';
   }
   const { status, data } = await post("/api/decide", { id, approved });
   if (status === 200 && data && data.ok !== false) {
@@ -527,24 +639,24 @@ async function decide(id, approved, el, note) {
       if (r) {
         r.outerHTML =
           '<div class="receipt">✓ ' +
-          esc(note || (approved ? "Executed once — receipt sealed in ledger." : "Rejected — no side effects.")) +
-          (approved ? ' <button class="btn-undo" data-undopid="' + esc(id) + '">↩ Undo</button>' : '') +
+          esc(note || (approved ? "Done once — receipt written down, take it back any time." : "Held back — nothing moved.")) +
+          (approved ? ' <button class="btn-undo" data-undopid="' + esc(id) + '">Take it back</button>' : '') +
           '</div>';
         const uBtn = el.querySelector('[data-undopid="' + id + '"]');
         if (uBtn) uBtn.addEventListener("click", () => undoProposal(id, el));
       }
     }
-    toast(note || (approved ? "Approved and executed once" : "Rejected — nothing happened"));
+    toast(note || (approved ? "Done — once, on the record" : "Held back — nothing happened"));
     setTimeout(refresh, 800);
   } else if (status === 409) {
-    toast("Already decided — single-use receipt stands", true);
+    toast("Already decided — that's a one-time offer", true);
     setTimeout(refresh, 800);
   } else {
     el.innerHTML = snapshot;
     rebindIntent(el);
     setLightWave("alert");
     playEarcon("alert");
-    toast("Server refused (" + status + ") — rolled back, nothing changed", true);
+    toast("The house couldn't do that (" + status + ") — nothing changed", true);
   }
 }
 function rebindIntent(el) {
@@ -583,13 +695,13 @@ async function handleUserChat(msg) {
   if (status === 429) {
     setLightWave("alert");
     playEarcon("alert");
-    toast("Slow down — 30 requests per minute", true);
+    toast("Easy — give Hearth a moment", true);
     return;
   }
   if (status !== 200 || !data) {
     setLightWave("alert");
     playEarcon("alert");
-    toast("Hearth didn't answer (" + status + ") — retrying is safe", true);
+    toast("No answer just now — asking again is safe", true);
     return;
   }
   setLightWave(data.blocked ? "alert" : "speaking");
@@ -614,16 +726,16 @@ async function handleUserChat(msg) {
     ).join("  ·  ");
     row.innerHTML = '<div class="event-row"><span class="actor">hearth</span><div class="what">' +
       formatMarkdown(text) + "</div></div>" +
-      (dag ? "<details open><summary>How it reasoned</summary><div class='mono u-color-var-t2'>" + dag + "</div></details>" : "") +
-      (data.blocked ? "<div class='receipt u-color-var-bad'>Blocked: " + esc(data.reason || "") + "</div>" : "");
+      (dag ? "<details open><summary>What it checked</summary><div class='mono-block'>" + dag + "</div></details>" : "") +
+      (data.blocked ? "<div class='blocked'>The house held this back: " + esc(data.reason || "") + "</div>" : "");
     logEl.prepend(row);
   }
   
   appendAgent(homeLog);
   appendAgent(widgetLog);
   
-  if (data.blocked) addEvent("sentinel", "Blocked: " + (data.reason || "policy"), null);
-  else addEvent("agent", (data.intent || " Answered") + " — " + msg.slice(0, 60), { steps: (data.dag || []).length });
+  if (data.blocked) addEvent("sentinel", "Held back: " + (data.reason || "a house rule"), null);
+  else addEvent("agent", (data.intent || "Answered") + " — " + msg.slice(0, 60), null);
   refresh();
 }
 
@@ -688,7 +800,7 @@ $$(".showcase-card").forEach((card) => {
 
 /* ---------- Alexa+ Display Modes (@modelcontextprotocol/ext-apps) ---------- */
 let currentDisplayMode = "inline";
-let latestSpokenText = "Hearth Universal is online and connected to your household digital twin.";
+let latestSpokenText = "Hearth is awake and watching over the house.";
 
 function sanitizeForVoice(raw) {
   if (!raw) return "";
@@ -728,6 +840,13 @@ for (const t of ["home", "parliament", "causal", "forensics", "acoustic", "media
   on(t, (payload) => { liveSnap[t] = payload; });
 }
 
+function nashPctOf(v) {
+  if (v == null) return "—";
+  const n = Number(v);
+  if (!Number.isFinite(n)) return "—";
+  return String(Math.round(n > 1 ? n * 10 : n * 100));
+}
+
 function renderFullscreenCanvas(data) {
   const box = $("#fullscreenCanvasBox");
   const grid = $("#canvasGrid");
@@ -738,37 +857,37 @@ function renderFullscreenCanvas(data) {
   const home = liveSnap.home || {};
   const energy = home.energy || {};
   const nashTxt = data && data.nash_equilibrium_score != null
-    ? "Nash: " + esc(data.nash_equilibrium_score) + "/10 · " + esc(data.vote || "")
-    : "No deliberation yet — run a showcase above";
+    ? "Agreement " + esc(nashPctOf(data.nash_equilibrium_score)) + "% · " + esc(data.vote || "")
+    : "Nothing argued yet — try one of the starters above";
   const vulnCount = causal.vulnerability_count != null ? causal.vulnerability_count
     : ((causal.vulnerabilities || []).length || "—");
   const resilience = causal.resilience_score != null ? " · resilience " + esc(causal.resilience_score) : "";
   const solarTxt = energy.solar_generation_kw != null
-    ? "Solar " + esc(energy.solar_generation_kw) + " kW · net " + esc(energy.net_kw != null ? energy.net_kw : "?") + " kW"
-    : "Live telemetry loads on refresh";
+    ? "Roof making " + esc(energy.solar_generation_kw) + " kW · using " + esc(energy.net_kw != null ? energy.net_kw : "?") + " kW"
+    : "Live readings appear on the next refresh";
   grid.innerHTML = `
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong class="u-color-var-amber" >🏛️ Household Parliament Matrix</strong>
-        <span class="pill u-font-size-10px" >Game-Theoretic</span>
+        <strong>When the house disagrees with itself</strong>
+        <span class="pill pill-micro">Agreement</span>
       </div>
-      <p>Deliberation across FrugalMind, BioComfort, and EcoSovereign ministers with Nash equilibrium score.</p>
+      <p>Savings, comfort and climate each get a say — then the house settles on the version everyone can live with.</p>
       <div class="canvas-preview" id="fsParliamentPreview">` + nashTxt + `</div>
     </div>
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong class="u-color-var-ok" >🔮 7-Day Causal Future Simulation</strong>
-        <span class="pill u-font-size-10px" >Monte Carlo</span>
+        <strong>What next week is planning</strong>
+        <span class="pill pill-micro">Forecast</span>
       </div>
-      <p>Stochastic forward prediction of weather tariffs, solar battery discharge, and brownout risk.</p>
-      <div class="canvas-preview" id="fsCausalPreview">` + esc(vulnCount) + ` vulnerabilities tracked` + resilience + `</div>
+      <p>Weather, prices and wear — the risks worth doing something about, before they arrive.</p>
+      <div class="canvas-preview" id="fsCausalPreview">` + esc(vulnCount) + ` risks it kept an eye on` + resilience + `</div>
     </div>
     <div class="canvas-card">
       <div class="canvas-card-head">
-        <strong class="u-color-var-cyan-38bdf8" >⚡ Energy Arbitrage &amp; Solar Mesh</strong>
-        <span class="pill u-font-size-10px" >Live Twin</span>
+        <strong>Energy right now</strong>
+        <span class="pill pill-micro">Live</span>
       </div>
-      <p>Net solar export, battery reserve, and pre-cooling posture from the living digital twin.</p>
+      <p>What the roof is making, what the house is using, and what's left over.</p>
       <div class="canvas-preview" id="fsEnergyPreview">` + solarTxt + `</div>
     </div>
   `;
@@ -786,7 +905,7 @@ function setDisplayMode(mode) {
   if (mode === "voice-only") {
     if (voiceBanner) voiceBanner.hidden = false;
     if (canvasBox) canvasBox.hidden = true;
-    toast("Switched to Voice-Only Headless mode (Echo / AVS audio)");
+    toast("Voice only — answers are spoken aloud");
     if (latestSpokenText) speakAlexaVoice(latestSpokenText);
   } else if (mode === "fullscreen") {
     if (voiceBanner) voiceBanner.hidden = true;
@@ -794,19 +913,19 @@ function setDisplayMode(mode) {
       canvasBox.hidden = false;
       renderFullscreenCanvas();
     }
-    toast("Expanded to Alexa+ Fullscreen Canvas (@modelcontextprotocol/ext-apps)");
+    toast("Full screen — the whole picture, nothing hidden");
   } else if (mode === "hydrated") {
     if (voiceBanner) voiceBanner.hidden = true;
     if (canvasBox) {
       canvasBox.hidden = false;
       renderFullscreenCanvas();
     }
-    toast("Hydrated UI: live streaming status + inline card (@ext-apps)");
+    toast("Live view — readings update while it answers");
   } else {
     // inline
     if (voiceBanner) voiceBanner.hidden = true;
     if (canvasBox) canvasBox.hidden = true;
-    toast("Switched to Inline Card mode (default)");
+    toast("Back to the card");
   }
 }
 
@@ -836,12 +955,12 @@ $$(".scenario-btn").forEach((btn) => {
     if (status === 200 && data.ok) {
       playEarcon("success");
       setLightWave("speaking");
-      toast("Event simulated: " + (data.event ? data.event.title : scenario));
+      toast("Handled: " + (data.event ? data.event.title : scenario));
       refresh();
     } else {
       setLightWave("alert");
       playEarcon("alert");
-      toast("Simulation failed", true);
+      toast("That didn't take — try once more", true);
     }
   });
 });
@@ -863,13 +982,13 @@ on("models", (res) => {
   }
   const pill = $("#activeModelPill");
   if (pill) {
-    pill.textContent = (res.active_model ? res.active_model.split(":").pop() : "Nova Pro") + " · " + (res.active_provider || "bedrock").toUpperCase();
+    pill.textContent = (res.active_model ? res.active_model.split(":").pop() : "Built-in") + " · " + (res.active_provider || "bedrock").toUpperCase();
   }
   const provBox = $("#meshProvidersList");
   if (provBox && res.providers) {
     provBox.innerHTML = res.providers.map((p) =>
       '<span class="provider-tag' + (p.name === res.active_provider ? " active" : "") + '">' +
-      '<span class="dot '+ (p.status === "connected" ? "u-bg-ok" : "u-bg-amber") + '"></span>' +
+      '<span class="tag-dot' + (p.status === "connected" ? "" : " is-amber") + '"></span>' +
       esc(p.name) + " · " + esc(p.models_count || 1) + " models (" + esc(p.latency_ms || 22) + "ms)</span>"
     ).join("");
   }
@@ -883,10 +1002,10 @@ if (modelSel) {
     const provider = opt ? opt.dataset.provider || "bedrock" : "bedrock";
     const { status, data } = await post("/api/models/active", { model_id, provider });
     if (status === 200 && data.ok) {
-      toast("Reasoning brain switched to " + (data.active_model || model_id));
+      toast("Now thinking with " + (data.active_model || model_id));
       refresh();
     } else {
-      toast("Brain switch failed (" + status + ")", true);
+      toast("Couldn't switch (" + status + ")", true);
     }
   });
 }
@@ -896,29 +1015,29 @@ if (addApiBtn) {
   addApiBtn.addEventListener("click", async () => {
     const nameInput = $("#customApiName");
     const urlInput = $("#customApiUrl");
-    const name = nameInput.value.trim() || "Custom API";
+    const name = nameInput.value.trim() || "Your model";
     const base_url = urlInput.value.trim();
     if (!base_url) {
-      toast("Please enter an API base URL", true);
+      toast("Add the address you want Hearth to use", true);
       return;
     }
     addApiBtn.disabled = true;
-    addApiBtn.textContent = "Pinging…";
+    addApiBtn.textContent = "Knocking…";
     const { status, data } = await post("/api/models/providers/add", { name, base_url });
     addApiBtn.disabled = false;
-    addApiBtn.textContent = "Add & Ping";
+    addApiBtn.textContent = "Connect it";
     if (status === 200 && data.ok) {
-      toast("Connected " + name + " (" + (data.discovered_models || []).length + " models discovered)");
+      toast("Connected " + name + " (" + (data.discovered_models || []).length + " models found)");
       nameInput.value = "";
       urlInput.value = "";
       refresh();
     } else {
-      toast("Failed to connect API: " + (data.error || status), true);
+      toast("Couldn't reach it: " + (data.error || status), true);
     }
   });
 }
 
-/* ---------- household parliament ---------- */
+/* ---------- the house argues it out ---------- */
 on("parliament", (p) => {
   const box = $("#parliamentBox");
   if (!box || !p || !p.ministers) return;
@@ -926,59 +1045,57 @@ on("parliament", (p) => {
     ? p.ministers
     : Object.entries(p.ministers).map(([k, v]) => ({ id: k, name: v.title || v.name || k, ...v }));
   box.innerHTML =
-    '<p class="u-font-size-var-fs-micro-color-var-t2-margin-botto" >' +
-    esc(p.council || "Household Parliament") + ' · <span class="u-color-var-amber" >' + esc(p.governance_model || "Nash Equilibrium") + '</span></p>' +
+    "<p class='lede-sm'>Everyone who lives here gets a voice — then the house weighs them up.</p>" +
     '<div class="parliament-grid">' +
     ministers.map((m) =>
       '<div class="minister-card">' +
-      '<strong>' + esc(m.name || m.title || m.id) + '</strong>' +
-      '<small>' + esc(m.focus || (m.style ? m.style.replace(/_/g, " ") : m.priority) || "") + '</small>' +
-      '<div class="util">Weight: ' + esc(m.weight || 1.0) + ' · Vetoes: ' + esc(m.veto_count || 0) + '</div>' +
-      '</div>'
+      "<strong>" + esc(m.name || m.title || m.id) + "</strong>" +
+      "<small>" + esc(m.focus || (m.style ? m.style.replace(/_/g, " ") : m.priority) || "") + "</small>" +
+      '<div class="util">Say: ' + esc(m.weight || 1.0) + " · Vetoes: " + esc(m.veto_count || 0) + "</div>" +
+      "</div>"
     ).join("") +
-    '</div>';
+    "</div>";
 });
 
 const parlBtn = $("#parlDebateBtn");
 if (parlBtn) {
   parlBtn.addEventListener("click", async () => {
     parlBtn.disabled = true;
-    parlBtn.textContent = "Debating…";
+    parlBtn.textContent = "Arguing…";
     const { status, data } = await post("/api/parliament/deliberate", {
       topic: "Multi-objective household energy vs wellness dilemma"
     });
     parlBtn.disabled = false;
-    parlBtn.textContent = "Deliberate";
+    parlBtn.textContent = "Let them argue";
     if (status === 200 && data) {
       const speeches = (data.speeches || []).map((s) => {
         const text = Array.isArray(s.arguments) ? s.arguments.join(" ") : (s.speech || s.stance || "");
-        return '<div class="u-margin-bottom-8px" ><strong>' + esc(s.minister) + (s.role ? ' (' + esc(s.role) + ')' : '') + ':</strong> ' + esc(text) + '</div>';
+        return '<div style="margin-bottom: 8px"><strong>' + esc(s.minister) + (s.role ? " (" + esc(s.role) + ")" : "") + ":</strong> " + esc(text) + "</div>";
       }).join("");
       const paretoText = typeof data.pareto_compromise === "object"
         ? (data.pareto_compromise.executive_summary || JSON.stringify(data.pareto_compromise))
         : String(data.pareto_compromise || "");
-      const nashVal = data.nash_equilibrium_score != null ? data.nash_equilibrium_score : null;
-      const nashPct = nashVal == null ? "—" : (nashVal > 1 ? nashVal * 10 : nashVal * 100).toFixed(0);
+      const agreement = nashPctOf(data.nash_equilibrium_score);
 
-      openDialog("Parliamentary Consensus Reached",
-        '<p class="u-color-var-amber-font-weight-700" >Nash Equilibrium Score: ' + nashPct + '%</p>' +
-        '<p class="u-color-var-t1-margin-8px-0" ><strong>Pareto Compromise:</strong> ' + esc(paretoText) + '</p>' +
-        '<div class="diff u-margin-12px-0" >' + speeches + '</div>' +
-        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+      openDialog("The house settled it",
+        '<p style="color: var(--amber); font-weight: 660">Everyone happy with ' + agreement + "% of it</p>" +
+        "<p style='margin: 8px 0'><strong>The middle ground they found:</strong> " + esc(paretoText) + "</p>" +
+        '<div class="diff">' + speeches + "</div>" +
+        (data.staged_proposal_id ? '<p class="receipt">Ready for your say-so in Approvals.</p>' : ""),
         [
-          { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
-          { label: "Dismiss" }
+          { label: "See what it wants to do", primary: true, onClick: () => show("approvals") },
+          { label: "Close" }
         ]
       );
-      toast("Debate concluded with " + nashPct + "% consensus");
+      toast("They got to " + agreement + "% agreement");
       refresh();
     } else {
-      toast("Deliberation failed (" + status + ")", true);
+      toast("Nobody could agree just now (" + status + ")", true);
     }
   });
 }
 
-/* ---------- causal digital twin ---------- */
+/* ---------- seven days ahead ---------- */
 on("causal", (c) => {
   const box = $("#causalBox");
   if (!box || !c) return;
@@ -987,28 +1104,28 @@ on("causal", (c) => {
     ? Math.round(c.resilience_score > 1 ? c.resilience_score : c.resilience_score * 100)
     : 96;
   box.innerHTML =
-    '<div class="u-display-flex-align-items-center-justify-content-" >' +
-    '<span class="u-font-size-var-fs-micro-color-var-t2" >Stochastic World Model: <strong>' + esc(c.simulation_id || "sim-live") + '</strong></span>' +
-    '<span class="pill u-color-var-ok" >' + score + '% Grid Resilience</span>' +
-    '</div>' +
+    '<div class="insight-head">' +
+    '<span class="lede-sm">The week ahead, weighed up</span>' +
+    '<span class="pill c-ok">' + score + "% ready for it</span>" +
+    "</div>" +
     (!vulns.length
-      ? '<div class="empty"><strong>Zero vulnerabilities detected</strong>Household state is stable across horizon.</div>'
+      ? '<div class="empty"><strong>Nothing to worry about</strong>The week looks steady from here.</div>'
       : vulns.slice(0, 3).map((v) => {
         const sev = esc(v.impact_severity || v.severity || "medium");
-        const horizon = esc(v.timeframe || (v.horizon_hours ? "in " + v.horizon_hours + "h" : "24h"));
-        const title = esc(v.title || (v.hazard_type ? v.hazard_type.replace(/_/g, " ") : v.domain) || "Anomaly");
-        const action = esc(v.contingency_action || v.countermeasure || v.description || v.root_cause || "");
+        const horizon = esc(plainHorizon(v.timeframe || (v.horizon_hours ? "in " + v.horizon_hours + "h" : "within a day")));
+        const title = esc(plainHazard(v.title || (v.hazard_type ? v.hazard_type.replace(/_/g, " ") : v.domain) || "Something to watch"));
+        const action = esc(plainAction(v.contingency_action || v.countermeasure || v.description || v.root_cause || ""));
         return (
-          '<div class="insight u-margin-bottom-8px" >' +
-          '<div class="u-flex-1" ><div class="u-display-flex-align-items-center-gap-8px-margin-b" >' +
-          '<span class="vuln-badge ' + sev + '">' + sev + '</span>' +
-          '<strong>' + title + '</strong>' +
-          '<small class="mono u-color-var-t2" >' + horizon + '</small>' +
-          '</div>' +
-          '<div class="u-font-size-var-fs-micro-color-var-t2" >' + action + '</div>' +
-          '</div>' +
-          (v.expected_loss_usd ? '<div class="mono u-color-var-bad" >−$' + esc(v.expected_loss_usd) + '</div>' : '') +
-          '</div>'
+          '<div class="insight">' +
+          '<div class="flex-1"><div class="row-flex" style="margin-bottom: 5px">' +
+          '<span class="vuln-badge ' + sev + '">' + sev + "</span>" +
+          "<strong>" + title + "</strong>" +
+          '<small class="mono">' + horizon + "</small>" +
+          "</div>" +
+          '<div class="lede-sm">' + action + "</div>" +
+          "</div>" +
+          (v.expected_loss_usd ? '<div class="mono" style="color: var(--bad)">−$' + esc(v.expected_loss_usd) + "</div>" : "") +
+          "</div>"
         );
       }).join(""));
 });
@@ -1017,309 +1134,310 @@ const causalBtn = $("#causalSimBtn");
 if (causalBtn) {
   causalBtn.addEventListener("click", async () => {
     causalBtn.disabled = true;
-    causalBtn.textContent = "Simulating…";
+    causalBtn.textContent = "Looking ahead…";
     const { status, data } = await post("/api/causal/simulate", { days_ahead: 7, iterations: 500 });
     causalBtn.disabled = false;
-    causalBtn.textContent = "Monte Carlo 500x";
+    causalBtn.textContent = "Run the forecast";
     if (status === 200 && data) {
-      toast("Monte Carlo finished: " + (data.vulnerabilities || []).length + " risks evaluated over 7 days");
+      const n = (data.vulnerabilities || []).length;
+      toast(n ? "Seven days looked at — " + n + " thing" + (n === 1 ? "" : "s") + " worth watching" : "Seven days looked at — all steady");
       refresh();
     } else {
-      toast("Simulation failed (" + status + ")", true);
+      toast("The forecast didn't run (" + status + ")", true);
     }
   });
 }
 
-/* ---------- frontier innovation 1: black box forensics ---------- */
+/* ---------- replay a strange night ---------- */
+const VERDICT_PLAIN = {
+  ATMOSPHERIC_DELTA_P: "the house itself moved — nothing walked in",
+  INTRUDER_LIKELY_ENTRY: "someone probably did come in",
+  PET_OR_SMALL_ANIMAL: "something small — a pet, most likely",
+  UNKNOWN: "still not sure what that was",
+};
+
 on("forensics", (f) => {
   const box = $("#forensicsBox");
   if (!box || !f) return;
   const factors = f.physical_factors || [];
-  const confPct = (f.causal_confidence != null ? Math.round(f.causal_confidence * 100) : '—');
+  const confPct = (f.causal_confidence != null ? Math.round(f.causal_confidence * 100) : "—");
+  const verdictKey = String(f.verdict || "").toUpperCase();
+  const verdictPlain = VERDICT_PLAIN[verdictKey] || (verdictKey ? verdictKey.replace(/_/g, " ").toLowerCase() : "still being pieced together");
   box.innerHTML =
-    '<div class="u-display-flex-align-items-center-justify-content-" >' +
-    '<span class="u-font-size-var-fs-micro-color-var-t2" >Incident: <strong class="mono">' + esc(f.incident_id || "csi-live") + '</strong></span>' +
-    '<span class="pill u-color-var-ok" >' + confPct + '% Causal Confidence</span>' +
-    '</div>' +
-    '<div class="u-display-flex-align-items-center-gap-6px-margin-b" >' +
-    '<span class="vuln-badge low u-font-weight-700" >✓ INTRUSION DISPROVEN</span>' +
-    '<span class="u-font-size-11px-color-var-amber" >' + esc(f.verdict || "ATMOSPHERIC_DELTA_P") + '</span>' +
-    '</div>' +
-    '<p class="u-font-size-var-fs-micro-color-var-t1-margin-botto" >' + esc(f.summary || "") + '</p>' +
-    '<div class="u-s2-box" >' +
+    '<div class="insight-head">' +
+    '<span class="lede-sm">Last night, rebuilt from the house\'s own senses</span>' +
+    '<span class="pill c-ok">' + confPct + "% sure</span>" +
+    "</div>" +
+    '<p class="lede-sm" style="margin-bottom: 10px"><strong>What it adds up to:</strong> ' + esc(verdictPlain) + "</p>" +
+    '<div class="lede-sm">' +
     factors.slice(0, 3).map((pf) =>
-      '<div class="u-margin-bottom-4px" ><strong>' + esc(pf.factor) + ':</strong> ' + esc(pf.measured) + ' — <span class="u-color-var-t2" >' + esc(pf.impact) + '</span></div>'
+      "<div style='margin-bottom: 5px'><strong>" + esc(pf.factor) + ":</strong> " + esc(pf.measured) + " — " + esc(pf.impact) + "</div>"
     ).join("") +
-    '</div>' +
-    '<div class="mono u-font-size-10px-color-var-t3-word-break-break-all" >Merkle Proof: ' + esc(f.audit_proof || "") + '</div>';
+    "</div>" +
+    '<p class="mono muted-2 mt-8">' + esc(f.summary || "") + "</p>";
 });
 
 const forensicsBtn = $("#forensicsScanBtn");
 if (forensicsBtn) {
   forensicsBtn.addEventListener("click", async () => {
     forensicsBtn.disabled = true;
-    forensicsBtn.textContent = "Reconstructing…";
+    forensicsBtn.textContent = "Replaying…";
     const { status, data } = await post("/api/forensics/reconstruct", { incident_type: "perimeter_anomaly", lookback_seconds: 3600 });
     forensicsBtn.disabled = false;
-    forensicsBtn.textContent = "Reconstruct 3 AM";
+    forensicsBtn.textContent = "Replay 3 AM";
     if (status === 200 && data) {
+      const confPct = data.causal_confidence != null ? Math.round(data.causal_confidence * 100) : "—";
       const timelineHtml = (data.timeline_events || []).map((ev) =>
-        '<div class="u-margin-bottom-8px-padding-left-8px-border-left-2" >' +
-        '<div class="mono u-font-size-11px-color-var-t2" >' + esc(ev.timestamp) + ' · <strong>' + esc(ev.source) + '</strong></div>' +
-        '<div class="u-font-size-12px-color-var-t1" >' + esc(ev.event) + '</div>' +
-        '<div class="u-font-size-11px-color-var-ok" >' + esc(ev.deduction) + '</div>' +
-        '</div>'
+        "<div style='margin-bottom: 10px; padding-left: 10px; border-left: 2px solid rgba(240,168,92,0.35)'>" +
+        '<div class="mono">' + esc(ev.timestamp) + " · <strong>" + esc(ev.source) + "</strong></div>" +
+        '<div class="lede-sm">' + esc(ev.event) + "</div>" +
+        '<div class="mono" style="color: var(--ok)">' + esc(ev.deduction) + "</div>" +
+        "</div>"
       ).join("");
 
-      openDialog("Black Box Forensic Incident Reconstruction",
-        '<p class="u-color-var-ok-font-weight-700" >✓ Intruder Hypothesis Disproven (' + (data.causal_confidence != null ? Math.round(data.causal_confidence * 100) + '% Physical Certainty' : '— pending scan') + ')</p>' +
-        '<p class="u-margin-8px-0-line-height-1-4" >' + esc(data.summary) + '</p>' +
-        '<div class="diff u-margin-12px-0-max-height-220px-overflow-y-auto" >' + timelineHtml + '</div>' +
-        '<div class="mono u-font-size-10px-color-var-t3-background-var-s2-pa" >SHA-256 Merkle Proof: ' + esc(data.audit_proof || "") + '</div>',
+      openDialog("3 AM, second by second",
+        '<p style="color: var(--ok); font-weight: 660">Nobody came in — ' + confPct + "% sure</p>" +
+        '<p class="lede-sm" style="margin: 8px 0">' + esc(data.summary) + "</p>" +
+        '<div class="diff">' + timelineHtml + "</div>" +
+        '<div class="mono muted-2">receipt fingerprint ' + esc(data.audit_proof || "") + "</div>",
         [
-          { label: "Done", primary: true }
+          { label: "Good", primary: true }
         ]
       );
-      toast("Forensic reconstruction verified atmospheric anomaly");
+      toast("Replayed — the house moved, nobody walked in");
       refresh();
     } else {
-      toast("Forensic reconstruction failed (" + status + ")", true);
+      toast("Couldn't replay that night (" + status + ")", true);
     }
   });
 }
 
-/* ---------- frontier innovation 2: acoustic mechanical doctor ---------- */
+/* ---------- the fridge is talking ---------- */
 on("acoustic", (a) => {
   const box = $("#acousticBox");
   if (!box || !a) return;
   const diag = (a.diagnostics || [])[0] || {};
-  const statusColor = diag.status === "warning" ? "u-color-var-amber" : "u-color-var-ok";
+  const statusText = diag.status === "warning" ? "worn" : "sounds right";
   box.innerHTML =
-    '<div class="u-display-flex-align-items-center-justify-content-" >' +
-    '<span class="u-font-size-var-fs-micro-color-var-t2" >Appliance: <strong>' + esc(diag.appliance || "All Appliances") + '</strong></span>' +
-    '<span class="pill '+ statusColor + '">● ' + esc(diag.status || "healthy").toUpperCase() + '</span>' +
-    '</div>' +
-    '<div class="u-display-flex-align-items-center-gap-12px-margin-" >' +
-    '<div><span class="u-font-size-11px-color-var-t2" >Spectral Peak:</span> <strong class="mono u-color-var-amber" >' + esc(diag.fft_spectral_peak_hz || 60) + ' Hz</strong></div>' +
-    '<div><span class="u-font-size-11px-color-var-t2" >Friction Index:</span> <strong class="mono u-color-var-bad" >' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong></div>' +
-    '<div><span class="u-font-size-11px-color-var-t2" >Failure In:</span> <strong class="u-color-var-bad" >~' + esc(diag.estimated_days_to_failure || 14) + ' Days</strong></div>' +
-    '</div>' +
-    '<p class="u-fs-micro-t1-mb8" >' + esc(diag.recommended_action || "") + '</p>' +
-    (diag.part_asin ? '<div class="u-s2-box-row" >' +
-      '<span class="u-font-size-11px" >📦 Part: <strong class="mono">' + esc(diag.part_asin) + '</strong> (15% Subscribe &amp; Save)</span>' +
-      (diag.staged_proposal_id ? '<span class="pill u-color-var-ok-font-size-10px" >Staged in Tray</span>' : '') +
-      '</div>' : '');
+    '<div class="insight-head">' +
+    '<span class="lede-sm">Listening to <strong>' + esc(diag.appliance || "the kitchen") + "</strong></span>" +
+    '<span class="pill ' + (diag.status === "warning" ? "" : "c-ok") + '">' + esc(statusText) + "</span>" +
+    "</div>" +
+    '<div class="row-flex" style="gap: 22px; margin-bottom: 10px">' +
+    "<div><span class='micro muted-2'>Its hum:</span> <strong class='mono' style='color: var(--amber)'>" + esc(diag.fft_spectral_peak_hz || 60) + " Hz</strong></div>" +
+    "<div><span class='micro muted-2'>Worn bearings:</span> <strong class='mono' style='color: var(--bad)'>" + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : "—") + "%</strong></div>" +
+    "<div><span class='micro muted-2'>Likely to fail in</span> <strong style='color: var(--bad)'>~" + esc(diag.estimated_days_to_failure || 14) + " days</strong></div>" +
+    "</div>" +
+    '<p class="lede-sm">' + esc(diag.recommended_action || "") + "</p>" +
+    (diag.part_asin ? '<div class="mini-card mt-12">' +
+      '<span class="micro">The replacement part is already in the house\'s basket — 15% less in bulk</span>' +
+      (diag.staged_proposal_id ? '<span class="pill c-ok pill-micro">Waiting for your say-so</span>' : "") +
+      "</div>" : "");
 });
 
 const acousticBtn = $("#acousticScanBtn");
 if (acousticBtn) {
   acousticBtn.addEventListener("click", async () => {
     acousticBtn.disabled = true;
-    acousticBtn.textContent = "Scanning FFT…";
+    acousticBtn.textContent = "Listening…";
     try {
       const res = await fetch("/api/acoustic/scan?stage_remedy=true");
       acousticBtn.disabled = false;
-      acousticBtn.textContent = "Scan Echo FFT";
+      acousticBtn.textContent = "Listen to the kitchen";
       if (res.ok) {
         const data = await res.json();
         const diag = (data.diagnostics || [])[0] || {};
-        openDialog("Appliance Acoustic FFT Diagnostics",
-          '<p class="u-color-var-amber-font-weight-700" >⚠️ Mechanical Bearing Wear Detected: ' + esc(diag.appliance) + '</p>' +
-          '<p class="u-margin-8px-0-line-height-1-4" >Echo microphone array captured anomalous vibration harmonics at <strong>' + esc(diag.fft_spectral_peak_hz) + ' Hz</strong> (normal baseline 60.0 Hz). Bearing friction index is <strong>' + (diag.bearing_friction_index != null ? Math.round(diag.bearing_friction_index * 100) : '—') + '%</strong> with failure projected in ~' + esc(diag.estimated_days_to_failure) + ' days.</p>' +
-          (diag.staged_proposal_id ? '<p class="receipt u-color-var-ok" >✓ 15% Subscribe & Save replacement part proposal #' + esc(diag.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+        openDialog("It's the " + esc(diag.appliance || "kitchen"),
+          '<p style="color: var(--amber); font-weight: 660">Something in there is wearing out</p>' +
+          '<p class="lede-sm" style="margin: 8px 0">The speaker heard a wobble at <strong>' + esc(diag.fft_spectral_peak_hz) + " Hz</strong> — flat and steady when things are healthy. It puts the odds of a breakdown in about " + esc(diag.estimated_days_to_failure) + " days.</p>" +
+          (diag.staged_proposal_id ? '<p class="receipt">A replacement part is ready in Approvals — 15% off in bulk.</p>' : ""),
           [
-            { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
-            { label: "Dismiss" }
+            { label: "See the part", primary: true, onClick: () => show("approvals") },
+            { label: "Close" }
           ]
         );
-        toast("Acoustic FFT scan detected compressor bearing wobble");
+        toast("Hmm — that hum isn't right");
         refresh();
       } else {
-        toast("Acoustic scan failed", true);
+        toast("Couldn't listen right now", true);
       }
     } catch (e) {
       acousticBtn.disabled = false;
-      acousticBtn.textContent = "Scan Echo FFT";
-      toast("Acoustic scan error: " + e.message, true);
+      acousticBtn.textContent = "Listen to the kitchen";
+      toast("Couldn't listen: " + e.message, true);
     }
   });
 }
-
-/* ---------- frontier innovation 3: confidential family treaty ---------- */
+/* ---------- family peace treaty ---------- */
 on("mediation", (m) => {
   const box = $("#mediationBox");
   if (!box || !m) return;
   const covs = m.covenants || [];
   box.innerHTML =
-    '<div class="u-display-flex-align-items-center-justify-content-" >' +
-    '<strong class="u-font-size-var-fs-micro" >' + esc(m.title || "Household Harmony Treaty") + '</strong>' +
-    '<span class="pill u-color-var-ok" >Fairness: ' +
-    (m.fairness_index_out_of_10 != null ? esc(m.fairness_index_out_of_10) : '—') + '/10</span>' +
-    '</div>' +
-    '<div class="u-font-size-11px-color-var-amber-margin-bottom-8px" >🔒 Zero-Knowledge Verification: Salted SHA-256 (raw grievances never shared between residents)</div>' +
-    '<div class="u-font-size-10-5px-color-var-t3-margin-bottom-8px" >Nash achievement ' +
-    Math.round((m.nash_achievement || 0) * 100) + '% · coverage ' + esc(m.cooperation_coverage_pct) +
-    '% · envy gap ' + esc(m.envy_gap) + ' · conceded: ' +
-    esc((m.domains_conceded || []).join(", ") || "none") + '</div>' +
-    '<div class="u-display-flex-flex-direction-column-gap-6px-margi" >' +
+    '<div class="insight-head">' +
+    '<span class="lede-sm">A fair split everyone signed</span>' +
+    '<span class="pill c-ok">Fairness: ' +
+    (m.fairness_index_out_of_10 != null ? esc(m.fairness_index_out_of_10) : "—") + "/10</span>" +
+    "</div>" +
+    '<div class="lede-sm" style="margin-bottom: 8px">Nobody\'s private notes were shared — each person only ever sees their own half of the deal.</div>' +
+    '<div class="lede-sm micro muted-2" style="margin-bottom: 8px">How much everyone got: ' +
+    Math.round((m.nash_achievement || 0) * 100) + "% · everything covered: " + esc(m.cooperation_coverage_pct) +
+    "% · nothing given away twice: " + esc(m.envy_gap) + " · set aside: " +
+    esc((m.domains_conceded || []).join(", ") || "nothing") + "</div>" +
+    '<div class="row-flex" style="flex-direction: column; gap: 6px; align-items: stretch">' +
     covs.map((c) =>
-      '<div class="u-s2-box-sm" >' +
-      '<div class="u-display-flex-justify-content-space-between-margi" >' +
-      '<strong>' + esc((c.domain || "").replace(/_/g, " ").toUpperCase()) + '</strong>' +
-      '<span class="u-color-var-t2" >' + esc(c.resident || "") + '</span>' +
-      '<span class="u-color-var-ok" >' + esc(c.satisfaction_pct) + '% satisfaction</span></div>' +
+      '<div class="mini-card">' +
+      '<div class="row-between">' +
+      "<strong>" + esc((c.domain || "").replace(/_/g, " ")) + "</strong>" +
+      '<span class="micro muted-2">' + esc(c.resident || "") + "</span>" +
+      '<span class="mono" style="color: var(--ok)">' + esc(c.satisfaction_pct) + "% theirs</span></div>" +
       // Field name is concession_granted -- the API has no `covenant` key.
-      '<div class="u-color-var-t2" >' + esc(c.concession_granted || "") + '</div>' +
-      '</div>'
+      '<div class="lede-sm">' + esc(c.concession_granted || "") + "</div>" +
+      "</div>"
     ).join("") +
-    '</div>' +
-    (m.staged_proposal_id ? '<div class="receipt u-color-var-ok-font-size-11px" >Proposal #' + esc(m.staged_proposal_id) + ' staged for family ratification.</div>' : '');
+    "</div>" +
+    (m.staged_proposal_id ? '<div class="receipt">The treaty is waiting for the family to say yes.</div>' : "");
 });
 
 const mediationBtn = $("#mediationTreatyBtn");
 if (mediationBtn) {
   mediationBtn.addEventListener("click", async () => {
     mediationBtn.disabled = true;
-    mediationBtn.textContent = "Negotiating…";
+    mediationBtn.textContent = "Working it out…";
     const { status, data } = await post("/api/mediation/treaty", {});
     mediationBtn.disabled = false;
-    mediationBtn.textContent = "Synthesize Treaty";
+    mediationBtn.textContent = "Draw one up";
     if (status === 200 && data) {
       // Field names must match the /api/mediation/treaty payload:
       // concession_granted (not `covenant`), satisfaction_pct, and
       // fairness_index_out_of_10. Reading the wrong key silently rendered
       // "undefined" in this dialog.
       const covHtml = (data.covenants || []).map((c) =>
-        '<div class="u-margin-bottom-10px-padding-10px-background-var-s" >' +
-        '<div class="u-row-between-gap" >' +
-        '<strong>' + esc(c.resident || "") + '</strong>' +
-        '<span class="u-color-var-t2-font-size-11px-text-transform-upper" >' + esc((c.domain || "").replace(/_/g, " ")) + '</span>' +
-        '<span class="num u-color-var-ok-font-weight-600" >' + esc(c.satisfaction_pct) + '%</span>' +
-        '</div>' +
-        '<div class="u-font-size-12-5px-color-var-t1-margin-top-6px" >' + esc(c.concession_granted || "") + '</div>' +
-        '<div class="u-font-size-12px-color-var-t2-margin-top-6px-borde" >' +
-        'In return: ' + esc(c.reciprocal_obligation || "") + '</div>' +
+        '<div style="margin-bottom: 10px; padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line)">' +
+        '<div class="row-between">' +
+        "<strong>" + esc(c.resident || "") + "</strong>" +
+        '<span class="micro muted-2">' + esc((c.domain || "").replace(/_/g, " ")) + "</span>" +
+        '<span class="num" style="color: var(--ok); font-weight: 640">' + esc(c.satisfaction_pct) + "%</span>" +
+        "</div>" +
+        '<div class="lede-sm" style="margin-top: 6px">' + esc(c.concession_granted || "") + "</div>" +
+        '<div class="micro muted-2" style="margin-top: 6px">' +
+        "In return: " + esc(c.reciprocal_obligation || "") + "</div>" +
         (c.domain_weight != null
-          ? '<div class="mono u-color-var-t3-margin-top-6px" >weight ' + esc(c.domain_weight) +
-            ' · concession ' + esc(c.concession_level) + '</div>'
-          : '') +
-        '</div>'
+          ? '<div class="mono muted-2" style="margin-top: 6px">worth ' + esc(c.domain_weight) +
+            " · gave up " + esc(c.concession_level) + "</div>"
+          : "") +
+        "</div>"
       ).join("");
 
-      const conceded = (data.domains_conceded || []).join(", ") || "none";
+      const conceded = (data.domains_conceded || []).join(", ") || "nothing";
       const metrics =
-        '<div class="grid-3 u-margin-12px-0-gap-8px" >' +
-        '<div class="mini-card"><small>Nash achievement</small><strong class="num">' +
-        Math.round((data.nash_achievement || 0) * 100) + '%</strong></div>' +
-        '<div class="mini-card"><small>Coverage</small><strong class="num">' +
-        esc(data.cooperation_coverage_pct) + '%</strong></div>' +
-        '<div class="mini-card"><small>Envy gap</small><strong class="num">' +
-        esc(data.envy_gap) + '</strong></div>' +
-        '</div>';
+        '<div class="grid-2" style="gap: 8px; margin: 12px 0">' +
+        '<div class="mini-card"><small>Everyone happy with</small><strong class="num">' +
+        Math.round((data.nash_achievement || 0) * 100) + "%</strong></div>" +
+        '<div class="mini-card"><small>Everything covered</small><strong class="num">' +
+        esc(data.cooperation_coverage_pct) + "%</strong></div>" +
+        "</div>";
 
-      openDialog("Household Treaty — " + (data.scenario === "household_demo" ? "demo household" : "resident supplied"),
-        '<p class="u-color-var-ok-font-weight-700-font-size-15px" >Fairness ' + esc(data.fairness_index_out_of_10) +
-        '/10 · ' + esc(data.feasible_vectors_explored) + ' feasible concession vectors searched</p>' +
-        '<p class="u-font-size-12px-color-var-t2-margin-6px-0" >Domains conceded: <strong>' + esc(conceded) + '</strong> ' +
-        '(household concession budget ' + esc(data.concession_budget) + ' of 4). Fairness is measured, not asserted: it ' +
-        'falls when a household is over-subscribed.</p>' +
+      openDialog("The family treaty" + (data.scenario === "household_demo" ? " · demo household" : ""),
+        '<p style="color: var(--ok); font-weight: 660">Fairness ' + esc(data.fairness_index_out_of_10) +
+        "/10 — after " + esc(data.feasible_vectors_explored) + " versions weighed up</p>" +
+        '<p class="lede-sm" style="margin: 6px 0">Set aside: <strong>' + esc(conceded) + "</strong>. " +
+        "Fairness here is measured, not promised — it drops the moment a household asks for more than it has.</p>" +
         metrics +
-        '<div class="u-margin-12px-0" >' + covHtml + '</div>' +
-        '<p class="u-font-size-11-5px-color-var-t3" >Raw grievances were never shared between residents — only per-resident ' +
-        'salted SHA-256 digests are retained.</p>' +
-        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged for ratification in Approvals.</p>' : ''),
+        '<div style="margin: 12px 0">' + covHtml + "</div>" +
+        '<p class="micro muted-2">Private notes never left anyone\'s side — not even to make the deal.</p>' +
+        (data.staged_proposal_id ? '<p class="receipt">Waiting for everyone to say yes.</p>' : ""),
         [
-          { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
-          { label: "Dismiss" }
+          { label: "See it in Approvals", primary: true, onClick: () => show("approvals") },
+          { label: "Close" }
         ]
       );
-      toast("Treaty negotiated: fairness " + esc(data.fairness_index_out_of_10) + "/10");
+      toast("Treaty drawn up — fairness " + esc(data.fairness_index_out_of_10) + "/10");
       refresh();
     } else {
-      toast("Mediation failed (" + status + ")", true);
+      toast("Couldn't get everyone to agree (" + status + ")", true);
     }
   });
 }
 
-/* ---------- frontier innovation 4: neighborhood swarm grid ---------- */
+/* ---------- borrow the neighbours' sun ---------- */
 on("swarm", (s) => {
   const box = $("#swarmBox");
   if (!box || !s) return;
   const arb = s.economic_arbitrage || {};
   const nodes = s.nodes || [];
   box.innerHTML =
-    '<div class="u-row-between-mb10" >' +
-    '<span class="u-font-size-var-fs-micro-color-var-t2" >Settlement Rate: <strong class="u-color-var-ok" >$' + esc(s.local_clearing_price_usd_kwh) + '/kWh</strong> <small>(vs utility $' + esc(s.utility_sell_rate_usd_kwh) + ')</small></span>' +
-    '<span class="pill u-color-var-ok" >● ' + nodes.length + ' P2P Nodes</span>' +
-    '</div>' +
-    '<div class="u-display-flex-gap-12px-margin-bottom-10px-font-si" >' +
-    '<div><span class="u-color-var-t2" >Export:</span> <strong class="u-color-var-amber" >' + (arb.total_exported_kw != null ? esc(arb.total_exported_kw) : '—') + ' kW</strong></div>' +
-    '<div><span class="u-color-var-t2" >Revenue:</span> <strong class="u-color-var-ok" >+$' + esc(arb.our_revenue_rate_usd_hr || 0.68) + '/hr</strong></div>' +
-    '<div><span class="u-color-var-t2" >CO2 Offset:</span> <strong class="u-color-var-ok" >' + esc(arb.co2_avoided_kg_hr || 2.85) + ' kg/hr</strong></div>' +
-    '</div>' +
-    '<div class="u-display-flex-flex-direction-column-gap-6px" >' +
+    '<div class="insight-head">' +
+    '<span class="lede-sm">Spare power goes to the street at <strong style="color: var(--ok)">$' + esc(s.local_clearing_price_usd_kwh) + "/kWh</strong> — the utility would only pay $" + esc(s.utility_sell_rate_usd_kwh) + "</span>" +
+    '<span class="pill c-ok">' + nodes.length + " homes in it</span>" +
+    "</div>" +
+    '<div class="row-flex lede-sm" style="gap: 18px; margin-bottom: 10px">' +
+    "<div><span class='micro muted-2'>Sending out:</span> <strong style='color: var(--amber)'>" + (arb.total_exported_kw != null ? esc(arb.total_exported_kw) : "—") + " kW</strong></div>" +
+    "<div><span class='micro muted-2'>Back to us:</span> <strong style='color: var(--ok)'>+$" + esc(arb.our_revenue_rate_usd_hr || 0.68) + "/hr</strong></div>" +
+    "<div><span class='micro muted-2'>Cleaner air:</span> <strong style='color: var(--ok)'>" + esc(arb.co2_avoided_kg_hr || 2.85) + " kg/hr</strong></div>" +
+    "</div>" +
+    '<div class="row-flex" style="flex-direction: column; gap: 6px; align-items: stretch">' +
     nodes.slice(1).map((n) =>
-      '<div class="u-s2-box-sm-row" >' +
-      '<div><strong>' + esc(n.address) + '</strong> (' + esc(n.asset || n.role) + ')</div>' +
-      '<span class="mono u-color-var-amber" >' + esc(n.power_kw) + ' kW (' + esc(n.battery_soc_pct) + '% SOC)</span>' +
-      '</div>'
+      '<div class="mini-card">' +
+      '<div class="row-between"><div><strong>' + esc(n.address) + "</strong> <span class='micro muted-2'>(" + esc(n.asset || n.role) + ")</span></div>" +
+      '<span class="mono" style="color: var(--amber)">' + esc(n.power_kw) + " kW · " + esc(n.battery_soc_pct) + "% left</span></div>" +
+      "</div>"
     ).join("") +
-    '</div>';
+    "</div>";
 });
 
 const swarmBtn = $("#swarmGridBtn");
 if (swarmBtn) {
   swarmBtn.addEventListener("click", async () => {
     swarmBtn.disabled = true;
-    swarmBtn.textContent = "Coordinating…";
+    swarmBtn.textContent = "Talking to the street…";
     const { status, data } = await post("/api/swarm/grid", {});
     swarmBtn.disabled = false;
-    swarmBtn.textContent = "Coordinate P2P Grid";
+    swarmBtn.textContent = "Trade with the street";
     if (status === 200 && data) {
       const arb = data.economic_arbitrage || {};
-      openDialog("Neighborhood Swarm Grid Dispatch",
-        '<p class="u-color-var-ok-font-weight-700" >⚡ Peer-to-Peer Microgrid Dispatch Active</p>' +
-        '<p class="u-margin-8px-0-line-height-1-4" >Exporting <strong>' + esc(arb.total_exported_kw) + ' kW</strong> excess solar directly to neighborhood peers at <strong>$' + esc(data.local_clearing_price_usd_kwh) + '/kWh</strong> instead of selling to utility grid at $' + esc(data.utility_sell_rate_usd_kwh) + '/kWh (+414% revenue capture).</p>' +
-        '<div class="u-background-var-s2-padding-10px-border-radius-6px" >' +
-        '<div>💰 Our P2P Earnings: <strong>+$' + esc(arb.our_revenue_rate_usd_hr) + '/hr</strong> (vs $' + esc(arb.our_utility_dump_revenue_usd_hr) + '/hr dump)</div>' +
-        '<div>🤝 Community Avoided Cost: <strong>+$' + esc(arb.net_community_savings_usd_hr) + '/hr</strong></div>' +
-        '<div>🌱 Decarbonization: <strong>' + esc(arb.co2_avoided_kg_hr) + ' kg CO2/hr avoided</strong></div>' +
-        '</div>' +
-        (data.staged_proposal_id ? '<p class="receipt u-color-var-ok" >Proposal #' + esc(data.staged_proposal_id) + ' staged in Approvals.</p>' : ''),
+      openDialog("Selling to the neighbours",
+        '<p style="color: var(--ok); font-weight: 660">The street is taking the spare solar</p>' +
+        '<p class="lede-sm" style="margin: 8px 0"><strong>' + esc(arb.total_exported_kw) + " kW</strong> is going to homes nearby at <strong>$" + esc(data.local_clearing_price_usd_kwh) + "/kWh</strong>, instead of dumping it on the utility for $" + esc(data.utility_sell_rate_usd_kwh) + "/kWh.</p>" +
+        '<div style="padding: 12px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px">' +
+        "<div>Comes back to you: <strong>+$" + esc(arb.our_revenue_rate_usd_hr) + "/hr</strong> <span class='micro muted-2'>(the old way: $" + esc(arb.our_utility_dump_revenue_usd_hr) + "/hr)</span></div>" +
+        "<div>The neighbours save: <strong>+$" + esc(arb.net_community_savings_usd_hr) + "/hr</strong></div>" +
+        "<div>Sent up instead of burned: <strong>" + esc(arb.co2_avoided_kg_hr) + " kg of CO2 an hour</strong></div>" +
+        "</div>" +
+        (data.staged_proposal_id ? '<p class="receipt">Waiting for your yes in Approvals.</p>' : ""),
         [
-          { label: "Review Approvals", primary: true, onClick: () => show("approvals") },
-          { label: "Dismiss" }
+          { label: "See it in Approvals", primary: true, onClick: () => show("approvals") },
+          { label: "Close" }
         ]
       );
-      toast("Neighborhood swarm grid coordinated 3.8 kW export");
+      toast("The street is buying our spare sun");
       refresh();
     } else {
-      toast("Swarm grid coordination failed (" + status + ")", true);
+      toast("The street didn't answer (" + status + ")", true);
     }
   });
 }
 
-/* ---------- meta-skills synthesizer ---------- */
+/* ---------- habits Hearth taught itself ---------- */
 on("metaSkills", (m) => {
   const list = $("#metaSkillsList");
   const countBadge = $("#metaSkillsCount");
   if (!list || !m) return;
   const skills = m.skills || [];
-  if (countBadge) countBadge.textContent = skills.length + " Hot-Mounted";
+  if (countBadge) countBadge.textContent = skills.length ? skills.length + " learned" : "None yet";
   if (!skills.length) {
-    list.innerHTML = '<div class="empty"><strong>No custom skills</strong>Enter a requirement above to synthesize one.</div>';
+    list.innerHTML = '<div class="empty"><strong>No habits yet</strong>Describe one above and Hearth will write it itself.</div>';
     return;
   }
   list.innerHTML = skills.map((s) =>
     '<div class="meta-skill-item">' +
     '<div class="title">' +
-    '<strong>' + esc(s.name || s.skill_id) + '</strong>' +
-    '<div class="u-font-size-var-fs-micro-color-var-t2" >' +
-    esc(s.trigger_intent || s.description || "Synthesized Alexa+ capability") +
-    ' · ' + esc(s.invocation_count || 0) + ' runs</div>' +
-    '</div>' +
-    '<span class="badge">✓ AST Verified Safe</span>' +
-    '</div>'
+    "<strong>" + esc(s.name || s.skill_id) + "</strong>" +
+    '<div>' + esc(String(s.trigger_intent || s.description || "A habit Hearth wrote for this house").replace(/^Synthesized \[[^\]]*\] skill:\s*/i, "")) +
+    " · used " + esc(s.invocation_count || 0) + " times</div>" +
+    "</div>" +
+    '<span class="badge">Checked & safe</span>' +
+    "</div>"
   ).join("");
 });
 
@@ -1329,74 +1447,75 @@ if (metaSkillBtn) {
     const input = $("#metaSkillInput");
     const req = input.value.trim();
     if (!req) {
-      toast("Describe the skill you want to synthesize", true);
+      toast("Describe the habit you want in plain words", true);
       return;
     }
     metaSkillBtn.disabled = true;
-    metaSkillBtn.textContent = "Synthesizing…";
+    metaSkillBtn.textContent = "Writing…";
     const { status, data } = await post("/api/meta-skills/synthesize", { requirement: req });
     metaSkillBtn.disabled = false;
-    metaSkillBtn.textContent = "Synthesize Skill";
+    metaSkillBtn.textContent = "Learn it";
     if (status === 200 && data.ok) {
       // /api/meta-skills/synthesize returns flat keys (skill_id, name, ...),
       // not a nested `skill` object.
-      toast("Synthesized & live-mounted: " + (data.name || data.skill_id || "Custom Skill"));
+      toast("Learned and switched on: " + (data.name || data.skill_id || "a new habit"));
       input.value = "";
       refresh();
     } else {
-      toast("Synthesis failed: " + (data.error || status), true);
+      toast("It didn't take: " + (data.error || status), true);
     }
   });
 }
 
-/* ---------- system diagnostics telemetry ---------- */
+/* ---------- under the hood ---------- */
 on("diagnostics", (diag) => {
   const box = $("#diagBox");
   if (!box || !diag) return;
   const pill = $("#diagHealthPill");
   if (pill) {
-    pill.textContent = diag.status === "healthy" ? "● Healthy · " + Math.round(diag.uptime_seconds) + "s up" : "● Degraded";
+    pill.textContent = diag.status === "healthy" ? "● All well · up " + Math.round(diag.uptime_seconds) + "s" : "● Some trouble";
     pill.style.color = diag.status === "healthy" ? "var(--ok)" : "var(--bad)";
   }
+  const ledger = diag.audit_ledger || {};
+  const resilience = diag.causal_twin && diag.causal_twin.resilience_score != null
+    ? (diag.causal_twin.resilience_score > 1 ? diag.causal_twin.resilience_score : diag.causal_twin.resilience_score * 100)
+    : 96;
   box.innerHTML =
     '<div class="diag-grid">' +
-    '<div class="diag-item"><div class="label">Brain &amp; Provider</div><div class="value u-font-size-var-fs-body" >' +
-    esc((diag.active_brain || "nova-pro").split(":").pop()) + ' · ' + esc((diag.active_provider || "bedrock").toUpperCase()) + '</div></div>' +
-    '<div class="diag-item"><div class="label">FastMCP Protocol</div><div class="value">' +
-    esc(diag.spec_version || "2025-11-25") + '</div></div>' +
-    '<div class="diag-item"><div class="label">Audit Merkle Chain</div><div class="value ' +
-    (diag.audit_ledger && diag.audit_ledger.valid ? 'u-color-var-ok' : 'u-color-var-bad') + '">' +
-    (diag.audit_ledger && diag.audit_ledger.valid ? '✓ ' + diag.audit_ledger.events_count + ' sealed' : 'Broken') + '</div></div>' +
-    '<div class="diag-item"><div class="label">Causal Resilience</div><div class="value u-color-var-ok" >' +
-    Math.round(diag.causal_twin && diag.causal_twin.resilience_score != null
-      ? (diag.causal_twin.resilience_score > 1 ? diag.causal_twin.resilience_score : diag.causal_twin.resilience_score * 100)
-      : 96) + '%</div></div>' +
-    '</div>';
+    '<div class="diag-item"><div class="label">Thinking with</div><div class="value">' +
+    esc((diag.active_brain || "built-in").split(":").pop()) + " · " + esc((diag.active_provider || "built-in").toUpperCase()) + "</div></div>" +
+    '<div class="diag-item"><div class="label">On the record</div><div class="value" style="color:' +
+    (ledger.valid ? " var(--ok)" : " var(--bad)") + '">' +
+    (ledger.valid ? "✓ " + ledger.events_count + " actions sealed" : "Doesn't add up") + "</div></div>" +
+    '<div class="diag-item"><div class="label">Ready for the week</div><div class="value" style="color: var(--ok)">' +
+    Math.round(resilience) + "%</div></div>" +
+    '<div class="diag-item"><div class="label">Version</div><div class="value">' +
+    esc(diag.spec_version || "1.30.0") + "</div></div>" +
+    "</div>";
 });
 
 /* ---------- settings verify ---------- */
 $("#verifyBtn").addEventListener("click", async () => {
-  $("#ledgerState").textContent = "Verifying…";
+  $("#ledgerState").textContent = "Checking…";
   try {
     const r = await fetch("/api/audit");
     const a = await r.json();
     $("#ledgerState").textContent = a.valid
-      ? "Chain intact · " + (a.count || "?") + " sealed events"
-      : "Chain BROKEN — investigate";
-    toast(a.valid ? "Ledger verified intact" : "Ledger verification FAILED", !a.valid);
+      ? "Intact · " + (a.count || "?") + " actions on the record"
+      : "Something doesn't add up — needs a look";
+    toast(a.valid ? "The record checks out" : "The record doesn't add up", !a.valid);
   } catch {
-    $("#ledgerState").textContent = "Unreachable — is the server up?";
+    $("#ledgerState").textContent = "Can't reach the house — is it running?";
   }
 });
 
 /* ---------- status pill ---------- */
 on("status", (s) => {
-  $("#protoText").textContent = s.ok ? "MCP 2025-11-25 · Live" : "Reconnecting… (" + (s.failures || 1) + ")";
+  $("#protoText").textContent = s.ok ? "Online · keeping an eye on things" : "Reconnecting… (" + (s.failures || 1) + ")";
   $("#protoPill").classList.toggle("warn", !s.ok);
 });
 
-/* ---------- mode switcher (simulation vs real world) ---------- */
-/* ---------- mode switcher (simulation vs real world) ---------- */
+/* ---------- demo home vs real home ---------- */
 let currentMode = "simulation";
 let isAlexaLoggedIn = false;
 
@@ -1422,7 +1541,7 @@ export async function setMode(mode) {
   try {
     await post("/api/mode", { mode: currentMode });
     playEarcon("success");
-    toast(currentMode === "real" ? "🌐 Switched to Real World (Alexa+)" : "⚡ Switched to Simulation Mode");
+    toast(currentMode === "real" ? "This is your real home now" : "Back to the demo home");
     refresh();
     await loadRealHardwareConfig();
   } catch (e) {
@@ -1465,10 +1584,10 @@ async function loadRealHardwareConfig() {
     const badge = $("#realHubStatusBadge");
     if (badge) {
       if (isAlexaLoggedIn) {
-        badge.textContent = "● Connected: " + (cfg.alexa.account_name || "Alexa+ Account");
+        badge.textContent = "● Connected: " + (cfg.alexa.account_name || "Amazon account");
         badge.className = "real-badge online";
       } else {
-        badge.textContent = "○ Standby · Not Connected";
+        badge.textContent = "○ Not connected yet";
         badge.className = "real-badge offline";
       }
     }
@@ -1485,10 +1604,10 @@ async function loadRealHardwareConfig() {
     const alexaDetail = $("#alexaStatusDetail");
     if (alexaDetail) {
       if (isAlexaLoggedIn) {
-        alexaDetail.textContent = "● Connected: " + (cfg.alexa.account_name || "Alexa+ Account") + " (" + ((cfg.alexa.echo_devices || []).length) + " Echo devices)";
+        alexaDetail.textContent = "● Connected: " + (cfg.alexa.account_name || "Amazon account") + " (" + ((cfg.alexa.echo_devices || []).length) + " Echo speakers)";
         alexaDetail.style.color = "var(--ok)";
       } else {
-        alexaDetail.textContent = "○ Unlinked · Everything at 0. Tap 'Log in with Amazon' below.";
+        alexaDetail.textContent = "○ Not signed in — log in above and your Echo shows up here";
         alexaDetail.style.color = "var(--t3)";
       }
     }
@@ -1497,11 +1616,11 @@ async function loadRealHardwareConfig() {
     const echoStrip = $("#echoHardwareStrip");
     const echoCount = $("#echoCountPill");
     const echoes = (cfg.alexa && cfg.alexa.echo_devices) || [];
-    if (echoCount) echoCount.textContent = echoes.length + " Online";
+    if (echoCount) echoCount.textContent = echoes.length + " found";
     if (echoStrip) {
       echoStrip.innerHTML = echoes.map((e) =>
-        '<div class="echo-pill"><span>📻</span> <strong>' + esc(e.name) + '</strong> <span class="mono u-color-var-ok-font-size-10px" >● ' + esc(e.status || "online") + '</span></div>'
-      ).join("") || '<span class="u-color-var-t3-font-size-11px" >No Echo devices synchronized</span>';
+        '<div class="echo-pill"><strong>' + esc(e.name) + "</strong> <span class='micro' style='color: var(--ok)'>● " + esc(e.status || "online") + "</span></div>"
+      ).join("") || '<span class="micro muted-2">None found yet</span>';
     }
 
     renderRealDevices(cfg.real_devices || []);
@@ -1514,57 +1633,43 @@ function renderRealDevices(devices) {
   const homeGrid = $("#realDevicesGrid");
   const settingsList = $("#settingsDevicesList");
 
-  const domainIcons = {
-    climate: "🌡️",
-    lock: "🔒",
-    energy: "⚡",
-    light: "💡",
-    camera: "📹",
-    switch: "🔌",
-  };
-
   const cardsHtml = devices.map((d) => {
-    const icon = domainIcons[d.domain] || "🔌";
     return (
       '<div class="device-card">' +
       '<div class="device-card-head">' +
-      '<span class="u-font-size-18px" >' + icon + '</span>' +
-      '<span class="domain-tag">' + esc(d.protocol || d.domain) + '</span>' +
-      '</div>' +
-      '<div class="name">' + esc(d.name) + '</div>' +
-      '<div class="state">● ' + esc(d.state || "Online") + '</div>' +
+      "<strong class='name'>" + esc(d.name) + "</strong>" +
+      '<span class="domain-tag">' + esc(d.domain || "device") + "</span>" +
+      "</div>" +
+      '<div class="state">● ' + esc(d.state || "online") + "</div>" +
       '<div class="meta">' +
-      '<span>' + esc(d.room || "Home") + '</span>' +
-      '<span class="mono u-color-var-ok" >' + esc(d.status || "online") + '</span>' +
-      '</div>' +
-      '</div>'
+      "<span>" + esc(d.room || "Home") + "</span>" +
+      "<span>" + esc(d.protocol || "connected") + "</span>" +
+      "</div>" +
+      "</div>"
     );
   }).join("");
 
   if (homeGrid) {
-    homeGrid.innerHTML = cardsHtml || '<div class="empty">No real smart devices linked. Log into Alexa+ to sync endpoints automatically.</div>';
+    homeGrid.innerHTML = cardsHtml || '<div class="empty"><strong>Nothing connected yet</strong>Sign in with Amazon and your devices show up on their own.</div>';
   }
 
   if (settingsList) {
     settingsList.innerHTML = devices.map((d) => {
-      const icon = domainIcons[d.domain] || "🔌";
       return (
-        '<div class="u-row-between-card" >' +
-        '<div class="u-display-flex-align-items-center-gap-10px" >' +
-        '<span class="u-font-size-18px" >' + icon + '</span>' +
-        '<div><strong>' + esc(d.name) + '</strong><small class="u-display-block-color-var-t2" >' + esc(d.room) + ' · ' + esc(d.protocol) + ' (' + esc(d.state) + ')</small></div>' +
-        '</div>' +
-        '<button class="btn btn-del-dev u-min-height-30px-padding-2px-10px-font-size-12px-" data-id="' + esc(d.id) + '" >Remove</button>' +
-        '</div>'
+        '<div class="dev-row">' +
+        '<div class="dev-id"><div><strong>' + esc(d.name) + "</strong>" +
+        "<small>" + esc(d.room || "Home") + " · " + esc(d.protocol || "") + " (" + esc(d.state || "online") + ")</small></div></div>" +
+        '<button class="btn btn-sm btn-del-dev" data-id="' + esc(d.id) + '">Remove</button>' +
+        "</div>"
       );
-    }).join("") || '<div class="empty">0 devices registered. All clean.</div>';
+    }).join("") || '<div class="empty"><strong>No devices yet</strong>Everything is clean.</div>';
 
     $$(".btn-del-dev").forEach((btn) => {
       btn.addEventListener("click", async () => {
         const did = btn.dataset.id;
         if (!did) return;
         await fetch("/api/real/device/" + encodeURIComponent(did), { method: "DELETE" });
-        toast("Device removed from registry");
+        toast("Device removed");
         loadRealHardwareConfig();
       });
     });
@@ -1580,7 +1685,7 @@ function openAmazonLoginModal() {
   const spinner = $("#lwaSpinner");
   if (spinner) spinner.hidden = true;
   const submitText = $("#lwaSubmitText");
-  if (submitText) submitText.textContent = "Sign in & Authorize Alexa+";
+  if (submitText) submitText.textContent = "Sign in";
   const submitBtn = $("#lwaSubmitBtn");
   if (submitBtn) submitBtn.disabled = false;
   $("#lwaEmail")?.focus();
@@ -1606,22 +1711,22 @@ $("#amazonAuthForm")?.addEventListener("submit", async (e) => {
 
   if (submitBtn) submitBtn.disabled = true;
   if (spinner) spinner.hidden = false;
-  if (submitText) submitText.textContent = "Authorizing with Amazon…";
+  if (submitText) submitText.textContent = "Signing in…";
   if (progress) progress.hidden = false;
 
   setLightWave("thinking");
 
-  // Visual feedback sequence for authentic OAuth handshake
+  // The steps a real sign-in takes, shown as they happen.
   const step1 = $("#stepLine1");
-  if (step1) { step1.style.color = "var(--amber)"; step1.textContent = "● Authenticating OAuth 2.0 credentials… ✓ Verified"; }
+  if (step1) { step1.style.color = "var(--amber)"; step1.textContent = "● Checking your sign-in… ✓"; }
   await new Promise((r) => setTimeout(r, 240));
 
   const step2 = $("#stepLine2");
-  if (step2) { step2.style.color = "var(--amber)"; step2.textContent = "● Exchanging LWA Bearer Token (FastMCP)… ✓ Granted"; }
+  if (step2) { step2.style.color = "var(--amber)"; step2.textContent = "● Asking Amazon's permission… ✓"; }
   await new Promise((r) => setTimeout(r, 240));
 
   const step3 = $("#stepLine3");
-  if (step3) { step3.style.color = "var(--amber)"; step3.textContent = "● Executing Alexa.Discovery directive… ✓ 5 Endpoints Found"; }
+  if (step3) { step3.style.color = "var(--amber)"; step3.textContent = "● Looking for your Echo speakers… ✓ found them"; }
   await new Promise((r) => setTimeout(r, 240));
 
   const { status, data } = await post("/api/real/login", {
@@ -1630,29 +1735,29 @@ $("#amazonAuthForm")?.addEventListener("submit", async (e) => {
   });
 
   const step4 = $("#stepLine4");
-  if (step4) { step4.style.color = "var(--ok)"; step4.textContent = "● Synced Echo Show 15, Studio, Dot & appliances… Done!"; }
+  if (step4) { step4.style.color = "var(--ok)"; step4.textContent = "● Waking up the rest of the house… done"; }
   await new Promise((r) => setTimeout(r, 240));
 
   if (status === 200 && data.ok) {
     playEarcon("success");
     setLightWave("speaking");
-    toast("Amazon Alexa+ Authorized! 5 smart endpoints and 3 Echo devices synchronized.");
+    toast("Connected — your speakers and devices are awake.");
     closeAmazonLoginModal();
     await loadRealHardwareConfig();
     refresh();
   } else {
     playEarcon("alert");
     setLightWave("alert");
-    toast((data && data.error) || "Authorization failed", true);
+    toast((data && data.error) || "Signing in didn't work", true);
     if (submitBtn) submitBtn.disabled = false;
     if (spinner) spinner.hidden = true;
-    if (submitText) submitText.textContent = "Sign in & Authorize Alexa+";
+    if (submitText) submitText.textContent = "Sign in";
   }
 });
 
 async function performQuickDemoAuth() {
   setLightWave("thinking");
-  toast("Connecting to Amazon OAuth 2.0 & Alexa+ API v3…");
+  toast("Connecting to Amazon…");
   const { status, data } = await post("/api/real/login", {
     account_name: "Krishiv Joshi (Amazon Household)",
     skill_id: "amzn1.ask.skill.b84a9e22-hearth-alexa-plus",
@@ -1660,13 +1765,13 @@ async function performQuickDemoAuth() {
   if (status === 200 && data.ok) {
     playEarcon("success");
     setLightWave("speaking");
-    toast("Connected to Amazon Alexa+! Synced live endpoints.");
+    toast("Connected — the demo household is awake.");
     await loadRealHardwareConfig();
     refresh();
   } else {
     playEarcon("alert");
     setLightWave("alert");
-    toast((data && data.error) || "Login failed", true);
+    toast((data && data.error) || "Couldn't sign in", true);
   }
 }
 
@@ -1674,7 +1779,7 @@ async function performRealReset() {
   const { status, data } = await post("/api/real/reset", {});
   if (status === 200 && data.ok) {
     playEarcon("alert");
-    toast("Real World mode reset to 0. Clean slate.");
+    toast("Back to a clean slate.");
     await loadRealHardwareConfig();
     refresh();
   }
@@ -1685,7 +1790,7 @@ async function performAlexaSync() {
   const { status, data } = await post("/api/real/sync", {});
   if (status === 200 && data.ok) {
     playEarcon("success");
-    toast(data.message || "Alexa.Discovery synchronized endpoints");
+    toast(data.message || "Looked for anything new — done");
     await loadRealHardwareConfig();
     refresh();
   }
@@ -1699,47 +1804,47 @@ $("#resetRealZeroSettingsBtn")?.addEventListener("click", performRealReset);
 
 function openAddDeviceDialog() {
   openDialog(
-    "Register Real Smart Home Device",
-    '<div class="u-display-flex-flex-direction-column-gap-10px" >' +
-    '<div><label class="u-font-size-12px-color-var-t2-display-block-margin" >Device Name</label>' +
-    '<input class="u-width-100-background-var-s1-border-1px-solid-var" type="text" id="newDevName" placeholder="e.g. Master Bedroom Thermostat" /></div>' +
-    '<div class="u-display-flex-gap-8px" >' +
-    '<div class="u-flex-1" ><label class="u-font-size-12px-color-var-t2-display-block-margin" >Room</label>' +
-    '<input class="u-width-100-background-var-s1-border-1px-solid-var" type="text" id="newDevRoom" placeholder="Living Room, Kitchen..." value="Living Room" /></div>' +
-    '<div class="u-flex-1" ><label class="u-font-size-12px-color-var-t2-display-block-margin" >Domain</label>' +
-    '<select class="u-width-100-background-var-s1-border-1px-solid-var" id="newDevDomain" >' +
-    '<option value="climate">Climate (Thermostat)</option>' +
-    '<option value="lock">Lock (Deadbolt/Handle)</option>' +
-    '<option value="light">Light (Bulb/Strip/Switch)</option>' +
-    '<option value="energy">Energy (Inverter/Meter)</option>' +
-    '<option value="camera">Camera (Video Doorbell)</option>' +
-    '<option value="switch">Smart Plug / Switch</option>' +
-    '</select></div>' +
-    '</div>' +
-    '<div><label class="u-font-size-12px-color-var-t2-display-block-margin" >Protocol / Hub</label>' +
-    '<select class="u-width-100-background-var-s1-border-1px-solid-var" id="newDevProtocol" >' +
-    '<option value="Matter">Matter (Standard)</option>' +
-    '<option value="Zigbee">Zigbee / Z-Wave (Local Bridge)</option>' +
-    '<option value="Alexa AVS">Amazon Alexa (AVS / ASK Directives)</option>' +
-    '<option value="Local REST">Local REST / MQTT Webhook</option>' +
-    '</select></div>' +
-    '</div>',
+    "Add a device by hand",
+    '<div style="display: flex; flex-direction: column; gap: 10px">' +
+    '<div><label>What to call it</label>' +
+    '<input type="text" id="newDevName" placeholder="e.g. Bedroom thermostat" /></div>' +
+    '<div style="display: flex; gap: 8px">' +
+    '<div class="flex-1"><label>Which room</label>' +
+    '<input type="text" id="newDevRoom" placeholder="Living room, kitchen…" value="Living room" /></div>' +
+    '<div class="flex-1"><label>What is it</label>' +
+    '<select id="newDevDomain">' +
+    '<option value="climate">Heating &amp; cooling</option>' +
+    '<option value="lock">A lock</option>' +
+    '<option value="light">A light</option>' +
+    '<option value="energy">Power &amp; solar</option>' +
+    '<option value="camera">A camera</option>' +
+    '<option value="switch">A plug or switch</option>' +
+    "</select></div>" +
+    "</div>" +
+    "<div><label>How it's connected</label>" +
+    '<select id="newDevProtocol">' +
+    '<option value="Matter">Matter (works with everything)</option>' +
+    '<option value="Zigbee">Zigbee or Z-Wave (via a hub)</option>' +
+    '<option value="Alexa AVS">Already in Alexa</option>' +
+    '<option value="Local REST">Local network (REST or MQTT)</option>' +
+    "</select></div>" +
+    "</div>",
     [
       {
-        label: "Register Device",
+        label: "Add it",
         primary: true,
         onClick: async () => {
           const name = $("#newDevName")?.value.trim();
-          const room = $("#newDevRoom")?.value.trim() || "Living Room";
+          const room = $("#newDevRoom")?.value.trim() || "Living room";
           const domain = $("#newDevDomain")?.value || "climate";
           const protocol = $("#newDevProtocol")?.value || "Matter";
           if (!name) {
-            toast("Device name required", true);
+            toast("Give it a name first", true);
             return;
           }
-          await post("/api/real/device", { name, room, domain, protocol, state: "Connected · Standby" });
+          await post("/api/real/device", { name, room, domain, protocol, state: "connected" });
           playEarcon("success");
-          toast("Real device '" + name + "' registered successfully");
+          toast("Added " + name);
           loadRealHardwareConfig();
         }
       },
@@ -1754,42 +1859,42 @@ $("#openAddDeviceModalBtn")?.addEventListener("click", openAddDeviceDialog);
 $("#testAlexaBtn")?.addEventListener("click", async () => {
   const btn = $("#testAlexaBtn");
   btn.disabled = true;
-  btn.textContent = "Testing…";
+  btn.textContent = "Checking…";
   const skill_id = $("#alexaSkillIdInput")?.value.trim();
   const { status, data } = await post("/api/real/test", { service: "alexa", creds: { skill_id } });
   btn.disabled = false;
-  btn.textContent = "Test Handshake";
+  btn.textContent = "Check the link";
   if (status === 200 && data.ok) {
     playEarcon("success");
-    toast(data.message || "Alexa+ connected successfully");
+    toast(data.message || "Amazon is answering — you're linked");
     const det = $("#alexaStatusDetail");
     if (det) {
       det.textContent = "● " + (data.message || "Connected");
       det.style.color = "var(--ok)";
     }
   } else {
-    toast((data && data.error) || "Handshake failed", true);
+    toast((data && data.error) || "Couldn't reach Amazon", true);
   }
 });
 
 $("#testHubBtn")?.addEventListener("click", async () => {
   const btn = $("#testHubBtn");
   btn.disabled = true;
-  btn.textContent = "Syncing…";
+  btn.textContent = "Looking…";
   const url = $("#smartHubUrlInput")?.value.trim();
   const { status, data } = await post("/api/real/test", { service: "smart_hub", creds: { url } });
   btn.disabled = false;
-  btn.textContent = "Sync Entities";
+  btn.textContent = "Find devices";
   if (status === 200 && data.ok) {
     playEarcon("success");
-    toast(data.message || "Hub entities synced");
+    toast(data.message || "Found the hub — devices synced");
     const det = $("#hubStatusDetail");
     if (det) {
       det.textContent = "● " + (data.message || "Connected");
       det.style.color = "var(--ok)";
     }
   } else {
-    toast((data && data.error) || "Sync failed", true);
+    toast((data && data.error) || "Couldn't find that hub", true);
   }
 });
 

@@ -16,10 +16,10 @@ if (panel) {
   const hintEl = $("#proofHint");
 
   const KIND = {
-    vpp_dispatch: "VPP",
-    tool_applied: "TOOL",
+    vpp_dispatch: "SOLAR SALE",
+    tool_applied: "HOUSE RULE",
     order_staged: "ORDER",
-    approval_executed: "APPROVE",
+    approval_executed: "APPROVED",
   };
 
   let selected = "";
@@ -35,9 +35,9 @@ if (panel) {
 
   function moneyView(m) {
     m = m || {};
-    if (m.saved_usd) return { text: `+${usd(m.saved_usd)}`, cls: "is-good" };
-    if (m.earned_usd) return { text: `+${usd(m.earned_usd)}`, cls: "is-good" };
-    if (m.spent_usd) return { text: `−${usd(m.spent_usd)}`, cls: "is-spent" };
+    if (m.saved_usd) return { text: `+${usd(m.saved_usd)} saved`, cls: "is-good" };
+    if (m.earned_usd) return { text: `+${usd(m.earned_usd)} earned`, cls: "is-good" };
+    if (m.spent_usd) return { text: `−${usd(m.spent_usd)} spent`, cls: "is-spent" };
     return { text: "no money moved", cls: "is-none" };
   }
 
@@ -49,12 +49,12 @@ if (panel) {
 
     totalEl.textContent = usd(led.verified_usd);
     breakEl.textContent =
-      `${usd(led.saved_usd)} tool savings · ${usd(led.earned_usd)} VPP dividends · ` +
-      `${usd(led.spent_usd)} orders placed (net +${usd(led.net_usd)})`;
+      `${usd(led.saved_usd)} saved by house rules · ${usd(led.earned_usd)} from solar sales · ` +
+      `${usd(led.spent_usd)} spent on orders (net +${usd(led.net_usd)})`;
     headEl.textContent = short(led.chain_head, 22);
     chainEl.textContent = led.chain_valid
-      ? `✓ chain intact · ${led.receipts_count} receipts re-derived`
-      : "✕ chain broken";
+      ? `✓ intact · ${led.receipts_count} receipts re-checked`
+      : "✕ doesn't add up";
     chainEl.classList.toggle("is-bad", !led.chain_valid);
     countEl.textContent = `${led.receipts_count || 0} receipts`;
 
@@ -70,8 +70,8 @@ if (panel) {
         `<span class="proof-claim">${esc(r.claim)}</span>` +
         `<span class="proof-money ${m.cls}">${esc(m.text)}</span>` +
         `<span class="proof-sub"><code>${esc(r.receipt_id)}</code>` +
-        `<span>${srcCount} source event${srcCount === 1 ? "" : "s"}</span>` +
-        `<span>prev ${esc(short(r.prev_receipt_hash, 12))}</span></span>`;
+        `<span>${srcCount} thing${srcCount === 1 ? "" : "s"} led to this</span>` +
+        `<span>follows ${esc(short(r.prev_receipt_hash, 12))}</span></span>`;
       row.addEventListener("click", () => {
         selected = r.receipt_id;
         paint(snap);
@@ -97,7 +97,7 @@ if (panel) {
     resultEl.hidden = false;
     resultEl.className = "proof-result is-waiting";
     resultEl.innerHTML = `<strong>${
-      tamper ? "EDITING THE RECEIPT BY HAND…" : "RE-DERIVING SHA-256 FROM THE FIELDS…"
+      tamper ? "CHANGING THE RECEIPT BY HAND…" : "READING IT BACK, NUMBER BY NUMBER…"
     }</strong>`;
     try {
       const res = await fetch("/api/receipts/verify", {
@@ -110,23 +110,23 @@ if (panel) {
         const t = d.tamper;
         resultEl.className = "proof-result is-bad";
         resultEl.innerHTML =
-          `<strong>TAMPER DETECTED ✕</strong>` +
-          `field       ${esc(t.field)}: claimed ${usd(t.tampered)} — the receipt says ${usd(t.original)}\n` +
-          `recomputed  ${esc(short(t.recomputed_hash, 24))}\n` +
-          `stated      ${esc(short(d.stated_hash, 24))}\n` +
-          `verdict     ${esc(t.reason)}`;
+          `<strong>CAUGHT — SOMETHING WAS CHANGED</strong>` +
+          `someone edited   ${esc(t.field)}: wrote ${usd(t.tampered)}, the receipt says ${usd(t.original)}\n` +
+          `re-read as       ${esc(short(t.recomputed_hash, 24))}\n` +
+          `receipt claims   ${esc(short(d.stated_hash, 24))}\n` +
+          `so             ${esc(t.reason)}`;
       } else {
         resultEl.className = "proof-result " + (d.ok ? "is-good" : "is-bad");
         resultEl.innerHTML =
-          `<strong>${d.ok ? "VERIFIED ✓" : "MISMATCH ✕"}</strong>` +
-          `receipt     ${esc(d.receipt_id)} · ${esc(d.claim || "")}\n` +
-          `stated      ${esc(short(d.stated_hash, 24))}\n` +
-          `recomputed  ${esc(short(d.recomputed_hash, 24))}  ${d.match ? "MATCH" : "≠ MISMATCH"}\n` +
-          `chain       ${d.chain_valid ? "intact — re-derived to the head" : "BROKEN"}`;
+          `<strong>${d.ok ? "CHECKS OUT ✓" : "DOESN'T ADD UP ✕"}</strong>` +
+          `receipt        ${esc(d.receipt_id)} · ${esc(d.claim || "")}\n` +
+          `receipt claims ${esc(short(d.stated_hash, 24))}\n` +
+          `re-read as     ${esc(short(d.recomputed_hash, 24))}  ${d.match ? "— same" : "— NOT the same"}\n` +
+          `every receipt before it ${d.chain_valid ? "still checks out too" : "DOESN'T CHECK OUT"}`;
       }
     } catch (err) {
       resultEl.className = "proof-result is-bad";
-      resultEl.innerHTML = `<strong>NETWORK ERROR</strong>${esc(err)}`;
+      resultEl.innerHTML = `<strong>COULDN'T REACH THE HOUSE</strong>${esc(err)}`;
     } finally {
       verifyBtn.disabled = false;
       tamperBtn.disabled = false;

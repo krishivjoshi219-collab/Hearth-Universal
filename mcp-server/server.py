@@ -3094,6 +3094,24 @@ async def echo_surface(request: Request):
     return PlainTextResponse("Echo surface not built yet.", status_code=404)
 
 
+@mcp.custom_route("/wire", methods=["GET"])
+async def wire_surface(request: Request):
+    """The Wire: a live MCP client, in the browser.
+
+    The Alexa+ track FAQ blesses "a web page that acts as an actual MCP client
+    (initialize, tools-list, tools-call over Streamable HTTP)" as a submission
+    that genuinely imports and calls the track technology at runtime. This page
+    IS that client: it performs the 2025-11-25 handshake with this same server's
+    /mcp endpoint, lists the live tool catalog, and lets anyone call a tool and
+    watch the raw JSON-RPC reply — no mocks, no replays. Served from web2 so it
+    inherits the same CSP; assets ride the existing /web2 static route.
+    """
+    page = os.path.join(WEB2_DIR, "wire.html")
+    if os.path.exists(page):
+        return FileResponse(page, headers={"Cache-Control": "no-cache", **_SECURITY_HEADERS})
+    return PlainTextResponse("The Wire is not built yet.", status_code=404)
+
+
 @mcp.custom_route("/css/{path:path}", methods=["GET"])
 async def css_static(request: Request):
     rel = request.path_params.get("path", "")

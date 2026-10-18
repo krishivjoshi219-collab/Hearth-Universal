@@ -1,8 +1,11 @@
-/* Hearth web2 — Calm Command token system. Single source of truth. */
+/* =============================================================================
+   Hearth — shared tokens ("Ambient OS").
+   Warm near-black canvas, one ember accent, light-made structure. The cockpit
+   inherits the same material as the Echo surface and The Wire so all four
+   surfaces read as one product.
+   ========================================================================== */
 
-/* Self-hosted so the cockpit and the Echo surface render identically with no
-   CDN dependency. Previously both merely *named* Inter with no @font-face, so
-   every device silently fell back to its system UI font. */
+/* Self-hosted so every surface renders identically with no CDN dependency. */
 @font-face {
   font-family: "Hearth Sans";
   src: url("/web2/fonts/inter-var.woff2") format("woff2-variations");
@@ -12,72 +15,73 @@
 }
 
 :root {
-  /* Zinc surfaces (solid; blur lives on overlay scrim only) */
-  --s0: oklch(8% 0.022 274);
-  --s1: oklch(12% 0.026 274);
-  --s2: oklch(16% 0.03 274);
-  --s3: oklch(21% 0.034 274);
+  /* Canvas + ink (warm) */
+  --s0: #0b0908;
+  --s1: #121009;
+  --s2: #17140f;
+  --s3: #1f1b15;
+  --ink: #f4f1eb;
+  --t1: #f4f1eb;
+  --t2: rgba(244, 241, 235, 0.66);
+  --t3: rgba(244, 241, 235, 0.42);
 
-  /* Lines + depth */
-  --line: oklch(100% 0 0 / 0.09);
-  --line-strong: oklch(100% 0 0 / 0.16);
-  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-pop: 0 24px 60px rgba(0, 0, 0, 0.7);
-  --scrim: rgba(4, 4, 6, 0.72);
+  /* Light-made structure */
+  --line: rgba(255, 255, 255, 0.055);
+  --line-strong: rgba(255, 255, 255, 0.11);
+  --surface: rgba(255, 255, 255, 0.026);
+  --surface-2: rgba(255, 255, 255, 0.052);
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-pop: 0 26px 70px rgba(0, 0, 0, 0.72);
+  --scrim: rgba(5, 4, 3, 0.74);
 
-  /* Type (verified contrast on --s0: body 7.76:1, accent 9.75:1) */
-  --t1: oklch(97% 0.006 274);
-  --t2: oklch(74% 0.018 274);
-  --t3: oklch(58% 0.02 274);
+  /* One living accent; signals stay strictly semantic */
+  --amber: #f0a85c;
+  --amber-dim: rgba(240, 168, 92, 0.14);
+  --amber-line: rgba(240, 168, 92, 0.34);
+  --ok: #8fd8ac;
+  --ok-dim: rgba(143, 216, 172, 0.13);
+  --bad: #f2958e;
+  --bad-dim: rgba(242, 149, 142, 0.13);
+  --sky: #9cc1ff;
 
-  /* Signal: amber is the ONLY interactive accent. Emerald/rose are status-only. */
-  --amber: oklch(82% 0.125 74);
-  --amber-dim: oklch(82% 0.125 74 / 0.15);
-  --ok: oklch(80% 0.125 163);
-  --ok-dim: oklch(80% 0.125 163 / 0.13);
-  --bad: oklch(70% 0.155 18);
-  --bad-dim: oklch(70% 0.155 18 / 0.13);
-  --sky: oklch(80% 0.105 220);
-
-  /* Glass material — shared with the Echo surface so the two read as one app. */
   --glass: linear-gradient(157deg,
-      oklch(100% 0 0 / 0.07) 0%,
-      oklch(100% 0 0 / 0.026) 48%,
-      oklch(100% 0 0 / 0.012) 100%);
-  --glass-blur: blur(22px) saturate(160%);
+      rgba(255, 255, 255, 0.06) 0%,
+      rgba(255, 255, 255, 0.022) 48%,
+      rgba(255, 255, 255, 0.01) 100%);
   --grain: url("data:image/svg+xml;utf8,\
 <svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'>\
-<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/>\
+<filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/>\
 <feColorMatrix type='saturate' values='0'/></filter>\
-<rect width='180' height='180' filter='url(%23n)' opacity='0.42'/></svg>");
+<rect width='180' height='180' filter='url(%23n)' opacity='0.55'/></svg>");
 
-  /* Type scale (1.25 ratio; micro 11 mono exception) */
-  --fs-hero: 29px;
-  --fs-h2: 23px;
-  --fs-h3: 19px;
-  --fs-title: 15px;
+  /* Type scale — the cockpit is the dense ops surface (the room surfaces
+     are deliberately far larger). */
+  --fs-hero: 27px;
+  --fs-h2: 21px;
+  --fs-h3: 17px;
+  --fs-title: 14.5px;
   --fs-body: 13.5px;
   --fs-micro: 11px;
   --font-sans: "Hearth Sans", -apple-system, BlinkMacSystemFont,
     "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
 
-  /* 8pt grid + geometry (3 radii only) */
+  /* 8pt grid + geometry */
   --sp1: 8px;
   --sp2: 12px;
   --sp3: 16px;
   --sp4: 24px;
   --sp5: 32px;
   --sp6: 48px;
-  --r-card: 12px;
-  --r-hero: 20px;
+  --r-card: 16px;
+  --r-hero: 22px;
   --r-pill: 999px;
 
-  /* Motion: 150-200ms ease-out, transform/opacity only */
-  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --t-fast: 150ms;
-  --t-med: 200ms;
-  --focus: 0 0 0 2px var(--s0), 0 0 0 4px var(--amber);
+  /* Motion: one designed curve for everything */
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --t-fast: 150ms var(--ease);
+  --t-med: 320ms var(--ease);
+  --focus: 0 0 0 2px var(--s0), 0 0 0 4px rgba(240, 168, 92, 0.7);
 }
 
 *,
@@ -94,6 +98,7 @@ html {
   font-family: var(--font-sans);
   font-size: var(--fs-body);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -101,41 +106,39 @@ body {
   line-height: 1.5;
 }
 
-h1,
-h2,
-h3 {
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+h1, h2, h3, h4 {
+  letter-spacing: -0.011em;
+  line-height: 1.22;
   font-weight: 650;
 }
 
-button,
-input,
-select {
+button, input, select, textarea {
   font: inherit;
   color: inherit;
 }
 
-button {
-  cursor: pointer;
-}
+button { cursor: pointer; }
+
+a { color: inherit; }
+
+[hidden] { display: none !important; }
 
 :focus-visible {
   outline: none;
   box-shadow: var(--focus);
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
-/* Skeleton: geometry-matched pulse, 500ms ambient, static under reduced motion */
+/* Skeleton: geometry-matched pulse, calm, static under reduced motion */
 .skel {
-  border-radius: 6px;
+  border-radius: 8px;
   background: var(--s3);
-  animation: skpulse 600ms var(--ease) infinite alternate;
+  animation: skpulse 640ms var(--ease) infinite alternate;
 }
 
 @keyframes skpulse {
-  from { opacity: 0.45; }
-  to { opacity: 0.9; }
+  from { opacity: 0.4; }
+  to { opacity: 0.85; }
 }
 
 /* Numeric telemetry: tabular figures, no layout jitter */
@@ -156,8 +159,5 @@ button {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-  .skel {
-    animation: none;
-    opacity: 0.6;
-  }
+  .skel { animation: none; opacity: 0.6; }
 }

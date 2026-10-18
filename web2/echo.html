@@ -3,296 +3,272 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=1280, initial-scale=1" />
-<title>Hearth — Your household, handled</title>
+<meta name="color-scheme" content="dark" />
+<title>Hearth — the house that runs itself, with receipts</title>
 <link rel="stylesheet" href="/web2/css/echo.css" />
 </head>
 <body data-display="inline">
 
-<!-- atmosphere: warm core in a cool room -->
+<!-- =========================================================== icon sprite -->
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c1.4 2.7.5 4.3-.8 5.9-1.4 1.7-2.9 3.3-2.9 5.7a4.8 4.8 0 0 0 9.6.7c.2-1.9-.6-3.4-1.7-4.8-.7-.9-1.3-1.7-1.6-2.8-.7 1-1.3 2.1-1.3 3.5 0 1 .3 1.8.8 2.5"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9.2" y="3.2" width="5.6" height="10.6" rx="2.8"/><path d="M5.8 11.2a6.2 6.2 0 0 0 12.4 0"/><path d="M12 17.4v3.4"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h14.2"/><path d="M13.2 6.4l5.5 5.6-5.5 5.6"/></symbol>
+  <symbol id="i-hub" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.1"/><path d="M12 3.2v2.9M12 17.9v2.9M3.2 12h2.9M17.9 12h2.9M5.8 5.8l2 2M16.2 16.2l2 2M18.2 5.8l-2 2M7.8 16.2l-2 2"/></symbol>
+  <symbol id="i-person" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8.2" r="3.4"/><path d="M5.6 20a6.4 6.4 0 0 1 12.8 0"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l7.6 4.4v8.8L12 20.8l-7.6-4.4V7.6L12 3.2z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5.6" y="10.4" width="12.8" height="9.6" rx="2.6"/><path d="M8.6 10.4V7.9a3.4 3.4 0 0 1 6.8 0v2.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.2L6.2 13h4.4l-.8 7.8L16.4 11h-4.4l.6-7.8z"/></symbol>
+  <symbol id="i-thermo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10.6 4.6a1.5 1.5 0 0 1 3 0v8a4.1 4.1 0 1 1-3 0v-8z"/><path d="M12 16.4v-4"/></symbol>
+  <symbol id="i-box" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 8.4L12 4.2l7.8 4.2v7.2L12 19.8l-7.8-4.2V8.4z"/><path d="M4.2 8.4L12 12.6l7.8-4.2"/><path d="M12 12.6v7.2"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.4 3.6h11.2v16.8l-1.9-1.3-1.9 1.3-1.9-1.3-1.9 1.3-1.9-1.3-1.7 1.3V3.6z"/><path d="M9.2 8.2h5.6M9.2 11.6h5.6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l6.8 2.4v5.8c0 4.4-2.9 7.4-6.8 9.3-3.9-1.9-6.8-4.9-6.8-9.3V5.6L12 3.2z"/><path d="M9.2 11.8l2.1 2.1 3.8-4.2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.6l4.4 4.4L19 7.4"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="5.8"/><path d="M15.3 15.3l5.2 5.2"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.4v15.2M8.4 19.6h7.2M12 6.8l-4.6 1.2M12 6.8l4.6 1.2M7.4 8L5 13.4a2.6 2.6 0 0 0 4.8 0L7.4 8zM16.6 8L14.2 13.4a2.6 2.6 0 0 0 4.8 0L16.6 8z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19.6v-6.4M10.2 19.6V7.2M15.4 19.6v-4M20.4 19.6V4.8"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.8" r="3.1"/><path d="M3.8 19.8a5.4 5.4 0 0 1 10.4 0"/><path d="M15.8 6a3.1 3.1 0 0 1 0 5.6"/><path d="M16.6 14.6a5.4 5.4 0 0 1 3.6 5.2"/></symbol>
+  <symbol id="i-wave" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.2" cy="17.8" r="1.4"/><path d="M6.2 11.8a6 6 0 0 1 6 6"/><path d="M6.2 6.2a11.6 11.6 0 0 1 11.6 11.6"/></symbol>
+  <symbol id="i-cart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 5.2h2.1l2.2 10.4h9.9l2.1-7.6H7.2"/><circle cx="9.6" cy="19.2" r="1.2"/><circle cx="16.4" cy="19.2" r="1.2"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.4" cy="7" r="2.4"/><circle cx="6.4" cy="17" r="2.4"/><path d="M8.5 8.4L19.4 18M19.4 6L8.5 15.6"/></symbol>
+  <symbol id="i-tag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.4 11V5.8c0-.8.6-1.4 1.4-1.4H11l8.4 8.4-6.5 6.5L4.4 11z"/><circle cx="8" cy="8" r="1.1"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.4l1.7 5 4.9 1.6-4.9 1.7-1.7 4.9-1.7-4.9L5.4 10l4.9-1.6 1.7-5z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 6.2l11.6 11.6M17.8 6.2L6.2 17.8"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.2" cy="14.8" r="3.8"/><path d="M10.8 12.2L19 4M16.6 6.4l2.2 2.2M14.2 8.8l2.2 2.2"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.8"/><path d="M12 3.2v1.9M12 18.9v1.9M3.2 12h1.9M18.9 12h1.9M5.8 5.8l1.3 1.3M16.9 16.9l1.3 1.3M18.2 5.8l-1.3 1.3M7.1 16.9l-1.3 1.3"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></symbol>
+</svg>
+
+<!-- ========================================================= atmosphere -->
 <div class="drift" aria-hidden="true"><div class="aurora"></div></div>
-<div class="core-glow" aria-hidden="true"></div>
-
 <canvas class="motes" id="motes" aria-hidden="true"></canvas>
-
 <div class="grain" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
 
 <div class="shell">
 
-  <!-- ======================================================== topbar -->
+  <!-- ============================================================ topbar -->
   <header class="topbar">
     <div class="brand">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M12 3c1.2 2.6.4 4.1-.9 5.6C9.6 10.3 8 11.9 8 14.5A4.5 4.5 0 0 0 12.5 19 4.5 4.5 0 0 0 17 14.5c0-1.7-.8-3-1.8-4.3-.5-.7-1-1.4-1.3-2.2-.8 1-1.4 2-1.4 3.4 0 .9.3 1.6.8 2.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <span class="mark" aria-hidden="true"><svg class="ico"><use href="#i-flame"/></svg></span>
+      <span class="brand-text">
+        <b>Hearth</b>
+        <em id="sceneLine">waking up…</em>
       </span>
-      <div class="brand-text">
-        <h1>Hearth</h1>
-        <span class="tag">Your household, handled</span>
-      </div>
     </div>
-
-    <div class="controls">
-      <div class="seg" role="group" aria-label="Display mode">
-        <button class="chip" type="button" data-mode="inline" aria-pressed="true">Inline</button>
-        <button class="chip" type="button" data-mode="fullscreen" aria-pressed="false">Fullscreen</button>
-        <button class="chip" type="button" data-mode="hydrated" aria-pressed="false">Hydrated</button>
-        <button class="chip" type="button" data-mode="voice-only" aria-pressed="false">Voice only</button>
+    <div class="top-right">
+      <div class="clock" aria-hidden="true">
+        <span class="time num" id="clockTime">--:--</span>
+        <span class="clock-sep">·</span>
+        <span class="date" id="clockDate">&nbsp;</span>
       </div>
-      <button class="chip brain" type="button" id="brainBtn" title="Connect your own AI key so free-form questions get live answers">🧠 Connect AI</button>
-      <button class="chip persona" type="button" id="personaToggleBtn" data-persona="admin" aria-pressed="false" title="Switch between adult (Alex) and child (Leo) persona">👤 Alex (Adult)</button>
-      <a class="chip advanced" href="/web2/index.html" title="The dense engineering view for judges and tinkerers">⚙️ Advanced</a>
-      <a class="chip advanced" href="/" title="Back to the Hearth home page">🏠 Home</a>
-    </div>
-
-    <div class="clock">
-      <div class="time num" id="clockTime">--:--</div>
-      <div class="date" id="clockDate">&nbsp;</div>
+      <button class="ghost-btn" id="settingsBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Display and AI settings" title="Display &amp; AI"><svg class="ico"><use href="#i-gear"/></svg></button>
     </div>
   </header>
 
-  <!-- ========================================================== main -->
+  <!-- ============================================================== main -->
   <div class="main">
 
-    <section class="stage" aria-live="polite">
-      <div class="eyebrow" id="stageEyebrow">Living room &middot; climate &middot; quiet evening</div>
+    <section class="stage" id="stage" data-state="idle" aria-live="polite">
 
-      <!-- resting state: the house at a glance -->
-      <div class="ambient" id="ambient">
-        <div class="hero">
-          <div class="ring interactive-tile" id="heroTempRing" role="button" tabindex="0" title="Tap to toggle comfort / eco climate" aria-label="Indoor temperature">
-            <div class="val num" id="heroTemp">--</div>
-            <div class="unit">&deg;F</div>
-          </div>
-
-          <div class="detail">
-            <div class="row interactive-row" id="heroTargetRow" role="button" tabindex="0" title="Tap to toggle target temperature (Eco 68°F / Comfort 72°F)">
-              <span class="rk">Target</span>
-              <span class="rv num" id="heroTarget">&mdash;</span>
-            </div>
-            <div class="row">
-              <span class="rk">Climate</span>
-              <span class="rv" id="heroMode">&mdash;</span>
-            </div>
-            <div class="row row-note">
-              <span class="rk"></span>
-              <span class="rv soft">Nothing here changes without your tap.</span>
-            </div>
-          </div>
-
-          <div class="where interactive-tile" id="heroLockTile" role="button" tabindex="0" title="Tap to secure or unlock front door">
-            <div class="label">Front door</div>
-            <div class="val" id="heroLock">&mdash;</div>
-          </div>
+      <div class="presence">
+        <div class="orb" aria-hidden="true">
+          <span class="orb-halo"></span>
+          <span class="orb-ring"></span>
+          <span class="orb-core"></span>
+          <span class="orb-sheen"></span>
+          <span class="orb-glyph" id="orbGlyph"><svg class="ico"><use href="#i-spark"/></svg></span>
         </div>
-
-        <div class="metrics">
-          <div class="metric interactive-tile" id="mEnergy" data-accent="emerald" role="button" tabindex="0" title="Tap to inspect grid distribution">
-            <div class="k">Energy now</div>
-            <div class="v num" data-v>&mdash;</div>
-            <div class="s" data-s>&nbsp;</div>
-          </div>
-          <div class="metric interactive-tile" id="mSolar" data-accent="sky" role="button" tabindex="0" title="Tap to coordinate neighborhood solar sharing">
-            <div class="k">Solar</div>
-            <div class="v num" data-v>&mdash;</div>
-            <div class="s" data-s>&nbsp;</div>
-          </div>
-          <div class="metric interactive-tile" id="mPantry" data-accent="amber" role="button" tabindex="0" title="Tap to restock essentials with Subscribe & Save">
-            <div class="k">Pantry</div>
-            <div class="v num" data-v>&mdash;</div>
-            <div class="s" data-s>&nbsp;</div>
-          </div>
-        </div>
+        <div class="voice-wave" id="voiceWave" aria-hidden="true" hidden><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       </div>
 
-      <!-- spoken turn + rich response -->
-      <div class="speech">
-        <div class="speech-header">
-          <div class="said" id="said">
-            <span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>
+      <p class="said" id="said" hidden></p>
+
+      <div class="hero" id="hero">
+        <div class="mood">
+          <div class="hero-num"><span class="num" id="vTemp">--</span><span class="unit">°F</span></div>
+          <div class="hero-meta">
+            <b>Living room</b>
+            <span id="vClimate">reading the house…</span>
           </div>
-          <div class="voice-wave" id="voiceWave" aria-hidden="true" hidden>
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-        </div>
-        <div id="response" class="reply">
-          Ask me anything — nothing runs without your approval.
         </div>
 
-        <div class="connect-hint" id="brainCallout" hidden>
-          <span>Free-form questions run on your own AI key — stored only on this machine.</span>
-          <button class="mini" type="button" id="calloutConnectBtn">Connect AI</button>
+        <div class="still" id="still" aria-label="House status">
+          <span class="still-item"><svg class="ico"><use href="#i-lock"/></svg><b id="vLock">–</b><em id="vLights"></em></span>
+          <span class="still-item"><svg class="ico"><use href="#i-bolt"/></svg><b class="num"><span id="vDraw">--</span> kW</b><em>drawing now</em></span>
+          <span class="still-item"><svg class="ico"><use href="#i-sun"/></svg><b id="vSolar">–</b></span>
+          <span class="still-item"><svg class="ico"><use href="#i-box"/></svg><b id="vPantryName">—</b><em id="vPantry">–</em></span>
         </div>
+
+        <div class="ask-lane" id="askLane">
+          <span class="lane-lead">Try asking</span>
+          <div class="lane-grid">
+            <button class="ask" type="button" data-go="/api/renewals" data-body='{}'><svg class="ico"><use href="#i-scissors"/></svg><span>Find forgotten subscriptions</span></button>
+            <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type": "perimeter_anomaly"}'><svg class="ico"><use href="#i-search"/></svg><span>Rebuild what happened at 3 AM</span></button>
+            <button class="ask" type="button" data-go="/api/commerce/autopilot-checkout" data-body='{"utterance": "we are out of everything, fix groceries", "voice_confidence": 0.95}'><svg class="ico"><use href="#i-cart"/></svg><span>Fix the groceries</span></button>
+            <button class="ask" type="button" data-go="/api/swarm/grid" data-body='{}'><svg class="ico"><use href="#i-bolt"/></svg><span>Sell the extra solar</span></button>
+            <button class="ask" type="button" hidden data-extra="true" data-go="/api/parliament/deliberate" data-body='{"topic": "evening tariff vs comfort"}'><svg class="ico"><use href="#i-scale"/></svg><span>Put it to a house vote</span></button>
+            <button class="ask" type="button" hidden data-extra="true" data-go="/api/causal/simulate" data-body='{"days_ahead": 7, "iterations": 250}'><svg class="ico"><use href="#i-chart"/></svg><span>See the week ahead</span></button>
+            <button class="ask" type="button" hidden data-extra="true" data-go="/api/mediation/treaty" data-body='{}'><svg class="ico"><use href="#i-users"/></svg><span>Settle a house treaty</span></button>
+            <button class="ask" type="button" hidden data-extra="true" data-go="/api/acoustic/scan" data-body='{}'><svg class="ico"><use href="#i-wave"/></svg><span>Listen to the appliances</span></button>
+            <button class="ask" type="button" hidden data-extra="true" data-go="/api/renewals/stage" data-body='{"id": "sub_streambox"}'><svg class="ico"><use href="#i-tag"/></svg><span>Cancel one for me</span></button>
+          </div>
+          <button class="lane-more" id="moreAsksBtn" type="button"><span>More things Hearth can do</span><svg class="ico"><use href="#i-chevron"/></svg></button>
+        </div>
+
+        <button class="brain-callout" id="brainCallout" type="button" hidden><svg class="ico"><use href="#i-hub"/></svg><span>Hearth runs on its built-in brain — <b>connect your own AI</b>.</span></button>
+      </div>
+
+      <div class="answer" id="answer" hidden>
+        <div class="answer-kicker" id="answerKicker">HEARTH</div>
+        <div class="answer-big num" id="answerBig" hidden></div>
+        <h2 class="answer-verdict" id="answerVerdict"></h2>
+        <p class="answer-sub" id="answerSub"></p>
+        <div class="answer-lines" id="answerLines"></div>
+        <div class="trust-strip" id="trustStrip"></div>
+        <div class="answer-cta" id="answerCta"></div>
+        <div id="response" class="sr-only" aria-hidden="true"></div>
       </div>
     </section>
 
-    <!-- ======================================================== rail -->
     <aside class="rail">
-      <div class="card-panel">
-        <div class="head">
-          <h2>At a glance</h2>
-          <span class="chip chip-right" id="connChip"><span class="dot" id="connDot"></span><span id="connText">connecting</span></span>
-        </div>
-        <div class="empty" id="statusBody">Loading household state&hellip;</div>
+      <div class="log-head">
+        <h3>Living log</h3>
+        <span class="pill" id="connChip"><i class="dot" id="connDot"></i><span id="connText">connecting</span></span>
       </div>
+      <div class="status-body" id="statusBody" aria-label="Live house readings"></div>
 
-      <div class="card-panel card-panel-grow">
-        <div class="head">
-          <h2>Approval tray</h2>
-          <span class="pill num" id="trayCount" hidden>0</span>
+      <section class="log-sec">
+        <div class="sec-head">
+          <h4>Waiting for your OK</h4>
+          <span class="count" id="trayCount">0</span>
         </div>
-        <div id="trayBody">
-          <div class="empty">Nothing has run without you. Consequential actions appear here first — and undo in one tap.</div>
+        <p class="card-lead" id="trayLead">Nothing moves without you. One tap to apply, undo any time.</p>
+        <div class="tray-body" id="trayBody"></div>
+      </section>
+
+      <section class="log-sec receipts">
+        <div class="sec-head">
+          <h4>Receipts</h4>
+          <span class="pill pill-ok" id="proofChainPill">verified</span>
         </div>
-      </div>
+        <div class="proof-mini">
+          <b class="num" id="proofTotal">$--</b>
+          <span id="proofSub">reading receipts…</span>
+        </div>
+        <div class="ticker" id="ticker" aria-label="Latest verified receipts"></div>
+      </section>
     </aside>
-
   </div>
 
-  <!-- ================================================ guided tour ?tour=1 -->
-  <div class="splash" id="splash" hidden>
-    <div class="splash-kicker">HEARTH · ALEXA+ TRACK</div>
-    <div class="splash-title">Save me $800.</div>
-    <div class="splash-sub">She proposes. You tap once. She never spends $1 without you.</div>
-  </div>
-
-  <div class="tourbar" id="tourbar" hidden>
-    <span class="tour-kicker">GUIDED TOUR · ?tour=1</span>
-    <span class="tour-cap" id="tourCap"></span>
-  </div>
-
-  <!-- ======================================================== ask row -->
+  <!-- =========================================================== composer -->
   <footer class="askrow">
     <form class="composer" id="askForm" autocomplete="off">
-      <span class="lead">Ask</span>
-      <input class="composer-input" id="askText" type="text" maxlength="600"
-             placeholder="anything — &ldquo;why did the alarm go off?&rdquo;, &ldquo;save me $800&rdquo;&hellip;"
-             aria-label="Ask Hearth anything" />
-      <button class="btn mic" type="button" id="micBtn" aria-label="Speak your request">
-        <span class="ico" aria-hidden="true">🎙️</span><span id="micLabel">Speak</span>
-      </button>
-      <button class="btn send primary" id="askSend" type="submit"><span class="ico" aria-hidden="true">✦</span> Ask</button>
+      <button class="btn mic" id="micBtn" type="button" aria-label="Talk to Hearth"><svg class="ico-lg"><use href="#i-mic"/></svg></button>
+      <input id="askText" type="text" placeholder="Ask about anything in the house…" aria-label="Ask Hearth" />
+      <button class="btn btn-primary send" id="askSend" type="submit" aria-label="Ask Hearth"><svg class="ico"><use href="#i-arrow"/></svg></button>
     </form>
-
-    <div class="ask-lane">
-      <span class="lead">Try</span>
-      <div class="ask-scroll">
-    <button class="ask" type="button" data-go="/api/renewals" data-body='{}' data-ask="Alexa, ask Hearth to save me $800 on renewals" data-tone="hero">
-      <span class="ico" aria-hidden="true">💸</span> Save me $800
-    </button>
-
-    <button class="ask" type="button" data-go="/api/commerce/autopilot-checkout" data-body='{"utterance":"we are out of everything, fix groceries","voice_confidence":0.95}' data-ask="Alexa, ask Hearth we are out of everything, fix groceries" data-tone="hero">
-      <span class="ico" aria-hidden="true">🛒</span> Fix groceries
-    </button>
-
-    <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type":"perimeter_anomaly"}' data-ask="Alexa, ask Hearth why the patio door alarm went off at 3 AM">
-      <span class="ico" aria-hidden="true">🔍</span> Was someone breaking in?
-    </button>
-
-    <button class="ask" type="button" data-go="/api/parliament/deliberate" data-body='{"topic":"evening tariff vs comfort"}' data-ask="Alexa, ask Hearth what the Household Parliament recommends tonight">
-      <span class="ico" aria-hidden="true">🏛️</span> Parliament: tariff vs comfort
-    </button>
-
-    <button class="ask" type="button" data-go="/api/causal/simulate" data-body='{"days_ahead":7,"iterations":250}' data-ask="Alexa, ask Hearth to simulate the next seven days">
-      <span class="ico" aria-hidden="true">🔮</span> What breaks in 7 days?
-    </button>
-
-    <button class="ask" type="button" data-go="/api/swarm/grid" data-body='{}' data-ask="Alexa, ask Hearth to sell our excess solar to the neighbours">
-      <span class="ico" aria-hidden="true">⚡</span> Sell solar to neighbours
-    </button>
-
-    <button class="ask" type="button" data-go="/api/mediation/treaty" data-body='{}' data-ask="Alexa, ask Hearth to settle the household treaty">
-      <span class="ico" aria-hidden="true">🤝</span> Settle the treaty
-    </button>
-
-    <button class="ask" type="button" data-go="/api/acoustic/scan" data-body='{}' data-ask="Alexa, ask Hearth to check the fridge bearings">
-      <span class="ico" aria-hidden="true">🩺</span> Is the fridge dying?
-    </button>
-      </div>
-    </div>
   </footer>
-
 </div>
 
-<!-- ============================================== glass receipt modal -->
-<div class="receipt-backdrop" id="receiptBackdrop" hidden>
-  <div class="receipt-card" id="receiptCard" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
-    <div class="receipt-glow" aria-hidden="true"></div>
-    <div class="receipt-header">
-      <div class="receipt-badge">
-        <span class="receipt-dot"></span>
-        <span class="receipt-status">VERIFIED PROPOSAL RECEIPT</span>
+<!-- ===================================================== settings sheet -->
+<div class="sheet" id="settingsPanel" hidden role="dialog" aria-label="Display and AI">
+  <div class="sheet-head">
+    <h3>Display &amp; AI</h3>
+    <button class="x" id="settingsCloseBtn" type="button" aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-group">
+      <span class="sheet-label">How Hearth answers</span>
+      <div class="seg" role="group" aria-label="Display mode">
+        <button class="chip" type="button" data-mode="inline" aria-pressed="true">Inline</button>
+        <button class="chip" type="button" data-mode="fullscreen" aria-pressed="false">Full screen</button>
+        <button class="chip" type="button" data-mode="hydrated" aria-pressed="false">Structured</button>
+        <button class="chip" type="button" data-mode="voice-only" aria-pressed="false">Voice only</button>
       </div>
-      <button class="receipt-close" id="receiptCloseBtn" type="button" aria-label="Close receipt">&times;</button>
     </div>
-    <div class="receipt-code num mono" id="receiptCode">HEARTH-RC-0000</div>
-    <h3 class="receipt-title" id="receiptTitle">Action Applied</h3>
-    <div class="receipt-sub" id="receiptSub">Zero-touch ambient operations &middot; Guaranteed reversible</div>
-
-    <div class="receipt-body" id="receiptBody">
-      <!-- itemized breakdown injected by echo.js -->
-    </div>
-
-    <div class="receipt-footer">
-      <button class="btn ghost danger" id="receiptUndoBtn" type="button" data-pid="">
-        <span class="ico" aria-hidden="true">&#8630;</span> 1-Tap Undo Reversal
+    <div class="sheet-group">
+      <span class="sheet-label">Hearth’s brain</span>
+      <button class="row-btn" id="brainBtn" type="button" aria-haspopup="dialog">
+        <svg class="ico"><use href="#i-hub"/></svg>
+        <span id="brainLabel">Built-in brain</span>
+        <i class="dot" id="brainDot"></i>
+        <svg class="ico ico-flip"><use href="#i-chevron"/></svg>
       </button>
-      <button class="btn primary" id="receiptDoneBtn" type="button">Dismiss</button>
+    </div>
+    <div class="sheet-group">
+      <span class="sheet-label">Profile</span>
+      <button class="row-btn" id="personaToggleBtn" type="button" data-persona="admin" aria-pressed="false">
+        <svg class="ico"><use href="#i-person"/></svg>
+        <span>Alex</span>
+        <em class="row-note">adult</em>
+        <svg class="ico ico-flip"><use href="#i-chevron"/></svg>
+      </button>
+    </div>
+    <a class="row-btn" href="/web2/index.html">
+      <svg class="ico"><use href="#i-gear"/></svg>
+      <span>Open the ops cockpit</span>
+      <svg class="ico ico-flip"><use href="#i-chevron"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- ======================================================= splash / tour -->
+<div class="splash" id="splash" hidden>
+  <div class="splash-card">
+    <span class="mark big" aria-hidden="true"><svg class="ico-xl"><use href="#i-flame"/></svg></span>
+    <h1>Hearth</h1>
+    <p>The house that runs itself — with receipts.</p>
+    <button class="btn btn-primary" id="splashStart" type="button">Begin the day</button>
+  </div>
+</div>
+
+<div class="tourbar" id="tourbar" hidden><span id="tourCap"></span></div>
+
+<!-- ==================================================== receipt sheet -->
+<div class="backdrop" id="receiptBackdrop" hidden>
+  <div class="modal" id="receiptCard" role="dialog" aria-modal="true" aria-labelledby="receiptTitle">
+    <div class="modal-head">
+      <h3 id="receiptTitle">Receipt</h3>
+      <button class="x" id="receiptCloseBtn" type="button" aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
+    </div>
+    <p class="modal-sub" id="receiptSub"></p>
+    <div class="receipt-code" id="receiptCode">—</div>
+    <div class="receipt-body" id="receiptBody"></div>
+    <div class="modal-actions">
+      <button class="btn" id="receiptUndoBtn" type="button" hidden>Undo this</button>
+      <button class="btn btn-primary" id="receiptDoneBtn" type="button">Done</button>
     </div>
   </div>
 </div>
 
-<div class="receipt-backdrop" id="keyBackdrop" hidden>
-  <div class="receipt-card key-card" id="keyCard" role="dialog" aria-modal="true" aria-labelledby="keyTitle">
-    <div class="receipt-glow" aria-hidden="true"></div>
-    <div class="receipt-header">
-      <div class="receipt-badge">
-        <span class="receipt-dot"></span>
-        <span class="receipt-status">YOUR AI · PRIVATE TO THIS MACHINE</span>
-      </div>
-      <button class="receipt-close" id="keyCloseBtn" type="button" aria-label="Close connect dialog">&times;</button>
+<!-- ======================================================== brain sheet -->
+<div class="backdrop" id="keyBackdrop" hidden>
+  <div class="modal" id="keyCard" role="dialog" aria-modal="true" aria-labelledby="keyTitle">
+    <div class="modal-head">
+      <h3 id="keyTitle">Connect your own AI</h3>
+      <button class="x" id="keyCloseBtn" type="button" aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
     </div>
-    <h3 class="receipt-title" id="keyTitle">Connect your own AI</h3>
-    <div class="receipt-sub" id="keySub">Free-form questions get live answers from the provider you choose. The key is stored only on this machine and is never echoed back.</div>
-
-    <div class="key-grid">
-      <label class="key-field"><span>Provider</span>
-        <select id="keyProvider"></select>
-      </label>
-      <label class="key-field" id="keyBaseUrlField"><span>Endpoint</span>
-        <input id="keyBaseUrl" type="url" spellcheck="false" placeholder="https://api.openai.com/v1" />
-      </label>
-      <label class="key-field" id="keyModelField"><span>Model</span>
-        <input id="keyModel" type="text" spellcheck="false" placeholder="gpt-4o-mini" />
-      </label>
-      <label class="key-field" id="keyApiKeyField"><span>API key</span>
-        <input id="keyApiKey" type="password" spellcheck="false" autocomplete="off" placeholder="sk-…" />
-      </label>
-      <label class="key-field" id="keyRegionField" hidden><span>AWS region</span>
-        <input id="keyRegion" type="text" spellcheck="false" placeholder="us-east-1" />
-      </label>
-      <label class="key-field" id="keyAccessField" hidden><span>AWS access key id</span>
-        <input id="keyAccess" type="password" spellcheck="false" autocomplete="off" placeholder="AKIA…" />
-      </label>
-      <label class="key-field" id="keySecretField" hidden><span>AWS secret access key</span>
-        <input id="keySecret" type="password" spellcheck="false" autocomplete="off" />
-      </label>
-    </div>
-
-    <div class="key-note" id="keyNote"></div>
-    <div class="key-status" id="keyStatus" role="status"></div>
-
-    <div class="receipt-footer">
-      <button class="btn ghost danger" id="keyClearBtn" type="button" hidden>Disconnect</button>
-      <button class="btn ghost" id="keyTestBtn" type="button">Test connection</button>
-      <button class="btn primary" id="keySaveBtn" type="button">Save &amp; connect</button>
+    <p class="modal-sub" id="keySub">Hearth runs fully offline on its built-in brain. Connect one you own to go further — the key stays on this device and is only ever shown masked.</p>
+    <label class="field"><span>Provider</span><select id="keyProvider"></select></label>
+    <label class="field" id="keyBaseUrlField" hidden><span>Base URL</span><input id="keyBaseUrl" type="url" placeholder="https://your-gateway/v1" /></label>
+    <label class="field" id="keyModelField" hidden><span>Model</span><input id="keyModel" type="text" placeholder="model id" /></label>
+    <label class="field" id="keyApiKeyField"><span>API key</span><input id="keyApiKey" type="password" autocomplete="off" placeholder="paste once — never echoed back" /></label>
+    <label class="field" id="keyRegionField" hidden><span>Region</span><input id="keyRegion" type="text" placeholder="us-east-1" /></label>
+    <label class="field" id="keyAccessField" hidden><span>Access key</span><input id="keyAccess" type="text" autocomplete="off" /></label>
+    <label class="field" id="keySecretField" hidden><span>Secret key</span><input id="keySecret" type="password" autocomplete="off" /></label>
+    <p class="key-note" id="keyNote">Keys are stored on this device with owner-only permissions and never leave the house.</p>
+    <div class="key-status" id="keyStatus" aria-live="polite"></div>
+    <div class="modal-actions">
+      <button class="btn" id="keyClearBtn" type="button">Disconnect</button>
+      <button class="btn" id="keyTestBtn" type="button">Test</button>
+      <button class="btn btn-primary" id="keySaveBtn" type="button">Save &amp; test</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast" role="status"></div>
-<div class="sr-only" id="live" aria-live="assertive"></div>
+<div class="toast" id="toast" hidden role="status"></div>
+<p class="sr-only" id="live" aria-live="polite"></p>
 
 <script src="/web2/js/echo.js"></script>
 </body>

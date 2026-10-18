@@ -1,54 +1,90 @@
-/* Hearth — Echo Show surface controller.
- *
- * Voice-first: a tap (or a spoken phrase) runs a real MCP-backed tool call, the
- * result is rendered as glanceable cards rather than a text dump, and the spoken
- * summary is read aloud via the Web Speech API. Display modes mirror the four
- * modes the MCP server implements in `format_display_response`.
- *
- * Loaded as an external file because the server sets CSP script-src 'self'.
- */
-(() => {
+/* ============================================================================
+   Hearth — Echo surface logic ("Ambient OS", rebuilt from scratch).
+   A quiet device: household state, the ask → answer theater, the living log
+   (approvals + receipts), the settings sheet, the bring-your-own-brain
+   dialog, and voice. The MCP server owns every action; this file only speaks
+   to real endpoints and shows only consumer-facing language.
+   ========================================================================= */
+(function () {
   "use strict";
 
-  const $ = (sel) => document.querySelector(sel);
+  var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const el = {
-    time: $("#clockTime"),
-    date: $("#clockDate"),
-    eyebrow: $("#stageEyebrow"),
-    ambient: $("#ambient"),
-    heroTemp: $("#heroTemp"),
-    heroLock: $("#heroLock"),
-    heroTarget: $("#heroTarget"),
-    heroMode: $("#heroMode"),
+  /* ------------------------------------------------------------------ dom */
+  function $(sel) { return document.querySelector(sel); }
+
+  function icon(name, cls) {
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", cls || "ico");
+    svg.setAttribute("aria-hidden", "true");
+    var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#i-" + name);
+    svg.appendChild(use);
+    return svg;
+  }
+
+  var el = {
+    stage: $("#stage"),
+    orbGlyph: $("#orbGlyph"),
+    voiceWave: $("#voiceWave"),
     said: $("#said"),
+    sceneLine: $("#sceneLine"),
+    vTemp: $("#vTemp"),
+    vClimate: $("#vClimate"),
+    vDraw: $("#vDraw"),
+    vSolar: $("#vSolar"),
+    vLock: $("#vLock"),
+    vLights: $("#vLights"),
+    vPantry: $("#vPantry"),
+    vPantryName: $("#vPantryName"),
+    answer: $("#answer"),
+    answerKicker: $("#answerKicker"),
+    answerBig: $("#answerBig"),
+    answerVerdict: $("#answerVerdict"),
+    answerSub: $("#answerSub"),
+    answerLines: $("#answerLines"),
+    trustStrip: $("#trustStrip"),
+    answerCta: $("#answerCta"),
     response: $("#response"),
-    statusBody: $("#statusBody"),
-    trayBody: $("#trayBody"),
-    trayCount: $("#trayCount"),
+    ticker: $("#ticker"),
+    rail: $(".rail"),
+    connChip: $("#connChip"),
     connDot: $("#connDot"),
     connText: $("#connText"),
-    toast: $("#toast"),
-    live: $("#live"),
-    micBtn: $("#micBtn"),
-    micLabel: $("#micLabel"),
-    receiptBackdrop: $("#receiptBackdrop"),
-    receiptCode: $("#receiptCode"),
-    receiptTitle: $("#receiptTitle"),
-    receiptSub: $("#receiptSub"),
-    receiptBody: $("#receiptBody"),
-    receiptUndoBtn: $("#receiptUndoBtn"),
-    receiptCloseBtn: $("#receiptCloseBtn"),
-    receiptDoneBtn: $("#receiptDoneBtn"),
-    brainBtn: $("#brainBtn"),
-    brainCallout: $("#brainCallout"),
-    calloutConnectBtn: $("#calloutConnectBtn"),
+    statusBody: $("#statusBody"),
+    trayCount: $("#trayCount"),
+    trayLead: $("#trayLead"),
+    trayBody: $("#trayBody"),
+    proofChainPill: $("#proofChainPill"),
+    proofTotal: $("#proofTotal"),
+    proofSub: $("#proofSub"),
     askForm: $("#askForm"),
     askText: $("#askText"),
     askSend: $("#askSend"),
+    micBtn: $("#micBtn"),
+    askLane: $("#askLane"),
+    moreAsksBtn: $("#moreAsksBtn"),
+    settingsBtn: $("#settingsBtn"),
+    settingsPanel: $("#settingsPanel"),
+    settingsCloseBtn: $("#settingsCloseBtn"),
+    brainBtn: $("#brainBtn"),
+    brainDot: $("#brainDot"),
+    brainLabel: $("#brainLabel"),
+    brainCallout: $("#brainCallout"),
+    personaToggleBtn: $("#personaToggleBtn"),
+    personaLabel: $("#personaToggleBtn") ? $("#personaToggleBtn").querySelector("span") : null,
+    personaNote: $("#personaToggleBtn") ? $("#personaToggleBtn").querySelector(".row-note") : null,
+    clockTime: $("#clockTime"),
+    clockDate: $("#clockDate"),
+    receiptBackdrop: $("#receiptBackdrop"),
+    receiptTitle: $("#receiptTitle"),
+    receiptSub: $("#receiptSub"),
+    receiptCode: $("#receiptCode"),
+    receiptBody: $("#receiptBody"),
+    receiptDoneBtn: $("#receiptDoneBtn"),
+    receiptUndoBtn: $("#receiptUndoBtn"),
+    receiptCloseBtn: $("#receiptCloseBtn"),
     keyBackdrop: $("#keyBackdrop"),
-    keyCard: $("#keyCard"),
-    keyCloseBtn: $("#keyCloseBtn"),
     keyProvider: $("#keyProvider"),
     keyBaseUrlField: $("#keyBaseUrlField"),
     keyBaseUrl: $("#keyBaseUrl"),
@@ -64,1589 +100,1308 @@
     keySecret: $("#keySecret"),
     keyNote: $("#keyNote"),
     keyStatus: $("#keyStatus"),
-    keyClearBtn: $("#keyClearBtn"),
-    keyTestBtn: $("#keyTestBtn"),
     keySaveBtn: $("#keySaveBtn"),
+    keyTestBtn: $("#keyTestBtn"),
+    keyClearBtn: $("#keyClearBtn"),
+    keyCloseBtn: $("#keyCloseBtn"),
+    splash: $("#splash"),
+    splashStart: $("#splashStart"),
+    tourbar: $("#tourbar"),
+    tourCap: $("#tourCap"),
+    toast: $("#toast"),
+    live: $("#live"),
   };
 
-  let displayMode = "inline";
-  let busy = false;
-  let toastTimer = null;
-
-  /* Bring-your-own-AI state, hydrated from /api/brain/connect. The server
-   * stores the key itself; the browser only ever sees a masked hint. */
-  let brainState = { configured: false, presets: [] };
-
-  // ---------------------------------------------------------------- helpers
-
-  function esc(v) {
-    return String(v == null ? "" : v).replace(/[&<>"']/g, (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  /* ---------------------------------------------------------------- utils */
+  function num(v, digits) {
+    var n = Number(v);
+    return isFinite(n) ? n.toFixed(digits == null ? 0 : digits) : "--";
   }
-
-  function num(v, digits = 0) {
-    const n = Number(v);
-    return Number.isFinite(n) ? n.toFixed(digits) : "—";
+  function cToF(c) {
+    var n = Number(c);
+    return isFinite(n) ? n * 9 / 5 + 32 : null;
   }
-
-  function toast(msg, isError) {
+  function usd(n) {
+    var v = Number(n);
+    if (!isFinite(v)) return "$--";
+    var sign = v < 0 ? "-" : "";
+    return sign + "$" + Math.abs(v).toFixed(2);
+  }
+  function shortHash(h, n) {
+    var s = String(h || "");
+    return s ? s.slice(0, n || 10) + "…" : "—";
+  }
+  function titleCase(s) {
+    return String(s || "").replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+  }
+  function stripMd(s) {
+    return String(s || "").replace(/\*\*/g, "").replace(/\*/g, "").trim();
+  }
+  function firstSentence(text) {
+    var t = stripMd(text);
+    var m = t.match(/^.*?[.!?](?=\s|$)/);
+    var s = m ? m[0] : t;
+    if (s.length > 150) s = s.slice(0, 147).replace(/\s+\S*$/, "") + "…";
+    return s;
+  }
+  function restAfterFirst(text) {
+    var t = stripMd(text);
+    var m = t.match(/^.*?[.!?](?=\s|$)/);
+    if (!m) return "";
+    var rest = t.slice(m[0].length).trim();
+    return rest.length > 320 ? rest.slice(0, 317) + "…" : rest;
+  }
+  function timeLabel(ts) {
+    var n = Number(ts);
+    if (!isFinite(n) || n <= 0) return "";
+    var d = new Date(n < 1e12 ? n * 1000 : n);
+    return d.toTimeString().slice(0, 5);
+  }
+  function announce(text) {
+    if (el.live) el.live.textContent = String(text || "").slice(0, 300);
+  }
+  var toastTimer = null;
+  function toast(msg, ms) {
+    if (!el.toast) return;
     el.toast.textContent = msg;
-    el.toast.classList.toggle("err", !!isError);
-    el.toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.toast.classList.remove("show"), 3200);
+    el.toast.hidden = false;
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.toast.hidden = true; }, ms || 2800);
   }
 
-  function thinking(label) {
-    el.response.innerHTML =
-      '<span class="thinking"><span class="bars"><i></i><i></i><i></i></span>' +
-      esc(label) + "</span>";
-  }
-
-  /* A reply longer than the card fades at its bottom edge; scrolling marks it
-   * "at end" so the fade disappears exactly when there is nothing more to see. */
-  function markScrollable() {
-    const host = el.response && el.response.parentElement;
-    if (!host || !el.response) return;
-    const more = el.response.scrollHeight > el.response.clientHeight + 4;
-    host.classList.toggle("scrollable", more);
-    host.classList.toggle(
-      "at-end",
-      !more || el.response.scrollTop + el.response.clientHeight >= el.response.scrollHeight - 6
-    );
-  }
-
-  if (el.response) {
-    el.response.addEventListener("scroll", markScrollable);
-  }
-
-  /* The TRY strip overflows on narrow screens; fade its right edge while more
-   * chips are waiting, so the cut chip reads as "scroll me", not "broken". */
-  const askScroll = $(".ask-scroll");
-  if (askScroll) {
-    const syncAskScroll = () => {
-      const max = askScroll.scrollWidth - askScroll.clientWidth;
-      askScroll.classList.toggle(
-        "fade-end",
-        max > 6 && askScroll.scrollLeft < max - 6
-      );
-    };
-    askScroll.addEventListener("scroll", syncAskScroll, { passive: true });
-    if (window.ResizeObserver) new ResizeObserver(syncAskScroll).observe(askScroll);
-    window.addEventListener("resize", syncAskScroll);
-    syncAskScroll();
-  }
-
-  async function call(path, body) {
-    const res = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body || {}),
-    });
-    if (!res.ok) {
-      let detail = "";
-      try {
-        detail = (await res.json())?.error || "";
-      } catch (_) { /* non-JSON error body */ }
-      throw new Error(detail || `HTTP ${res.status}`);
-    }
-    return res.json();
-  }
-
-  function setConn(state, text) {
-    el.connDot.className = "dot " + (state || "");
-    el.connText.textContent = text;
-  }
-
-  /* ============================================== connect your own AI ===
-   * The preview ships with a zero-config offline engine so nothing breaks
-   * without a key. Connecting a key turns free-form questions into live
-   * provider answers; the key itself lives server-side (state/brain_config
-   * .json, chmod 600) and is never echoed back to this page. */
-
-  const BRAIN_STATUS_PATH = "/api/brain/connect";
-
-  function presetById(id) {
-    return (brainState.presets || []).find((p) => p.id === id) || null;
-  }
-
-  function brainChip() {
-    if (el.brainBtn) {
-      const label = brainState.configured
-        ? "🧠 " + (brainState.model || brainState.provider_name || "AI ready")
-        : "🧠 Connect AI";
-      el.brainBtn.textContent = label.length > 34 ? label.slice(0, 33) + "…" : label;
-      el.brainBtn.classList.toggle("on", !!brainState.configured);
-      el.brainBtn.title = brainState.configured
-        ? "Connected via " + (brainState.provider_name || brainState.provider) +
-          ". Tap to change or disconnect."
-        : "Connect your own AI key so free-form questions get live answers";
-    }
-    if (el.brainCallout) el.brainCallout.hidden = !!brainState.configured;
-  }
-
-  async function refreshBrain() {
+  async function getJSON(path) {
     try {
-      const r = await fetch(BRAIN_STATUS_PATH);
-      if (r.ok) brainState = await r.json();
-    } catch (_) { /* keep the last known state; ask still works offline */ }
-    brainChip();
-  }
-
-  function fillKeyForm(presetId) {
-    const p = presetById(presetId) || {};
-    const isBedrock = p.kind === "bedrock";
-    el.keyBaseUrlField.hidden = isBedrock;
-    el.keyApiKeyField.hidden = isBedrock;
-    el.keyRegionField.hidden = !isBedrock;
-    el.keyAccessField.hidden = !isBedrock;
-    el.keySecretField.hidden = !isBedrock;
-    el.keyBaseUrl.value = p.base_url || "";
-    el.keyModel.value = p.model || "";
-    el.keyApiKey.value = "";
-    if (isBedrock) el.keyRegion.value = el.keyRegion.value || "us-east-1";
-    let note = p.note || "";
-    if (!isBedrock && presetId === "openai" && brainState.env_key_available) {
-      note = "An OpenAI key is already set on this machine — leave the field blank to use it.";
+      var r = await fetch(path, { headers: { Accept: "application/json" } });
+      if (!r.ok) return null;
+      return await r.json();
+    } catch (e) {
+      return null;
     }
-    el.keyNote.textContent = note;
-    el.keyNote.hidden = !note;
-    el.keyNote.classList.toggle("env", !!brainState.env_key_available && !isBedrock);
   }
-
-  function populateProviders() {
-    if (!el.keyProvider || el.keyProvider.options.length) return;
-    (brainState.presets || []).forEach((p) => {
-      const o = document.createElement("option");
-      o.value = p.id;
-      o.textContent = p.name;
-      el.keyProvider.appendChild(o);
-    });
-  }
-
-  function openKeyModal() {
-    populateProviders();
-    if (brainState.configured && presetById(brainState.provider)) {
-      el.keyProvider.value = brainState.provider;
-    }
-    fillKeyForm(el.keyProvider.value || "openai");
-    el.keyStatus.className = "key-status" + (brainState.configured ? " ok" : "");
-    el.keyStatus.textContent = brainState.configured
-      ? "Connected via " + (brainState.provider_name || brainState.provider) +
-        (brainState.key_hint ? " (" + brainState.key_hint + ")" : "")
-      : "";
-    el.keyClearBtn.hidden = !brainState.configured;
-    el.keyBackdrop.hidden = false;
-    el.keyApiKey.focus();
-  }
-
-  function closeKeyModal() {
-    el.keyBackdrop.hidden = true;
-  }
-
-  function keyPayload(extra) {
-    const pid = el.keyProvider.value;
-    const p = presetById(pid) || {};
-    const payload = { provider: pid, model: el.keyModel.value.trim() };
-    if (p.kind === "bedrock") {
-      payload.region = el.keyRegion.value.trim();
-      payload.access_key_id = el.keyAccess.value.trim();
-      payload.secret_access_key = el.keySecret.value.trim();
-    } else {
-      payload.base_url = el.keyBaseUrl.value.trim();
-      payload.api_key = el.keyApiKey.value;
-    }
-    return Object.assign(payload, extra || {});
-  }
-
-  async function saveKey(doTest) {
-    el.keySaveBtn.disabled = true;
-    el.keyTestBtn.disabled = true;
-    el.keyStatus.className = "key-status";
-    el.keyStatus.textContent = doTest ? "Testing your provider…" : "Saving…";
+  async function postJSON(path, body) {
     try {
-      const res = await fetch(BRAIN_STATUS_PATH, {
+      var r = await fetch(path, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(keyPayload({ test: !!doTest })),
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body || {}),
       });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
-      brainState = data;
-      brainChip();
-      el.keyClearBtn.hidden = !data.configured;
-      const t = data.test;
-      if (t) {
-        el.keyStatus.className = "key-status " + (t.ok ? "ok" : "err");
-        el.keyStatus.textContent = t.ok
-          ? (t.detail || "Reached your provider") + " — ready."
-          : "Saved, but the test failed: " + (t.error || "unknown error");
-      } else {
-        el.keyStatus.className = "key-status ok";
-        el.keyStatus.textContent = data.message || "Connected.";
-      }
-      toast(t && !t.ok ? "Saved — check the test result" : "AI connected — ask me anything", t && !t.ok);
-    } catch (err) {
-      el.keyStatus.className = "key-status err";
-      el.keyStatus.textContent = String(err.message || err);
-    } finally {
-      el.keySaveBtn.disabled = false;
-      el.keyTestBtn.disabled = false;
+      var d = null;
+      try { d = await r.json(); } catch (e2) { d = null; }
+      return { ok: r.ok, status: r.status, data: d };
+    } catch (e) {
+      return { ok: false, status: 0, data: null };
     }
   }
 
-  async function disconnectKey() {
-    el.keyClearBtn.disabled = true;
-    try {
-      const res = await fetch("/api/brain/disconnect", { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      el.keyStatus.className = "key-status";
-      el.keyStatus.textContent = data.message || "Disconnected.";
-      brainState = data;
-      brainChip();
-      el.keyClearBtn.hidden = true;
-      toast("Disconnected — the offline engine still answers");
-    } catch (err) {
-      el.keyStatus.className = "key-status err";
-      el.keyStatus.textContent = String(err.message || err);
-    } finally {
-      el.keyClearBtn.disabled = false;
-    }
-  }
-
-  function wireBrain() {
-    if (el.brainBtn) el.brainBtn.addEventListener("click", openKeyModal);
-    if (el.calloutConnectBtn) el.calloutConnectBtn.addEventListener("click", openKeyModal);
-    if (el.keyCloseBtn) el.keyCloseBtn.addEventListener("click", closeKeyModal);
-    if (el.keyBackdrop) {
-      el.keyBackdrop.addEventListener("click", (e) => {
-        if (e.target === el.keyBackdrop) closeKeyModal();
-      });
-    }
-    if (el.keyProvider) {
-      el.keyProvider.addEventListener("change", () => {
-        el.keyStatus.textContent = "";
-        el.keyStatus.className = "key-status";
-        fillKeyForm(el.keyProvider.value);
-      });
-    }
-    if (el.keySaveBtn) el.keySaveBtn.addEventListener("click", () => saveKey(false));
-    if (el.keyTestBtn) el.keyTestBtn.addEventListener("click", () => saveKey(true));
-    if (el.keyClearBtn) el.keyClearBtn.addEventListener("click", disconnectKey);
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && el.keyBackdrop && !el.keyBackdrop.hidden) closeKeyModal();
-    });
-    if (el.askForm) {
-      el.askForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const text = el.askText.value.trim();
-        if (!text) {
-          toast("Type a question first", true);
-          return;
-        }
-        el.askText.value = "";
-        askFree(text);
-      });
-    }
-  }
-
-  /* Free-form turn: the planner (MCP tools + optional live brain) answers,
-   * stages any consequential proposal in the tray, and never executes one. */
-  async function askFree(message) {
-    const text = String(message || "").trim();
-    if (!text || busy) return;
-    busy = true;
-    document.querySelectorAll(".ask").forEach((b) => (b.disabled = true));
-    if (el.askSend) el.askSend.disabled = true;
-    el.said.innerHTML =
-      '<span class="q">&ldquo;</span>' + esc(text) + '<span class="q">&rdquo;</span>';
-    el.eyebrow.textContent = "Live answer";
-    thinking("Thinking it through…");
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
-      el.response.innerHTML = renderAskAnswer(data);
-      document.body.classList.add("has-result");
-      el.response.scrollTop = 0;
-      requestAnimationFrame(markScrollable);
-      el.said.parentElement.scrollTop = 0;
-      speak(data.draft || "Here is what I found.");
-      await refreshTray();
-    } catch (err) {
-      el.response.innerHTML =
-        '<div class="answer">I could not complete that: ' + esc(err.message) + "</div>" +
-        (brainState.configured
-          ? ""
-          : '<div class="meta-line">Tip: connect your own AI key for live free-form answers.</div>');
-      if (!brainState.configured && el.brainCallout) el.brainCallout.hidden = false;
-      speak("Sorry, that did not work.");
-    } finally {
-      busy = false;
-      document.querySelectorAll(".ask").forEach((b) => (b.disabled = false));
-      if (el.askSend) el.askSend.disabled = false;
-    }
-  }
-
-  function toolChip(step) {
-    const t = String(step.tool || "");
-    const icon =
-      /home|scene|light|lock|climate|thermostat/i.test(t) ? "🏠" :
-      /web_search|search/i.test(t) ? "🔎" :
-      /renew|subscription/i.test(t) ? "💸" :
-      /commerce|grocery|order|cart|checkout/i.test(t) ? "🛒" :
-      /forensic|security|incident/i.test(t) ? "🔍" :
-      /acoustic|appliance|fridge/i.test(t) ? "🩺" :
-      /solar|grid|swarm|energy/i.test(t) ? "⚡" :
-      /parliament|vote|deliberate/i.test(t) ? "🏛️" :
-      /mediation|treaty/i.test(t) ? "🤝" :
-      /causal|simulat|forecast/i.test(t) ? "🔮" :
-      /memory|remember/i.test(t) ? "🧠" : "•";
-    const label = humanize(t).replace(/^(handlers?|semantic|exec|tools?)\s+/i, "");
-    return (
-      '<span class="step' + (step.status === "blocked" ? " blocked" : "") + '">' +
-      esc(icon) + " " + esc(label || "step") + "</span>"
-    );
-  }
-
-  function renderAskAnswer(d) {
-    // Escape first, then light markdown: the planner's drafts use **bold**.
-    const text = esc(d.draft || "…").replace(/\*\*([^*\n]{1,80})\*\*/g, "<strong>$1</strong>");
-    const bits = ['<div class="answer">' + text + "</div>"];
-    const steps = Array.isArray(d.dag) ? d.dag.filter((s) => s && s.tool).slice(0, 6) : [];
-    if (steps.length) bits.push('<div class="steps">' + steps.map(toolChip).join("") + "</div>");
-    const n = Array.isArray(d.proposals_created) ? d.proposals_created.length : 0;
-    if (n) {
-      bits.push(
-        '<div class="staged-note">' + n + " proposal" + (n === 1 ? "" : "s") +
-        " staged in your approval tray — nothing runs until you approve.</div>"
-      );
-    }
-    const raw = d.provider || "local";
-    const pretty =
-      raw === "openai-compatible" ? (d.fallback ? "built-in engine" : "your AI") :
-      raw === "sentinel-blocked" ? "blocked by policy" :
-      raw === "local" || raw === "local-fallback" ? "built-in engine" : raw;
-    const meta = d.fallback
-      ? pretty + " · offline"
-      : pretty + (d.model ? " · " + d.model : "");
-    bits.push('<div class="meta-line num">' + esc(meta) + "</div>");
-    return bits.join("");
-  }
-
-  // ------------------------------------------------------------------- clock
-
+  /* ----------------------------------------------------------------- clock */
   function tickClock() {
-    const now = new Date();
-    el.time.textContent = now.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    el.date.textContent = now.toLocaleDateString([], {
-      weekday: "long",
-      month: "short",
-      day: "numeric",
-    });
+    var d = new Date();
+    if (el.clockTime) {
+      el.clockTime.textContent = d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+    if (el.clockDate) {
+      el.clockDate.textContent = d.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+    }
   }
 
-  // =========================================================== atmosphere ===
-  /* A small canvas particle field plus a real spring integrator.
-   *
-   * Why hand-rolled rather than a library: the page is served under
-   * `script-src 'self'` with no CDN available, so three.js/ogl/gsap are simply
-   * not options. A 2D canvas with additive blending and a damped spring gives
-   * the same perceptual result for a fraction of the weight, and degrades to a
-   * plain gradient background when motion is reduced or the canvas is missing.
-   */
+  /* ----------------------------------------------------------------- motes */
+  (function motes() {
+    var canvas = document.getElementById("motes");
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var parts = [];
+    var COUNT = 30;
 
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  /* Motes: slow-rising warm/cool particles with parallax by depth. */
-  const MOTE_COUNT = 54;
-
-  function initMotes() {
-    const canvas = document.getElementById("motes");
-    if (!canvas || !canvas.getContext) return null;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    let w = 0;
-    let h = 0;
-    let motes = [];
-    let raf = 0;
-
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      w = window.innerWidth;
-      h = window.innerHeight;
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = w + "px";
-      canvas.style.height = h + "px";
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-
-    const seed = () => {
-      motes = [];
-      for (let i = 0; i < MOTE_COUNT; i += 1) {
-        // depth in [0,1] drives size, speed, opacity and blur-ish softness
-        const depth = Math.random();
-        motes.push({
-          x: Math.random() * w,
-          y: Math.random() * h,
-          depth,
-          r: 0.6 + depth * 2.4,
-          vy: -(0.06 + depth * 0.22),
-          drift: (Math.random() - 0.5) * 0.12,
-          // warm amber vs cool sky, matching the surface's two signal hues
-          warm: Math.random() > 0.42,
-          phase: Math.random() * Math.PI * 2,
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * DPR;
+      canvas.height = H * DPR;
+      canvas.style.width = W + "px";
+      canvas.style.height = H + "px";
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+    function seed() {
+      parts = [];
+      for (var i = 0; i < COUNT; i++) {
+        parts.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 0.6 + Math.random() * 1.6,
+          v: 0.05 + Math.random() * 0.18,
+          w: Math.random() * Math.PI * 2,
+          a: 0.04 + Math.random() * 0.16,
+          warm: Math.random() < 0.75,
         });
       }
-    };
-
-    const frame = () => {
-      ctx.clearRect(0, 0, w, h);
-      ctx.globalCompositeOperation = "lighter";
-      for (const m of motes) {
-        m.y += m.vy;
-        m.x += m.drift + Math.sin(m.phase + m.y * 0.004) * 0.16;
-        if (m.y < -12) {
-          m.y = h + 12;
-          m.x = Math.random() * w;
+    }
+    function frame(t) {
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < parts.length; i++) {
+        var p = parts[i];
+        if (!reducedMotion) {
+          p.y -= p.v;
+          p.x += Math.sin(t / 2600 + p.w) * 0.08;
+          if (p.y < -8) { p.y = H + 8; p.x = Math.random() * W; }
         }
-        if (m.x < -12) m.x = w + 12;
-        if (m.x > w + 12) m.x = -12;
-
-        const a = 0.1 + m.depth * 0.3;
-        const g = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r * 7);
-        const tint = m.warm ? "255, 196, 110" : "150, 210, 255";
-        g.addColorStop(0, "rgba(" + tint + "," + a + ")");
-        g.addColorStop(1, "rgba(" + tint + ",0)");
-        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(m.x, m.y, m.r * 7, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.warm
+          ? "rgba(255, 196, 122, " + p.a + ")"
+          : "rgba(186, 210, 255, " + p.a * 0.8 + ")";
         ctx.fill();
       }
-      raf = window.requestAnimationFrame(frame);
-    };
-
+      if (!reducedMotion) requestAnimationFrame(frame);
+    }
     resize();
     seed();
-    window.addEventListener("resize", () => {
-      resize();
-      seed();
-    });
+    window.addEventListener("resize", function () { resize(); seed(); });
+    frame(0);
+  })();
 
-    if (reduceMotion.matches) {
-      // Draw one static frame: the material still reads, nothing moves.
-      ctx.clearRect(0, 0, w, h);
-      window.cancelAnimationFrame(raf);
-      return { stop() {} };
+  /* ---------------------------------------------------------------- tilt */
+  (function tilt() {
+    if (reducedMotion) return;
+    var root = document.documentElement;
+    var rx = 0, ry = 0, tx = 0, ty = 0, raf = null;
+
+    function apply() {
+      raf = null;
+      rx += (tx - rx) * 0.12;
+      ry += (ty - ry) * 0.12;
+      root.style.setProperty("--rx", rx.toFixed(3) + "deg");
+      root.style.setProperty("--ry", ry.toFixed(3) + "deg");
+      if (Math.abs(tx - rx) > 0.01 || Math.abs(ty - ry) > 0.01) raf = requestAnimationFrame(apply);
     }
-    raf = window.requestAnimationFrame(frame);
-    return {
-      stop() { window.cancelAnimationFrame(raf); },
-    };
+    window.addEventListener("pointermove", function (e) {
+      tx = ((e.clientY / window.innerHeight) - 0.5) * -1.2;
+      ty = ((e.clientX / window.innerWidth) - 0.5) * 1.2;
+      if (!raf) raf = requestAnimationFrame(apply);
+    });
+    window.addEventListener("pointerleave", function () {
+      tx = 0; ty = 0;
+      if (!raf) raf = requestAnimationFrame(apply);
+    });
+  })();
+
+  /* --------------------------------------------------------- display modes */
+  function paintModes() {
+    var chips = document.querySelectorAll("[data-mode]");
+    var mode = document.body.dataset.display || "inline";
+    chips.forEach(function (c) {
+      c.setAttribute("aria-pressed", c.dataset.mode === mode ? "true" : "false");
+    });
+  }
+  document.querySelectorAll("[data-mode]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      document.body.dataset.display = chip.dataset.mode || "inline";
+      paintModes();
+    });
+  });
+
+  /* ------------------------------------------------------------ settings sheet */
+  function setSettings(open) {
+    if (!el.settingsPanel) return;
+    el.settingsPanel.hidden = !open;
+    if (el.settingsBtn) el.settingsBtn.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  el.settingsBtn && el.settingsBtn.addEventListener("click", function () {
+    setSettings(!!el.settingsPanel && el.settingsPanel.hidden);
+  });
+  el.settingsCloseBtn && el.settingsCloseBtn.addEventListener("click", function () { setSettings(false); });
+  document.addEventListener("click", function (e) {
+    if (!el.settingsPanel || el.settingsPanel.hidden) return;
+    if (el.settingsPanel.contains(e.target)) return;
+    if (el.settingsBtn && el.settingsBtn.contains(e.target)) return;
+    setSettings(false);
+  });
+
+  /* ------------------------------------------------------------ more asks */
+  function setExtras(open) {
+    document.querySelectorAll(".ask[data-extra]").forEach(function (b) { b.hidden = !open; });
+    if (el.moreAsksBtn) el.moreAsksBtn.classList.toggle("is-open", open);
+  }
+  el.moreAsksBtn && el.moreAsksBtn.addEventListener("click", function () {
+    setExtras(!!!el.moreAsksBtn.classList.contains("is-open"));
+  });
+
+  /* --------------------------------------------------------- stage states */
+  var stageTimer = null;
+  function setIdle() {
+    if (el.stage) el.stage.dataset.state = "idle";
+    if (el.answer) el.answer.hidden = true;
+    if (el.said) el.said.hidden = true;
+    if (el.voiceWave) el.voiceWave.hidden = true;
+  }
+  function setAsk(said) {
+    if (stageTimer) { clearTimeout(stageTimer); stageTimer = null; }
+    if (el.stage) el.stage.dataset.state = "ask";
+    if (el.said) { el.said.hidden = false; el.said.textContent = "“" + said + "”"; }
+    if (el.voiceWave) el.voiceWave.hidden = false;
+    if (el.answer) el.answer.hidden = true;
+    announce("Hearth is working on: " + said);
+  }
+  function setAnswer(state) {
+    if (stageTimer) { clearTimeout(stageTimer); stageTimer = null; }
+    if (el.stage) el.stage.dataset.state = "answer";
+    if (el.said) el.said.hidden = true;
+    if (el.voiceWave) el.voiceWave.hidden = true;
+    paintAnswer(state);
+    announce([state.verdict, state.sub].filter(Boolean).join(". "));
   }
 
-  /* Critically-damped-ish spring for card tilt. Real springs settle with
-   * overshoot and inertia; a CSS cubic-bezier cannot, which is exactly why
-   * this felt flat before. */
-  function springTilt() {
-    const cards = Array.from(document.querySelectorAll(".metric"));
-    if (!cards.length || reduceMotion.matches) return { stop() {} };
+  function countUp(node, text) {
+    if (reducedMotion) { node.textContent = text; return; }
+    var m = String(text).match(/^([^0-9]*)([0-9][0-9,]*(?:\.[0-9]+)?)(.*)$/);
+    if (!m) { node.textContent = text; return; }
+    var prefix = m[1], raw = m[2].replace(/,/g, ""), suffix = m[3];
+    var target = parseFloat(raw);
+    if (!isFinite(target) || target <= 0) { node.textContent = text; return; }
+    var dec = (raw.split(".")[1] || "").length;
+    var t0 = performance.now(), dur = 680;
+    function frame(t) {
+      var p = Math.min(1, (t - t0) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      var v = (target * eased).toFixed(dec);
+      v = v.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      node.textContent = prefix + v + suffix;
+      if (p < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
 
-    const state = cards.map((el) => ({
-      el,
-      tx: 0, ty: 0, x: 0, y: 0, vx: 0, vy: 0,
-    }));
-
-    let raf = 0;
-    let running = false;
-
-    const step = () => {
-      let settled = true;
-      for (const s of state) {
-        // stiffness 0.12, damping 0.78 -> slight overshoot, ~350ms settle
-        const k = 0.12;
-        const d = 0.78;
-        s.vx += (s.tx - s.x) * k;
-        s.vy += (s.ty - s.y) * k;
-        s.vx *= d;
-        s.vy *= d;
-        s.x += s.vx;
-        s.y += s.vy;
-        if (Math.abs(s.tx - s.x) > 0.02 || Math.abs(s.ty - s.y) > 0.02) settled = false;
-        // translateZ is already applied in CSS; append the tilt only.
-        s.el.style.setProperty("--rx", s.y.toFixed(3) + "deg");
-        s.el.style.setProperty("--ry", s.x.toFixed(3) + "deg");
+  function paintAnswer(state) {
+    state = state || {};
+    if (el.answer) el.answer.hidden = false;
+    if (el.answerKicker) el.answerKicker.textContent = state.kicker || "HEARTH";
+    if (el.answerBig) {
+      if (state.big) {
+        var bigTone = state.bigTone || state.tone;
+        el.answerBig.hidden = false;
+        el.answerBig.className = "answer-big num" + (bigTone ? " is-" + bigTone : "");
+        countUp(el.answerBig, String(state.big));
+      } else {
+        el.answerBig.hidden = true;
+        el.answerBig.textContent = "";
       }
-      raf = settled ? 0 : window.requestAnimationFrame(step);
-      if (!raf) running = false;
-    };
-
-    const kick = () => {
-      if (!running) {
-        running = true;
-        raf = window.requestAnimationFrame(step);
-      }
-    };
-
-    const onMove = (ev) => {
-      const max = 5.2;
-      cards.forEach((el, i) => {
-        const r = el.getBoundingClientRect();
-        const cx = r.left + r.width / 2;
-        const cy = r.top + r.height / 2;
-        const nx = (ev.clientX - cx) / Math.max(1, r.width / 2);
-        const ny = (ev.clientY - cy) / Math.max(1, r.height / 2);
-        state[i].tx = Math.max(-1, Math.min(1, nx)) * max;
-        state[i].ty = Math.max(-1, Math.min(1, ny)) * -max;
+    }
+    if (el.answerVerdict) {
+      el.answerVerdict.textContent = state.verdict || "Done.";
+      el.answerVerdict.className = "answer-verdict" + (state.tone === "bad" ? " is-bad" : "");
+    }
+    if (el.answerSub) {
+      el.answerSub.textContent = state.sub || "";
+      el.answerSub.hidden = !state.sub;
+    }
+    if (el.answerLines) {
+      el.answerLines.innerHTML = "";
+      (state.lines || []).slice(0, 5).forEach(function (row) {
+        var div = document.createElement("div");
+        div.className = "line" + (row.tone ? " is-" + row.tone : "");
+        var k = document.createElement("b");
+        k.textContent = String(row.k == null ? "" : row.k);
+        var v = document.createElement("span");
+        v.textContent = String(row.v == null ? "" : row.v);
+        div.append(k, v);
+        el.answerLines.appendChild(div);
       });
-      kick();
-    };
-
-    const onLeave = () => {
-      state.forEach((s) => { s.tx = 0; s.ty = 0; });
-      kick();
-    };
-
-    window.addEventListener("pointermove", onMove, { passive: true });
-    window.addEventListener("pointerleave", onLeave, { passive: true });
-
-    return {
-      stop() {
-        window.removeEventListener("pointermove", onMove);
-        window.removeEventListener("pointerleave", onLeave);
-        if (raf) window.cancelAnimationFrame(raf);
-      },
-    };
-  }
-
-  // ------------------------------------------------------- speech synthesis
-
-  /* Strip markdown/pipes/URLs the same way the server's sanitize_voice_output
-   * does, so the voice channel matches the voice-only display mode. */
-  function sanitizeForVoice(text) {
-    return String(text || "")
-      .replace(/```[\s\S]*?```/g, " ")
-      .replace(/`([^`]*)`/g, "$1")
-      .replace(/https?:\/\/\S+/g, " ")
-      .replace(/\|/g, " ")
-      .replace(/[*_#>]/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  function setVoiceWave(active) {
-    const w = document.getElementById("voiceWave");
-    if (w) w.hidden = !active;
-  }
-
-  function speak(text) {
-    const clean = sanitizeForVoice(text);
-    el.live.textContent = clean;
-    if (!("speechSynthesis" in window)) return;
-    try {
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(clean);
-      u.rate = 1.02;
-      u.pitch = 1.0;
-      u.volume = 1.0;
-      setVoiceWave(true);
-      u.onend = () => setVoiceWave(false);
-      u.onerror = () => setVoiceWave(false);
-      window.speechSynthesis.speak(u);
-    } catch (_) {
-      setVoiceWave(false);
-      /* speech unavailable; live region still updated */
     }
-  }
-
-  function listening(on) {
-    el.micBtn.classList.toggle("listening", on);
-    el.micLabel.textContent = on ? "Listening…" : "Speak";
-  }
-
-  function setupMic() {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      el.micBtn.disabled = true;
-      el.micLabel.textContent = "No mic";
-      el.micBtn.title = "Web Speech recognition is not available in this browser";
-      return;
+    if (el.trustStrip) {
+      el.trustStrip.innerHTML = "";
+      (state.trust || []).forEach(function (chip) {
+        var span = document.createElement("span");
+        span.className = "trust" + (chip.tone ? " is-" + chip.tone : "");
+        if (chip.icon) span.appendChild(icon(chip.icon));
+        var t = document.createElement("span");
+        t.textContent = chip.text || "";
+        span.appendChild(t);
+        el.trustStrip.appendChild(span);
+      });
     }
-    const rec = new SR();
-    rec.lang = "en-US";
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-
-    rec.onstart = () => listening(true);
-    rec.onend = () => listening(false);
-    rec.onerror = (e) => {
-      listening(false);
-      if (e.error && e.error !== "aborted") toast("Could not hear that", true);
-    };
-    rec.onresult = async (e) => {
-      const phrase = e.results?.[0]?.[0]?.transcript?.trim();
-      if (!phrase) return;
-      el.said.innerHTML = '<span class="q">&ldquo;</span>' + esc(phrase) + '<span class="q">&rdquo;</span>';
-      await handleUtterance(phrase);
-    };
-
-    el.micBtn.addEventListener("click", () => {
-      if (busy) return;
-      try {
-        rec.start();
-      } catch (_) {
-        toast("Microphone busy", true);
+    if (el.answerCta) {
+      el.answerCta.innerHTML = "";
+      if (state.cta && state.cta.href) {
+        var a = document.createElement("a");
+        a.className = "cta-link";
+        a.href = state.cta.href;
+        var t = document.createElement("span");
+        t.textContent = state.cta.label || "Open";
+        a.appendChild(t);
+        a.appendChild(icon("arrow"));
+        el.answerCta.appendChild(a);
       }
-    });
-  }
-
-  /* Map a spoken sentence onto the closest showcase action. Kept deliberately
-   * small and inspectable rather than pretending to be an LLM router. */
-  const UTTERANCE_ROUTES = [
-    { re: /break|intruder|alarm|door|perimeter|someone|patio/i, go: "/api/forensics/reconstruct", body: { incident_type: "perimeter_anomaly" }, label: "Reconstructing incident" },
-    { re: /parliament|council|tariff|thermostat|comfort|debate|recommend/i, go: "/api/parliament/deliberate", body: { topic: "evening tariff vs comfort" }, label: "Convening parliament" },
-    { re: /7 days|seven days|week|simulate|forecast|future|break/i, go: "/api/causal/simulate", body: { days_ahead: 7, iterations: 250 }, label: "Simulating seven days" },
-    { re: /solar|sell|neighbou?r|grid|export|vpp|power plant/i, go: "/api/swarm/grid", body: {}, label: "Coordinating microgrid" },
-    { re: /treaty|mediat|fight|argue|settle|family|chore/i, go: "/api/mediation/treaty", body: {}, label: "Negotiating treaty" },
-    { re: /fridge|bearing|noise|acoustic|appliance|fft|dying/i, go: "/api/acoustic/scan", body: {}, label: "Analysing appliance acoustics" },
-    { re: /pantry|milk|coffee|restock|order|buy|grocery|everything|fix groceries|robux|toy/i, go: "/api/commerce/autopilot-checkout", passPhrase: true, label: "Staging your restock" },
-    { re: /save.*800|save money|subscription|renewal|audit.*bill|waste/i, go: "/api/renewals", body: {}, label: "Auditing subscriptions" },
-  ];
-
-  async function handleUtterance(phrase) {
-    const hit = UTTERANCE_ROUTES.find((r) => r.re.test(phrase));
-    if (!hit) {
-      // No showcase match: hand the sentence to the planner as a free-form
-      // question. It answers from live tools (and the connected brain when
-      // one is configured) instead of a canned "I did not match that".
-      await askFree(phrase);
-      return;
     }
-    const body = hit.passPhrase
-      ? { utterance: phrase, voice_confidence: 0.95 }
-      : hit.body;
-    await run(hit.go, body, hit.label);
+    if (el.response) el.response.textContent = [state.verdict, state.sub].filter(Boolean).join(" ");
+    if (el.answer && el.answer.scrollTo) el.answer.scrollTo({ top: 0 });
+    stageTimer = setTimeout(setIdle, 90000);
   }
 
-  // -------------------------------------------------------------- rendering
-
-  function cardList(items) {
-    if (!items || !items.length) return "";
-    return (
-      '<div class="cards">' +
-      items
-        .slice(0, 4)
-        .map(
-          (c) =>
-            '<div class="card"><div class="top">' +
-            '<span class="name">' + esc(c.name) + "</span>" +
-            (c.tag ? '<span class="tag ' + esc(c.tagClass || c.tag) + '">' + esc(c.tag) + "</span>" : "") +
-            (c.score != null ? '<span class="score num">' + esc(c.score) + "</span>" : "") +
-            "</div>" +
-            (c.body ? '<div class="body">' + c.body + "</div>" : "") +
-            (c.action ? '<div class="card-action-bar">' + c.action + "</div>" : "") +
-            "</div>"
-        )
-        .join("") +
-      (items.length > 4
-        ? '<div class="reply">+ ' + (items.length - 4) + " more</div>"
-        : "") +
-      "</div>"
-    );
+  /* forensics verdicts arrive as codes — say them the way a person would */
+  var VERDICTS = {
+    INTRUDER_LIKELY_ENTRY: "Someone probably walked in",
+    BENIGN_PHYSICAL_DISPLACEMENT: "Nothing to worry about — the house moved",
+    EQUIPMENT_POWER_STARVATION: "An appliance caused it",
+    NOMINAL_RECORD: "A quiet, ordinary night",
+  };
+  function humanVerdict(code) {
+    var c = String(code || "").trim();
+    if (!c) return "";
+    if (VERDICTS[c]) return VERDICTS[c];
+    if (c.length > 44 || /[a-z]/.test(c.slice(1))) return "";
+    return titleCase(c.toLowerCase());
   }
 
-  /* Big categorical result banner.
-   *
-   * `value` is an already-formatted string, not a 0-1 confidence. Several
-   * callers pass quantities that are not probabilities at all (a Nash score out
-   * of 10, a clearing price per kWh), and treating those as confidences produced
-   * nonsense like "1000%" and a meaningless "36%". Each renderer is now
-   * responsible for formatting its own measurement honestly.
-   */
-  function verdictBanner(icon, label, value, tone) {
-    const cls = tone === "bad" ? " bad" : tone === "warn" ? " warn" : "";
-    return (
-      '<div class="verdict' + cls + '">' +
-      '<span class="icon" aria-hidden="true">' + esc(icon || "\u2713") + "</span>" +
-      '<span class="label">' + esc(label) + "</span>" +
-      '<span class="conf num">' + esc(value) + "</span>" +
-      "</div>"
-    );
-  }
-
-  /* SHOUTING_SNAKE -> Shouting Snake. Enum-ish values come straight out of the
-   * engines and read as machine output until they are formatted. */
-  function humanize(v) {
-    return String(v == null ? "" : v)
-      .replace(/_/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  }
-
-  /* Tone a label from its own words so a scary result is never shown in the
-   * calm green used for a benign one. */
-  function toneFor(text) {
-    const v = String(text || "");
-    if (/INTRUDER|CORRUPT|FAIL|ERROR|CRITICAL/i.test(v)) return "bad";
-    if (/STARVATION|DEGRADED|WARN|CRITICAL|HIGH/i.test(v)) return "warn";
-    return "";
-  }
-
-  const RENDERERS = {
+  /* --------------------------------------------------- showcase renderers */
+  var RENDERERS = {
     "/api/forensics/reconstruct": (d) => {
-      const timeline = (d.timeline || []).slice(0, 3).map(
-        (e) =>
-          '<div class="card"><div class="top"><span class="name">' +
-          esc(e.subsystem || "") + '</span><span class="tag">' + esc(e.timestamp || "") +
-          "</span></div><div class=\"body\"><em>" + esc(e.event || "") + "</em><br/>" +
-          esc(e.causal_factor || "") + "</div></div>"
-      );
-      return (
-        verdictBanner("🔍", humanize(d.verdict), num(Number(d.confidence_score) * 100, 0) + "%", toneFor(d.verdict)) +
-        '<div class="reply">' + esc(d.summary || "") + "</div>" +
-        '<div class="cards">' + timeline.join("") + "</div>" +
-        (d.audit_proof
-          ? '<div class="hashline">Merkle proof ' + esc(String(d.audit_proof).slice(0, 64)) + "…</div>"
-          : "")
-      );
+      var conf = Number(d.confidence_score);
+      if (isFinite(conf)) conf = conf <= 1 ? conf * 100 : conf;
+      var code = String(d.verdict || "");
+      var tl = Array.isArray(d.timeline) ? d.timeline.slice(-4) : [];
+      var lines = tl.map(function (t) {
+        if (typeof t === "string") return { k: "·", v: t.slice(0, 110) };
+        var key = t.timestamp || t.time || t.label || timeLabel(t.ts) || "·";
+        var val = String(t.event || t.description || t.summary || t.detail || "").replace(/\s*\([^)]*\)/g, "").trim();
+        return { k: key, v: val.slice(0, 110) };
+      });
+      var proof = d.audit_proof;
+      if (proof && typeof proof === "object") {
+        proof = proof.merkle_root || proof.root || proof.hash || proof.proof || "";
+      }
+      var tone = code === "INTRUDER_LIKELY_ENTRY" ? "bad"
+        : (code === "BENIGN_PHYSICAL_DISPLACEMENT" || code === "NOMINAL_RECORD") ? "good" : null;
+      return {
+        kicker: "What happened",
+        big: isFinite(conf) ? Math.round(conf) + "%" : null,
+        bigTone: tone,
+        verdict: humanVerdict(code) || "Here is the full story",
+        sub: "Rebuilt from what the house recorded — wind, doors, climate. Nothing added, nothing guessed.",
+        lines: lines,
+        trust: [
+          { icon: "shield", text: "Checked for safety" },
+          proof ? { icon: "key", text: "Signed " + String(proof).slice(0, 10) } : null,
+          { icon: "receipt", text: "Saved to the ledger" },
+        ],
+        cta: { label: "See every detail in the cockpit", href: "/web2/index.html" },
+      };
     },
 
     "/api/parliament/deliberate": (d) => {
-      const session = d.session || d;
-      const speeches = (session.speeches || []).map((s) => ({
-        name: s.minister,
-        tag: s.stance,
-        score: "U " + num(s.utility_score, 1),
-        body: "<em>" + esc((s.arguments || [])[0] || "") + "</em>",
-      }));
-      const vote = session.vote || "";
-      const minority = session.minority_report
-        ? '<div class="card"><div class="top"><span class="name">Dissent — ' +
-          esc(session.minority_report.minister) +
-          '</span></div><div class="body">' + esc(session.minority_report.objection || "") + "</div></div>"
-        : "";
-      return (
-        verdictBanner("🏛️",
-          "NASH CONSENSUS \u00b7 " + (vote || "deliberated"),
-          num(session.nash_equilibrium_score, 1) + "/10",
-          session.nash_equilibrium_score < 7 ? "warn" : "") +
-        cardList(speeches) +
-        minority +
-        '<div class="reply">Searched ' + num(session.candidate_count) + " candidate actions across a discrete action grid.</div>"
-      );
+      var speeches = Array.isArray(d.speeches) ? d.speeches.slice(-3) : [];
+      var lines = speeches.map(function (s) {
+        if (typeof s === "string") return { k: "voice", v: s.slice(0, 110) };
+        var who = s.speaker || s.persona || s.minister || s.role || "member";
+        var what = s.position || s.stance || s.text || s.summary || s.speech || "";
+        return { k: titleCase(who).slice(0, 24), v: String(what).slice(0, 110) };
+      });
+      var nash = Number(d.nash_equilibrium_score);
+      return {
+        kicker: "Household vote",
+        big: isFinite(nash) ? nash.toFixed(2) : null,
+        verdict: "The house voted: " + String(d.vote || "recorded").replace(/_/g, " "),
+        sub: isFinite(nash) ? "Fairness " + nash.toFixed(2) + " — a split every member prefers to no deal at all." : "",
+        lines: lines,
+        trust: [
+          { icon: "scale", text: (d.candidate_count || 0) + " options weighed" },
+          { icon: "users", text: "everyone's voice heard" },
+        ],
+      };
     },
 
     "/api/causal/simulate": (d) => {
-      const vulns = (d.vulnerabilities || []).map((v) => ({
-        name: humanize(v.hazard_type),
-        tag: v.impact_severity,
-        score: num(v.probability_pct, 0) + "%",
-        body: "<em>" + esc(v.contingency_action || "") + "</em><br/>" + esc(v.root_cause || ""),
-      }));
-      const q = d.quantiles?.baseline || {};
-      return (
-        verdictBanner("🔮", "GRID RESILIENCE",
-          num(d.grid_resilience_score, 0) + "/100",
-          d.grid_resilience_score < 60 ? "warn" : "") +
-        cardList(vulns) +
-        '<div class="reply">' +
-        num(d.monte_carlo_iterations) + " Monte Carlo trajectories · p50 $" + num(q.p50, 2) +
-        " · p95 $" + num(q.p95, 2) + " · CVaR95 $" + num(q.cvar95, 2) +
-        " · saves $" + num(d.expected_savings_usd, 2) + "</div>"
-      );
+      var vulns = Array.isArray(d.vulnerabilities) ? d.vulnerabilities.slice(0, 4) : [];
+      var lines = vulns.map(function (v) {
+        if (typeof v === "string") return { k: v.slice(0, 46), v: "watch this" };
+        var name = v.name || v.title || v.asset || v.id || "risk";
+        var sev = v.severity || v.risk || v.probability || v.impact || "";
+        return { k: titleCase(name).slice(0, 46), v: sev ? titleCase(sev) : "watch this" };
+      });
+      var score = Number(d.grid_resilience_score);
+      var tone = isFinite(score) ? (score >= 70 ? "good" : score <= 40 ? "bad" : null) : null;
+      var savings = Number(d.expected_savings_usd);
+      return {
+        kicker: "The week ahead",
+        big: isFinite(score) ? String(Math.round(score)) : null,
+        bigTone: tone,
+        verdict: "Steadiness " + (isFinite(score) ? Math.round(score) : "--") + " out of 100",
+        sub: (d.monte_carlo_iterations ? d.monte_carlo_iterations + " what-if runs" : "what-if run") +
+             (isFinite(savings) ? " · " + usd(savings) + " on the table if you act on it" : ""),
+        lines: lines,
+        trust: [
+          { icon: "chart", text: "computed live, not scripted" },
+          { icon: "spark", text: "backup plans already prepared" },
+        ],
+      };
     },
 
     "/api/swarm/grid": (d) => {
-      const econ = d.economic_impact || {};
-      const env = d.environmental_impact || {};
-      const tx = (d.p2p_transactions || []).map((t) => ({
-        name: t.from_node + " → " + t.to_node,
-        tag: num(t.power_kw, 1) + " kW",
-        score: "$" + num(t.settlement_rate_kwh, 3) + "/kWh",
-        body:
-          "Seller <em>+$" + num(t.seller_dividend_hr, 2) + "/hr</em> · buyer saves <em>$" +
-          num(t.buyer_savings_hr, 2) + "/hr</em>",
-      }));
-      return (
-        // A clearing price is a price, not a probability: show $/kWh.
-        verdictBanner("⚡", "P2P CLEARING PRICE",
-          "$" + num(d.cooperative_rate_kwh, 3) + "/kWh", "") +
-        cardList(tx) +
-        '<div class="reply">Community dividend $' + num(econ.total_community_dividend_hourly_usd, 2) +
-        "/hr · $" + num(econ.annualized_neighborhood_wealth_retention_usd, 0) +
-        "/yr retained · " + num(env.carbon_offset_kg_co2e_hr, 2) + " kg CO₂e avoided per hour</div>"
-      );
+      var txs = Array.isArray(d.p2p_transactions) ? d.p2p_transactions : [];
+      var lines = [];
+      if (txs.length) {
+        txs.slice(0, 2).forEach(function (t) {
+          if (typeof t === "string") { lines.push({ k: "trade", v: t.slice(0, 90) }); return; }
+          var who = t.peer || t.neighbor || t.house || t.id || "neighbour";
+          var what = t.kwh || t.amount_kwh || t.volume || t.kwh_traded;
+          lines.push({ k: "→ " + String(who), v: what ? what + " kWh shared" : "settled" });
+        });
+      } else {
+        lines.push({ k: "trades", v: "settled with the neighbourhood pool" });
+      }
+      lines.push({ k: "economic impact", v: String(d.economic_impact || "—").slice(0, 100) });
+      lines.push({ k: "environmental impact", v: String(d.environmental_impact || "—").slice(0, 100) });
+      var rate = Number(d.cooperative_rate_kwh);
+      return {
+        kicker: "Neighbourhood energy",
+        big: isFinite(rate) ? "$" + rate.toFixed(2) + "/kWh" : null,
+        bigTone: "good",
+        verdict: "Extra solar sold to the neighbourhood",
+        sub: d.voice_summary || "Stored solar went to neighbours instead of the wall.",
+        lines: lines,
+        trust: [{ icon: "bolt", text: "surplus shared, nobody overpaid" }],
+      };
     },
 
     "/api/mediation/treaty": (d) => {
-      const covs = (d.covenants || []).map((c) => ({
-        name: c.resident,
-        tag: humanize(c.domain),
-        score: num(c.satisfaction_pct, 0) + "%",
-        body: "<em>" + esc(c.concession_granted || "") + "</em><br/>In return: " +
-          esc(c.reciprocal_obligation || ""),
-      }));
-      return (
-        verdictBanner("🤝", "TREATY FAIRNESS",
-          num(d.fairness_index_out_of_10, 2) + "/10",
-          d.fairness_index_out_of_10 < 8 ? "warn" : "") +
-        cardList(covs) +
-        '<div class="reply">Nash achievement ' + num((d.nash_achievement || 0) * 100, 0) +
-        "% · coverage " + num(d.cooperation_coverage_pct, 0) + "% · envy gap " +
-        num(d.envy_gap, 3) + " · $" + num(d.projected_monthly_savings_usd, 2) +
-        "/mo. Fairness is measured and falls when a household is over-subscribed. " +
-        "Raw grievances were never shared between residents.</div>"
-      );
+      var cov = Array.isArray(d.covenants) ? d.covenants : [];
+      var lines = [];
+      cov.slice(0, 3).forEach(function (c) {
+        if (typeof c === "string") { lines.push({ k: "agreement", v: c.slice(0, 100) }); return; }
+        lines.push({
+          k: titleCase(c.name || c.title || c.id || "agreement").slice(0, 40),
+          v: String(c.terms || c.summary || c.text || "agreed").slice(0, 100),
+        });
+      });
+      lines.push({ k: "fair-score", v: num(d.nash_achievement, 2) });
+      lines.push({ k: "shared budget covered", v: num(d.cooperation_coverage_pct, 0) + "%" });
+      lines.push({ k: "nobody left envious", v: num(d.envy_gap, 2) + " envy gap" });
+      var fair = Number(d.fairness_index_out_of_10);
+      var save = Number(d.projected_monthly_savings_usd);
+      return {
+        kicker: "House treaty",
+        big: isFinite(fair) ? fair.toFixed(1) + "/10" : null,
+        bigTone: isFinite(fair) && fair >= 8 ? "good" : null,
+        verdict: "Settled — " + (cov.length || "no") + " agreements, " + "everyone signed",
+        sub: save ? "About " + usd(save) + " a month saved for the household, and nobody feeling shortchanged." : "Every member prefers this split to a fight.",
+        lines: lines,
+        trust: [
+          { icon: "users", text: "everyone agreed" },
+          { icon: "receipt", text: "waiting for your OK" },
+        ],
+      };
     },
 
-    "/api/renewals": (d) => {
-      const cards = (d.renewals || []).map((s) => ({
-        name: s.name,
-        tag: s.recommendation === "cancel" ? "cancel" : "downgrade",
-        tagClass: s.recommendation === "cancel" ? "cancel" : "downgrade",
-        score: "+$" + num(s.savings_yr, 2) + "/yr",
-        body: "<em>" + esc(s.usage_status || "") + "</em><br/>" + esc(s.reason || ""),
-        action: '<button type="button" class="card-action-btn" data-sub="' + esc(s.id) + '">' +
-                (s.recommendation === "cancel" ? 'Stage Cancellation' : 'Stage Downgrade') +
-                ' &middot; Save $' + num(s.savings_yr, 2) + '/yr &rarr;</button>',
-      }));
-      const stageRow = '<div class="stage-row">' + (d.renewals || []).map((s) =>
-        '<button type="button" class="btn ghost" data-sub="' + esc(s.id) + '">Stage +$' +
-        num(s.savings_yr, 2) + "/yr</button>").join("") + "</div>";
-      return (
-        verdictBanner("💸", "WASTE FOUND",
-          "+$" + num(d.potential_save_yr, 2) + "/yr", "") +
-        cardList(cards) + stageRow +
-        '<div class="reply">Nothing cancelled — stage one tap at a time, Approve in the tray to execute. ' +
-        "Total spend $" + num(d.total_annual_spend, 2) + "/yr.</div>"
-      );
+    "/api/acoustic/scan": (d) => {
+      var apps = Array.isArray(d.appliances) ? d.appliances.slice(0, 4) : [];
+      var lines = apps.map(function (a) {
+        if (typeof a === "string") return { k: a, v: "answered" };
+        return {
+          k: titleCase(a.name || a.appliance || a.id || "appliance").slice(0, 40),
+          v: titleCase(String(a.status || a.health || a.state || a.verdict || "healthy")).slice(0, 60),
+        };
+      });
+      var healthy = apps.filter(function (a) {
+        var s = String((a && (a.status || a.health || a.state || a.verdict)) || "healthy").toLowerCase();
+        return s.indexOf("healthy") >= 0 || s.indexOf("ok") >= 0 || s.indexOf("nominal") >= 0 || s.indexOf("good") >= 0;
+      }).length;
+      return {
+        kicker: "Appliance hearing test",
+        big: String(apps.length || "—"),
+        verdict: (apps.length ? apps.length : "Every") + " appliances answered" + (apps.length && healthy === apps.length ? " — all healthy" : ""),
+        sub: d.voice_summary || "Each machine hums its own signature — Hearth listened and matched it.",
+        lines: lines,
+        trust: [{ icon: "wave", text: "one small mic, the whole house" }],
+      };
     },
 
     "/api/commerce/autopilot-checkout": (d) => {
       if (d.blocked) {
-        return (
-          verdictBanner("🛡️", "CHILD SAFETY GUARDRAIL", "BLOCKED", "bad") +
-          '<div class="reply"><strong>🛡️ Leo (9) is blocked from purchasing by architectural design, not prompt.</strong><br/>' +
-          esc(d.message || "Child profile 'Leo' is restricted from staging orders or making purchases.") + "</div>"
-        );
+        return {
+          kicker: "Blocked for safety",
+          verdict: d.message || "Held back by Leo's guardrails",
+          sub: "Nothing was staged and nothing was bought.",
+          lines: [],
+          tone: "bad",
+          trust: [{ icon: "shield", text: "kept Leo safe", tone: "bad" }],
+        };
       }
-      if (d.clarification_required) {
-        return (
-          verdictBanner("🛒", "WHICH ITEMS?", "clarify", "warn") +
-          '<div class="reply">' + esc(d.message || "Which items should I stage?") + "</div>"
-        );
-      }
-      const cart = d.cart_preview || {};
-      const slot = cart.delivery_schedule?.slot_name || "Amazon Prime Dedicated Box · Tomorrow, 7:00 AM - 11:00 AM";
-      const items = (cart.items || []).map((it) => ({
-        name: it.name,
-        tag: "Subscribe & Save (15%)",
-        tagClass: "subscribe",
-        score: "$" + num(it.unit_price, 2),
-        body: "was $" + num(it.original_price, 2) + " · <em>" + esc(it.prime_delivery || "Amazon Prime") + "</em>",
-      }));
-      return (
-        verdictBanner("🛒", "CART STAGED — NOTHING CHARGED",
-          "$" + num(cart.final_total, 2) + " (saves $" + num(cart.savings, 2) + ")",
-          "") +
-        '<div class="reply"><strong>📦 ' + esc(slot) + '</strong><br/>Consolidated Subscribe & Save bundle with automated replenishment.</div>' +
-        cardList(items) +
-        '<div class="reply">Tap Approve in the tray to order · one tap undoes. ' +
-        esc(d.message || "") + "</div>"
-      );
+      var cart = d.cart_preview || {};
+      var items = Array.isArray(cart.items) ? cart.items.slice(0, 3) : [];
+      var lines = items.map(function (it) {
+        if (typeof it === "string") return { k: it, v: "" };
+        var qty = it.qty || it.quantity || 1;
+        var price = Number(it.price);
+        return {
+          k: String(it.name || it.title || "item").slice(0, 44),
+          v: "×" + qty + (isFinite(price) ? " · " + usd(price) : ""),
+        };
+      });
+      var total = Number(cart.final_total);
+      var save = Number(cart.savings);
+      return {
+        kicker: "Groceries, handled",
+        big: isFinite(total) ? usd(total) : null,
+        verdict: "The cart is built and waiting for you",
+        sub: (isFinite(save) && save > 0 ? "You save " + usd(save) + " with Subscribe & Save. " : "") + "Nothing is bought until you tap approve.",
+        lines: lines,
+        trust: [
+          { icon: "receipt", text: "waiting for your OK" },
+          { icon: "lock", text: "no real payment" },
+        ],
+      };
     },
 
-    "/api/acoustic/scan": (d) => {
-      const apps = (d.appliances || []).map((a) => ({
-        name: a.name,
-        tag: a.status === "HEALTHY" ? "healthy" : "degraded",
-        score: num(a.failure_probability_14d * 100, 0) + "% / 14d",
-        body:
-          "<em>" + num(a.detected_peak_hz, 1) + " Hz peak</em> (+" + num(a.delta_db, 1) +
-          " dB, kurtosis " + num(a.diagnostics?.kurtosis, 2) + ")<br/>" +
-          esc(a.root_cause || ""),
-      }));
-      const degraded = (d.appliances || []).some((a) => a.status !== "HEALTHY");
-      // Report the engine's own measured risk for the worst appliance rather
-      // than a confidence figure invented here.
-      const worstRisk = (d.appliances || []).reduce(
-        (mx, a) => Math.max(mx, Number(a.failure_probability_14d) || 0), 0);
-      return (
-        verdictBanner("🩺",
-          degraded ? "APPLIANCE WEAR DETECTED" : "ALL APPLIANCES HEALTHY",
-          degraded ? num(worstRisk * 100, 0) + "% / 14d" : "0% / 14d",
-          degraded ? "warn" : "") +
-        cardList(apps) +
-        '<div class="reply">' + esc(d.voice_summary || "") + "</div>"
-      );
+    "/api/renewals": (d) => {
+      var rs = Array.isArray(d.renewals) ? d.renewals.slice(0, 4) : [];
+      var lines = rs.map(function (r) {
+        if (typeof r === "string") return { k: r, v: "" };
+        var cost = Number(r.cost_yr || r.yearly_cost || r.cost);
+        var why = r.recommendation || r.status || r.reason || "";
+        return {
+          k: String(r.title || r.name || r.service || "subscription").slice(0, 44),
+          v: (isFinite(cost) ? usd(cost) + "/yr" : "") + (why ? " · " + String(why).replace(/_/g, " ").slice(0, 40) : ""),
+        };
+      });
+      var pot = Number(d.potential_save_yr);
+      var spend = Number(d.total_annual_spend);
+      return {
+        kicker: "Forgotten money",
+        big: isFinite(pot) ? usd(pot) + "/yr" : null,
+        bigTone: "good",
+        verdict: "Subscriptions nobody uses anymore",
+        sub: "Untouched for 60+ days, instantly resumable — cancelling costs you nothing.",
+        lines: lines,
+        trust: [
+          { icon: "scissors", text: isFinite(spend) ? usd(spend) + "/yr under watch" : "under watch" },
+          { icon: "tag", text: "cancel one and it appears for your OK" },
+        ],
+      };
+    },
+
+    "/api/renewals/stage": (d) => {
+      if (d.blocked || d.ok === false) {
+        return {
+          kicker: "Blocked for safety",
+          verdict: "That one needs a grown-up to approve",
+          sub: "Nothing was staged. Leo keeps the fun stuff, not the money stuff.",
+          tone: "bad",
+          lines: [],
+          trust: [{ icon: "shield", text: "kept Leo safe", tone: "bad" }],
+        };
+      }
+      var prop = d.proposal || {};
+      var delta = Number(prop.cost_delta_yr);
+      var abs = Math.abs(delta);
+      return {
+        kicker: "Cancellation ready",
+        big: isFinite(delta) ? "+" + usd(abs) + "/yr" : null,
+        bigTone: "good",
+        verdict: "Waiting in your OK list",
+        sub: "Approve and it's done — undo any time, and the receipt is kept forever.",
+        lines: prop.title ? [{ k: String(prop.title).slice(0, 50), v: "one tap · reversible" }] : [],
+        trust: [{ icon: "receipt", text: "nothing cancels without your OK" }],
+      };
     },
   };
 
-  function render(path, d) {
-    const fn = RENDERERS[path];
-    return fn ? fn(d) : '<div class="reply">' + esc(d.voice_summary || d.summary || d.message || JSON.stringify(d).slice(0, 400)) + "</div>";
+  function genericTheater(d, label) {
+    d = d || {};
+    var msg = d.message || d.verdict || d.summary || d.voice_summary || "";
+    return {
+      kicker: "Hearth",
+      verdict: msg ? humanVerdict(msg) || firstSentence(msg) : (label || "Done — recorded in the ledger"),
+      sub: msg ? restAfterFirst(msg) : "",
+      lines: [],
+      trust: [{ icon: "receipt", text: "every move lands in the ledger" }],
+    };
   }
 
-  function speechLineFor(path, d) {
-    if (d.voice_summary) return d.voice_summary;
-    if (path.includes("forensics")) return d.summary;
-    if (path.includes("mediation")) {
-      return "Treaty fairness " + num(d.fairness_index_out_of_10, 2) +
-        " out of 10, with " + (d.covenants || []).length + " covenants. Recouping " +
-        num(d.projected_monthly_savings_usd, 0) + " dollars a month.";
-    }
-    if (path.includes("swarm")) return d.voice_summary;
-    if (path.includes("parliament")) return "Parliament reached a consensus at a Nash score of " + num(d.nash_equilibrium_score, 1) + ".";
-    if (path.includes("causal")) return "Found " + (d.vulnerabilities || []).length + " vulnerabilities. Resilience score " + num(d.grid_resilience_score, 0) + ".";
-    if (path.includes("renewals")) {
-      return "Found " + num(d.potential_save_yr, 0) +
-        " dollars a year in waste across " + (d.renewals || []).length +
-        " subscriptions. Nothing cancelled — tap the tray to stage them.";
-    }
-    if (path.includes("autopilot-checkout")) {
-      if (d.blocked) return "Blocked by child safety contract. Leo cannot make purchases.";
-      if (d.clarification_required) return "Which items should I stage? Nothing is ordered yet.";
-      const cart = d.cart_preview || {};
-      return "Cart staged for " + (cart.item_count || 0) + " items, saving " +
-        num(cart.savings, 2) + " dollars. Nothing ordered until you tap Approve.";
-    }
-    return "Done.";
+  /* --------------------------------------------------------------- chatting */
+  var busy = false;
+  function setBusy(state) {
+    busy = state;
+    if (el.askSend) el.askSend.disabled = state;
+    if (el.askText) el.askText.disabled = state;
+    document.querySelectorAll(".ask").forEach(function (b) { b.disabled = state; });
   }
 
-  // ----------------------------------------------------------------- runner
-
-  async function run(path, body, label) {
-    if (busy) return;
-    busy = true;
-    document.querySelectorAll(".ask").forEach((b) => (b.disabled = true));
-    thinking(label || "Working…");
-
-    try {
-      const data = await call(path, body);
-      el.response.innerHTML = render(path, data);
-      tickMoney();
-      // Recede the ambient hero so the reply owns the stage, and start the
-      // reply region scrolled to the top of the new content.
-      document.body.classList.add("has-result");
-      el.response.scrollTop = 0;
-      requestAnimationFrame(markScrollable);
-      el.said.parentElement.scrollTop = 0;
-      speak(speechLineFor(path, data));
-      el.eyebrow.textContent = label || "Result";
-      await refreshTray();
-    } catch (err) {
-      el.response.innerHTML =
-        '<span class="u-color-var-e-bad" >Could not complete that: ' + esc(err.message) + "</span>";
-      speak("Sorry, that did not work.");
-    } finally {
-      busy = false;
-      document.querySelectorAll(".ask").forEach((b) => (b.disabled = false));
+  function chatTheater(d, message) {
+    d = d || {};
+    var draft = String(d.draft || "").trim();
+    draft = draft.replace(/\[[^\]]*\]/g, " ").replace(/\s+/g, " ").trim();
+    var blocked = /blocked by the safety contract/i.test(draft);
+    var lines = [];
+    var steps = Array.isArray(d.dag) ? d.dag : [];
+    steps.slice(0, 3).forEach(function (s) {
+      var tool = typeof s === "string" ? s : (s.tool || s.name || s.step || s.action || "step");
+      var status = typeof s === "object" && s ? (s.status || s.state || "done") : "done";
+      lines.push({ k: titleCase(tool).slice(0, 44), v: titleCase(status).slice(0, 26) });
+    });
+    var staged = Array.isArray(d.proposals_created) ? d.proposals_created : [];
+    staged.slice(0, 2).forEach(function (p) {
+      var title = typeof p === "string" ? p : (p.title || p.kind || p.id || "a plan");
+      lines.push({ k: "waiting for your OK", v: String(title).replace(/_/g, " ").slice(0, 60), tone: "good" });
+    });
+    var trust = [];
+    if (d.fallback) {
+      trust.push({ icon: "hub", text: "built-in brain answered — connect your own to go further" });
+    } else if (d.provider || d.model) {
+      trust.push({ icon: "hub", text: [titleCase(d.provider), d.model].filter(Boolean).join(" · ").slice(0, 48) });
     }
+    trust.push(blocked
+      ? { icon: "shield", text: "the guardrail held the line", tone: "bad" }
+      : { icon: "lock", text: "Checked for safety" });
+    trust.push({ icon: "receipt", text: "receipt issued when it happens" });
+    return {
+      kicker: "Hearth",
+      verdict: draft ? humanVerdict(draft) || firstSentence(draft) : "I heard you.",
+      sub: restAfterFirst(draft),
+      lines: lines,
+      trust: trust,
+      tone: blocked ? "bad" : null,
+      raw: message,
+    };
   }
 
-  // ------------------------------------------------------------ ambient state
-
-  /* Populate the glanceable resting state from real telemetry.
-   *
-   * `/api/home` reports temperature in Celsius (the house runs on a metric
-   * digital twin), so it is converted for display: the product narrative is
-   * US-centric ($0.48/kWh tariffs, a 68F office setpoint), and an Echo Show in
-   * the US renders Fahrenheit. The conversion is explicit rather than silently
-   * relabelling a Celsius value as Fahrenheit. */
-  const cToF = (c) => (Number.isFinite(Number(c)) ? Number(c) * 9 / 5 + 32 : null);
-
-  function setMetric(id, value, sub, tone) {
-    const box = document.getElementById(id);
-    if (!box) return;
-    const v = box.querySelector("[data-v]");
-    const s = box.querySelector("[data-s]");
-    if (v) v.textContent = value;
-    if (s) s.textContent = sub || "\u00a0";
-    if (tone) box.classList.add(tone);
+  async function ask(message, label) {
+    var text = String(message || "").trim();
+    if (!text || busy) return;
+    setBusy(true);
+    setAsk(label || text);
+    var res = await postJSON("/api/chat", { message: text });
+    setBusy(false);
+    if (!res.ok || !res.data) {
+      setAnswer({
+        kicker: "Offline",
+        verdict: "I couldn't reach the house's brain for that one.",
+        sub: "The connection said " + (res.status || "no reply") + ". Everything else in the house still works.",
+        lines: [],
+        trust: [{ icon: "wave", text: "local hiccup", tone: "bad" }],
+        tone: "bad",
+      });
+      return;
+    }
+    setAnswer(chatTheater(res.data, text));
+    refreshTray();
+    tourNext();
   }
 
-  async function refreshAmbient() {
-    try {
-      const [home, pantry] = await Promise.all([
-        fetch("/api/home").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        fetch("/api/commerce/depletion")
-          .then((r) => (r.ok ? r.json() : null))
-          .catch(() => null),
-      ]);
+  el.askForm && el.askForm.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = el.askText ? el.askText.value.trim() : "";
+    if (!text) return;
+    if (el.askText) el.askText.value = "";
+    ask(text);
+  });
 
-      if (home) {
-        const tempF = cToF(home.living_room?.climate?.current_c);
-        el.heroTemp.textContent = tempF == null ? "--" : num(tempF, 0);
-
-        const lock = home.entryway?.lock?.front_door;
-        el.heroLock.textContent =
-          lock === "locked" ? "Locked" : lock ? "Unlocked" : "Unknown";
-        el.heroLock.style.color =
-          lock === "locked" ? "var(--e-ok)" : lock ? "var(--e-bad)" : "";
-
-        const climate = home.living_room?.climate || {};
-        if (el.heroTarget) {
-          const t = Number(climate.target_c);
-          el.heroTarget.textContent = Number.isFinite(t)
-            ? num(cToF(t), 1) + " \u00b0F"
-            : "\u2014";
-        }
-        if (el.heroMode) {
-          const bits = [climate.mode, climate.fan].filter(Boolean);
-          el.heroMode.textContent = bits.length ? bits.join(" \u00b7 ") : "\u2014";
-        }
-
-        const e = home.energy || {};
-        setMetric("mEnergy",
-          num(e.current_draw_kw, 2) + " kW",
-          e.eco_score ? "eco score " + num(e.eco_score, 0) : "",
-          "ok");
-        setMetric("mSolar",
-          num(e.solar_generation_kw, 2) + " kW",
-          e.net_grid_kw != null ? "grid " + num(e.net_grid_kw, 2) + " kW" : "",
-          "cool");
-
-        setConn("ok", "connected");
-        el.statusBody.innerHTML =
-          '<div class="card"><div class="body">' +
-          esc("Scene: " + (home.active_scene || "—")) +
-          " &middot; target " + num(home.living_room?.climate?.target_c, 1) + "°C" +
-          " &middot; lights " + (home.living_room?.lights?.on ? "on" : "off") +
-          "</div></div>";
-      } else {
-        setConn("warn", "no telemetry");
-        el.statusBody.innerHTML =
-          '<div class="card"><div class="body">Household telemetry unavailable.</div></div>';
+  /* ------------------------------------------------------------- showcase */
+  document.querySelectorAll(".ask[data-go]").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      if (busy) return;
+      var path = btn.dataset.go;
+      var payload = {};
+      try { payload = JSON.parse(btn.dataset.body || "{}"); } catch (e) { payload = {}; }
+      var label = btn.textContent.replace(/^\s*[^\w]*/, "").trim();
+      setBusy(true);
+      setAsk(label);
+      var res = await postJSON(path, payload);
+      setBusy(false);
+      var d = (res.data && typeof res.data === "object") ? res.data : {};
+      if (!res.ok && !d.blocked) {
+        d.blocked = true;
+        d.message = d.error || d.message || ("The house said " + res.status);
       }
-
-      // Pantry: how soon does the next staple run out?
-      const items = Array.isArray(pantry) ? pantry
-        : pantry?.items || pantry?.forecast || pantry?.depletion || [];
-      if (items.length) {
-        const soonest = items
-          .slice()
-          .sort((a, b) => (a.days_until_empty ?? 99) - (b.days_until_empty ?? 99))[0];
-        setMetric("mPantry",
-          num(soonest.days_until_empty, 0) + "d",
-          soonest.name || soonest.item || "next staple",
-          "warn");
-      } else {
-        setMetric("mPantry", "—", "no forecast");
+      var state = null;
+      try {
+        state = RENDERERS[path] ? RENDERERS[path](d) : genericTheater(d, label);
+      } catch (err) {
+        state = genericTheater(d, label);
       }
-    } catch (_) {
-      setConn("bad", "offline");
+      setAnswer(state);
+      if (!d.blocked) { refreshTray(); refreshTicker(); }
+      tourNext();
+    });
+  });
+
+  /* ----------------------------------------------------- the waiting list */
+  var trayPids = {};
+  var lastTraySig = null;
+
+  function trayItem(p) {
+    var row = document.createElement("div");
+    row.className = "tray-item";
+
+    var title = document.createElement("div");
+    title.className = "tray-title";
+    title.textContent = String(p.title || p.kind || p.id || "").replace(/_/g, " ");
+
+    var meta = document.createElement("div");
+    meta.className = "tray-meta";
+    var delta = Number(p.cost_delta_yr);
+    var dspan = document.createElement("span");
+    dspan.className = "delta";
+    if (isFinite(delta) && delta < 0) {
+      dspan.textContent = "+" + usd(Math.abs(delta)) + "/yr saved";
+    } else if (isFinite(delta) && delta > 0) {
+      dspan.textContent = usd(delta) + "/yr";
+      dspan.classList.add("is-muted");
     }
+    var risk = document.createElement("span");
+    risk.className = "risk";
+    risk.textContent = [p.risk_level, p.kind].filter(Boolean).join(" · ").replace(/_/g, " ").slice(0, 40);
+    meta.append(dspan, risk);
+
+    var actions = document.createElement("div");
+    actions.className = "row-actions";
+    var approve = document.createElement("button");
+    approve.className = "btn btn-primary";
+    approve.type = "button";
+    approve.textContent = "Approve";
+    approve.addEventListener("click", function () { decide(p.id, true); });
+    var decline = document.createElement("button");
+    decline.className = "btn";
+    decline.type = "button";
+    decline.textContent = "Decline";
+    decline.addEventListener("click", function () { decide(p.id, false); });
+    actions.append(approve, decline);
+
+    row.append(title, meta, actions);
+    return row;
   }
 
   async function refreshTray() {
-    try {
-      const res = await fetch("/api/proposals?limit=20", { headers: { Accept: "application/json" } });
-      if (!res.ok) throw new Error("tray unavailable");
-      const data = await res.json();
-      renderTray(data.proposals || [], data.pending_count || 0);
-      setConn("ok", "connected");
-    } catch (_) {
-      setConn("warn", "degraded");
-    }
-  }
-
-  function renderTray(items, pendingCount) {
-    if (!el.trayBody) return;
-    if (pendingCount > 0) {
-      el.trayCount.hidden = false;
-      el.trayCount.textContent = pendingCount;
-    } else {
-      el.trayCount.hidden = true;
-    }
-    const pend = items.filter((p) => p && p.status === "pending").slice(0, 5);
-    const done = items.filter((p) => p && p.status !== "pending").slice(0, 3);
-    if (!pend.length && !done.length) {
-      el.trayBody.innerHTML =
-        '<div class="empty">Nothing has run without you. Consequential actions appear here first — and undo in one tap.</div>';
+    var d = await getJSON("/api/proposals?limit=20");
+    if (!d) {
+      if (el.connText) el.connText.textContent = "offline";
+      if (el.connDot) el.connDot.className = "dot is-bad";
       return;
     }
-    el.trayBody.innerHTML =
-      pend.map((p) =>
-        '<div class="tray-item"><div class="tray-title">' + esc(p.title) + "</div>" +
-        '<div class="tray-meta">' + esc(p.kind || "") +
-        (p.cost_delta_yr ? " · $" + num(Math.abs(p.cost_delta_yr), 2) + "/yr" : "") + " · undoes in 1 tap</div>" +
-        '<div class="tray-actions"><button type="button" class="btn primary" data-act="approve" data-pid="' +
-        esc(p.id) + '">Approve</button>' +
-        '<button type="button" class="btn ghost" data-act="reject" data-pid="' +
-        esc(p.id) + '">Reject</button></div></div>').join("") +
-      done.map((p) =>
-        '<div class="tray-item decided"><div class="tray-title">' + esc(p.title) + "</div>" +
-        '<div class="tray-actions"><button type="button" class="btn ghost" data-act="undo" data-pid="' +
-        esc(p.id) + '">Undo</button></div></div>').join("");
-  }
+    if (el.connText) el.connText.textContent = "online";
+    if (el.connDot) el.connDot.className = "dot is-ok";
 
-  // ---------------------------------------------------------------- wiring
+    var all = Array.isArray(d.proposals) ? d.proposals : [];
+    var pending = all.filter(function (p) { return p && p.status === "pending"; });
+    trayPids = {};
+    pending.forEach(function (p) { trayPids[p.id] = p; });
 
-  document.querySelectorAll(".ask").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const path = btn.dataset.go;
-      let body = {};
-      try {
-        body = JSON.parse(btn.dataset.body || "{}");
-      } catch (_) {
-        body = {};
-      }
-      el.said.innerHTML = '<span class="q">&ldquo;</span>' + esc(btn.dataset.ask || "") + '<span class="q">&rdquo;</span>';
-      run(path, body, btn.textContent.trim());
-    });
-  });
-
-  // ============================================================= Earcons ===
-  let audioCtx = null;
-  function getAudioContext() {
-    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AC();
-    }
-    if (audioCtx && audioCtx.state === "suspended") {
-      audioCtx.resume().catch(() => {});
-    }
-    return audioCtx;
-  }
-
-  function playTone(freq, type, startTime, duration, gainVal, dest) {
-    try {
-      const osc = dest.context.createOscillator();
-      const gain = dest.context.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, startTime);
-      gain.gain.setValueAtTime(0.0001, startTime);
-      gain.gain.exponentialRampToValueAtTime(gainVal, startTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-      osc.connect(gain);
-      gain.connect(dest);
-      osc.start(startTime);
-      osc.stop(startTime + duration + 0.05);
-    } catch (_) {}
-  }
-
-  function playEarcon(name) {
-    try {
-      const ctx = getAudioContext();
-      if (!ctx) return;
-      const t = ctx.currentTime;
-      const master = ctx.createGain();
-      master.gain.setValueAtTime(0.18, t);
-      master.connect(ctx.destination);
-
-      if (name === "stage") {
-        playTone(523.25, "sine", t, 0.12, 0.22, master);
-        playTone(659.25, "sine", t + 0.09, 0.2, 0.25, master);
-      } else if (name === "approve") {
-        playTone(523.25, "sine", t, 0.22, 0.2, master);
-        playTone(659.25, "triangle", t + 0.05, 0.24, 0.22, master);
-        playTone(783.99, "sine", t + 0.1, 0.3, 0.26, master);
-        playTone(1046.50, "sine", t + 0.15, 0.4, 0.24, master);
-      } else if (name === "undo") {
-        playTone(783.99, "sine", t, 0.11, 0.22, master);
-        playTone(659.25, "sine", t + 0.08, 0.13, 0.2, master);
-        playTone(523.25, "sine", t + 0.16, 0.22, 0.18, master);
-      } else if (name === "block") {
-        playTone(329.63, "sawtooth", t, 0.14, 0.12, master);
-        playTone(261.63, "sine", t + 0.1, 0.22, 0.2, master);
-      }
-    } catch (_) {}
-  }
-
-  // ======================================================== Glass Receipt ===
-  function showReceipt(p) {
-    if (!el.receiptBackdrop || !p) return;
-    const exec = p.execution || {};
-    const code = exec.receipt_code || ("HEARTH-RC-" + (p.id || "000").toUpperCase());
-    if (el.receiptCode) el.receiptCode.textContent = code;
-    if (el.receiptTitle) el.receiptTitle.textContent = p.title || "Action Applied";
-    if (el.receiptUndoBtn) el.receiptUndoBtn.dataset.pid = p.id || "";
-
-    const kind = p.kind || "";
-    let html = "";
-    if (kind === "subscription_cancel" || kind === "cancel_subscription" || kind === "downgrade_subscription") {
-      const saveYr = exec.savings_yr || Math.abs(p.cost_delta_yr || 0);
-      const serv = exec.service_name || p.title;
-      const portal = exec.portal_url || "";
-      const phone = exec.support_phone || "";
-      html =
-        '<div class="receipt-row"><span class="receipt-rk">Service</span><span class="receipt-rv">' + esc(serv) + '</span></div>' +
-        '<div class="receipt-row"><span class="receipt-rk">Annual Household Savings</span><span class="receipt-rv highlight num">+$' + num(saveYr, 2) + '/yr</span></div>' +
-        (portal ? '<div class="receipt-row"><span class="receipt-rk">Provider Cancellation Portal</span><a class="receipt-rv link" href="' + esc(portal) + '" target="_blank" rel="noopener">Open ' + esc(portal.replace(/^https?:\/\//, '')) + ' &rarr;</a></div>' : '') +
-        (phone ? '<div class="receipt-row"><span class="receipt-rk">Concierge Phone Assist</span><span class="receipt-rv num mono">' + esc(phone) + '</span></div>' : '') +
-        '<div class="receipt-row"><span class="receipt-rk">Human Reversibility</span><span class="receipt-rv">100% Guaranteed reversible before billing cycle</span></div>';
-    } else if (kind === "commerce_order") {
-      const tot = exec.final_total || Math.abs(p.cost_delta_yr || 0);
-      const sav = exec.savings || 0;
-      const items = exec.items || [];
-      const sched = exec.delivery_schedule?.slot_name || "Amazon Prime Dedicated Box (Tuesday)";
-      html =
-        '<div class="receipt-row"><span class="receipt-rk">Delivery Window</span><span class="receipt-rv">' + esc(sched) + '</span></div>' +
-        '<div class="receipt-row"><span class="receipt-rk">Replenishment Total</span><span class="receipt-rv highlight num">$' + num(tot, 2) + '</span></div>' +
-        (sav > 0 ? '<div class="receipt-row"><span class="receipt-rk">Subscribe & Save Discount (15%)</span><span class="receipt-rv highlight num">-$' + num(sav, 2) + '</span></div>' : '') +
-        (items.length ? '<div class="receipt-items-list">' + items.map(it => '<div class="receipt-item-line"><span>' + esc(it.name || it.item_id) + '</span><span class="num mono">$' + num((it.unit_price ?? it.price ?? 0) * (it.quantity || 1), 2) + '</span></div>').join('') + '</div>' : '') +
-        '<div class="receipt-row"><span class="receipt-rk">Human Reversibility</span><span class="receipt-rv">Reversible in 1 tap prior to fulfillment dispatch</span></div>';
+    if (el.trayCount) el.trayCount.textContent = String(d.pending_count != null ? d.pending_count : pending.length);
+    if (!el.trayBody) return;
+    var shown = pending.slice(0, 3);
+    var sig = shown.map(function (p) { return p.id; }).join("|");
+    if (sig === lastTraySig) { paintGlance(d); return; }
+    lastTraySig = sig;
+    el.trayBody.innerHTML = "";
+    if (!pending.length) {
+      var empty = document.createElement("div");
+      empty.className = "tray-empty";
+      empty.textContent = "All clear. When Hearth prepares something, it waits here with the exact cost — one tap to apply, undo any time.";
+      el.trayBody.appendChild(empty);
     } else {
-      html =
-        '<div class="receipt-row"><span class="receipt-rk">Action Verdict</span><span class="receipt-rv">' + esc(exec.note || "Executed successfully") + '</span></div>' +
-        (p.cost_delta_yr ? '<div class="receipt-row"><span class="receipt-rk">Financial Impact</span><span class="receipt-rv highlight num">$' + num(Math.abs(p.cost_delta_yr), 2) + '/yr</span></div>' : '') +
-        '<div class="receipt-row"><span class="receipt-rk">Audit Seal</span><span class="receipt-rv mono">SHA-256 Merkle Ratchet</span></div>';
+      shown.forEach(function (p) { el.trayBody.appendChild(trayItem(p)); });
     }
-    if (el.receiptBody) el.receiptBody.innerHTML = html;
-    el.receiptBackdrop.hidden = false;
+    if (el.trayLead) el.trayLead.hidden = pending.length > 0;
+    paintGlance(d);
   }
 
-  function hideReceipt() {
-    if (el.receiptBackdrop) {
-      el.receiptBackdrop.hidden = true;
+  function paintGlance(tray) {
+    if (!el.statusBody) return;
+    el.statusBody.innerHTML = "";
+    function row(k, v) {
+      var div = document.createElement("div");
+      div.className = "status-row";
+      var a = document.createElement("span");
+      a.textContent = k;
+      var b = document.createElement("b");
+      b.textContent = v;
+      div.append(a, b);
+      el.statusBody.appendChild(div);
     }
-  }
-
-  if (el.receiptUndoBtn) {
-    el.receiptUndoBtn.addEventListener("click", async () => {
-      const pid = el.receiptUndoBtn.dataset.pid;
-      if (!pid || busy) return;
-      try {
-        const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/undo", {});
-        const ok = d && d.ok !== false;
-        playEarcon("undo");
-        toast(ok ? "Undone — reversed in the ledger." : "Undo failed.", !ok);
-        speak(ok ? "Undone. Action reversed." : "Undo failed.");
-        hideReceipt();
-        await refreshTray();
-      } catch (err) {
-        toast("Undo failed.", true);
-      }
-    });
-  }
-  if (el.receiptCloseBtn) el.receiptCloseBtn.addEventListener("click", hideReceipt);
-  if (el.receiptDoneBtn) el.receiptDoneBtn.addEventListener("click", hideReceipt);
-  if (el.receiptBackdrop) {
-    el.receiptBackdrop.addEventListener("click", (e) => {
-      if (e.target === el.receiptBackdrop) hideReceipt();
-    });
-  }
-
-  /* Staged-card buttons rendered inside replies (e.g. renewals "Stage" row). */
-  el.response.addEventListener("click", async (e) => {
-    const st = e.target && e.target.closest ? e.target.closest("[data-sub]") : null;
-    if (!st || busy) return;
-    try {
-      const data = await call("/api/renewals/stage", { id: st.dataset.sub });
-      playEarcon("stage");
-      toast(data.message || "Staged in the tray.");
-      speak("Staged. Approve it in the tray when ready — nothing is cancelled yet.");
-      await refreshTray();
-    } catch (err) {
-      playEarcon("block");
-      toast("Could not stage that.", true);
+    if (el.vDraw && el.vDraw.textContent !== "--") {
+      row("Drawing now", el.vDraw.textContent + " kW" + (el.vSolar && el.vSolar.dataset.kw ? " · solar " + el.vSolar.dataset.kw + " kW" : ""));
     }
-  });
-
-  /* Approval tray decisions (Approve / Reject / Undo) live on the Echo surface. */
-  if (el.trayBody) {
-    el.trayBody.addEventListener("click", async (e) => {
-      const b = e.target && e.target.closest ? e.target.closest("[data-act]") : null;
-      if (!b || busy) return;
-      const pid = b.dataset.pid;
-      const act = b.dataset.act;
-      b.disabled = true;
-      try {
-        if (act === "undo") {
-          const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/undo", {});
-          const ok = d && d.ok !== false;
-          playEarcon("undo");
-          hideReceipt();
-          toast(ok ? "Undone — reversed in the ledger." : "Undo failed.", !ok);
-          speak(ok ? "Undone." : "Undo failed.");
-        } else {
-          const d = await call("/api/proposals/" + encodeURIComponent(pid) + "/decide",
-            { approved: act === "approve" });
-          const ok = d && d.ok !== false;
-          if (act === "approve") {
-            playEarcon("approve");
-            if (ok && d) showReceipt(d);
-          } else {
-            playEarcon("undo");
-          }
-          toast(ok ? "Sealed in the ledger." : "That did not go through.", !ok);
-          speak(ok ? (act === "approve" ? "Approved. Receipt sealed." : "Rejected.") : "That did not go through.");
-        }
-        await refreshTray();
-        if (act === "approve" || act === "reject") {
-          const sealed = el.trayBody.querySelector(".tray-item.decided");
-          if (sealed) sealed.classList.add("sealed");
-        }
-      } catch (err) {
-        playEarcon("block");
-        toast("That did not go through.", true);
-        b.disabled = false;
-      }
-    });
+    row("Waiting for your OK", String((tray && (tray.pending_count != null ? tray.pending_count : (tray.proposals || []).length)) || 0));
   }
 
-  document.querySelectorAll(".chip[data-mode]").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      displayMode = chip.dataset.mode;
-      document.body.dataset.display = displayMode;
-      document.querySelectorAll(".chip[data-mode]").forEach((c) =>
-        c.setAttribute("aria-pressed", String(c.dataset.mode === displayMode))
-      );
-      toast("Display mode: " + displayMode);
-    });
-  });
-
-  const personaBtn = document.querySelector("#personaToggleBtn");
-  if (personaBtn) {
-    async function syncPersona() {
-      try {
-        const r = await fetch("/api/persona");
-        if (r.ok) {
-          const d = await r.json();
-          const pid = d.active_persona?.id || "admin";
-          const isChild = pid === "child" || pid === "leo";
-          personaBtn.dataset.persona = isChild ? "child" : "admin";
-          personaBtn.setAttribute("aria-pressed", String(isChild));
-          personaBtn.textContent = isChild ? "🧒 Leo (Child)" : "👤 Alex (Adult)";
-        }
-      } catch (_) {}
-    }
-    syncPersona();
-
-    personaBtn.addEventListener("click", async () => {
-      const cur = personaBtn.dataset.persona || "admin";
-      const next = cur === "admin" ? "child" : "admin";
-      try {
-        const res = await fetch("/api/persona", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: next }),
+  async function decide(pid, approved) {
+    if (!pid) return;
+    var res = await postJSON("/api/proposals/" + encodeURIComponent(pid) + "/decide", { approved: !!approved });
+    if (!res.ok) {
+      var dd = res.data || {};
+      if (res.status === 403 || dd.blocked) {
+        setAnswer({
+          kicker: "Blocked for safety",
+          verdict: "Approving money moves is a grown-up job",
+          sub: "Nothing was executed. The plan stays in the waiting list for Alex.",
+          tone: "bad",
+          lines: [],
+          trust: [{ icon: "shield", text: "kept Leo safe", tone: "bad" }],
         });
-        if (res.ok) {
-          const isChild = next === "child";
-          personaBtn.dataset.persona = next;
-          personaBtn.setAttribute("aria-pressed", String(isChild));
-          personaBtn.textContent = isChild ? "🧒 Leo (Child)" : "👤 Alex (Adult)";
-          if (isChild) {
-            playEarcon("block");
-            toast("Active: Leo (Child) — child guardrail engaged", false);
-            speak("Switched to Leo persona. Financial orders and unlocks are restricted.");
-            el.said.innerHTML = '<span class="q">&ldquo;</span>Leo: buy me Robux<span class="q">&rdquo;</span>';
-            el.response.innerHTML =
-              verdictBanner("🛡️", "CHILD SAFETY GUARDRAIL", "BLOCKED", "bad") +
-              '<div class="reply"><strong>🛡️ Leo (9) is blocked from purchasing or unlocking by architectural design, not prompt.</strong><br/>' +
-              'Child safety contract: orders, subscription cancellations, and perimeter doors are hard-refused at the AST gateway layer. Zero proposals staged.</div>';
-          } else {
-            playEarcon("approve");
-            toast("Active: Alex (Adult) — full authorization", false);
-            speak("Switched to adult profile. Full household authorization enabled.");
-            el.said.innerHTML = '<span class="q">&ldquo;</span>Alexa, ask Hearth to save me $800 on renewals<span class="q">&rdquo;</span>';
-            el.response.innerHTML =
-              '<div class="reply">Ask for anything above, or tap the microphone. Nothing runs without your approval — and every approval undoes in one tap.</div>';
-          }
-        }
-      } catch (err) {
-        toast("Could not switch persona", true);
+      } else {
+        toast("Couldn't do that one: " + (dd.error || res.status));
       }
-    });
-  }
-
-  // --------------------------------------------------- interactive hero tiles
-  const lockTile = document.getElementById("heroLockTile");
-  if (lockTile) {
-    lockTile.addEventListener("click", async () => {
-      if (busy) return;
-      const curLocked = (el.heroLock.textContent || "").trim().toLowerCase() === "locked";
-      try {
-        if (curLocked) {
-          const res = await call("/api/home/lock", { locked: false });
-          if (res.approval_required) {
-            playEarcon("stage");
-            toast("Front door unlock proposal staged in tray for human approval.");
-            speak("Front door unlock staged in the approval tray.");
-            await refreshTray();
-          }
-        } else {
-          const res = await call("/api/home/lock", { locked: true });
-          if (res.ok) {
-            playEarcon("approve");
-            toast("Front door locked and secured.");
-            speak("Front door locked.");
-            await refreshAmbient();
-          }
-        }
-      } catch (err) {
-        playEarcon("block");
-        toast("Lock action restricted.", true);
-      }
-    });
-  }
-
-  const toggleClimate = async () => {
-    if (busy) return;
-    const curText = el.heroTarget.textContent || "";
-    const isComfort = curText.includes("72") || curText.includes("22");
-    const nextTarget = isComfort ? 20.0 : 22.2;
-    const nextMode = isComfort ? "eco" : "comfort";
-    try {
-      await call("/api/home/device", {
-        room: "living_room",
-        device: "climate",
-        state: { target_c: nextTarget, mode: nextMode }
-      });
-      playEarcon("approve");
-      const fVal = Math.round(nextTarget * 9 / 5 + 32);
-      toast("Living room set to " + fVal + "°F (" + nextMode.toUpperCase() + ")");
-      speak("Thermostat adjusted to " + fVal + " degrees.");
-      await refreshAmbient();
-    } catch (_) {
-      toast("Climate adjustment unavailable.", true);
+      return;
     }
-  };
-  const targetRow = document.getElementById("heroTargetRow");
-  const tempRing = document.getElementById("heroTempRing");
-  if (targetRow) targetRow.addEventListener("click", toggleClimate);
-  if (tempRing) tempRing.addEventListener("click", toggleClimate);
-
-  const mPantry = document.getElementById("mPantry");
-  if (mPantry) {
-    mPantry.addEventListener("click", () => {
-      const btn = document.querySelector("button[data-go='/api/commerce/autopilot-checkout']");
-      if (btn) btn.click();
-    });
+    var prop = (res.data && (res.data.proposal || res.data.execution ? res.data.proposal || res.data : res.data)) || {};
+    if (approved) {
+      var led = await newestLedgerReceipt();
+      openReceipt(prop, led);
+    } else {
+      toast("Declined — nothing moved, nothing charged.");
+    }
+    refreshTray();
+    refreshTicker();
   }
 
-  const mSolar = document.getElementById("mSolar");
-  if (mSolar) {
-    mSolar.addEventListener("click", () => {
-      const btn = document.querySelector("button[data-go='/api/swarm/grid']");
-      if (btn) btn.click();
-    });
+  /* ------------------------------------------------------------ receipt sheet */
+  var receiptPid = null;
+  async function newestLedgerReceipt() {
+    var d = await getJSON("/api/receipts?limit=10");
+    var rs = (d && d.receipts) || [];
+    var i;
+    for (i = 0; i < rs.length; i++) {
+      if (rs[i].kind === "approval_executed" || rs[i].kind === "order_staged" || rs[i].kind === "tool_applied") return rs[i];
+    }
+    return rs[0] || null;
+  }
+  function openReceipt(prop, ledger) {
+    prop = prop || {};
+    var ex = prop.execution || {};
+    receiptPid = prop.id || null;
+    if (el.receiptTitle) el.receiptTitle.textContent = "Receipt";
+    if (el.receiptSub) el.receiptSub.textContent = String(prop.title || "Household action applied").replace(/_/g, " ");
+    if (el.receiptCode) el.receiptCode.textContent = ex.receipt_code || (ledger && ledger.receipt_id) || "—";
+    if (el.receiptBody) {
+      el.receiptBody.innerHTML = "";
+      function row(k, v) {
+        var div = document.createElement("div");
+        div.className = "status-row";
+        var a = document.createElement("span");
+        a.textContent = k;
+        var b = document.createElement("b");
+        b.textContent = v;
+        div.append(a, b);
+        el.receiptBody.appendChild(div);
+      }
+      var delta = Number(prop.cost_delta_yr);
+      if (isFinite(delta) && delta < 0) row("You save", "+" + usd(Math.abs(delta)) + "/yr");
+      else if (isFinite(delta) && delta > 0) row("Extra cost", usd(delta) + "/yr");
+      var spent = ledger && ledger.money ? Number(ledger.money.spent_usd) : 0;
+      if (isFinite(spent) && spent > 0) row("Paid", usd(spent));
+      if (ex.applied) row("Done", "applied exactly once");
+      if (ex.at || prop.decided_at) row("Done at", timeLabel(ex.at || prop.decided_at) || "now");
+      row("Undo", ex.reversal ? "straight back" : "one tap, any time");
+      row("Verified", ledger && ledger.receipt_hash ? shortHash(ledger.receipt_hash, 14) + " · hash-chained" : "written to the ledger");
+    }
+    if (el.receiptUndoBtn) el.receiptUndoBtn.hidden = !receiptPid;
+    if (el.receiptBackdrop) el.receiptBackdrop.hidden = false;
+  }
+  function closeReceipt() { if (el.receiptBackdrop) el.receiptBackdrop.hidden = true; }
+
+  el.receiptDoneBtn && el.receiptDoneBtn.addEventListener("click", closeReceipt);
+  el.receiptCloseBtn && el.receiptCloseBtn.addEventListener("click", closeReceipt);
+  el.receiptBackdrop && el.receiptBackdrop.addEventListener("click", function (e) {
+    if (e.target === el.receiptBackdrop) closeReceipt();
+  });
+  el.receiptUndoBtn && el.receiptUndoBtn.addEventListener("click", async function () {
+    if (!receiptPid) return;
+    var res = await postJSON("/api/proposals/" + encodeURIComponent(receiptPid) + "/undo", {});
+    if (res.ok) {
+      toast("Undone — the reversal is in the ledger too.");
+      closeReceipt();
+      refreshTray();
+      refreshTicker();
+    } else {
+      toast("Undo failed: " + ((res.data && res.data.error) || res.status));
+    }
+  });
+
+  /* -------------------------------------------------------------- ambient */
+  var ambientBusy = false;
+  async function refreshAmbient() {
+    if (ambientBusy) return;
+    ambientBusy = true;
+    var results = await Promise.all([getJSON("/api/home"), getJSON("/api/commerce/depletion")]);
+    ambientBusy = false;
+    var home = results[0], dep = results[1];
+
+    if (home) {
+      var climate = (home.living_room && home.living_room.climate) || {};
+      var f = cToF(climate.current_c);
+      if (el.vTemp) el.vTemp.textContent = f == null ? "--" : num(f, 0);
+      if (el.vClimate) {
+        var bits = [];
+        if (climate.mode) bits.push(String(climate.mode).replace(/_/g, " "));
+        var tgt = cToF(climate.target_c);
+        if (tgt != null) bits.push("heading to " + num(tgt, 0) + "°");
+        if (climate.fan && climate.fan !== climate.mode) bits.push(String(climate.fan).replace(/_/g, " "));
+        el.vClimate.textContent = bits.join(" · ") || "holding steady";
+      }
+      var energy = home.energy || {};
+      if (el.vDraw) el.vDraw.textContent = num(energy.current_draw_kw, 1);
+      if (el.vSolar) {
+        var solar = Number(energy.solar_generation_kw);
+        el.vSolar.dataset.kw = isFinite(solar) ? solar.toFixed(1) : "";
+        el.vSolar.textContent = isFinite(solar) && solar > 0.05
+          ? solar.toFixed(1) + " kW solar" + (energy.eco_score != null ? " · eco " + Math.round(energy.eco_score) : "")
+          : "grid only" + (energy.eco_score != null ? " · eco " + Math.round(energy.eco_score) : "");
+      }
+      var lock = home.entryway && home.entryway.lock && home.entryway.lock.front_door;
+      if (el.vLock) {
+        el.vLock.textContent = lock === "locked" ? "Locked" : lock ? "Unlocked" : "Unknown";
+        el.vLock.className = lock === "locked" ? "is-ok" : lock ? "is-bad" : "";
+      }
+      if (el.vLights) {
+        var lights = (home.living_room && home.living_room.lights) || {};
+        var on = Object.keys(lights).filter(function (k) { return lights[k] === true; }).length;
+        el.vLights.textContent = on ? on + (on === 1 ? " light on" : " lights on") : "lights off";
+      }
+      if (el.sceneLine) {
+        var scene = String(home.active_scene || "").replace(/[-_]+/g, " ").trim();
+        el.sceneLine.textContent = scene && scene !== "none"
+          ? scene.charAt(0).toUpperCase() + scene.slice(1)
+          : "All quiet";
+      }
+    }
+
+    if (dep) {
+      var items = Array.isArray(dep) ? dep : (dep.forecast || dep.items || dep.depletion || dep.pantry || []);
+      var low = null;
+      (Array.isArray(items) ? items : []).forEach(function (it) {
+        if (!it || typeof it !== "object") return;
+        var days = Number(it.days_until_empty != null ? it.days_until_empty : it.days_left);
+        if (!isFinite(days)) return;
+        if (!low || days < low.days) low = { days: days, name: it.name || it.item || "supply" };
+      });
+      if (el.vPantry && el.vPantryName) {
+        if (low) {
+          var days = Math.max(0, Math.round(low.days));
+          var pname = String(low.name);
+          el.vPantryName.textContent = pname.length > 28 ? pname.slice(0, 27).trim() + "…" : pname;
+          el.vPantry.textContent = days + (days === 1 ? " day left" : " days left");
+        } else {
+          el.vPantryName.textContent = "Everything stocked";
+          el.vPantry.textContent = "";
+        }
+      }
+    }
+    paintGlance({ pending_count: Object.keys(trayPids).length });
   }
 
-  const mEnergy = document.getElementById("mEnergy");
-  if (mEnergy) {
-    mEnergy.addEventListener("click", () => {
-      const btn = document.querySelector("button[data-go='/api/parliament/deliberate']");
-      if (btn) btn.click();
-    });
+  /* --------------------------------------------------------- receipts stream */
+  function moneyText(m) {
+    m = m || {};
+    if (m.saved_usd) return { t: "+" + usd(m.saved_usd) + " saved", good: true };
+    if (m.earned_usd) return { t: "+" + usd(m.earned_usd), good: true };
+    if (m.spent_usd) return { t: "−" + usd(m.spent_usd), good: false };
+    return null;
   }
 
+  async function refreshTicker() {
+    var d = await getJSON("/api/receipts?limit=4");
+    if (!d || !d.ok) return;
+    var receipts = Array.isArray(d.receipts) ? d.receipts : [];
+    if (el.ticker) {
+      el.ticker.innerHTML = "";
+      if (!receipts.length) {
+        var empty = document.createElement("span");
+        empty.className = "tick is-empty";
+        empty.textContent = "No receipts yet — the moment something happens, its receipt lands here.";
+        el.ticker.appendChild(empty);
+      }
+      receipts.slice(0, 4).forEach(function (r) {
+        var m = moneyText(r.money);
+        var chip = document.createElement("span");
+        chip.className = "tick";
+        chip.appendChild(icon(m && m.good ? "check" : "receipt"));
+        if (m) {
+          var b = document.createElement("b");
+          b.textContent = m.t;
+          if (!m.good) b.className = "is-quiet";
+          chip.appendChild(b);
+        }
+        var label = document.createElement("span");
+        label.textContent = String(r.claim || "").split("—")[0]
+          .replace(/^Approval executed:\s*approved\s*/i, "You approved ")
+          .replace(/^Approval executed:?\s*/i, "Approved ")
+          .replace(/^Tool applied:\s*/i, "")
+          .trim()
+          .slice(0, 40);
+        var code = document.createElement("code");
+        code.textContent = shortHash(r.receipt_id, 11);
+        chip.append(label, code);
+        el.ticker.appendChild(chip);
+      });
+    }
+    var led = d.ledger || {};
+    if (el.proofTotal) el.proofTotal.textContent = usd(led.verified_usd || 0);
+    if (el.proofSub) {
+      el.proofSub.textContent = (led.receipts_count || 0) + " receipts · spent " + usd(led.spent_usd || 0);
+    }
+    if (el.proofChainPill) {
+      el.proofChainPill.textContent = led.chain_valid ? "verified" : "broken";
+      el.proofChainPill.className = "pill" + (led.chain_valid ? " pill-ok" : " is-bad");
+    }
+  }
+
+  /* -------------------------------------------------------------- persona */
+  function paintPersona(id) {
+    if (!el.personaToggleBtn) return;
+    var child = id === "child";
+    el.personaToggleBtn.dataset.persona = child ? "child" : "admin";
+    if (el.personaLabel) el.personaLabel.textContent = child ? "Leo" : "Alex";
+    if (el.personaNote) el.personaNote.textContent = child ? "child" : "adult";
+    el.personaToggleBtn.title = child ? "Leo · kid-safe profile" : "Alex · adult profile";
+    el.personaToggleBtn.setAttribute("aria-pressed", child ? "true" : "false");
+  }
+  async function loadPersona() {
+    var d = await getJSON("/api/persona");
+    paintPersona((d && (d.id || d.persona)) || "admin");
+  }
+  el.personaToggleBtn && el.personaToggleBtn.addEventListener("click", async function () {
+    var cur = el.personaToggleBtn.dataset.persona === "child" ? "child" : "admin";
+    var next = cur === "child" ? "admin" : "child";
+    var res = await postJSON("/api/persona", { id: next });
+    if (res.ok) {
+      paintPersona(next);
+      toast(next === "child" ? "Leo's profile is on — kid-safe guardrails active." : "Alex is back on the profile.");
+      refreshTray();
+    } else {
+      toast("Couldn't switch profiles: " + ((res.data && res.data.error) || res.status));
+    }
+  });
+
+  /* ---------------------------------------------------------------- brain */
+  var BRAIN_PRESETS = [
+    { id: "local", name: "Built-in brain (works offline, zero setup)" },
+    { id: "openai", name: "OpenAI-compatible (OpenAI / gateway)" },
+    { id: "groq", name: "Groq" },
+    { id: "openrouter", name: "OpenRouter" },
+    { id: "ollama", name: "Ollama (on this network)" },
+    { id: "bedrock", name: "Amazon Bedrock (Claude / Nova)" },
+  ];
+  var brainPresets = BRAIN_PRESETS.slice();
+
+  function paintBrain(status) {
+    status = status || {};
+    var provider = String(status.provider || "local");
+    var name = String(status.provider_name || provider);
+    if (el.brainLabel) {
+      el.brainLabel.textContent = provider === "local" ? "Built-in brain" : name.split("(")[0].trim().slice(0, 22);
+    }
+    if (el.brainDot) el.brainDot.className = "dot" + (provider === "local" ? "" : " is-ok");
+    if (el.brainCallout) el.brainCallout.hidden = provider !== "local";
+  }
+  async function loadBrain() {
+    var st = await getJSON("/api/brain/connect");
+    paintBrain(st || {});
+    if (st && Array.isArray(st.presets) && st.presets.length) {
+      brainPresets = st.presets;
+    }
+    if (st && st.key_hint && el.keyStatus) {
+      el.keyStatus.textContent = "Connected · stored key " + st.key_hint;
+    }
+  }
+  function brainFields() {
+    var p = el.keyProvider ? el.keyProvider.value : "local";
+    var showBase = p === "ollama" || p === "openai";
+    var showKey = p === "openai" || p === "groq" || p === "openrouter";
+    var showAws = p === "bedrock";
+    if (el.keyBaseUrlField) el.keyBaseUrlField.hidden = !showBase;
+    if (el.keyApiKeyField) el.keyApiKeyField.hidden = !showKey;
+    if (el.keyRegionField) el.keyRegionField.hidden = !showAws;
+    if (el.keyAccessField) el.keyAccessField.hidden = !showAws;
+    if (el.keySecretField) el.keySecretField.hidden = !showAws;
+    if (el.keyModelField) el.keyModelField.hidden = !(p === "ollama" || p === "openai" || p === "groq" || p === "openrouter");
+    if (el.keyNote) {
+      el.keyNote.textContent = p === "bedrock"
+        ? "Bedrock uses your AWS credentials. They stay on this device with owner-only access and are never echoed back."
+        : p === "ollama"
+          ? "Ollama needs no key — just the address of the machine running it."
+          : p === "local"
+            ? "The built-in brain is zero setup and works offline. Connect one you own only if you want deeper reasoning."
+            : "The key stays on this device with owner-only access, is shown masked, and is never echoed by any part of Hearth.";
+    }
+  }
+  function openBrain() {
+    setSettings(false);
+    if (el.keyBackdrop) el.keyBackdrop.hidden = false;
+    if (el.keyProvider) {
+      el.keyProvider.innerHTML = "";
+      brainPresets.forEach(function (p) {
+        var o = document.createElement("option");
+        o.value = p.id;
+        o.textContent = p.name || p.id;
+        el.keyProvider.appendChild(o);
+      });
+      el.keyProvider.value = "openai";
+    }
+    brainFields();
+    if (el.keyStatus) { el.keyStatus.textContent = ""; el.keyStatus.className = "key-status"; }
+  }
+  function closeBrain() { if (el.keyBackdrop) el.keyBackdrop.hidden = true; }
+  function brainPayload(extra) {
+    var p = el.keyProvider ? el.keyProvider.value : "local";
+    var body = { provider: p, test: true };
+    var key = el.keyApiKey && el.keyApiKey.value.trim();
+    var base = el.keyBaseUrl && el.keyBaseUrl.value.trim();
+    var model = el.keyModel && el.keyModel.value.trim();
+    var region = el.keyRegion && el.keyRegion.value.trim();
+    var access = el.keyAccess && el.keyAccess.value.trim();
+    var secret = el.keySecret && el.keySecret.value.trim();
+    if (key) body.api_key = key;
+    if (base) body.base_url = base;
+    if (model) body.model = model;
+    if (region) body.region = region;
+    if (access) body.access_key = access;
+    if (secret) body.secret_key = secret;
+    return Object.assign(body, extra || {});
+  }
+
+  async function saveBrain() {
+    var res = await postJSON("/api/brain/connect", brainPayload());
+    var d = res.data || {};
+    if (!res.ok || d.ok === false) {
+      if (el.keyStatus) {
+        el.keyStatus.textContent = String(d.error || "Could not save (" + res.status + ")").slice(0, 160);
+        el.keyStatus.className = "key-status is-bad";
+      }
+      return;
+    }
+    if (el.keyApiKey) el.keyApiKey.value = "";
+    if (el.keySecret) el.keySecret.value = "";
+    if (el.keyAccess) el.keyAccess.value = "";
+    var test = d.test || {};
+    var testMsg = test.message || test.detail || test.error || (test.ok ? "endpoint answered" : "");
+    if (el.keyStatus) {
+      el.keyStatus.textContent = "Connected ✓ " + titleCase(d.provider || "") + (d.model ? " · " + d.model : "") + (testMsg ? " — " + String(testMsg).slice(0, 90) : "");
+      el.keyStatus.className = "key-status is-ok";
+    }
+    paintBrain(d);
+    toast("Connected — keys never leave this house.");
+  }
+
+  el.brainBtn && el.brainBtn.addEventListener("click", openBrain);
+  el.brainCallout && el.brainCallout.addEventListener("click", openBrain);
+  el.keyCloseBtn && el.keyCloseBtn.addEventListener("click", closeBrain);
+  el.keyBackdrop && el.keyBackdrop.addEventListener("click", function (e) {
+    if (e.target === el.keyBackdrop) closeBrain();
+  });
+  el.keyProvider && el.keyProvider.addEventListener("change", brainFields);
+  el.keySaveBtn && el.keySaveBtn.addEventListener("click", saveBrain);
+  el.keyTestBtn && el.keyTestBtn.addEventListener("click", saveBrain);
+  el.keyClearBtn && el.keyClearBtn.addEventListener("click", async function () {
+    var res = await postJSON("/api/brain/disconnect", {});
+    if (res.ok) {
+      paintBrain({ provider: "local", provider_name: "Built-in brain" });
+      if (el.keyStatus) { el.keyStatus.textContent = "Disconnected — the built-in brain is back."; el.keyStatus.className = "key-status"; }
+      toast("Disconnected. The built-in brain is back on duty.");
+    } else {
+      toast("Disconnect failed: " + ((res.data && res.data.error) || res.status));
+    }
+  });
+
+  /* ----------------------------------------------------------------- voice */
+  (function voice() {
+    if (!el.micBtn) return;
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var rec = null;
+    if (SR) {
+      rec = new SR();
+      rec.lang = "en-US";
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = function (e) {
+        var text = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : "";
+        stop();
+        if (text) ask(text);
+      };
+      rec.onerror = function () { stop(); toast("The mic stayed quiet — type it and I'll answer just as fast."); };
+      rec.onend = function () { stop(); };
+    }
+    var listening = false;
+    function stop() {
+      listening = false;
+      el.micBtn.classList.remove("is-live");
+      if (el.stage && el.stage.dataset.state === "ask" && el.voiceWave && el.voiceWave.dataset.fromMic) {
+        setIdle();
+      }
+      if (el.voiceWave) delete el.voiceWave.dataset.fromMic;
+    }
+    el.micBtn.addEventListener("click", function () {
+      if (listening) { if (rec) rec.stop(); stop(); return; }
+      if (rec) {
+        listening = true;
+        el.micBtn.classList.add("is-live");
+        if (el.stage) el.stage.dataset.state = "ask";
+        if (el.voiceWave) { el.voiceWave.hidden = false; el.voiceWave.dataset.fromMic = "1"; }
+        if (el.said) { el.said.hidden = false; el.said.textContent = "Listening…"; }
+        try { rec.start(); } catch (e) { stop(); }
+      } else {
+        listening = true;
+        el.micBtn.classList.add("is-live");
+        if (el.stage) el.stage.dataset.state = "ask";
+        if (el.voiceWave) { el.voiceWave.hidden = false; el.voiceWave.dataset.fromMic = "1"; }
+        if (el.said) { el.said.hidden = false; el.said.textContent = "Listening…"; }
+        setTimeout(function () {
+          stop();
+          toast("This browser can't listen — type it and I'll answer just as fast.");
+        }, 1700);
+      }
+    });
+  })();
+
+  /* ------------------------------------------------------------------ tour */
+  var TOUR_MODE = new URLSearchParams(location.search).has("tour");
+  var TOUR_CAPTIONS = [
+    "Ask anything. Hearth answers with the plan, the price, and the proof.",
+    "Behind every answer: 50+ real abilities, wired to the house.",
+    "Money moves only after your one-tap approval — and it is reversible.",
+    "Even a refusal gets written down, in plain language.",
+    "In the cockpit you can teach Hearth a brand-new skill, live.",
+    "Hearth — the house that runs itself, with receipts.",
+  ];
+  var tourIdx = 0;
+  function tourNext() {
+    if (!TOUR_MODE || !el.tourCap || (el.tourbar && el.tourbar.hidden)) return;
+    el.tourCap.textContent = TOUR_CAPTIONS[Math.min(tourIdx, TOUR_CAPTIONS.length - 1)] || "";
+    tourIdx += 1;
+  }
+  if (TOUR_MODE && el.splash) el.splash.hidden = false;
+  el.splashStart && el.splashStart.addEventListener("click", function () {
+    if (el.splash) el.splash.hidden = true;
+    if (el.tourbar) el.tourbar.hidden = false;
+    tourNext();
+  });
+
+  /* ------------------------------------------------------------------ misc */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") {
+      setIdle();
+      closeReceipt();
+      closeBrain();
+      setSettings(false);
+    }
+  });
+  el.stage && el.stage.addEventListener("click", function (e) {
+    if (e.target.closest("button, a, input, select, textarea, label")) return;
+    if (el.stage.dataset.state === "answer") setIdle();
+  });
+
+  /* ------------------------------------------------------------------ boot */
   tickClock();
-  setInterval(tickClock, 15000);
-  setupMic();
-  wireBrain();
-  refreshBrain();
+  setInterval(tickClock, 10000);
+  paintModes();
+  setSettings(false);
+  setExtras(false);
+  setIdle();
+  loadPersona();
+  loadBrain();
   refreshAmbient();
   refreshTray();
-  setInterval(() => { refreshAmbient(); refreshTray(); }, 20000);
+  refreshTicker();
+  setInterval(refreshAmbient, 15000);
+  setInterval(function () { refreshTray(); }, 12000);
+  setInterval(refreshTicker, 20000);
 
-  /* Atmosphere last: it is decoration and must never delay data. */
-  initMotes();
-  springTilt();
-
-  /* ---------------------------------------------------------- guided tour
-   * ?tour=1 drives the hero flow end-to-end with captions, so a recorded
-   * take needs no timing skill: audit -> stage -> approve -> undo ->
-   * fix groceries -> approve -> undo. Every step is a real API call. */
-  /* Money count-up: verdict figures tick like a slot machine. Runs on any
-   * verdict banner whose value starts with +$ or $. Pure presentation. */
-  function tickMoney() {
-    el.response.querySelectorAll(".verdict .conf").forEach((node) => {
-      const m = (node.textContent || "").match(/^\+?\$([\d,]+\.\d{2})/);
-      if (!m || node.dataset.ticked) return;
-      node.dataset.ticked = "1";
-      const target = parseFloat(m[1].replace(/,/g, ""));
-      const prefix = node.textContent.trim().startsWith("+") ? "+$" : "$";
-      const suffix = node.textContent.slice(node.textContent.indexOf(m[1]) + m[1].length);
-      const t0 = performance.now();
-      const step = (t) => {
-        const k = Math.min(1, (t - t0) / 1400);
-        const eased = 1 - Math.pow(1 - k, 3);
-        node.textContent = prefix +
-          (target * eased).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
-          suffix;
-        if (k < 1) requestAnimationFrame(step);
-      };
-      requestAnimationFrame(step);
-    });
-  }
-
-  async function runTour() {
-    const capEl = document.querySelector("#tourCap");
-    const bar = document.querySelector("#tourbar");
-    if (!capEl || !bar) return;
-    bar.hidden = false;
-    const splash = document.querySelector("#splash");
-    if (splash) {
-      splash.hidden = false;
-      await new Promise((r) => setTimeout(r, 3000));
-      splash.classList.add("out");
-      await new Promise((r) => setTimeout(r, 750));
-      splash.hidden = true;
-    }
-    const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-    const cap = (t) => { capEl.textContent = t; };
-    const firstSub = () => el.response.querySelector("[data-sub]");
-    const trayBtn = (act) => el.trayBody.querySelector('[data-act="' + act + '"]');
-    const waitForFree = async () => {
-      for (let i = 0; i < 40 && busy; i++) await wait(250);
-    };
-
-    await waitForFree();
-    cap("“Save me $800” — the audit");
-    const renewalsBtn = document.querySelector('.ask[data-go="/api/renewals"]');
-    if (renewalsBtn) renewalsBtn.click();
-    await wait(6500);
-    await waitForFree();
-
-    cap("Stage one savings card — nothing is cancelled yet");
-    const sub = firstSub();
-    if (sub) sub.click();
-    await wait(3000);
-    await waitForFree();
-
-    cap("One tap approves — a sealed receipt, not a silent charge");
-    const approve = trayBtn("approve");
-    if (approve) approve.click();
-    await wait(3500);
-    await waitForFree();
-
-    cap("One tap undoes everything");
-    const undo = trayBtn("undo");
-    if (undo) undo.click();
-    await wait(3500);
-    await waitForFree();
-
-    cap("“We are out of everything, fix groceries”");
-    const grocBtn = document.querySelector('.ask[data-go="/api/commerce/autopilot-checkout"]');
-    if (grocBtn) grocBtn.click();
-    await wait(7000);
-    await waitForFree();
-
-    cap("The cart is staged — 5 items, 15% saved, still nothing ordered");
-    const approve2 = trayBtn("approve");
-    if (approve2) approve2.click();
-    await wait(3500);
-    await waitForFree();
-
-    const undo2 = trayBtn("undo");
-    if (undo2) undo2.click();
-    await wait(3500);
-
-    cap("Tour complete — the surface is yours. Nothing runs without your tap.");
-  }
-
-  if (new URLSearchParams(location.search).get("tour") === "1") {
-    setTimeout(runTour, 1200);
-  }
 })();

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280, initial-scale=1" />
+<meta name="color-scheme" content="dark" />
+<title>Hearth — The Wire · a live MCP client</title>
+<link rel="stylesheet" href="/web2/css/wire.css" />
+</head>
+<body>
+
+<svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-flame" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5c1.4 2.7.5 4.3-.8 5.9-1.4 1.7-2.9 3.3-2.9 5.7a4.8 4.8 0 0 0 9.6.7c.2-1.9-.6-3.4-1.7-4.8-.7-.9-1.3-1.7-1.6-2.8-.7 1-1.3 2.1-1.3 3.5 0 1 .3 1.8.8 2.5"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="5.8"/><path d="M15.3 15.3l5.2 5.2"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12h14.2"/><path d="M13.2 6.4l5.5 5.6-5.5 5.6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.6l4.4 4.4L19 7.4"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l6.8 2.4v5.8c0 4.4-2.9 7.4-6.8 9.3-3.9-1.9-6.8-4.9-6.8-9.3V5.6L12 3.2z"/><path d="M9.2 11.8l2.1 2.1 3.8-4.2"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9.5l5.5 5.5 5.5-5.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 3.2L6.2 13h4.4l-.8 7.8L16.4 11h-4.4l.6-7.8z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.4 3.6h11.2v16.8l-1.9-1.3-1.9 1.3-1.9-1.3-1.9 1.3-1.9-1.3-1.7 1.3V3.6z"/><path d="M9.2 8.2h5.6M9.2 11.6h5.6"/></symbol>
+</svg>
+
+<div class="aurora" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="page">
+
+  <header class="top">
+    <div class="brand">
+      <span class="mark" aria-hidden="true"><svg class="ico"><use href="#i-flame"/></svg></span>
+      <span class="brand-text">
+        <b>Hearth</b>
+        <em>The Wire — the house talking the open standard, live</em>
+      </span>
+    </div>
+    <div class="top-right">
+      <span class="proto" id="protoPill"><i class="dot" id="protoDot"></i><span id="protoText">connecting…</span></span>
+      <a class="qlink" href="/echo">Echo surface</a>
+      <a class="qlink" href="/web2/index.html">Cockpit</a>
+    </div>
+  </header>
+
+  <main class="cols">
+
+    <section class="panel transcript-wrap">
+      <div class="p-head">
+        <h1>The conversation</h1>
+        <span class="p-note" id="wireCount">0 exchanges</span>
+      </div>
+      <div class="transcript" id="wireTranscript" aria-live="polite"></div>
+      <div class="p-foot" id="footNote">Connecting to the house…</div>
+    </section>
+
+    <aside class="panel tools-wrap">
+      <div class="p-head">
+        <h2>What the house can do</h2>
+        <span class="p-note" id="toolCount">—</span>
+      </div>
+      <label class="search">
+        <svg class="ico" aria-hidden="true"><use href="#i-search"/></svg>
+        <input id="wireSearch" type="search" placeholder="Search the abilities…" aria-label="Search abilities" />
+      </label>
+      <div class="tools" id="wireTools"></div>
+      <div class="call-box">
+        <div class="call-head">Call <b id="callName">an ability</b></div>
+        <textarea id="callArgs" spellcheck="false" aria-label="Arguments as JSON">{}</textarea>
+        <button class="send" id="callSend" type="button"><svg class="ico" aria-hidden="true"><use href="#i-send"/></svg><span>Send over the wire</span></button>
+      </div>
+    </aside>
+
+  </main>
+
+</div>
+
+<script src="/web2/js/wire.js"></script>
+</body>
+</html>

@@ -131,6 +131,9 @@ class TestWeb2ProductExperienceAssets:
         assert 'id="quickChips"' in html
         assert 'id="chimeBtn"' in html
         assert 'id="diagBox"' in html
-        assert 'Living Household Simulator' in html
+        # The scenario sandbox: consumer-renamed in the Ambient OS rebuild,
+        # same panel and same one-tap scenarios underneath.
+        assert 'id="simPanel"' in html
+        assert 'Test drive the house' in html
         assert 'data-scenario="energy_peak"' in html
         assert 'data-cmd="Surge solar' in html
