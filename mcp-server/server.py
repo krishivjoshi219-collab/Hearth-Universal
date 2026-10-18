@@ -2033,6 +2033,7 @@ async def api_forge_synthesize(request: Request):
     if not isinstance(body, dict):
         return JSONResponse({"ok": False, "error": "JSON object required"}, status_code=400)
     requirement = str(body.get("requirement", ""))[:400].strip()
+    repaired_from = str(body.get("repaired_from", "") or "")[:400].strip()
     if len(requirement) < 8:
         return JSONResponse(
             {"ok": False, "error": "Describe the household rule in a little more detail"},
@@ -2046,7 +2047,8 @@ async def api_forge_synthesize(request: Request):
     started = _time.time()
     # Synthesis runs exec/AST/smoke work; keep it off the event loop.
     result = await asyncio.to_thread(
-        meta_skill.meta_synthesizer.synthesize, requirement, ACTIVE_PERSONA
+        meta_skill.meta_synthesizer.synthesize, requirement, ACTIVE_PERSONA,
+        repaired_from or None,
     )
     if not result.get("ok"):
         return JSONResponse(result, status_code=422)

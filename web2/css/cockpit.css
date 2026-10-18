@@ -1152,3 +1152,108 @@ select.persona:focus,
   .forge-out { grid-template-columns: 1fr; }
   .forge-bar { flex-direction: column; }
 }
+
+/* ---------------------------------------------------------------------------
+   Forge Grand Tier: templates, Sentinel refusal + repair, tool card proof
+--------------------------------------------------------------------------- */
+
+.forge-templates { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+.forge-tpl {
+  appearance: none;
+  padding: 5px 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  background: var(--s2);
+  color: var(--t2);
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+}
+
+.forge-tpl:hover { color: var(--t1); border-color: oklch(82% 0.125 74 / 0.45); transform: translateY(-1px); }
+.forge-tpl.is-danger { color: oklch(80% 0.11 25); border-color: oklch(70% 0.155 18 / 0.4); }
+.forge-tpl.is-danger:hover { border-color: oklch(70% 0.155 18 / 0.65); }
+
+.forge-refuse {
+  margin: 2px 0 12px;
+  padding: 12px 14px;
+  border: 1px solid oklch(70% 0.155 18 / 0.45);
+  border-radius: var(--r-card);
+  background: linear-gradient(180deg, oklch(30% 0.06 18 / 0.25), transparent 70%);
+  animation: forgeRefuseIn 0.35s var(--ease);
+}
+
+.forge-refuse-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.forge-refuse-head strong { color: var(--t1); font-size: 13.5px; }
+
+.forge-refuse-gate {
+  padding: 3px 8px;
+  border: 1px solid oklch(70% 0.155 18 / 0.5);
+  border-radius: var(--r-pill);
+  color: var(--bad);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.forge-refuse-detail { margin: 6px 0 0; color: var(--t2); font-size: 12.5px; line-height: 1.45; }
+
+.forge-refuse-repair {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed oklch(70% 0.155 18 / 0.3);
+  animation: forgeRefuseIn 0.3s var(--ease);
+}
+
+.forge-refuse-label {
+  color: var(--t3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.forge-refuse-repair code {
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--s1);
+  color: var(--t1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.forge-repaired {
+  padding: 8px 10px;
+  border: 1px solid oklch(80% 0.125 163 / 0.4);
+  border-radius: 10px;
+  background: oklch(30% 0.05 163 / 0.18);
+  color: var(--ok);
+  font-size: 12.5px;
+  animation: forgeRefuseIn 0.35s var(--ease);
+}
+
+.forge-proof { color: var(--ok); font-family: var(--font-mono); font-size: 11px; }
+.forge-snip { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.forge-snip code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--t2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.forge-snip .btn { padding: 3px 9px; font-size: 10.5px; }
+
+@keyframes forgeRefuseIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}

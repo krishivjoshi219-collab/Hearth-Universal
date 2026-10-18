@@ -73,3 +73,45 @@ def test_forge_catalog_lists_the_tool(client, forged):
 def test_forge_rejects_vague_requests(client):
     res = client.post("/api/forge/synthesize", json={"requirement": "hi"})
     assert res.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Grand-tier: the refusal + repair chain. A privileged rule is blocked with a
+# plain-English reason and a suggested safe variant; the repaired rule then
+# compiles into a proposal-only tool that can never execute the action itself.
+# ---------------------------------------------------------------------------
+
+REFUSED_RULE = "Unlock the front door whenever the camera sees motion"
+REPAIRED_RULE = ("Notify me when the camera sees motion; unlock the front door "
+                 "only after my explicit approval")
+
+
+def test_forge_refuses_privileged_rule_with_suggested_repair(client):
+    res = client.post("/api/forge/synthesize", json={"requirement": REFUSED_RULE})
+    assert res.status_code == 422, res.text
+    data = res.json()
+    assert data["ok"] is False
+    assert data["blocked"] is True
+    assert data["gate"] == "sentinel"
+    assert data["repair_available"] is True
+    assert "approval" in data["suggested_repair"].lower()
+    assert data["audit_hash"]
+
+
+def test_forge_repair_mounts_a_human_gated_tool(client):
+    res = client.post("/api/forge/synthesize",
+                      json={"requirement": REPAIRED_RULE, "repaired_from": REFUSED_RULE})
+    assert res.status_code == 200, res.text
+    data = res.json()
+    assert data["ok"] is True
+    assert data.get("repaired") is True
+    assert data["intent"]["domain"] == "security"
+    assert "awaiting_human_approval" in data["code"]
+    inv = client.post("/api/forge/invoke", json={"tool": data["mcp_tool"], "params": {}})
+    body = inv.json()
+    assert body["ok"] is True
+    assert body["result"]["status"] == "awaiting_human_approval"
+    assert body["result"]["requires_human_approval"] is True
+    server._FORGED_TOOLS.pop(data["mcp_tool"], None)
+    with contextlib.suppress(Exception):
+        server.mcp.remove_tool(data["mcp_tool"])

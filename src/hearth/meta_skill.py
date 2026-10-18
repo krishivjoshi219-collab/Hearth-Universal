@@ -54,6 +54,7 @@ class SynthesizedSkill:
 # ---------------------------------------------------------------------------
 
 _DOMAINS = {
+    "security": ["door", "lock", "unlock", "security", "camera"],
     "ev": ["ev", "tesla", "car charge", "charging", "vehicle"],
     "hvac": ["hvac", "thermostat", "pre-cool", "precool", "ac ", "cool", "heat", "climate"],
     "greenhouse": ["greenhouse", "ventilation", "garden", "plants"],
@@ -64,6 +65,39 @@ _DOMAINS = {
 }
 
 _PRIVILEGED = ["door", "lock", "unlock", "security", "gate", "camera", "vault", "funds", "wire", "payment"]
+
+# A privileged rule is only synthesizable when it carries an explicit
+# human-confirmation clause ("notify me", "only after my approval", ...).
+_HUMAN_GATE_MARKERS = (
+    "approv", "confirm", "notify", "ask me", "with my", "only after",
+    "human", "permission", "explicit",
+)
+
+
+def _has_human_gate(low: str) -> bool:
+    return any(m in low for m in _HUMAN_GATE_MARKERS)
+
+
+def _repair_requirement(requirement: str) -> str:
+    """Rewrite an autonomous privileged rule into a human-gated safe variant.
+
+    'Unlock the front door whenever the camera sees motion'
+      -> 'Notify me when the camera sees motion; unlock the front door only
+          after my explicit approval'
+    """
+    r = str(requirement).strip().rstrip(".")
+    low = r.lower()
+    for w in (" whenever ", " when "):
+        if w in low:
+            i = low.index(w)
+            action = r[:i].strip()
+            trigger = r[i + len(w):].strip()
+            if action and trigger:
+                act = action[0].lower() + action[1:] if action[0].isupper() else action
+                return (f"Notify me {w.strip()} {trigger}; {act} only after my "
+                        f"explicit approval")
+    act = (r[0].lower() + r[1:]) if r else r
+    return f"Notify me first; {act} only after my explicit approval"
 
 
 def parse_intent(requirement: str) -> dict[str, Any]:
@@ -107,6 +141,13 @@ def infer_schema(intent: dict[str, Any], requirement: str) -> dict[str, Any]:
         base_props["target_kwh"] = {"type": "number", "description": "Charge energy kWh", "default": 8.0}
         base_props["max_price"] = {"type": "number", "description": "Max $/kWh", "default": 0.28}
         required = ["schedule_hour", "target_kwh"]
+    elif d == "security":
+        base_props["require_confirmation"] = {
+            "type": "boolean",
+            "description": "Require explicit human approval before acting",
+            "default": True,
+        }
+        required = ["schedule_hour", "require_confirmation"]
     elif d == "greenhouse":
         base_props["max_temp_c"] = {"type": "number", "description": "Vent above C", "default": 28.0}
         base_props["min_temp_c"] = {"type": "number", "description": "Close below C", "default": 18.0}
@@ -122,7 +163,17 @@ def infer_schema(intent: dict[str, Any], requirement: str) -> dict[str, Any]:
 def generate_code(intent: dict[str, Any], schema: dict[str, Any], requirement: str) -> tuple[str, str]:
     """Emit a real handler computing savings from TOU spread + params. Returns (code, formula)."""
     d = intent["domain"]
-    if d == "ev":
+    status = "scheduled"
+    extras = ""
+    if d == "security":
+        # Proposal-only by construction: the handler can never execute a
+        # physical action itself; it drafts one and parks it for approval.
+        body = ("hour = int(params.get('schedule_hour', 22));"
+                " action = params.get('note', 'security_action');"
+                " savings = 0.0")
+        status = "awaiting_human_approval"
+        extras = ", 'requires_human_approval': True, 'proposed_action': action"
+    elif d == "ev":
         body = ("kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14));"
                 " cap = float(params.get('max_price', 0.28));"
                 " peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28);"
@@ -139,18 +190,25 @@ def generate_code(intent: dict[str, Any], schema: dict[str, Any], requirement: s
                 " peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28);"
                 " savings = round(max(0.0, (0.52 - peak)) * 3.0 + (0.15 if params.get('eco_mode', True) else 0.0), 2)")
     safe_req = requirement.replace("'", "").replace('"', "").replace("\n", " ")[:120]
+    ret_line = (
+        "    return {'status': " + repr(status) + ", 'requirement': params.get('note', ''),"
+        " 'applied_hour': int(params.get('schedule_hour', 14)),"
+        " 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings)"
+        + extras + "}\n"
+    )
     code = (
         f"# Synthesized [{d}] for: {safe_req}\n"
         "def execute_plan(params):\n"
         "    params = dict(params or {})\n"
         f"    {body}\n"
-        "    return {'status': 'scheduled', 'requirement': params.get('note', ''),"
-        " 'applied_hour': int(params.get('schedule_hour', 14)),"
-        " 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings)}\n"
+        + ret_line +
         "def handle(action, params):\n"
         "    return {'executed_action': action, **execute_plan(params)}\n"
     )
     formula = f"domain={d}: " + body
+    if d == "security":
+        formula = ("domain=security: proposal-only toolkit; savings 0.0; "
+                   "requires explicit human approval")
     return code, formula
 
 
@@ -246,12 +304,39 @@ class MetaSkillSynthesizer:
             except Exception:
                 continue
 
-    def synthesize(self, requirement: str, author_persona: str = "Alex") -> dict[str, Any]:
+    def synthesize(self, requirement: str, author_persona: str = "Alex",
+                   repaired_from: str | None = None) -> dict[str, Any]:
         t_start = time.time()
+        low = str(requirement).lower()
         intent = parse_intent(requirement)
         skill_slug = re.sub(r"[^a-z0-9_]", "", requirement.lower().replace(" ", "_"))[:20] or "skill"
         skill_id = f"amzn1.ask.skill.hearth.custom.{skill_slug}_{uuid.uuid4().hex[:6]}"
         skill_name = f"Custom: {requirement[:35]}"
+
+        # Gate 0: non-adult personas may not synthesize privileged skills (defense in depth).
+        if intent["privileged"] and str(author_persona).strip().lower() in ("leo", "child", "kid", "minor"):
+            ev = audit.append("meta_skill_synthesizer", "synthesis_refused_child_profile",
+                {"requirement": requirement, "gate": "child_gate", "persona": author_persona})
+            return {"ok": False, "blocked": True, "gate": "child_gate",
+                    "error": "Synthesis blocked by Sentinel Safety: Child profile may not synthesize security skills",
+                    "reason": "Child profile may not synthesize security or payment skills",
+                    "detail": "Security and money tools are adult-gated by design.",
+                    "risk_tier": "tier-3", "repair_available": False,
+                    "audit_hash": ev.get("hash", "")}
+
+        # Gate 1: privileged intents require an explicit human-confirmation clause.
+        if intent["privileged"] and not _has_human_gate(low):
+            ev = audit.append("meta_skill_synthesizer", "synthesis_refused_privileged",
+                {"requirement": requirement, "gate": "sentinel", "persona": author_persona})
+            reason = "Physical security or money movement without human confirmation"
+            return {"ok": False, "blocked": True, "gate": "sentinel",
+                    "error": f"Synthesis blocked by Sentinel Safety: {reason}",
+                    "reason": reason,
+                    "detail": ("This rule asks Hearth to act on locks, doors, cameras, or funds "
+                               "on its own. Hearth never executes those without you."),
+                    "risk_tier": "tier-3",
+                    "suggested_repair": _repair_requirement(requirement),
+                    "repair_available": True, "audit_hash": ev.get("hash", "")}
 
         schema = infer_schema(intent, requirement)
         code_logic, formula = generate_code(intent, schema, requirement)
@@ -259,25 +344,33 @@ class MetaSkillSynthesizer:
         verdict = sentinel.judge(tool="workspace_write",
             args={"path": f"skills/{skill_slug}.py", "content": code_logic, "persona": author_persona})
         if verdict.decision == "deny":
-            audit.append("meta_skill_synthesizer", "synthesis_rejected_by_safety",
+            ev = audit.append("meta_skill_synthesizer", "synthesis_rejected_by_safety",
                 {"requirement": requirement, "reason": verdict.reason, "persona": author_persona})
-            return {"ok": False, "error": f"Synthesis blocked by Sentinel Safety: {verdict.reason}",
-                    "risk_tier": verdict.risk_tier}
-        # Privileged intents by non-adult -> deny even if sentinel allowed (defense in depth)
-        if intent["privileged"] and str(author_persona).strip().lower() in ("leo", "child", "kid", "minor"):
-            audit.append("meta_skill_synthesizer", "synthesis_rejected_by_safety",
-                {"requirement": requirement, "reason": "Child may not synthesize security skills", "persona": author_persona})
-            return {"ok": False, "error": "Synthesis blocked by Sentinel Safety: Child profile may not synthesize security skills",
-                    "risk_tier": "tier-3"}
+            return {"ok": False, "blocked": True, "gate": "sentinel",
+                    "error": f"Synthesis blocked by Sentinel Safety: {verdict.reason}",
+                    "reason": str(verdict.reason or "Sentinel safety denial"),
+                    "detail": "The generated handler tripped a safety pattern.",
+                    "risk_tier": verdict.risk_tier, "repair_available": False,
+                    "audit_hash": ev.get("hash", "")}
 
         ast_rep = ast_validate(code_logic)
         if not ast_rep.get("ok"):
-            audit.append("meta_skill_synthesizer", "synthesis_rejected_by_ast", {"reason": ast_rep})
-            return {"ok": False, "error": f"AST validation failed: {ast_rep.get('error')}", "risk_tier": "tier-3"}
+            ev = audit.append("meta_skill_synthesizer", "synthesis_rejected_by_ast", {"reason": ast_rep})
+            return {"ok": False, "blocked": True, "gate": "ast",
+                    "error": f"AST validation failed: {ast_rep.get('error')}",
+                    "reason": f"AST validation failed: {ast_rep.get('error')}",
+                    "detail": "The generated source did not pass static verification.",
+                    "risk_tier": "tier-3", "repair_available": False,
+                    "audit_hash": ev.get("hash", "")}
         smoke = sandbox_smoke(code_logic, schema)
         if not smoke.get("ok"):
-            audit.append("meta_skill_synthesizer", "synthesis_rejected_by_smoke", {"reason": smoke})
-            return {"ok": False, "error": f"Smoke test failed: {smoke.get('error')}", "risk_tier": "tier-3"}
+            ev = audit.append("meta_skill_synthesizer", "synthesis_rejected_by_smoke", {"reason": smoke})
+            return {"ok": False, "blocked": True, "gate": "smoke",
+                    "error": f"Smoke test failed: {smoke.get('error')}",
+                    "reason": f"Smoke test failed: {smoke.get('error')}",
+                    "detail": "The sandboxed handler did not run cleanly on sample inputs.",
+                    "risk_tier": "tier-3", "repair_available": False,
+                    "audit_hash": ev.get("hash", "")}
 
         caps = [f"{skill_slug}_dispatch", "temporal_scheduling", "energy_coordination", f"domain_{intent['domain']}"]
         tools = [f"custom_{skill_slug}_execute"]
@@ -292,13 +385,16 @@ class MetaSkillSynthesizer:
         self._skills[skill_id] = skill
         out_file = self.storage_dir / f"{skill_slug}.json"
         atomic.atomic_write_json(out_file, asdict(skill))
-        audit.append("meta_skill_synthesizer", "skill_synthesized_and_mounted",
+        ev = audit.append("meta_skill_synthesizer", "skill_synthesized_and_mounted",
             {"skill_id": skill_id, "name": skill_name, "tools": tools,
+             "repaired_from": repaired_from or "",
              "duration_ms": round((time.time() - t_start) * 1000, 1)})
         return {"ok": True, "skill_id": skill_id, "name": skill_name, "capabilities": caps,
                 "tools_exposed": tools, "status": "mounted_live",
                 "safety_audit": f"PASSED (Sentinel {verdict.risk_tier} + AST + smoke)",
-                "intent": intent, "savings_formula": formula}
+                "intent": intent, "savings_formula": formula,
+                "repaired": bool(repaired_from), "repaired_from": repaired_from or "",
+                "audit_hash": ev.get("hash", "")}
 
     def _mount_into_runtime(self, skill: SynthesizedSkill) -> None:
         safe_builtins = {"abs": abs, "min": min, "max": max, "round": round, "sum": sum, "len": len,

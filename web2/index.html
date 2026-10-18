@@ -111,7 +111,20 @@
                    aria-label="Household rule to compile into a tool"/>
             <button class="btn btn-primary" id="forgeGo" type="submit">⚒ Forge tool</button>
           </form>
+          <div class="forge-templates" id="forgeTemplates" aria-label="Rule templates — one click to try"></div>
           <div class="forge-steps" id="forgeSteps" aria-live="polite"></div>
+          <div class="forge-refuse" id="forgeRefuse" hidden aria-live="assertive">
+            <div class="forge-refuse-head">
+              <span class="forge-refuse-gate" id="forgeRefuseGate">SENTINEL</span>
+              <strong id="forgeRefuseReason"></strong>
+            </div>
+            <p class="forge-refuse-detail" id="forgeRefuseDetail"></p>
+            <div class="forge-refuse-repair" id="forgeRefuseRepair" hidden>
+              <span class="forge-refuse-label">Safe variant</span>
+              <code id="forgeRefuseSuggestion"></code>
+              <button class="btn btn-primary" id="forgeRepair" type="button">⚒ Repair intent</button>
+            </div>
+          </div>
           <div class="forge-out" id="forgeOut" hidden>
             <div class="forge-code-wrap">
               <div class="forge-code-head"><span>Generated tool source</span><code id="forgeToolName"></code></div>
@@ -120,6 +133,9 @@
             <div class="forge-side">
               <div class="forge-kv"><span>Safety</span><strong id="forgeSafety">–</strong></div>
               <div class="forge-kv"><span>Smoke test</span><strong id="forgeSmoke">–</strong></div>
+              <div class="forge-kv"><span>Audit chain</span><strong id="forgeProof" class="forge-proof">–</strong></div>
+              <div class="forge-kv"><span>MCP tool</span><span class="forge-snip"><code id="forgeSnip">–</code><button class="btn" id="forgeCopy" type="button">Copy</button></span></div>
+              <div class="forge-repaired" id="forgeRepaired" hidden>✓ Repaired &amp; mounted — human approval enforced by construction</div>
               <button class="btn btn-primary" id="forgeCall" type="button">▶ Call it now</button>
               <pre class="forge-result" id="forgeResult" tabindex="0" hidden></pre>
             </div>
