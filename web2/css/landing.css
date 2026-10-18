@@ -698,7 +698,7 @@ img, svg { display: block; }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
 }
 
 .stat {
@@ -818,6 +818,61 @@ img, svg { display: block; }
 
 .tile-proof strong { color: var(--amber); font-weight: 700; }
 
+/* the forge — the one wide card: when no tool exists, Hearth writes one */
+.forge-banner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.9fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: center;
+  margin-top: 20px;
+  border-radius: var(--r-l);
+  border: 1px solid var(--amber-line);
+  background:
+    radial-gradient(90% 130% at 8% 0%, rgba(240, 168, 92, 0.1), transparent 60%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  box-shadow: 0 24px 70px rgba(240, 168, 92, 0.1);
+  padding: clamp(24px, 3.4vw, 36px);
+}
+
+.forge-tag {
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+
+.forge-banner h3 {
+  font-size: clamp(21px, 2.6vw, 28px);
+  letter-spacing: -0.02em;
+  font-weight: 730;
+  margin-bottom: 12px;
+}
+
+.forge-banner p { color: var(--t2); font-size: 15.5px; }
+
+.forge-side { display: grid; gap: 10px; }
+
+.forge-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--r-s);
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.forge-step .num {
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+}
+
 .center-cta { display: flex; justify-content: center; margin-top: 44px; }
 
 /* ---------------------------------------------------- conversation strip */
@@ -929,6 +984,11 @@ img, svg { display: block; }
 .step h3 { font-size: 18.5px; font-weight: 700; margin-bottom: 10px; }
 .step p { color: var(--t2); font-size: 15.5px; }
 
+/* promise cards carry their guarantees inline */
+.step-points { margin-top: 18px; gap: 9px; }
+.step-points li { font-size: 13.5px; line-height: 1.5; padding-left: 24px; }
+.step-points li::before { font-size: 12px; top: 1px; }
+
 /* --------------------------------------------------------------- safety */
 
 .trust-grid {
@@ -997,6 +1057,18 @@ img, svg { display: block; }
 .story-block strong { color: var(--t1); }
 
 .story-note { font-size: 13.5px; color: var(--t3); margin: 18px 0 20px; }
+
+/* the misbehave story, full-width under the promise cards */
+.story-wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: center;
+  margin-top: 20px;
+}
+
+.story-side { display: grid; gap: 4px; justify-items: start; }
+.story-side .story-note { margin: 0 0 12px; }
 
 /* ---------------------------------------------------------------- built */
 
@@ -1263,8 +1335,11 @@ img, svg { display: block; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .stat { border-left: 0; border-top: 1px solid var(--line); }
   .stat:nth-child(-n + 2) { border-top: 0; }
+  .stats-grid .stat:last-child { grid-column: 1 / -1; }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
   .trust-grid { grid-template-columns: 1fr; }
+  .forge-banner { grid-template-columns: 1fr; }
+  .story-wide { grid-template-columns: 1fr; align-items: start; }
   .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 
@@ -1282,6 +1357,8 @@ img, svg { display: block; }
   .stat:first-child { border-top: 0; }
   .grid-3, .grid-2, .steps { grid-template-columns: 1fr; }
   .footer-grid { grid-template-columns: 1fr; }
+  .forge-banner { padding: 22px 18px; }
+  .story-wide { padding: 24px 20px; }
   .device-body { padding: 18px 16px 16px; }
   .device-top { padding: 12px 16px; }
   .device-clock { display: none; }
