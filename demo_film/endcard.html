@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Hearth — Endcard</title>
+<style>
+  :root { --total: 19s; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { height: 100%; background: #07080b; overflow: hidden;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #e8e6e1; }
+  .vig { position: fixed; inset: 0; pointer-events: none; background:
+    radial-gradient(1200px 620px at 50% 38%, rgba(255,120,50,.15), transparent 62%),
+    radial-gradient(closest-side, rgba(0,0,0,0) 55%, rgba(0,0,0,.72)); }
+  .stage { position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; }
+  .flame { width: 84px; height: 84px; position: relative; opacity: 0;
+    animation: ign .9s ease .3s forwards; }
+  .flame i { position: absolute; left: 50%; top: 50%; width: 54px; height: 74px;
+    transform: translate(-50%, -52%);
+    background: radial-gradient(60% 55% at 50% 62%, #ffd9a8, #ff8a3c 55%, rgba(255,120,40,.15) 85%, transparent);
+    border-radius: 50% 50% 46% 46% / 62% 62% 38% 38%;
+    filter: drop-shadow(0 0 26px rgba(255,130,50,.65)); }
+  .flame i::after { content: ""; position: absolute; inset: 26% 32% 10% 32%;
+    background: radial-gradient(60% 60% at 50% 60%, #fff3d9, #ffb15e 80%);
+    border-radius: inherit; filter: blur(1px); }
+  h1 { margin-top: 26px; font-family: ui-serif, Georgia, serif; font-size: 78px;
+    letter-spacing: .24em; text-indent: .24em; font-weight: 600; opacity: 0;
+    animation: up .9s ease .95s forwards; }
+  .sub { margin-top: 12px; color: #b9b4ab; font-size: 20px; letter-spacing: .08em;
+    opacity: 0; animation: up .9s ease 1.4s forwards; }
+  .stats { display: flex; gap: 84px; margin-top: 68px; }
+  .stat { text-align: center; opacity: 0; animation: up .8s ease 3.3s forwards; }
+  .num { font-size: 46px; font-weight: 700; color: #ffb27a; font-variant-numeric: tabular-nums; }
+  .lab { font-size: 13px; color: #8d877d; letter-spacing: .16em; text-transform: uppercase; margin-top: 8px; }
+  .tagline { margin-top: 80px; font-size: 31px; color: #f4f1ea;
+    font-family: ui-serif, Georgia, serif; font-style: italic; opacity: 0;
+    animation: up 1s ease 7.5s forwards; }
+  .credit { position: fixed; bottom: 44px; left: 0; right: 0; text-align: center;
+    font-size: 13px; letter-spacing: .2em; color: #6f6a61; text-transform: uppercase;
+    opacity: 0; animation: up .8s ease 9.3s forwards; }
+  .outro { position: fixed; inset: 0; background: #000; opacity: 0;
+    animation: out 1.6s ease calc(var(--total) - 2.1s) forwards; }
+  @keyframes ign { from { opacity: 0; transform: scale(.6) translateY(8px); filter: brightness(.4); }
+    to { opacity: 1; transform: scale(1); filter: brightness(1.15); } }
+  @keyframes up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes out { to { opacity: 1; } }
+</style>
+</head>
+<body>
+  <div class="vig"></div>
+  <div class="stage">
+    <div class="flame"><i></i></div>
+    <h1>HEARTH</h1>
+    <div class="sub">one calm agent for the whole household</div>
+    <div class="stats">
+      <div class="stat"><div class="num" data-n="343">0</div><div class="lab">tests passing</div></div>
+      <div class="stat"><div class="num" data-n="55">0</div><div class="lab">tools live · 1 forged on camera</div></div>
+      <div class="stat"><div class="num" data-n="100" data-suffix="%">0%</div><div class="lab">actions audited</div></div>
+    </div>
+    <div class="tagline">&ldquo;Proposes. Never executes.&rdquo;</div>
+  </div>
+  <div class="credit">Built for the Alexa+ Hackathon · October 2026</div>
+  <div class="outro"></div>
+  <script>
+    const t = parseFloat(new URLSearchParams(location.search).get('t') || '19');
+    document.documentElement.style.setProperty('--total', t + 's');
+    document.querySelectorAll('.num').forEach((el) => {
+      const n = +el.dataset.n, sfx = el.dataset.suffix || '';
+      const st = performance.now() + 3300, dur = 1200;
+      (function tick(now) {
+        const p = Math.max(0, Math.min(1, (now - st) / dur));
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(n * e) + sfx;
+        if (p < 1) requestAnimationFrame(tick);
+      })(performance.now());
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+# Film production artifacts stay local — committing media is huge and useless.
+raw/
+vo/
+*.mp4
+*.webm
+*.wav
+*.mp3
+actuals.json
+durations.json

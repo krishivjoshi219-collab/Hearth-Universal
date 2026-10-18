@@ -1,0 +1,53 @@
+{
+  "preferred_voice": {
+    "engine": "elevenlabs",
+    "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+    "voice_name": "George - Warm, Captivating Storyteller",
+    "model_id": "eleven_multilingual_v2",
+    "status": "quota_exceeded_0_credits"
+  },
+  "fallback_voice": {
+    "engine": "edge-tts",
+    "voice": "en-US-AndrewMultilingualNeural",
+    "rate": "-4%",
+    "status": "validated"
+  },
+  "scenes": [
+    {
+      "id": "s01", "slug": "landing", "tail": 2.2,
+      "text": "Every home runs on guesswork. Forgotten subscriptions. Energy burned at the wrong hour. Money that quietly leaks away. Hearth is one calm agent that stops the leak, and shows you how."
+    },
+    {
+      "id": "s02", "slug": "echo", "tail": 2.2,
+      "text": "Just talk to it. Save me eight hundred dollars. Hearth understands the whole home: energy, pantry, water, comfort. The answer arrives inline, fullscreen, hydrated with live data, and voice only. One question. Four ways to see it. No apps to learn. No dashboards to decode."
+    },
+    {
+      "id": "s03", "slug": "cockpit", "tail": 2.2,
+      "text": "Behind the conversation sits a cockpit for the household. What is happening. What it costs. What Hearth recommends next. Scenarios you can rehearse before your home ever feels them. Your home, rendered as a system, not a list of gadgets."
+    },
+    {
+      "id": "s04", "slug": "approvals", "tail": 2.2,
+      "text": "Here is the line Hearth never crosses. It proposes. It never executes. Every action waits for you: what will happen, what it saves, why it matters. Approve once, and Hearth carries it out. Then it records exactly what it did. Trust is built in the pauses."
+    },
+    {
+      "id": "s05", "slug": "activity", "tail": 2.2,
+      "text": "Every action leaves a story. The agent timeline names every actor: acoustic doctor, family mediator, forensic investigator, and exactly what each one did. Every entry shows its reasoning. No black boxes. No the algorithm decided."
+    },
+    {
+      "id": "s06", "slug": "insights", "tail": 2.2,
+      "text": "Insights turn a month of noise into a signal. Money recovered. What is actually in your pantry. How sunlight and load shift through the day. Even a digital twin that rehearses tomorrow before your home lives it."
+    },
+    {
+      "id": "s07", "slug": "forge", "tail": 3.5,
+      "text": "And when Hearth meets a need nobody coded: a new rate plan, an E V tariff, a rule that only your household has, it doesn't wait for an update. It writes the tool itself. Watch. Intent understood. Schema compiled. A safety gate. Source verified. Sandboxed. Smoke tested. Then mounted, live, as tool fifty five. Nothing was shipped. Nothing was hand coded. And every step is on the record."
+    },
+    {
+      "id": "s08", "slug": "forensics", "tail": 2.2,
+      "text": "Trust isn't a promise. It's a proof. Reconstruct three A M: every sensor, every decision, every deduction, replayed and sealed in a hash chained Merkle proof. The intruder hypothesis? Disproven in seconds, with evidence."
+    },
+    {
+      "id": "s09", "slug": "close", "tail": 2.2,
+      "text": "Hearth. Three hundred forty three tests. Fifty four live tools, and the power to forge the next one. A home that finally understands itself, and never acts without you. Alexa plus: one calm agent, for your whole household."
+    }
+  ]
+}
