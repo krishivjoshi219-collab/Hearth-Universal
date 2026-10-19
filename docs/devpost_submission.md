@@ -24,9 +24,9 @@ Full short description: proactive agentic workflows (audit → propose → 1-tap
 ### Links & Video
 - **GitHub Repository URL**: `https://github.com/krishivjoshi219-collab/Hearth-Universal`  
   *(Public repository with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar` — add Oct 22, invites expire in 7 days)*
-- **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(See `docs/demo_video_script.md` for the exact storyboard. Must be Public + "Not for Kids", <3:00)*
+- **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(the finished film is `demo_film/HEARTH_DEMO_FINAL.mp4` — 2:58, the as-shot script is `demo_film/script.md`. Must be Public + "Not for Kids", <3:00.)*
 - **Try It Out URL**: `<deployed /echo URL — see battleplan>` *(fallback: clone + `./demo.sh`)*
-- **Built With tags**: `alexa-plus`, `mcp`, `streamable-http`, `strands-agents`, `bedrock`, `agentcore`, `nova`, `mcp-apps`, `agent-skills`, `oauth-2.1`, `fastapi`, `python`, `subscribe-and-save`, `echo-show`
+- **Built With tags**: `alexa-plus`, `mcp`, `streamable-http`, `strands-agents`, `bedrock`, `agentcore`, `nova`, `google-gemini`, `mcp-apps`, `agent-skills`, `oauth-2.1`, `fastapi`, `python`, `subscribe-and-save`, `echo-show`
 - **Thumbnail**: 3:2 JPG/PNG/GIF ≤5MB — Echo Show tray card with "$803.76/yr found" + big Approve button, not the logo.
 
 ---
@@ -45,7 +45,7 @@ We built **Hearth Universal** for **Alexa+** around one rule families instantly 
 
 Say *"Alexa, save me $800 on renewals"* → she audits 5 subscriptions, finds **$803.76/yr** waste, stages 3 cards with exact before/after diffs → you tap once → SHA-256 receipt sealed. Say *"restock coffee"* → 15% Subscribe & Save cart staged, Prime slot booked, still nothing ordered until you tap. Switch to Leo (9) → orders + unlocks hard-blocked with a kind "ask a grown-up" card.
 
-Under that 60-second magic is real Alexa+ tech: self-hosted MCP 2025-11-25 Streamable HTTP (51 tools live), Strands multi-agent supervisor, Bedrock memory, MCP Apps cards, Agent Skills — all offline-first so a judge can run it with zero keys. Bring your own key in the preview (🧠 Connect AI) and free-form questions route through **your** provider — OpenAI, Groq, OpenRouter, Ollama, any OpenAI-compatible endpoint, or Bedrock — with the key stored server-side only.
+Under that 60-second magic is real Alexa+ tech: self-hosted MCP 2025-11-25 Streamable HTTP (51 hand-built tools — 54 live once forged skills are mounted), Strands multi-agent supervisor, Bedrock memory, MCP Apps cards, Agent Skills — all offline-first so a judge can run it with zero keys. Bring your own key in the preview (🧠 Connect AI) and free-form questions route through **your** provider — Google Gemini (the film runs live on Gemini 3.8 Flash), OpenAI, Groq, OpenRouter, Ollama, any OpenAI-compatible endpoint, or Bedrock — with the key stored server-side only.
 
 ---
 
@@ -105,7 +105,7 @@ Beyond financial waste auditing and Subscribe & Save replenishments, Hearth prov
 
 ## ⚙️ How We Built It
 
-- **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 51 tools, 8 resources, and 3 prompt templates (counts verified live over the wire).
+- **MCP Server Core (`mcp>=1.29.1,<2`)**: Implemented FastMCP over **Streamable HTTP** with specification version **2025-11-25** on port `8787`. Exposes 51 hand-built tools (54 served live with forged skills mounted — the demo film mints another on camera: 54 → 55), 8 resources, and 3 prompt templates (counts verified live over the wire).
 - **AWS Strands Agents SDK (`src/hearth/strands_agent.py`)**: Real `strands-agents` integration (`pip install -e ".[aws]"`). Three sub-agents built as `strands.Agent` objects with SDK-derived tool schemas, composed via `Agent.as_tool()`; every schema reported by `strands_sdk_status()` is produced by the SDK. A deterministic router remains the offline path so tests need no credentials.
 - **Bedrock AgentCore (`src/hearth/agentcore.py`)**: Persistent session turns and cross-session episodic context retrieval.
 - **Alexa Smart Home v3 Adapter (`src/hearth/alexa.py`)**: Standard directive handlers for `Alexa.Discovery`, `Alexa.PowerController`, `Alexa.ThermostatController`, `Alexa.LockController`, and camera stream controllers.
@@ -117,7 +117,7 @@ Beyond financial waste auditing and Subscribe & Save replenishments, Hearth prov
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **305 Automated Tests (+15 adapter = 320 Total)**: 100% pass rate with high test coverage.
+- **362 Automated Tests**: 100% pass rate with high test coverage.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Open Source Contribution**: `mcp-strands-adapter` covers the direction the SDK does not ship — exposing Strands agents *as* MCP tools, reusing the SDK's own `tool_spec` rather than re-deriving schemas. Apache-2.0, 15 standalone tests, real `mcp` and `strands-agents` dependencies declared honestly.

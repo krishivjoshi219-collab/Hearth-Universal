@@ -104,8 +104,9 @@
           <span class="lane-lead">Try asking</span>
           <div class="lane-grid">
             <button class="ask" type="button" data-go="/api/renewals" data-body='{}'><svg class="ico"><use href="#i-scissors"/></svg><span>Find forgotten subscriptions</span></button>
-            <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type": "perimeter_anomaly"}'><svg class="ico"><use href="#i-search"/></svg><span>Rebuild what happened at 3 AM</span></button>
+            <button class="ask" type="button" data-go="/api/commerce/delivery-clawback" data-body='{}'><svg class="ico"><use href="#i-bolt"/></svg><span>Check late Prime deliveries</span></button>
             <button class="ask" type="button" data-go="/api/commerce/autopilot-checkout" data-body='{"utterance": "we are out of everything, fix groceries", "voice_confidence": 0.95}'><svg class="ico"><use href="#i-cart"/></svg><span>Fix the groceries</span></button>
+            <button class="ask" type="button" data-go="/api/forensics/reconstruct" data-body='{"incident_type": "perimeter_anomaly"}'><svg class="ico"><use href="#i-search"/></svg><span>Rebuild what happened at 3 AM</span></button>
             <button class="ask" type="button" data-go="/api/swarm/grid" data-body='{}'><svg class="ico"><use href="#i-bolt"/></svg><span>Sell the extra solar</span></button>
             <button class="ask" type="button" hidden data-extra="true" data-go="/api/parliament/deliberate" data-body='{"topic": "evening tariff vs comfort"}'><svg class="ico"><use href="#i-scale"/></svg><span>Put it to a house vote</span></button>
             <button class="ask" type="button" hidden data-extra="true" data-go="/api/causal/simulate" data-body='{"days_ahead": 7, "iterations": 250}'><svg class="ico"><use href="#i-chart"/></svg><span>See the week ahead</span></button>

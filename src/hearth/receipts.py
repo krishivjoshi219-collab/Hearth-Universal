@@ -52,27 +52,27 @@ def _load() -> list[dict[str, Any]]:
     if not path.exists():
         return []
     out: list[dict[str, Any]] = []
-    for line in path.read_text().splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            r = json.loads(line)
-        except Exception:
-            continue
-        if isinstance(r, dict) and "receipt_hash" in r:
-            out.append(r)
+    with atomic.locked(path):
+        for raw_line in path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line:
+                continue
+            try:
+                r = json.loads(line)
+            except Exception:
+                continue
+            if isinstance(r, dict) and "receipt_hash" in r:
+                out.append(r)
     return out
 
 
 def _append_line(receipt: dict[str, Any]) -> None:
-    with atomic.locked(_receipts_path()):
-        with _receipts_path().open("a", encoding="utf-8") as fh:
-            fh.write(json.dumps(receipt, sort_keys=True, default=str) + "\n")
+    with atomic.locked(_receipts_path()), _receipts_path().open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(receipt, sort_keys=True, default=str) + "\n")
 
 
 def _receipt_id(kind: str, ts: int, seed: str) -> str:
-    raw = f"{kind}|{ts}|{seed}".encode("utf-8")
+    raw = f"{kind}|{ts}|{seed}".encode()
     return "rcpt_" + hashlib.sha256(raw).hexdigest()[:12]
 
 
@@ -119,6 +119,25 @@ def _event_to_receipt(e: dict[str, Any]) -> dict[str, Any] | None:
         m = re.search(r"total=([0-9]+(?:\.[0-9]+)?)", qr)
         total = float(m.group(1)) if m else 0.0
         code = str(ex.get("receipt_code", ""))
+        try:
+            credit = round(float(ex.get("credit_usd", 0) or 0), 2)
+        except (TypeError, ValueError):
+            credit = 0.0
+        if credit > 0:
+            label = str(ex.get("delay_label") or "late delivery")
+            return {
+                "receipt_id": _receipt_id("credit_claimed", ts, h),
+                "ts": ts,
+                "kind": "credit_claimed",
+                "claim": (f"Amazon courtesy credit claimed — +${credit:.2f} "
+                          f"(delivery arrived {label} past the promised time)"),
+                "money": {"earned_usd": credit},
+                "terms": {"order_id": ex.get("order_id", ""),
+                          "tracking_number": ex.get("tracking_number", ""),
+                          "delay_minutes": ex.get("delay_minutes")},
+                "settled": {"credit_receipt_code": code, "credit_usd": credit},
+                "source_events": [h],
+            }
         if total > 0:
             return {
                 "receipt_id": _receipt_id("order_staged", ts, h),
@@ -155,8 +174,8 @@ def rebuild() -> int:
         prev = receipts[-1]["receipt_hash"] if receipts else "GENESIS"
         added = 0
         new_lines: list[str] = []
-        for line in audit_path.read_text().splitlines():
-            line = line.strip()
+        for raw_line in audit_path.read_text().splitlines():
+            line = raw_line.strip()
             if not line:
                 continue
             try:

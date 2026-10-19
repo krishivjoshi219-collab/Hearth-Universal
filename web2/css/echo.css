@@ -53,7 +53,16 @@
   --e-noise: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='180' height='180' filter='url(%23n)' opacity='0.6'/></svg>");
 }
 
-* { box-sizing: border-box; }
+* {
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
 
 html, body { height: 100%; }
 
@@ -422,12 +431,14 @@ a { color: inherit; }
   inset: 0;
   z-index: 3;
   overflow-y: auto;
+  scrollbar-width: none;
   padding: 6px 0 18px;
   display: flex;
   flex-direction: column;
   justify-content: safe center;
   animation: rise 450ms var(--t-med);
 }
+.answer::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 .answer-kicker { font-size: 12.5px; font-weight: 650; letter-spacing: 0.18em; text-transform: uppercase; color: var(--e-amber); }
 

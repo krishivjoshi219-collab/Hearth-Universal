@@ -15,6 +15,7 @@ Env vars (all optional, zero-config offline by default):
   AWS_BEDROCK_MAX_ATTEMPTS   Botocore adaptive retry max attempts (default 5)
   HEARTH_BRAIN_PROVIDER      local | bedrock | openai (env wins unless preferred_provider passed)
   HEARTH_MODEL / HEARTH_BASE_URL / OPENAI_API_KEY  OpenAI-compatible path
+  HEARTH_REASONING_EFFORT    low | medium | high — latency profile for reasoning models (opt-in)
 """
 from __future__ import annotations
 
@@ -129,12 +130,18 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
         last_err: Exception | None = None
         for attempt in (1, 2):
             try:
-                payload = json.dumps({
+                payload_obj = {
                     "model": model,
                     "messages": messages,
                     "max_tokens": max_tokens,
                     "temperature": 0.3,
-                }).encode()
+                }
+                # Opt-in latency profile for reasoning models (e.g. Gemini Flash):
+                # "low" answers in seconds where default thinking takes much longer.
+                _effort = os.environ.get("HEARTH_REASONING_EFFORT", "").strip().lower()
+                if _effort in ("low", "medium", "high"):
+                    payload_obj["reasoning_effort"] = _effort
+                payload = json.dumps(payload_obj).encode()
 
                 req = urllib.request.Request(
                     base_url.rstrip("/") + "/chat/completions",

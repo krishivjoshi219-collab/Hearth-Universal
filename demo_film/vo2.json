@@ -1,0 +1,50 @@
+{
+  "preferred_voice": {"voice": "en-US-AndrewMultilingualNeural", "rate": "-4%"},
+  "fallback_voice": {"voice": "en-US-AndrewNeural", "rate": "-4%"},
+  "scenes": [
+    {
+      "id": "v2hook",
+      "slug": "echo",
+      "raw": "s02",
+      "start_s": 1.6,
+      "tail": 4.5,
+      "text": "Every household pays for subscriptions nobody uses. So you just ask. Eight hundred and three dollars, found. And it never spends a dollar on its own."
+    },
+    {
+      "id": "v2undo",
+      "slug": "echo",
+      "tail": 7.0,
+      "text": "Every action waits in the tray with the exact price. One tap applies it. One tap takes it back. And the reversal lands in the ledger too."
+    },
+    {
+      "id": "v2groceries",
+      "slug": "echo",
+      "tail": 18.0,
+      "text": "Groceries ride Subscribe and Save. Five household essentials, bundled. Thirty-five dollars off, four fewer boxes on the road. And nothing is ordered until you tap."
+    },
+    {
+      "id": "v2leo",
+      "slug": "echo",
+      "tail": 13.5,
+      "text": "Now the part parents care about. The profile switches to Leo, age nine. He asks for Robux. Blocked. The front door? Blocked. Not by a prompt. By the architecture. Nothing moves without a grown-up."
+    },
+    {
+      "id": "v2forensics",
+      "slug": "forensics",
+      "tail": 7.5,
+      "text": "Trust isn't a promise. It's a proof. Rebuild three AM: every sensor, every decision, on the record."
+    },
+    {
+      "id": "v2forge",
+      "slug": "forge",
+      "tail": 8.5,
+      "text": "And when the house needs something nobody coded, Hearth writes the tool itself. It understands the need, passes the safety gate, and mounts live as tool fifty-five."
+    },
+    {
+      "id": "v2endcard",
+      "slug": "endcard",
+      "tail": 5.0,
+      "text": "Hearth. The house that runs itself, with receipts. And it's live right now. Not an agent. A servant."
+    }
+  ]
+}

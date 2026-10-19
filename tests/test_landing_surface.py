@@ -29,7 +29,7 @@ EMOJI = re.compile(
 
 
 def _read(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return fh.read()
 
 
@@ -50,7 +50,7 @@ def test_landing_has_no_inline_script_or_style():
     assert "<style" not in html.lower()
     assert 'style="' not in html, "inline style attributes break the page CSP"
     assert not re.search(r"\son[a-z]+\s*=", html), "no inline event handlers"
-    scripts = re.findall(r"<script\b[^>]*>", html, re.I)
+    scripts = re.findall(r"<script\b[^>]*>", html, re.IGNORECASE)
     assert scripts, "the landing needs its controller script"
     for tag in scripts:
         assert "src=" in tag, "scripts must be external under script-src 'self'"

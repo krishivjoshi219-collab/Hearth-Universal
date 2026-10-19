@@ -52,9 +52,10 @@
     </a>
 
     <nav class="nav-links" aria-label="Product">
-      <a href="#leak">The leak</a>
+      <a href="#balance-sheet">The balance sheet</a>
       <a href="#does">What it does</a>
       <a href="#promises">The promises</a>
+      <a href="/wire">How it works</a>
       <a href="#faq">Questions</a>
     </nav>
 
@@ -72,31 +73,48 @@
   <div class="container hero-grid">
 
     <div class="hero-copy">
-      <p class="kicker"><span class="dot live-dot" aria-hidden="true"></span> Not an agent. A servant. <span class="kicker-sep" aria-hidden="true">&middot;</span> <span class="k-extra">for Alexa+ &middot; open source</span></p>
+      <p class="kicker"><span class="dot live-dot" aria-hidden="true"></span> Not an agent. A servant. <span class="kicker-sep" aria-hidden="true">&middot;</span> <span class="k-extra">Built for Amazon Alexa+</span></p>
 
-      <h1>Tell Alexa,<br /><em>&ldquo;Save me $800.&rdquo;</em></h1>
+      <h1>The first smart home<br /><em>that pays for itself.</em></h1>
 
       <p class="lead">
-        Hearth is a small servant for your whole household — it finds the money,
-        food, and energy your family leaks, and stages exactly what to do about it.
-        <strong>It asks before it acts, writes everything down, and undoes anything
-        in one tap.</strong>
+        Tell Alexa: <strong>&ldquo;Save me $800.&rdquo;</strong> Smart home devices usually cost thousands and do nothing but set kitchen timers. Hearth turns your Echo Show into a household servant &mdash; auditing dormant vampire subscriptions, unlocking 15% Amazon Subscribe &amp; Save discounts, and claiming courtesy refunds when Prime deliveries slip. <strong>Every action requires your tap. Every penny leaves a receipt you can read.</strong>
       </p>
 
       <div class="hero-ctas">
-        <a class="btn btn-primary btn-lg" href="/echo">Open the live demo <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
-        <a class="btn btn-ghost btn-lg" href="#promises">See the three promises</a>
+        <a class="btn btn-primary btn-lg" href="/echo">Watch it find $800 <span class="btn-arrow" aria-hidden="true">&rarr;</span></a>
+        <a class="btn btn-ghost btn-lg" href="#balance-sheet">See where the $1,455.10 comes from &darr;</a>
       </div>
 
       <ul class="hero-trust" role="list">
-        <li>No sign-up, no card</li>
-        <li>Runs in your browser</li>
-        <li>Nothing runs without you</li>
+        <li>Nothing spends without your tap</li>
+        <li>Every move on a receipt you can read</li>
+        <li>One tap undoes anything</li>
       </ul>
     </div>
 
-    <div class="hero-visual reveal" id="heroVisual">
+    <div class="hero-visual" id="heroVisual">
       <div class="device-glow" aria-hidden="true"></div>
+
+      <!-- Interactive scenario pills -->
+      <div class="sim-selector" role="tablist" aria-label="Interactive Demo Scenarios">
+        <button class="sim-pill active" role="tab" id="pill-subs" data-scenario="subs" aria-selected="true" type="button">
+          <span class="sim-pill-lead"><svg class="ico"><use href="#i-scissors"/></svg><span>Vampire Subs</span></span>
+          <b class="pill-delta save">+$803.76/yr</b>
+        </button>
+        <button class="sim-pill" role="tab" id="pill-groceries" data-scenario="groceries" aria-selected="false" type="button">
+          <span class="sim-pill-lead"><svg class="ico"><use href="#i-cart"/></svg><span>Amazon Restock</span></span>
+          <b class="pill-delta save">-$35.32</b>
+        </button>
+        <button class="sim-pill" role="tab" id="pill-delivery" data-scenario="delivery" aria-selected="false" type="button">
+          <span class="sim-pill-lead"><svg class="ico"><use href="#i-bolt"/></svg><span>Late Delivery</span></span>
+          <b class="pill-delta refund">+$5.00 Claim</b>
+        </button>
+        <button class="sim-pill" role="tab" id="pill-child" data-scenario="child" aria-selected="false" type="button">
+          <span class="sim-pill-lead"><svg class="ico"><use href="#i-shield"/></svg><span>Leo (Age 9)</span></span>
+          <b class="pill-delta lock">Blocked</b>
+        </button>
+      </div>
 
       <div class="device" id="heroDevice">
         <div class="device-top">
@@ -116,47 +134,166 @@
             <div class="orb"><span class="orb-halo"></span><span class="orb-ring"></span><span class="orb-core"></span><span class="orb-sheen"></span></div>
           </div>
 
-          <p class="device-said">&ldquo;Save me $800.&rdquo;</p>
+          <!-- Scenario 1: Subscription Audit -->
+          <div class="scen-panel" id="scen-subs">
+            <p class="device-said">&ldquo;Save me $800.&rdquo;</p>
+            <div class="device-answer">
+              <div class="device-kicker">Hearth &middot; Subscription Audit</div>
+              <div class="device-big num positive" id="heroBig">+$803.76<span class="device-unit">/yr</span></div>
+              <div class="device-verdict" id="heroVerdict">found in three services nobody uses anymore.</div>
 
-          <div class="device-answer">
-            <div class="device-kicker">Hearth</div>
-            <div class="device-big num" id="heroBig">$803.76</div>
-            <div class="device-verdict" id="heroVerdict">found in three services nobody uses.</div>
+              <div class="device-lines">
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scissors"/></svg></span>
+                  <span class="dline-main"><b id="heroLeakName">StreamBox 4K Family Plan</b><em id="heroLeakMeta">dormant 68 days &middot; cancels cleanly</em></span>
+                  <span class="dline-save num" id="heroLeakSave">+$239.88/yr</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scale"/></svg></span>
+                  <span class="dline-main"><b>Metro Fitness All-Access</b><em>downgrade keeps weekends &middot; saves $30/mo</em></span>
+                  <span class="dline-save num">+$360.00/yr</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-tag"/></svg></span>
+                  <span class="dline-main"><b>Ultra Cloud Gaming</b><em>0 sessions in 48 days &middot; cancels cleanly</em></span>
+                  <span class="dline-save num">+$203.88/yr</span>
+                </div>
+              </div>
 
-            <div class="device-lines">
-              <div class="dline">
-                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scissors"/></svg></span>
-                <span class="dline-main"><b id="heroLeakName">StreamBox 4K Family Plan</b><em id="heroLeakMeta">dormant 68 days &middot; cancels cleanly</em></span>
-                <span class="dline-save num" id="heroLeakSave">$239.88</span>
+              <div class="device-guard">
+                <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+                <span>Nothing moves until you tap.</span>
+                <span class="guard-pill" id="heroGuardPill-subs">waiting for your OK</span>
               </div>
-              <div class="dline">
-                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-scale"/></svg></span>
-                <span class="dline-main"><b>Metro Fitness All-Access</b><em>downgrade keeps weekends &middot; still $360/yr back</em></span>
-                <span class="dline-save num">$360.00</span>
-              </div>
-              <div class="dline">
-                <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-tag"/></svg></span>
-                <span class="dline-main"><b>Ultra Cloud Gaming</b><em>last session 48 days ago</em></span>
-                <span class="dline-save num">$203.88</span>
+
+              <div class="device-cta">
+                <button class="dbtn sim-action-btn" data-scenario="subs" type="button">Approve 3 Cancellations <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                <span class="dcta-note">1-tap undo anytime</span>
               </div>
             </div>
+          </div>
 
-            <div class="device-guard">
-              <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
-              <span>Nothing moves until you tap.</span>
-              <span class="guard-pill">0 executed</span>
+          <!-- Scenario 2: Prime Groceries -->
+          <div class="scen-panel" id="scen-groceries" hidden>
+            <p class="device-said">&ldquo;Fix our groceries before Thursday.&rdquo;</p>
+            <div class="device-answer">
+              <div class="device-kicker">Amazon &middot; Subscribe &amp; Save</div>
+              <div class="device-big num positive">-$35.32</div>
+              <div class="device-verdict">5-item bundle unlocked 15% Subscribe &amp; Save tier &middot; 1 monthly box.</div>
+
+              <div class="device-lines">
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-cart"/></svg></span>
+                  <span class="dline-main"><b>Organic Arabica Coffee (2 lb)</b><em>Pantry burn rate: 3 days left &middot; 15% off</em></span>
+                  <span class="dline-save num">-$6.40</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-box"/></svg></span>
+                  <span class="dline-main"><b>Plant-Based Laundry Pods (80 ct)</b><em>Consolidated into monthly restock slot</em></span>
+                  <span class="dline-save num">-$8.20</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-spark"/></svg></span>
+                  <span class="dline-main"><b>HEPA Replacement Filters (2 pk)</b><em>Pulled forward to hit 5-item threshold</em></span>
+                  <span class="dline-save num">-$20.72</span>
+                </div>
+              </div>
+
+              <div class="device-guard">
+                <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+                <span>Prime delivery window: Thursday 2–5 PM.</span>
+                <span class="guard-pill" id="heroGuardPill-groceries">waiting for your OK</span>
+              </div>
+
+              <div class="device-cta">
+                <button class="dbtn sim-action-btn" data-scenario="groceries" type="button">Approve Consolidated Cart <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                <span class="dcta-note">free Prime delivery</span>
+              </div>
             </div>
+          </div>
 
-            <div class="device-cta">
-              <a class="dbtn" href="/echo">Review &amp; approve <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-              <span class="dcta-note">undo anytime</span>
+          <!-- Scenario 3: Late Delivery Refund -->
+          <div class="scen-panel" id="scen-delivery" hidden>
+            <p class="device-said">&ldquo;Where is my 2 PM package?&rdquo;</p>
+            <div class="device-answer">
+              <div class="device-kicker">Amazon Prime &middot; Delivery Guarantee</div>
+              <div class="device-big num refund">+$5.00</div>
+              <div class="device-verdict">Prime guarantee missed by 2.5 hours. Courtesy credit drafted.</div>
+
+              <div class="device-lines">
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-bolt"/></svg></span>
+                  <span class="dline-main"><b>Prime Order #114-8921-391</b><em>Guaranteed 2:00 PM &middot; Delivered 4:32 PM</em></span>
+                  <span class="dline-save num">+$5.00</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-receipt"/></svg></span>
+                  <span class="dline-main"><b>Carrier SLA Breach Filed</b><em>Amazon Logistics route delay acknowledged</em></span>
+                  <span class="dline-save num">Ready</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-tag"/></svg></span>
+                  <span class="dline-main"><b>Household Wallet Credit</b><em>Direct credit to next Amazon purchase</em></span>
+                  <span class="dline-save num">Pending</span>
+                </div>
+              </div>
+
+              <div class="device-guard">
+                <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+                <span>Amazon Prime Delivery Guarantee Policy.</span>
+                <span class="guard-pill" id="heroGuardPill-delivery">waiting for your OK</span>
+              </div>
+
+              <div class="device-cta">
+                <button class="dbtn sim-action-btn" data-scenario="delivery" type="button">Claim $5.00 Courtesy Credit <svg class="ico" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+                <span class="dcta-note">instant credit to account</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scenario 4: Leo Child-Lock -->
+          <div class="scen-panel" id="scen-child" hidden>
+            <p class="device-said">&ldquo;Leo (Age 9): Buy 5,000 Robux and unlock front door.&rdquo;</p>
+            <div class="device-answer">
+              <div class="device-kicker">Child Safety &middot; Sentinel Rules</div>
+              <div class="device-big num blocked">BLOCKED</div>
+              <div class="device-verdict">Safety rules: Child profile restricted from spending &amp; security doors.</div>
+
+              <div class="device-lines">
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-lock"/></svg></span>
+                  <span class="dline-main"><b>Roblox Digital Currency ($49.99)</b><em>Refused: Child persona cannot authorize money</em></span>
+                  <span class="dline-save num">Blocked</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-shield"/></svg></span>
+                  <span class="dline-main"><b>Front Door Smart Deadbolt</b><em>Refused: Physical lock requires adult voice PIN</em></span>
+                  <span class="dline-save num">Locked</span>
+                </div>
+                <div class="dline">
+                  <span class="dline-ico" aria-hidden="true"><svg class="ico"><use href="#i-users"/></svg></span>
+                  <span class="dline-main"><b>Parent Notification Sent</b><em>Logged to Alex (Head of Household)</em></span>
+                  <span class="dline-save num">Logged</span>
+                </div>
+              </div>
+
+              <div class="device-guard">
+                <svg class="ico" aria-hidden="true"><use href="#i-shield"/></svg>
+                <span>Rules say no &mdash; cannot be bypassed by voice.</span>
+                <span class="guard-pill">safety held</span>
+              </div>
+
+              <div class="device-cta">
+                <button class="dbtn" disabled type="button">Parent PIN Required <svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg></button>
+                <span class="dcta-note">cannot be bypassed by child voice</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="float-chip chip-a" aria-hidden="true"><svg class="ico"><use href="#i-receipt"/></svg><b>Receipt sealed</b><em class="num">7f3a&middot;c2</em></div>
-      <div class="float-chip chip-b" aria-hidden="true"><svg class="ico"><use href="#i-undo"/></svg><b>Undo ready</b><em>one tap</em></div>
+      <div class="float-chip chip-a" id="heroChipReceipt" aria-hidden="true"><svg class="ico"><use href="#i-receipt"/></svg><b id="heroChipReceiptText">Receipt sealed</b><em class="num" id="heroChipReceiptHash">7f3a&middot;c2</em></div>
+      <div class="float-chip chip-b" id="heroChipUndo" role="button" tabindex="0" title="Click to undo this action"><svg class="ico"><use href="#i-undo"/></svg><b>Undo ready</b><em>one tap</em></div>
     </div>
 
   </div>
@@ -186,6 +323,72 @@
     <div class="stat reveal">
       <div class="stat-num num">0</div>
       <div class="stat-cap">actions without you <span class="stat-sub">every approval waits for one tap — and undoes with one more</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== self-funding balance sheet -->
+<section class="section section-balance" id="balance-sheet">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="kicker">The Household Balance Sheet</p>
+      <h2>Where the $1,455.10 comes from</h2>
+      <p class="section-lead">Smart devices historically cost $1,500+ and do nothing but set timers. Hearth is designed to recover <strong>+$1,455.10 every year</strong> directly into your family's bank account.</p>
+    </div>
+
+    <div class="balance-grid reveal">
+      <div class="balance-card">
+        <div class="bcard-top">
+          <span class="bcard-ico"><svg class="ico"><use href="#i-scissors"/></svg></span>
+          <span class="bcard-tag">Automated Defense</span>
+        </div>
+        <div class="bcard-num num">+$803.76<span class="bcard-period">/yr</span></div>
+        <h3>Vampire Subscriptions</h3>
+        <p>Identifies dormant streaming services, abandoned gym passes, and forgotten software licenses. Staged with one-tap cancellation.</p>
+        <div class="bcard-proof">Audited across 5 real services</div>
+      </div>
+
+      <div class="balance-card">
+        <div class="bcard-top">
+          <span class="bcard-ico"><svg class="ico"><use href="#i-cart"/></svg></span>
+          <span class="bcard-tag">Amazon Commerce</span>
+        </div>
+        <div class="bcard-num num">+$423.84<span class="bcard-period">/yr</span></div>
+        <h3>Amazon Subscribe &amp; Save</h3>
+        <p>Bundles staple orders to unlock the full 15% Subscribe &amp; Save tier while consolidating restocks into one monthly delivery.</p>
+        <div class="bcard-proof">Saved $35.32 on first 5-item bundle</div>
+      </div>
+
+      <div class="balance-card">
+        <div class="bcard-top">
+          <span class="bcard-ico"><svg class="ico"><use href="#i-bolt"/></svg></span>
+          <span class="bcard-tag">Grid Arbitrage</span>
+        </div>
+        <div class="bcard-num num">+$182.50<span class="bcard-period">/yr</span></div>
+        <h3>Microgrid Tariff Selling</h3>
+        <p>Automatically pre-cools the home during off-peak hours and sells home battery storage back to the utility grid at peak 4 PM rates.</p>
+        <div class="bcard-proof">+$0.50/day net grid feed-in profit</div>
+      </div>
+
+      <div class="balance-card">
+        <div class="bcard-top">
+          <span class="bcard-ico"><svg class="ico"><use href="#i-receipt"/></svg></span>
+          <span class="bcard-tag">Amazon Prime SLA</span>
+        </div>
+        <div class="bcard-num num">+$45.00<span class="bcard-period">/yr</span></div>
+        <h3>Late Delivery Refunds</h3>
+        <p>Monitors guaranteed Amazon Prime delivery windows via Ring and tracking. When a carrier slips, Hearth drafts your $5 courtesy credit.</p>
+        <div class="bcard-proof">Instant credit to next purchase</div>
+      </div>
+    </div>
+
+    <div class="balance-total reveal">
+      <div class="btotal-left">
+        <span class="btotal-label">Net Household Annual Wealth Recovered</span>
+        <span class="btotal-sub">Measured across four common household bills &middot; Echo Show 15 hardware ($279.99) fully paid off in 70 days</span>
+      </div>
+      <div class="btotal-num num">+$1,455.10 <span class="btotal-yr">/ year</span></div>
+      <a class="btn btn-primary btn-md" href="/echo">Experience it on Echo Show &rarr;</a>
     </div>
   </div>
 </section>

@@ -16,9 +16,14 @@ cloud for the "real LLM" story.
    ```bash
    export VAULT_MODEL_KEY=<your-key>
    export HEARTH_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
-   export HEARTH_MODEL=gemini-2.0-flash
+   export HEARTH_MODEL=gemini-3.8-flash
    scripts/use-brain.sh openai
    ```
+   In the preview itself (Echo surface → the brain chip), Gemini is a one-click
+   preset: **Google Gemini** — endpoint and model are pre-filled; paste the key
+   and free-form answers run on it immediately. The preset ships with low
+   reasoning effort for snappy household answers — set
+   `HEARTH_REASONING_EFFORT=high` for deeper thinking.
 2. **Alternative — OpenRouter:** https://openrouter.ai/keys → create key; free models end in
    `:free` (e.g. `meta-llama/llama-3.1-8b-instruct:free`). Same exports with
    `HEARTH_BASE_URL=https://openrouter.ai/api/v1`.

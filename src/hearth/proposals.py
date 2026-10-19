@@ -156,10 +156,23 @@ def list_proposals(status: str | None = None, limit: int = LIST_DEFAULT_LIMIT) -
 
 
 def get_proposal(pid: str) -> dict | None:
-    """Get a single proposal by ID."""
-    items = list_proposals()
-    for it in items:
-        if it["id"] == pid:
+    """Get a single proposal by ID.
+
+    Scans the full file — never the capped window. A capped read makes old
+    proposals read as "missing", which broke clawback idempotency (double
+    $5 claims) and refused legitimate late approvals once the tray grew
+    past LIST_DEFAULT_LIMIT (adversarial pass, P1#4).
+    """
+    p = _path()
+    try:
+        with atomic.locked(p):
+            items = json.loads(p.read_text())
+    except Exception:
+        return None
+    if not isinstance(items, list):
+        return None
+    for it in reversed(items):
+        if isinstance(it, dict) and it.get("id") == pid:
             return it
     return None
 
@@ -197,6 +210,11 @@ def decide(pid: str, approved: bool) -> dict:
                     return {"ok": False, "error": f"Proposal '{pid}' already {it.get('status')} — single-use, replay refused"}
                 it["status"] = "approved" if approved else "rejected"
                 it["decided_at"] = int(time.time())
+                if approved:
+                    # Execution runs outside this lock; stamp the in-flight
+                    # marker so undo() refuses to race a landing side effect
+                    # (adversarial pass, P1#5).
+                    it["executing_at"] = it["decided_at"]
                 target = dict(it)
                 atomic.atomic_write_text(p, json.dumps(items, indent=2))
                 break
@@ -216,7 +234,14 @@ def decide(pid: str, approved: bool) -> dict:
                 items = json.loads(p.read_text())
                 for it in items:
                     if it.get("id") == pid:
-                        it["execution"] = receipt
+                        if it.get("status") == "approved":
+                            it["execution"] = receipt
+                            it.pop("executing_at", None)
+                        else:
+                            # The item was reversed/undone while the side effect
+                            # was in flight (stale executor) — keep proof out.
+                            _audit.append("executor", "execution_dropped",
+                                          {"id": pid, "status": it.get("status")})
                         break
                 atomic.atomic_write_text(p, json.dumps(items, indent=2))
             except Exception:
@@ -314,6 +339,29 @@ def _execute_approved_action(proposal: dict) -> dict:
             commerce.reschedule_delivery_slot(slot_id, reason=proposal.get("title", ""))
         return {"applied": True, "at": now,
                 "note": f"rescheduled delivery window: {meta.get('diff', 'delivery updated')}"}
+    elif kind == "delivery_credit_claim":
+        try:
+            credit = round(float(meta.get("credit_usd", 0) or 0), 2)
+        except (TypeError, ValueError):
+            credit = 0.0
+        receipt_code = f"HEARTH-RC-AMZ-CREDIT-{str(proposal.get('id', 'p?')).upper()}-{now:X}"
+        return {
+            "applied": True,
+            "at": now,
+            "receipt_code": receipt_code,
+            "credit_usd": credit,
+            "order_id": meta.get("order_id", ""),
+            "tracking_number": meta.get("tracking_number", ""),
+            "delay_minutes": meta.get("delay_minutes"),
+            "delay_label": meta.get("delay_label", ""),
+            "glass": True,
+            "undo_before": "claim_settlement",
+            "undo_via": f"/api/undo {proposal.get('id')} | actions_undo",
+            "note": (f"Filed ${credit:.2f} Amazon courtesy credit for order {meta.get('order_id', '?')} "
+                     f"({meta.get('delay_label', 'late')} past the promised time). "
+                     f"Carrier dispute simulated — no live billing API in sandbox."),
+            "sandbox": True,
+        }
     elif kind == "workspace_exec":
         from . import sandbox
         res = sandbox.execute(str(meta.get("cmd", ""))[:2000])
@@ -359,6 +407,13 @@ def undo(pid: str) -> dict:
                 if it.get("status") != "approved":
                     return {"ok": False, "error": f"Proposal '{pid}' is '{it.get('status')}', not approved. Cannot undo."}
 
+                # Execution runs outside decide()'s lock; refuse undo while a
+                # side effect is still landing (adversarial pass, P1#5),
+                # unless the marker is stale (crashed executor).
+                _exec_at = it.get("executing_at")
+                if _exec_at and (int(time.time()) - int(_exec_at)) < 120:
+                    return {"ok": False, "error": "Action is still being applied — try undo again in a moment."}
+
                 kind = it.get("kind", "")
                 meta = it.get("meta") or {}
                 now = int(time.time())
@@ -383,6 +438,9 @@ def undo(pid: str) -> dict:
                         reversal_note = f"Subscription modification for '{it.get('title')}' rolled back (active status maintained)"
                     elif kind == "commerce_order":
                         reversal_note = f"Cart replenishment for '{it.get('title')}' cancelled before dispatch"
+                    elif kind == "delivery_credit_claim":
+                        reversal_note = (f"Credit claim for order {meta.get('order_id', '?')} withdrawn — "
+                                        f"the credit returns to the carrier dispute queue")
                 except Exception as exc:
                     reversal_note = f"Reversal execution partial: {exc}"
 

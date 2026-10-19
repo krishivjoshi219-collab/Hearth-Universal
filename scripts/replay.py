@@ -34,7 +34,13 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 
 from hearth import (  # noqa: E402
-    acoustic, causal_twin, forensics, mediation, parliament, proposals, swarm,
+    acoustic,
+    causal_twin,
+    forensics,
+    mediation,
+    parliament,
+    proposals,
+    swarm,
 )
 
 

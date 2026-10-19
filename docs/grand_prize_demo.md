@@ -21,7 +21,7 @@
 - **Insights**: money recovered + causal twin risk.
 
 **1:45 — 🔨 Hearth Forge (scroll to the panel)** *(50s)* — **THE MOMENT**
-- Input is pre-filled: *"Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh."*
+- Input is pre-filled: *"Pre-cool the living room to 70F before the 4pm peak tariff."*
 - Click **Forge tool**. Six chips light green: Intent → Schema → Sentinel → AST → Smoke → MCP mount.
 - Generated source appears. Say: *"Sentinel's policy gate, an AST scan, and a sandbox smoke test all ran before it was allowed to exist."*
 - Point at **52 MCP tools live** (was 51). Click **Call it now** → `applied_hour: 22, savings_usd: 3.2`.
@@ -39,7 +39,7 @@ curl -s localhost:8787/health | python3 -m json.tool   # tools_count, audit_ok, 
 curl -s localhost:8787/api/forge/tools                  # forged-tool catalog
 curl -s -X POST localhost:8787/api/forge/synthesize \
   -H 'content-type: application/json' \
-  -d '{"requirement":"Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh"}'
+  -d '{"requirement":"Pre-cool the living room to 70F before the 4pm peak tariff"}'
 ```
 
 ## Pre-flight (10 minutes before judging)

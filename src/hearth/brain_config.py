@@ -70,6 +70,19 @@ PRESETS: list[dict[str, Any]] = [
         "note": "One key, hundreds of models.",
     },
     {
+        "id": "gemini",
+        "name": "Google Gemini",
+        "kind": "openai-compatible",
+        "base_url": "https://generativelanguage.googleapis.com/v1beta/openai/",
+        "model": "gemini-3.8-flash",
+        "key_required": True,
+        "key_hint": "Google AI Studio key",
+        "note": "Free tier available at aistudio.google.com.",
+        # Households get answers in seconds, not half a minute: the preset ships
+        # with low reasoning effort (override with HEARTH_REASONING_EFFORT=high).
+        "reasoning_effort": "low",
+    },
+    {
         "id": "ollama",
         "name": "Ollama (on this machine)",
         "kind": "openai-compatible",
@@ -126,6 +139,7 @@ _ENV_FOR_PROVIDER = (
     "HEARTH_BRAIN_PROVIDER",
     "HEARTH_BASE_URL",
     "HEARTH_MODEL",
+    "HEARTH_REASONING_EFFORT",
     "VAULT_MODEL_KEY",
     "AWS_BEDROCK_ENABLED",
     "AWS_BEDROCK_MODEL",
@@ -152,6 +166,11 @@ def _apply(cfg: dict[str, Any]) -> None:
     os.environ["HEARTH_BRAIN_PROVIDER"] = provider
     os.environ["HEARTH_BASE_URL"] = cfg["base_url"]
     os.environ["HEARTH_MODEL"] = cfg["model"]
+    effort = str((_PRESET_INDEX.get(provider) or {}).get("reasoning_effort") or "")
+    if effort:
+        os.environ["HEARTH_REASONING_EFFORT"] = effort
+    else:
+        os.environ.pop("HEARTH_REASONING_EFFORT", None)
     # Ollama ignores Authorization but brains.chat refuses empty-key requests;
     # a non-secret placeholder keeps the local path live without a real key.
     if cfg.get("api_key"):

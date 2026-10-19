@@ -165,8 +165,15 @@ class TestPayloadLimitsAndRateHammering:
         res = client.post("/mcp", content=huge, headers=headers)
         assert res.status_code == 413
 
-    def test_api_chat_rate_limiting(self, client):
-        """Rapid hammering of /api/chat triggers 429 when exceeding threshold."""
+    def test_api_chat_rate_limiting(self, client, monkeypatch):
+        """Hammering /api/chat past the threshold yields 429.
+
+        The limiter is a 60s sliding window, so the threshold must be small
+        enough that the whole hammer loop finishes inside one window even when
+        a chat turn is slow (a live-brain attempt in offline envs takes seconds
+        per call). Pin the limit instead of relying on wall-clock luck.
+        """
+        monkeypatch.setattr(server, "RATE_LIMIT", 3)
         # Evict bucket for testclient host
         server._RATE_BUCKETS.clear()
         statuses = []
@@ -175,7 +182,7 @@ class TestPayloadLimitsAndRateHammering:
             statuses.append(res.status_code)
 
         assert 429 in statuses, f"Expected 429 in statuses, got {statuses}"
-        # Bucket count should equal RATE_LIMIT
+        # Blocked calls never append, so the bucket sits exactly at the limit.
         assert len(server._RATE_BUCKETS.get("testclient", [])) == server.RATE_LIMIT
 
     def test_rate_bucket_memory_leak(self):

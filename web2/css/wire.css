@@ -77,7 +77,65 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.arch-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 44px 14px;
+  border-bottom: 1px solid var(--w-line);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.arch-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  background: var(--w-surface);
+  border: 1px solid var(--w-line);
+  flex: 1;
+}
+
+.arch-step.highlight-gate {
+  border-color: rgba(240, 168, 92, 0.35);
+  background: rgba(240, 168, 92, 0.06);
+}
+
+.arch-idx {
+  font-family: var(--w-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--w-amber);
+  opacity: 0.85;
+}
+
+.arch-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.arch-tag {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--w-ink-3);
+  font-weight: 600;
+}
+
+.arch-title {
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--w-ink);
+}
+
+.arch-arrow {
+  color: var(--w-ink-4);
+  font-size: 14px;
 }
 
 .top {

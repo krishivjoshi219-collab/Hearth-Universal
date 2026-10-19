@@ -61,6 +61,7 @@ from hearth import (
     brains,
     causal_twin,
     commerce,
+    delivery_clawback,
     forensics,
     heartbeat,
     home_mock,
@@ -1521,12 +1522,24 @@ async def api_decide(request: Request):
     if gate is not None:
         return gate
 
+    # Persona guardrail: deciding moves a grown-up action — the child profile
+    # stages nothing and approves nothing (mirrors the renewals/cart gates).
+    _dpid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+    if _dpid == "child":
+        audit.append("sentinel", "child_decide_blocked", {"id": pid})
+        return JSONResponse({"ok": False, "blocked": True,
+                             "error": "Approving money moves is a grown-up job"},
+                            status_code=403)
+
     if pid.startswith("prop_real_"):
-        res = real_mode.real_manager.decide_real_proposal(pid, "approve" if approved else "reject")
+        res = await asyncio.to_thread(real_mode.real_manager.decide_real_proposal,
+                                      pid, "approve" if approved else "reject")
         _bump("decide")
         return JSONResponse(res)
 
-    out = proposals.decide(pid, approved)
+    # Execute off the event loop: workspace_exec approvals can run subprocesses
+    # for up to 60s and would otherwise freeze every REST route (critic P1#10).
+    out = await asyncio.to_thread(proposals.decide, pid, approved)
     if isinstance(out, dict) and out.get("ok") is False:
         err = str(out.get("error", ""))
         # Single-use replay is a conflict, not a missing resource.
@@ -1735,8 +1748,20 @@ async def api_home_device(request: Request):
     patch = body.get("patch", {})
     if not isinstance(patch, dict):
         return JSONResponse({"ok": False, "error": "patch must be an object"}, status_code=400)
-    # Child-safety + fail-closed: climate/lock changes via REST respect persona.
-    persona = str(body.get("persona", "") or body.get("persona_id", ""))
+    # Lock/door patches never merge directly: the front door may only move
+    # through the unlock proposal flow (/api/home/lock). Closes the REST
+    # bypass found in the adversarial pass (patch merge -> unlocked, no ask).
+    _keys = {str(k).lower() for k in patch}
+    if str(device).lower() in ("lock", "door") or (_keys & {"locked", "front_door"}):
+        audit.append("sentinel", "rest_device_denied", {"reason": "lock patches require the unlock proposal"})
+        return JSONResponse({"ok": False, "approval_required": True,
+                             "error": "Lock changes go through the unlock proposal — nothing moves without your OK."},
+                            status_code=403)
+    # Child-safety + fail-closed: climate changes via REST respect the
+    # server-side persona bridge as well as any explicit request persona.
+    _pid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+    _req = str(body.get("persona", "") or body.get("persona_id", "")).lower()
+    persona = "child" if (_pid == "child" or _req == "child") else _req
     v = sentinel.judge("home_update_device", {"persona": persona})
     if v.decision == "deny":
         audit.append("sentinel", "rest_device_denied", {"reason": v.reason})
@@ -1918,6 +1943,7 @@ async def api_reset(request: Request):
         return gate
     home_mock.reset_state()
     proposals.clear_proposals()
+    delivery_clawback.clear_claims()
     audit.append("human", "system_reset", {"action": "clean_state_reset"})
     return JSONResponse({"ok": True, "message": "State reset cleanly"})
 
@@ -2596,6 +2622,39 @@ async def api_timemachine(request: Request):
 @mcp.custom_route("/api/commerce/delivery-tracker", methods=["GET"])
 async def api_delivery_tracker(request: Request):
     return JSONResponse(commerce.get_delivery_tracker())
+
+
+@mcp.custom_route("/api/commerce/delivery-clawback", methods=["GET", "POST"])
+async def api_delivery_clawback(request: Request):
+    """Prime late-delivery clawback: GET scans the SLA feed, POST stages the $5 claim.
+
+    Idempotent: one open claim per order — repeated POSTs return the existing
+    pending proposal as ``already`` instead of double-staging.
+    """
+    if request.method == "GET":
+        return JSONResponse(delivery_clawback.scan())
+    _t = _throttled(request)
+    if _t is not None:
+        return _t
+    gate = _adult_or_403(request, "actions_propose")
+    if gate is not None:
+        return gate
+    # Persona guardrail: the child profile cannot stage money claims.
+    _cpid = ACTIVE_PERSONA.get("id", "admin") if isinstance(ACTIVE_PERSONA, dict) else "admin"
+    if _cpid == "child":
+        audit.append("sentinel", "child_clawback_blocked", {})
+        return JSONResponse({"ok": False, "staged": False, "blocked": True,
+                             "error": "Child profile cannot stage delivery credit claims"},
+                            status_code=403)
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    if not isinstance(body, dict):
+        body = {}
+    order_id = str(body.get("order_id") or "").strip() or None
+    out = delivery_clawback.stage_claim(order_id)
+    return JSONResponse(out, status_code=200 if out.get("ok") else 404)
 
 
 @mcp.custom_route("/api/commerce/scan", methods=["POST"])

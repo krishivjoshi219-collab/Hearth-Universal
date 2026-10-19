@@ -8,6 +8,7 @@ the ledger as hourly frames with narration, money, and jump markers.
 """
 from __future__ import annotations
 
+import contextlib
 import json
 import time
 from typing import Any
@@ -187,8 +188,8 @@ def day_frames(hours: int = 24) -> dict[str, Any]:
             lines = path.read_text().splitlines()
         except Exception:
             lines = []
-        for line in lines:
-            line = line.strip()
+        for raw_line in lines:
+            line = raw_line.strip()
             if not line:
                 continue
             try:
@@ -208,10 +209,8 @@ def day_frames(hours: int = 24) -> dict[str, Any]:
             b["by_action"][action] = b["by_action"].get(action, 0) + 1
             detail = e.get("detail") or {}
             if action == "microgrid_dispatch_settled":
-                try:
+                with contextlib.suppress(Exception):
                     b["vpp_kw"] += float(detail.get("allocated_kw", 0) or 0)
-                except Exception:
-                    pass
             if action in ("synthesis_refused_privileged", "skill_synthesized_and_mounted",
                           "incident_reconstructed", "forge_tool_applied"):
                 marker_sources.append((ts, action, detail))
@@ -225,10 +224,8 @@ def day_frames(hours: int = 24) -> dict[str, Any]:
                 continue
             m = r.get("money") or {}
             for key in ("earned_usd", "saved_usd", "spent_usd"):
-                try:
+                with contextlib.suppress(Exception):
                     b["money"][key] = round(b["money"][key] + float(m.get(key, 0) or 0), 2)
-                except Exception:
-                    pass
     except Exception:
         pass
 

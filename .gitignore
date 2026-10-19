@@ -28,3 +28,9 @@ demo_production/
 !demo_production/screenshots/
 *.mp4
 backups/
+
+# War room inter-agent logs
+discussion.md
+HEARTH_WAR_ROOM_DEBATE.md
+.watcher_10s.log
+*.swp

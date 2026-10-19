@@ -12,7 +12,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from mcp_strands_adapter import (  # noqa: E402
+from mcp_strands_adapter import (
     MCPServerBridge,
     StrandsMCPToolBridge,
     strands_available,
@@ -181,8 +181,8 @@ def test_agent_is_exported_via_as_tool():
 @needs_strands
 def test_agent_tool_handler_drives_the_async_stream():
     """The sync adapter must drain AgentTool.stream() and surface SDK errors."""
-    from strands import Agent
     from mcp_strands_adapter.adapter import _AgentToolHandler
+    from strands import Agent
 
     agent = Agent(
         name="echo_agent",

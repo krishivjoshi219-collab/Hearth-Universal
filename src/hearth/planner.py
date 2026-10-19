@@ -18,6 +18,7 @@ from . import (
     audit,
     brains,
     commerce,
+    delivery_clawback,
     forensics,
     home_mock,
     mediation,
@@ -515,14 +516,24 @@ def _react_live(goal: str, context_dump: str, execute, created: list, dag: list,
         "Money moves, orders, cancellations, UNLOCKING doors, shell commands and file writes "
         "are GATED: stage them with actions_propose and NEVER execute directly (direct calls fail closed). "
         "Before proposing, check actions_list_proposals to avoid duplicates. "
+        "If the already-established observations already cover the goal, answer in ONE final call — never re-verify covered work. "
         "Every reply must be EXACTLY one JSON object and nothing else: "
         '{"call": {"tool": "name", "args": {...}, "why": "short reason"}} to act, or '
-        '{"final": "answer grounded ONLY in tool results above"} when done. Max 6 calls.'
+        '{"final": "the outcome in at most two sentences: lead with the key number, then what is waiting for approval"} when done. Max 6 calls.'
         f"\nTOOLS:\n{_tool_specs()}"
     )
+    staged_block = ""
+    try:
+        pend = [p for p in proposals.list_proposals("pending") if isinstance(p, dict)][:6]
+        if pend:
+            staged_block = ("\nPending proposals ALREADY staged (do NOT re-propose; "
+                            "the user approves or declines them):\n"
+                            + "\n".join(f"- {p.get('title')} ({p.get('id')})" for p in pend))
+    except Exception:
+        staged_block = ""
     history = [
         {"role": "system", "content": system},
-        {"role": "user", "content": f"Goal: {goal}\nAlready established (do not redo, build on it):\n{(context_dump or '(nothing yet)')[:1500]}"},
+        {"role": "user", "content": f"Goal: {goal}\nAlready established (do not redo, build on it):\n{(context_dump or '(nothing yet)')[:1200]}" + staged_block},
     ]
     for _ in range(REACT_MAX_STEPS):
         try:
@@ -666,11 +677,19 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
     # 3. Semantic Analysis & Real Multi-Step Execution
     semantic_res = _route_semantic_execution(goal_str, execute_tool, proposals_created, dag_steps, persona_check=persona_check)
     
-    # 4. Synthesize with Active Brain (Bedrock / Cloud / Offline)
+    # 4. Synthesize with the active brain.
+    # Live providers run the ReAct loop directly: it uses the same tools and
+    # gates, and its final answer is what the household sees — a separate
+    # synthesis pass would be a second metered round-trip whose text gets
+    # replaced anyway. Local/offline engines keep the synthesis path.
+    configured = (preferred_provider or brains._get_active_provider() or "local").lower()
+    live_expected = configured not in ("local", "")
+    intent = semantic_res.get("intent", "GENERAL_AGENTIC")
+
     # Prepare messages grounded in live executed tool observations
     conversation = memory.chat_history_get(limit=6)
     messages_payload = []
-    
+
     system_prompt = (
         "You are Hearth Universal, an open glass-box operations agent for Amazon Alexa+. "
         "You operate on a Propose-Never-Execute safety contract. "
@@ -678,31 +697,45 @@ def plan(goal: str, preferred_provider: str | None = None) -> dict:
         "Cite exact temperatures, prices, stock percentages, and subscription names. Be concise, warm, and helpful."
     )
     messages_payload.append({"role": "system", "content": system_prompt})
-    
+
     messages_payload.extend({"role": c["role"], "content": c["content"]} for c in conversation)
-        
+
     tool_grounding = f"\n[Live System Observations from Executed Tools]:\n{semantic_res.get('context_dump', '')}"
     messages_payload[-1]["content"] += tool_grounding
-    
-    brain_res = brains.chat(messages_payload, preferred_provider=preferred_provider)
-    
-    # In local agent mode or fallback, use our real executed tool synthesis
-    if (brain_res.provider in ("local-agent", "local-fallback", "sentinel-blocked") and semantic_res.get("grounded_synthesis")) or (brain_res.fallback and semantic_res.get("grounded_synthesis")):
-        final_text = semantic_res["grounded_synthesis"]
-    else:
-        final_text = brain_res.text or semantic_res.get("grounded_synthesis", "")
 
-    # Live brains graduate to the general ReAct loop: same tools, same gates,
-    # but the model — not a keyword branch — drives. Deterministic grounding stays
-    # in context so numbers never get invented.
-    intent = semantic_res.get("intent", "GENERAL_AGENTIC")
-    if (not brain_res.fallback
-            and brain_res.provider not in ("local-agent", "local-fallback", "sentinel-blocked")):
+    brain_res = None
+    if live_expected:
         live_text = _react_live(goal_str, semantic_res.get("context_dump", ""), execute_tool,
                                 proposals_created, dag_steps, preferred_provider)
         if live_text:
             final_text = live_text
             intent = "LIVE_AGENTIC"
+            brain_res = brains.BrainResponse(
+                text=live_text,
+                model=os.environ.get("HEARTH_MODEL") or "live-model",
+                provider=configured,
+                fallback=False,
+            )
+
+    if brain_res is None:
+        brain_res = brains.chat(messages_payload, preferred_provider=preferred_provider)
+
+        # In local agent mode or fallback, use our real executed tool synthesis
+        if (brain_res.provider in ("local-agent", "local-fallback", "sentinel-blocked") and semantic_res.get("grounded_synthesis")) or (brain_res.fallback and semantic_res.get("grounded_synthesis")):
+            final_text = semantic_res["grounded_synthesis"]
+        else:
+            final_text = brain_res.text or semantic_res.get("grounded_synthesis", "")
+
+        # If the configured provider looked local but the model turned out real
+        # (e.g. Bedrock opted in via env), graduate to the live loop like before.
+        if (not live_expected
+                and not brain_res.fallback
+                and brain_res.provider not in ("local-agent", "local-fallback", "sentinel-blocked")):
+            live_text = _react_live(goal_str, semantic_res.get("context_dump", ""), execute_tool,
+                                    proposals_created, dag_steps, preferred_provider)
+            if live_text:
+                final_text = live_text
+                intent = "LIVE_AGENTIC"
 
     # Record assistant turn
     memory.chat_history_append("assistant", final_text, brain_res.model)
@@ -951,7 +984,9 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "kind": "cancel_subscription",
                     "title": title,
                     "reasons": f"{item['usage_status']}. {item.get('reason', '')}",
-                    "cost_delta_yr": item["savings_yr"],
+                    # Negative delta = it costs less than today (house convention:
+                    # tray/receipt/cockpit all render negative as "+$X/yr saved").
+                    "cost_delta_yr": -item["savings_yr"],
                     "risk_level": "low",
                     "diff": f"Current: ${item['cost_yr']}/yr -> After: $0/yr (Saves ${item['savings_yr']}/yr).",
                     "meta": {"service_id": item["id"]}
@@ -968,7 +1003,8 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
                     "kind": "downgrade_subscription",
                     "title": title,
                     "reasons": f"{item['usage_status']}. {item.get('reason', '')}",
-                    "cost_delta_yr": item["savings_yr"],
+                    # House convention: negative delta renders as "+$X/yr saved".
+                    "cost_delta_yr": -item["savings_yr"],
                     "risk_level": "low",
                     "diff": f"Current: ${item['cost_yr']}/yr -> Downgrade: Saves ${item['savings_yr']}/yr.",
                     "meta": {"service_id": item["id"]}
@@ -1496,6 +1532,64 @@ def _route_semantic_execution(goal: str, call_tool: Callable, proposals_created:
             f"• **Replenishment**: {fc.get('pantry_alert')}\n\n"
             f"💬 *\"{fc.get('narrative')}\"*"
         )
+
+    # --------------------------------------------------------------------------
+    # J2. Amazon Prime Late-Delivery Clawback (SLA miss -> $5 courtesy credit)
+    # --------------------------------------------------------------------------
+    elif any(k in low for k in (
+        "slip", "late delivery", "delivery late", "late package", "late arrival",
+        "clawback", "courtesy credit", "credit claim", "claim credit", "claim a credit",
+        "compensation", "compensate", "reimburse", "refund", "money back",
+        "did anything slip", "what do i get back",
+    )):
+        intent = "DELIVERY_CLAWBACK"
+        tracker = call_tool("commerce_delivery_tracker", {}, "Query Amazon Logistics delivery status")
+        claw_scan = delivery_clawback.scan()
+        claw_target = delivery_clawback.pick_claimable(claw_scan)
+        if claw_target is None:
+            claw_existing = next(
+                (d for d in claw_scan["deliveries"] if d.get("claimed") and d.get("claim")), None
+            )
+            if claw_existing:
+                grounded_synthesis = (
+                    f"💵 **Late-delivery credit already staged**: order `{claw_existing.get('order_id')}` "
+                    f"({claw_existing.get('delay_label')} past the promised time) — the "
+                    f"${delivery_clawback.CREDIT_USD:.2f} courtesy-credit claim is waiting in your Approval Tray. "
+                    f"One tap files it; the credit lands in your ledger with a hash-chained receipt."
+                )
+            else:
+                grounded_synthesis = (
+                    f"✅ **No missed promises to claim** — the last {len(claw_scan.get('deliveries', []))} "
+                    f"Prime deliveries landed on or before their promised time. I keep watching the carrier "
+                    f"feed; the moment a delivery slips past {delivery_clawback.LATE_THRESHOLD_MIN // 60} hours, "
+                    f"the ${delivery_clawback.CREDIT_USD:.2f} courtesy-credit claim drafts itself here for your tap."
+                )
+        else:
+            claw_created = call_tool(
+                "actions_propose",
+                delivery_clawback.proposal_fields(claw_target),
+                "Stage late-delivery courtesy-credit claim in Approval Tray",
+            )
+            if isinstance(claw_created, dict) and claw_created.get("ok") is False and not claw_created.get("proposal"):
+                grounded_synthesis = (
+                    f"🛡️ Leo can't spend or unlock — by design, not by prompt. Blocked by the safety contract: "
+                    f"{claw_created.get('error', 'blocked')}. Nothing was staged or filed."
+                )
+            else:
+                proposals_created.append(claw_created)
+                delivery_clawback.register_claim(str(claw_target["order_id"]), str(claw_created.get("id", "")))
+                grounded_synthesis = (
+                    f"💵 **Amazon Late-Delivery Clawback**:\n\n"
+                    f"• **Order**: `{claw_target.get('order_id')}` "
+                    f"({claw_target.get('carrier')} · {claw_target.get('tracking_number')})\n"
+                    f"• **SLA miss**: promised {claw_target.get('promised_at')} → delivered "
+                    f"{claw_target.get('delivered_at')} (**{claw_target.get('delay_label')} late**)\n"
+                    f"• **House rule**: {delivery_clawback.SLA_RULE}\n"
+                    f"• **Claim drafted**: ${delivery_clawback.CREDIT_USD:.2f} courtesy credit — "
+                    f"now in your Approval Tray\n\n"
+                    f"One tap files it; the credit lands in your ledger and the receipt chain keeps the proof. "
+                    f"Meanwhile the live package: {tracker.get('status_label')}."
+                )
 
     # --------------------------------------------------------------------------
     # K. Amazon Prime Live Delivery Tracker

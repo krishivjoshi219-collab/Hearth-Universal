@@ -156,6 +156,8 @@ SHOWCASE = [
     ("/api/commerce/autopilot-checkout",
      {"utterance": "we are out of everything, fix groceries", "voice_confidence": 0.95},
      ["proposal", "cart_preview", "message"]),
+    ("/api/commerce/delivery-clawback", {},
+     ["ok", "already", "delivery", "proposal", "claim"]),
     ("/api/renewals", {},
      ["renewals", "potential_save_yr", "total_annual_spend"]),
     ("/api/renewals/stage", {"id": "sub_streambox"},

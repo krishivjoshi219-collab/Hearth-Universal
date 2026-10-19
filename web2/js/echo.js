@@ -157,8 +157,30 @@
     var d = new Date(n < 1e12 ? n * 1000 : n);
     return d.toTimeString().slice(0, 5);
   }
+  var lastAskedViaVoice = false;
   function announce(text) {
     if (el.live) el.live.textContent = String(text || "").slice(0, 300);
+  }
+  function speak(text) {
+    if (!("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      var clean = String(text || "")
+        .replace(/(\d+)\+/g, "more than $1")
+        .replace(/\+[$](\d+(\.\d+)?)/g, "$1 dollar credit")
+        .replace(/[$](\d+(\.\d+)?)/g, "$1 dollars")
+        .replace(/[/]yr/g, " per year")
+        .replace(/·/g, ", ")
+        .replace(/[+]/g, "plus ")
+        .replace(/—/g, ", ")
+        .replace(/\s*,\s*/g, ", ")
+        .replace(/\s+/g, " ")
+        .trim();
+      var u = new SpeechSynthesisUtterance(clean.slice(0, 240));
+      u.rate = 1.0;
+      u.pitch = 1.0;
+      window.speechSynthesis.speak(u);
+    } catch (_) {}
   }
   var toastTimer = null;
   function toast(msg, ms) {
@@ -349,7 +371,12 @@
     if (el.said) el.said.hidden = true;
     if (el.voiceWave) el.voiceWave.hidden = true;
     paintAnswer(state);
-    announce([state.verdict, state.sub].filter(Boolean).join(". "));
+    var phrase = [state.verdict, state.sub].filter(Boolean).join(". ");
+    announce(phrase);
+    if (lastAskedViaVoice || document.body.getAttribute("data-display") === "voice-only") {
+      speak(phrase);
+      lastAskedViaVoice = false;
+    }
   }
 
   function countUp(node, text) {
@@ -652,6 +679,54 @@
       };
     },
 
+    "/api/commerce/delivery-clawback": (d) => {
+      var del = d.delivery || {};
+      var prop = d.proposal || {};
+      var claim = d.claim || {};
+      var meta = (prop && prop.meta) || {};
+      var credit = Number(meta.credit_usd || d.credit_usd || claim.credit_usd || 5.00);
+      var label = del.delay_label || "2h 32m";
+      var sealed = String(claim.status || prop.status || "") === "approved";
+      var receiptCode = String((prop.execution || {}).receipt_code || "");
+      var lines = [
+        { k: "carrier / tracking", v: (del.carrier || "AMZL") + " · " + (del.tracking_number || "TBA3094827731") },
+        { k: "promised time", v: String(del.promised_at || "Yesterday, 2:04 PM") },
+        { k: "actual arrival", v: String(del.delivered_at || "Yesterday, 4:36 PM") + " (" + label + " late)" },
+        { k: "prime SLA rule", v: "delays ≥ 2h qualify for $5.00 courtesy credit" },
+      ];
+      var verdict = "Prime delivery slipped " + label + " — $5 credit drafted";
+      var sub = "The package arrived past Amazon's promised window. A $5.00 courtesy credit is staged in your Waiting List — one tap claims it.";
+      var trust = [
+        { icon: "bolt", text: "Prime delivery SLA policy" },
+        { icon: "receipt", text: "staged in waiting list, tap to claim" },
+      ];
+      if (sealed) {
+        if (receiptCode) lines.push({ k: "receipt", v: receiptCode });
+        verdict = "Prime delivery slipped " + label + " — $5 credit claimed";
+        sub = "Claim approved and sealed in your ledger. $" + credit.toFixed(2) + " credited to the household wallet — undo anytime from Receipts.";
+        trust = [
+          { icon: "bolt", text: "Prime delivery SLA policy" },
+          { icon: "receipt", text: "sealed in ledger — undo anytime" },
+        ];
+      } else if (d.already) {
+        verdict = "Prime delivery slipped " + label + " — claim already waiting";
+        sub = "This claim is already staged in your Waiting List — one tap claims it.";
+        trust = [
+          { icon: "bolt", text: "Prime delivery SLA policy" },
+          { icon: "receipt", text: "already staged — one tap to claim" },
+        ];
+      }
+      return {
+        kicker: "Amazon Delivery SLA Shield",
+        big: "+$" + credit.toFixed(2),
+        bigTone: "good",
+        verdict: verdict,
+        sub: sub,
+        lines: lines,
+        trust: trust,
+      };
+    },
+
     "/api/renewals": (d) => {
       var rs = Array.isArray(d.renewals) ? d.renewals.slice(0, 4) : [];
       var lines = rs.map(function (r) {
@@ -753,9 +828,13 @@
       ? { icon: "shield", text: "the guardrail held the line", tone: "bad" }
       : { icon: "lock", text: "Checked for safety" });
     trust.push({ icon: "receipt", text: "receipt issued when it happens" });
+    var head = draft ? (humanVerdict(draft) || firstSentence(draft)) : "";
+    var money = (head.match(/\$[\d,]+(?:\.\d{1,2})?/) || [])[0] || null;
     return {
       kicker: "Hearth",
-      verdict: draft ? humanVerdict(draft) || firstSentence(draft) : "I heard you.",
+      big: money,
+      bigTone: blocked ? null : "good",
+      verdict: head || "I heard you.",
       sub: restAfterFirst(draft),
       lines: lines,
       trust: trust,
@@ -960,7 +1039,7 @@
     var rs = (d && d.receipts) || [];
     var i;
     for (i = 0; i < rs.length; i++) {
-      if (rs[i].kind === "approval_executed" || rs[i].kind === "order_staged" || rs[i].kind === "tool_applied") return rs[i];
+      if (rs[i].kind === "approval_executed" || rs[i].kind === "order_staged" || rs[i].kind === "tool_applied" || rs[i].kind === "credit_claimed") return rs[i];
     }
     return rs[0] || null;
   }
@@ -986,6 +1065,8 @@
       var delta = Number(prop.cost_delta_yr);
       if (isFinite(delta) && delta < 0) row("You save", "+" + usd(Math.abs(delta)) + "/yr");
       else if (isFinite(delta) && delta > 0) row("Extra cost", usd(delta) + "/yr");
+      var credit = Number((ex && ex.credit_usd) || (prop.meta && prop.meta.credit_usd) || 0);
+      if (isFinite(credit) && credit > 0) row(ex && ex.credit_usd ? "Credit claimed" : "Credit on approval", "+" + usd(credit));
       var spent = ledger && ledger.money ? Number(ledger.money.spent_usd) : 0;
       if (isFinite(spent) && spent > 0) row("Paid", usd(spent));
       if (ex.applied) row("Done", "applied exactly once");
@@ -1205,14 +1286,14 @@
   function brainFields() {
     var p = el.keyProvider ? el.keyProvider.value : "local";
     var showBase = p === "ollama" || p === "openai";
-    var showKey = p === "openai" || p === "groq" || p === "openrouter";
+    var showKey = p === "openai" || p === "groq" || p === "openrouter" || p === "gemini";
     var showAws = p === "bedrock";
     if (el.keyBaseUrlField) el.keyBaseUrlField.hidden = !showBase;
     if (el.keyApiKeyField) el.keyApiKeyField.hidden = !showKey;
     if (el.keyRegionField) el.keyRegionField.hidden = !showAws;
     if (el.keyAccessField) el.keyAccessField.hidden = !showAws;
     if (el.keySecretField) el.keySecretField.hidden = !showAws;
-    if (el.keyModelField) el.keyModelField.hidden = !(p === "ollama" || p === "openai" || p === "groq" || p === "openrouter");
+    if (el.keyModelField) el.keyModelField.hidden = !(p === "ollama" || p === "openai" || p === "groq" || p === "openrouter" || p === "gemini");
     if (el.keyNote) {
       el.keyNote.textContent = p === "bedrock"
         ? "Bedrock uses your AWS credentials. They stay on this device with owner-only access and are never echoed back."
@@ -1314,7 +1395,10 @@
       rec.onresult = function (e) {
         var text = e.results && e.results[0] && e.results[0][0] ? e.results[0][0].transcript : "";
         stop();
-        if (text) ask(text);
+        if (text) {
+          lastAskedViaVoice = true;
+          ask(text);
+        }
       };
       rec.onerror = function () { stop(); toast("The mic stayed quiet — type it and I'll answer just as fast."); };
       rec.onend = function () { stop(); };

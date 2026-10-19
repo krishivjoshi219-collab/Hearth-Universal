@@ -16,9 +16,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(ROOT, "mcp-server"))
 
-from starlette.testclient import TestClient  # noqa: E402
 import server  # noqa: E402
-from hearth import parliament, causal_twin, forensics, acoustic, mediation, swarm  # noqa: E402
+from starlette.testclient import TestClient  # noqa: E402
+
+from hearth import acoustic, causal_twin, forensics, mediation, parliament, swarm  # noqa: E402
 
 N = 20
 

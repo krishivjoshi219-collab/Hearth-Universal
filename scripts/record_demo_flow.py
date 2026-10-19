@@ -13,18 +13,16 @@ Saves timestamped high-res screenshots for video slides, pitch deck, and submiss
 from __future__ import annotations
 
 import argparse
-import json
-import os
 import sys
 import time
 from pathlib import Path
 
 try:
     from selenium import webdriver
-    from selenium.webdriver.common.by import By
     from selenium.webdriver.chrome.options import Options
-    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.common.by import By
     from selenium.webdriver.support import expected_conditions as EC
+    from selenium.webdriver.support.ui import WebDriverWait
 except ImportError:
     print("Selenium not available. Please install selenium or run HTTP verification mode.")
     sys.exit(1)

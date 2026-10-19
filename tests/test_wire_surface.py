@@ -27,7 +27,7 @@ WIRE_CSS = os.path.join(ROOT, "web2", "css", "wire.css")
 
 
 def _read(path):
-    with open(path, "r", encoding="utf-8") as fh:
+    with open(path, encoding="utf-8") as fh:
         return fh.read()
 
 
@@ -47,7 +47,7 @@ def test_wire_page_has_no_inline_script_or_style():
     html = _read(WIRE_HTML)
     assert "<style" not in html.lower()
     assert "style=\"" not in html, "inline style attributes break the page CSP"
-    scripts = re.findall(r"<script\b[^>]*>", html, re.I)
+    scripts = re.findall(r"<script\b[^>]*>", html, re.IGNORECASE)
     assert scripts, "the Wire needs its client script"
     for tag in scripts:
         assert "src=" in tag, "scripts must be external under script-src 'self'"

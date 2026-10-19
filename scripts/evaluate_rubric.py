@@ -10,9 +10,9 @@ Build, Ship, Shape: Amazon Developer Hackathon (2026):
 5. E-Commerce & Predictive Pantry Restock (15% Subscribe & Save)
 """
 
-import sys
-import os
 import json
+import os
+import sys
 import time
 import traceback
 
@@ -62,7 +62,7 @@ def main():
     step("Validating MCP server protocol and skill manifest")
     try:
         manifest_path = os.path.join(ROOT, "skill", "agent_skills_manifest.json")
-        with open(manifest_path, "r", encoding="utf-8") as f:
+        with open(manifest_path, encoding="utf-8") as f:
             manifest = json.load(f)
         assert manifest.get("manifestVersion") in ("1.0", "2.0")
         assert manifest.get("runtime", {}).get("protocolVersion") == "2025-11-25"
@@ -110,7 +110,8 @@ def main():
         s1, t1 = alexaplus_engine.exchange_token("client_credentials")
         assert s1 == 200 and t1["scope"] == "mcp:service"
         # Test Tier 2 PKCE authorization code grant (S256 required by OAuth 2.1)
-        import hashlib, base64
+        import base64
+        import hashlib
         verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk_TEST_SUITE"
         challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("utf-8")).digest()).decode("utf-8").rstrip("=")
         code = alexaplus_engine.create_authorization_code("test_client", "", challenge, "S256")
@@ -182,7 +183,7 @@ def main():
     header("4. Sentinel Guardian: Propose-Never-Execute & Child Guardrails")
     step("Testing Adult vs Child Persona security gating")
     try:
-        from hearth import sentinel, audit
+        from hearth import audit, sentinel
 
         # Adult permission for commerce order -> gated as proposal (ask)
         adult_verdict = sentinel.judge(
@@ -263,7 +264,7 @@ def main():
     header("7. Alexa+ Innovation 3: Meta-Skill Synthesizer (Self-Evolving Compiler)")
     step("Autonomously synthesizing and hot-mounting new Agent Skill at runtime")
     try:
-        from hearth import meta_skill, agent_skills
+        from hearth import agent_skills, meta_skill
         res = meta_skill.meta_synthesizer.synthesize(
             requirement="Smart EV charging with solar peak matching",
             author_persona="Alex",
@@ -399,7 +400,9 @@ def main():
     header("11. Autopilot Checkout: Voice-to-Tray + Proactive + Glass Receipt")
     step("Staging voice cart, approving to glass receipt, undoing")
     try:
-        from hearth import commerce, proposals as _props, heartbeat as _hb
+        from hearth import commerce
+        from hearth import heartbeat as _hb
+        from hearth import proposals as _props
         _props.clear_proposals()
         staged = commerce.build_autopilot_checkout(utterance="reorder coffee and detergent")
         assert staged["ok"] is True and staged["staged_only"] is True

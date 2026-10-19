@@ -63,10 +63,10 @@ cd Hearth-Universal
 3. **Verifies Alexa+ Compliance**: Executes [`tests/test_alexaplus_addon_compliance.py`](tests/test_alexaplus_addon_compliance.py) validating RFC 9728 PRM, OAuth 2.1 PKCE S256 two-tier authentication, and `addon.json`.
 4. **Validates Frontier Innovations**: Executes [`tests/test_frontier_innovations.py`](tests/test_frontier_innovations.py) (18 tests verifying Forensics, Acoustics, Treaty, and Swarm VPP).
 5. **Proves the hero flow over live HTTP**: Stages the "out of everything" Subscribe & Save cart via `POST /api/commerce/autopilot-checkout` and prints the Tier-2 gated result.
-6. **Runs the full suite**: 314 tests green, then prints judge links (`/`, `/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
+6. **Runs the full suite**: 362 tests green, then prints judge links (`/`, `/echo`, `/web2`, `/mcp`, `/api/diagnostics`).
 
 ### Bring Your Own Key (Optional)
-The preview answers every free-form question out of the box with the zero-config local engine. To route those answers through your own model, click the **🧠 Connect AI** chip in the `/echo` header (or the callout on first load) and enter a key for OpenAI, Groq, OpenRouter, Ollama (no key needed), any OpenAI-compatible endpoint, or Amazon Bedrock. The key is written to `state/brain_config.json` (chmod 0600, gitignored), applied server-side over `brains.chat`, and never echoed back to the browser — status only ever shows a masked hint. `make clean` removes it. Wrong keys or dead endpoints degrade to the offline engine with an honest notice; they never 500 the household.
+The preview answers every free-form question out of the box with the zero-config local engine. To route those answers through your own model, click the **🧠 Connect AI** chip in the `/echo` header (or the callout on first load) and enter a key for Google Gemini (a first-class preset — `gemini-3.8-flash`), OpenAI, Groq, OpenRouter, Ollama (no key needed), any OpenAI-compatible endpoint, or Amazon Bedrock. The key is written to `state/brain_config.json` (chmod 0600, gitignored), applied server-side over `brains.chat`, and never echoed back to the browser — status only ever shows a masked hint. `make clean` removes it. Wrong keys or dead endpoints degrade to the offline engine with an honest notice; they never 500 the household.
 
 ---
 
@@ -74,7 +74,7 @@ The preview answers every free-form question out of the box with the zero-config
 
 ## 🔨 Hearth Forge — the agent that builds new tools at runtime
 
-Hearth ships with 51 MCP tools. Ask for a household rule it has never seen and it **compiles a brand-new MCP tool, proves it, and mounts it into the live server** — no restart, no model key required:
+Hearth ships with 51 hand-built MCP tools (54 served live once forged skills are mounted — the demo film mints a 4th on camera: 54 → 55). Ask for a household rule it has never seen and it **compiles a brand-new MCP tool, proves it, and mounts it into the live server** — no restart, no model key required:
 
 1. **Intent → schema** — deterministic compiler in [`src/hearth/meta_skill.py`](src/hearth/meta_skill.py)
 2. **Sentinel deny-by-default policy gate**, then **AST validation** (forbidden imports/calls blocked)
@@ -113,7 +113,7 @@ score — the panel does that.
 
 | Official criterion | What we built | Run this to verify |
 |---|---|---|
-| **Tech Implementation** — how well built, how effectively the required tech is used | Self-hosted MCP server on the real `mcp` SDK: 51 tools / 8 resources / 3 prompts, spec `2025-11-25`, RFC 9728 PRM, OAuth 2.1 with PKCE S256 (client-credentials + auth-code + refresh tiers). Real algorithms, not stubs: constrained Nash bargaining (`parliament.py`), 1R1C thermal + battery integration with quantiles/CVaR (`causal_twin.py`), log-odds Bayesian hypothesis testing over orifice/wind-load physics (`forensics.py`), numpy FFT with parabolic peak interpolation (`acoustic.py`), uniform-price double auction (`swarm.py`). | `pytest` · `python3 scripts/evaluate_rubric.py` · `python3 tests/test_creative_mcp_endpoints.py` |
+| **Tech Implementation** — how well built, how effectively the required tech is used | Self-hosted MCP server on the real `mcp` SDK: 51 hand-built tools (54 served live with forged skills mounted) / 8 resources / 3 prompts, spec `2025-11-25`, RFC 9728 PRM, OAuth 2.1 with PKCE S256 (client-credentials + auth-code + refresh tiers). Real algorithms, not stubs: constrained Nash bargaining (`parliament.py`), 1R1C thermal + battery integration with quantiles/CVaR (`causal_twin.py`), log-odds Bayesian hypothesis testing over orifice/wind-load physics (`forensics.py`), numpy FFT with parabolic peak interpolation (`acoustic.py`), uniform-price double auction (`swarm.py`). | `pytest` · `python3 scripts/evaluate_rubric.py` · `python3 tests/test_creative_mcp_endpoints.py` |
 | **Design** — complete, coherent product experience; intuitive for the target device | Three surfaces that read as one product: a **consumer home page** (`/` — professional intro, plain-language benefits, live figures from the running engine, pricing, FAQ, Get Started hand-off), an **Echo Show viewport** (`/echo`, 1280×800, glanceable cards, 64px+ touch targets, voice-first turn flow with live TTS) and a dense **ops cockpit** (`/web2`) for deep inspection. The backend implements all four display modes (`inline`, `fullscreen`, `hydrated`, `voice-only`) plus MCP Apps resource descriptors. | Open `/`, then `/echo` and `/web2` |
 | **Potential Impact** — credible, specific case; could serve an audience beyond the hackathon | Propose-Never-Execute with 1-tap undo, child-persona guardrails, and an HMAC-chained audit ledger make autonomous control of a physical home defensible. Purchasing (voice-to-tray → glass receipt → undo) maps onto the Payments/checkout surface Alexa+ is building. Offline-first means it runs in a judge room with no cloud account. | `./replay.sh` (deterministic decision replay) · `/api/audit/replay` |
 | **Quality of the Idea** — creative, imaginative, genuine ecosystem understanding | The judges' own "creative" bar for Alexa+ is *"agentic workflow that orchestrates across services autonomously, context-aware add-on that maintains state across sessions, purchasing capabilities, MCP Apps, Agent Skills."* Hearth targets each: multi-agent orchestration, cross-session memory, checkout, MCP Apps resources, and a **Meta-Skill Synthesizer** that compiles and hot-mounts new skills at runtime behind an AST validator. | `python3 -c "…meta_skill.meta_synthesizer.synthesize('…')"` |
@@ -179,7 +179,7 @@ flowchart TD
 
     subgraph Model_Mesh ["Universal Model Mesh (Zero-Lockin)"]
         MeshRouter["Universal Model Router (/api/models/mesh)"]
-        Bedrock["Amazon Bedrock (Default)\nAmazon Nova Pro (300k Context)"]
+        Bedrock["Amazon Bedrock (Default)\nNova Pro 300k · Claude\n+ Google Gemini & OpenAI-compatible presets"]
         CustomAPIs["Any Remote/Local API\n(Ollama, vLLM, OpenAI, Custom URL)"]
         AgentCore["Bedrock AgentCore Short & Long-Term Memory Sync"]
     end
@@ -322,7 +322,7 @@ sequenceDiagram
     Alexa->>OAuth: POST /oauth/token (grant_type=client_credentials)
     OAuth-->>Alexa: Service Bearer Token (Expires in 3600s)
     Alexa->>MCP: POST /mcp (tools/list with Service Token)
-    MCP-->>Alexa: 51 Tools + 8 Resources + 3 Prompts
+    MCP-->>Alexa: 54 Tools (51 hand-built + forged) + 8 Resources + 3 Prompts
     end
 
     rect rgb(255, 248, 240)
@@ -511,10 +511,10 @@ Hearth provides **6 deeply detailed developer friction logs** complete with repr
 
 ---
 
-## 🛠️ Complete FastMCP Tool Catalog (51 Tools)
+## 🛠️ Complete FastMCP Tool Catalog (51 hand-built + forged)
 
-All 51 tools are exposed over Streamable HTTP at `/mcp` conforming to MCP protocol version `2025-11-25`
-(count verified live via `tools/list`):
+All 51 hand-built tools are exposed over Streamable HTTP at `/mcp` conforming to MCP protocol version `2025-11-25`
+(a fresh clone serves 51; our deployment serves 54 with forged skills mounted — counted live via `tools/list`):
 
 ### 1. Frontier Breakthrough Innovations
 - `forensic_incident_reconstruct(incident_type, lookback_seconds, sensor_readings?)`: Bayesian reverse causal walk; pass live `sensor_readings` (wind_mph, torque_nm, biometric) to flip benign↔intruder — fully input-sensitive.
@@ -629,12 +629,11 @@ tests/test_winning_parliament_causal_meta.py ... [14 passed]
 tests/test_input_sensitivity_10.py .... [4 passed]
 
 ==============================================================
-305 passed (plus 15 in open-source adapter = 320 total passed)
-TOTAL                                5294   1184   1510    313    75%
-Required test coverage of 70.0% reached. Total coverage: 74.65%
+343 passed  (+15 in the standalone mcp-strands-adapter suite, run separately)
+Required test coverage of 70% reached (pytest-cov)
 ```
 
-* **Mostly In-Memory Testing**: 313 of 314 tests use Starlette's `TestClient` with no socket binding. The exceptions (`tests/test_mcp_http.py` spawns a real server on port 8799; `test_brain_connect.py` runs a mock OpenAI-compatible provider on a loopback socket) deliberately prove the wire, not an in-process shim.
+* **Mostly In-Memory Testing**: The contract and unit suites drive the app through Starlette's `TestClient` with no socket binding. The exceptions deliberately prove the wire — `tests/test_mcp_http.py` spawns a real server on port 8799, and `tests/test_brain_connect.py` runs a mock OpenAI-compatible provider on a loopback socket.
 
 ---
 

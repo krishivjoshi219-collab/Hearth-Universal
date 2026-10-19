@@ -60,6 +60,10 @@ ignore = ["E501", "S", "BLE"]
 "src/hearth/home_mock.py" = ["PLW0603", "E402"]
 "src/hearth/strands_agent.py" = ["PLW0603"]
 
+# Household narration uses typographic × and − (the day-replay rail renders
+# them as prose); everything else in replay.py is lint-clean.
+"src/hearth/replay.py" = ["RUF001"]
+
 # The server bootstraps env/config before importing the library, mutates one
 # process-level persona singleton, and reads small local JSON state files
 # synchronously inside async routes. All deliberate for a single-node

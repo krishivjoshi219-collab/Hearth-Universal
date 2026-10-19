@@ -41,12 +41,24 @@
     for (let i = reveals.length - 1; i >= 0; i--) {
       const el = reveals[i];
       const r = el.getBoundingClientRect();
-      if (r.top < vh * 0.94 && r.bottom > -60) {
+      if (r.top < vh * 1.3 && r.bottom > -200) {
         el.classList.add("in");
         reveals.splice(i, 1);
       }
     }
   };
+
+  if ("IntersectionObserver" in window) {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("in");
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin: "300px 0px" });
+    reveals.forEach((el) => io.observe(el));
+  }
 
   if (reduceMotion) {
     reveals.forEach((el) => el.classList.add("in"));
@@ -63,7 +75,10 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
     window.addEventListener("load", onScroll);
-    window.setTimeout(onScroll, 900); // fonts/layout settle
+    window.setTimeout(onScroll, 300);
+    window.setTimeout(() => {
+      reveals.forEach((el) => el.classList.add("in"));
+    }, 1800);
   }
 
 
@@ -165,7 +180,7 @@
         const metaEl = $("#heroLeakMeta");
         const s = money(worst.savings_yr);
         if (nameEl && worst.name) nameEl.textContent = worst.name;
-        if (saveHero && s) saveHero.textContent = s;
+        if (saveHero && s) saveHero.textContent = "+" + s + "/yr";
         if (metaEl) {
           const days = Number(worst.last_used_days);
           const fallback = /(\d+)\s*(?:days?|d)\b/i.exec(worst.usage_status || worst.reason || "");
@@ -226,6 +241,109 @@
   }
 
   // --------------------------------------------------------------- niceties
+
+  // --------------------------------------------------- interactive scenarios
+  const approvedScenarios = new Set();
+
+  function switchScenario(scenarioKey) {
+    document.querySelectorAll(".sim-pill").forEach((p) => {
+      const match = p.getAttribute("data-scenario") === scenarioKey;
+      p.classList.toggle("active", match);
+      p.setAttribute("aria-selected", match ? "true" : "false");
+    });
+
+    document.querySelectorAll(".scen-panel").forEach((panel) => {
+      panel.hidden = panel.id !== `scen-${scenarioKey}`;
+    });
+
+    // Update floating chips
+    const chipReceiptText = $("#heroChipReceiptText");
+    const chipReceiptHash = $("#heroChipReceiptHash");
+    const chipUndo = $("#heroChipUndo");
+
+    const hashes = {
+      subs: "7f3a·c2b8",
+      groceries: "c982·4ffa",
+      delivery: "9b12·33e1",
+      child: "e410·77c1"
+    };
+
+    const isApproved = approvedScenarios.has(scenarioKey);
+    if (chipReceiptText) {
+      chipReceiptText.textContent = isApproved
+        ? "Receipt sealed in ledger"
+        : (scenarioKey === "child" ? "Gate held" : "Receipt ready");
+    }
+    if (chipReceiptHash) {
+      chipReceiptHash.textContent = hashes[scenarioKey] || "7f3a·c2";
+    }
+    if (chipUndo) {
+      chipUndo.classList.toggle("active", isApproved);
+    }
+  }
+
+  // Pill click handlers
+  document.querySelectorAll(".sim-pill").forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const scenario = pill.getAttribute("data-scenario");
+      if (scenario) switchScenario(scenario);
+    });
+  });
+
+  // Action button click handlers inside scenario cards
+  document.querySelectorAll(".sim-action-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const scenario = btn.getAttribute("data-scenario");
+      if (!scenario) return;
+      approvedScenarios.add(scenario);
+      btn.classList.add("approved");
+      btn.textContent = "Approved: Sealed in Ledger";
+
+      const pillEl = $(`#heroGuardPill-${scenario}`);
+      if (pillEl) pillEl.textContent = "1 executed";
+
+      const chipUndo = $("#heroChipUndo");
+      if (chipUndo) chipUndo.classList.add("active");
+
+      const chipReceiptText = $("#heroChipReceiptText");
+      if (chipReceiptText) chipReceiptText.textContent = "Receipt sealed in ledger";
+    });
+  });
+
+  // Undo button click handler
+  const chipUndo = $("#heroChipUndo");
+  if (chipUndo) {
+    chipUndo.addEventListener("click", () => {
+      const activePill = document.querySelector(".sim-pill.active");
+      const scenario = activePill ? activePill.getAttribute("data-scenario") : "subs";
+      approvedScenarios.delete(scenario);
+
+      const btn = document.querySelector(`.sim-action-btn[data-scenario="${scenario}"]`);
+      if (btn) {
+        btn.classList.remove("approved");
+        const defaultLabels = {
+          subs: "Approve 3 Cancellations",
+          groceries: "Approve Consolidated Cart",
+          delivery: "Claim $5.00 Courtesy Credit"
+        };
+        btn.textContent = defaultLabels[scenario] || "Review & Approve";
+      }
+
+      const pillEl = $(`#heroGuardPill-${scenario}`);
+      if (pillEl) {
+        const defaultPills = {
+          subs: "0 executed",
+          groceries: "staged in tray",
+          delivery: "1-tap claim"
+        };
+        pillEl.textContent = defaultPills[scenario] || "0 executed";
+      }
+
+      chipUndo.classList.remove("active");
+      const chipReceiptText = $("#heroChipReceiptText");
+      if (chipReceiptText) chipReceiptText.textContent = "Compensating reversal sealed";
+    });
+  }
 
   // Smooth-scroll fallback for browsers without CSS scroll-behavior.
   document.querySelectorAll('a[href^="#"]').forEach((a) => {

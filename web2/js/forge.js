@@ -37,12 +37,12 @@ if (panel) {
 
   const TEMPLATES = [
     {
-      label: "Charge the car after 10pm, cheap power only",
-      rule: "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh",
-    },
-    {
       label: "Cool the house before the evening rush",
       rule: "Pre-cool the living room to 70F before the 4pm peak tariff",
+    },
+    {
+      label: "Charge the car after 10pm, cheap power only",
+      rule: "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh",
     },
     {
       label: "Dishwasher on the cheap, quiet hours",

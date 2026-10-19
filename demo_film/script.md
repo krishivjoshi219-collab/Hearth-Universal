@@ -1,164 +1,162 @@
-# HEARTH — The Film
-### Alexa+ Hackathon submission · cinematic demo · 1920×1080 · ~3:00
+# HEARTH — The Film (as shot)
+### Alexa+ Hackathon submission · live-navigated product demo · 1920×1080 @ 30 fps · **2:58** (178.2 s)
 
-**Logline.** A household agent that runs a real home, tells you the truth about it, and when it meets a need nobody coded — it writes the tool itself, proves every step, and never acts without you.
+**Logline.** A small servant for the whole household. It finds the money, food and energy a
+family leaks, stages exactly what to do about it — writes the tool when nobody coded it,
+proves every step — and never acts without you.
 
-**Narrative arc (trustworthy autonomy):** leak → conversation → cockpit → the line it never crosses → the story behind every action → insight → **THE FORGE** → proof → close.
+**What is real on screen.**
+- A real server (`mcp-server/server.py`), a real Chrome, the shipped app surfaces (`/`, `/echo`, `/web2/`).
+- The money question is answered live by **Google Gemini 3.8 Flash** (`gemini-3.8-flash`); the answer
+  card shows the brain chip *“Gemini · gemini-3.8-flash”* on camera.
+- The forge scene mints a new tool **live**: catalog goes 54 → 55 while the camera watches, and the
+  new ability is invoked for real (`applied_hour: 16`, `savings_usd: 0.7`).
+- Nothing is composited; the UI in frame is the UI that ships.
 
-**Voice.** Calm, warm, confident documentary narrator. Rate −4%. No hype, no exclamation. The product is the excitement.
+**Narrative arc:** leak → conversation → cockpit → the line it never crosses → the story behind
+every action → insight → **THE FORGE** → proof → close.
 
-**Direction principles.**
-- Real product, real server, live actions. Nothing staged, nothing faked.
-- The cursor is a character: deliberate moves, pauses that let numbers land.
-- Every scene = one idea. Forge is the climax; everything before it earns the right to it.
-- Fades between scenes; silence is allowed to breathe under the final line.
+**Voice.** Calm documentary narrator (edge-tts `en-US-AndrewMultilingualNeural`, rate −4%).
+Music: an original synthesized room-tone bed, mixed at 0.55, `loudnorm I=-16:TP=-1.5:LRA=11`.
+No third-party audio, no Amazon/Alexa marks.
 
 ---
 
-## Scene s01 — Cold open · Landing *(~13s)*
-**VO:** "Every home runs on guesswork. Forgotten subscriptions. Energy burned at the wrong hour. Money that quietly leaks away. Hearth is one calm agent that stops the leak — and shows you how."
+## s01 — Cold open · Landing · 16.70 s
+**VO.** “Every home runs on guesswork. Forgotten subscriptions. Energy burned at the wrong hour.
+Money that quietly leaks away. Hearth is not an agent. It's a small servant for your household —
+and it never acts without asking.”
 
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | `/` loads. Fade in from black. |
-| 0.8 | Slow gliding mouse move across hero headline. |
-| D−6 | Wheel-scroll down ~2 viewports in 5 gentle steps, revealing the $800-leak section, the "What Hearth does" cards, the conversation strip. |
-| D−1.5 | Settle. Hold on the "Stop paying for what you forgot." line. |
+| 0.0 | `/` fades in on the hero: **Tell Alexa, “Save me $800.”** |
+| ~2.7 | Glide to the stats band — `$803.76 · 15% · 96% · $0.18 · 0` |
+| ~5.2–7.4 | The leak: “Every household leaks — quietly” (subscriptions · the 9 p.m. pantry panic · oversold trust) |
+| ~9.9 | What it does: “One small servant for the whole household” + the conversation strip |
+| ~12.7 | The promises: “No commands to memorize” + “It asks before it acts” cards |
+| 15.0 | Settle low, hold the line — fade to black (0.7 s). |
 
-**On screen copy:** "Tell Alexa, …" / "The quiet $800 leak in every household" / "One calm agent for the whole household".
+## s02 — “Save me $800.” · Echo surface · 24.28 s
+**VO.** “Just talk to it. Save me eight hundred dollars. Hearth understands the whole home —
+energy, pantry, comfort, and every subscription that quietly renews. The answer comes back inline,
+full screen, structured with live data, and voice only. One question. Four ways to see it.”
 
----
-
-## Scene s02 — "Save me $800." · Echo surface *(~22s)*
-**VO:** "Just talk to it. 'Save me eight hundred dollars.' Hearth understands the whole home — energy, pantry, water, comfort. Answer: inline, fullscreen, hydrated with live data, voice-only. One question. Four ways to see it. No apps to learn. No dashboards to decode."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | `/echo` loads (landing-styled surface). |
-| 1.2 | Click `#askText`; type `Save me $800.` at ~60ms/char (human cadence, includes the period). |
-| 4.0 | Click `#askSend`. Hearth "thinks" (ring/typing). |
-| 6.5 | Answer card appears → pause 1.5s to read. |
-| 9.0 | Click mode chip `[data-mode="fullscreen"]` → fullscreen answer. Hold 2s. |
-| 12.0 | Click `[data-mode="hydrated"]` → live data woven in. Hold 2s. |
-| 15.0 | Click `[data-mode="voice-only"]` → answer speaks. Hold. |
-| 18.5 | Return to `[data-mode="inline"]`. |
+| 1.9 | Cursor eases to the composer, clicks in. |
+| 2.7 | Types `Save me $800.` (voice says it with him). |
+| ~5.8 | Sends. The question stages; the live brain thinks on camera. |
+| ~11 | **The answer lands**: count-up to **$803.76** — “$803.76/yr in projected savings has been
+identified across your subscriptions.” Three proposals staged (StreamBox 4K, Ultra Cloud Gaming,
+Metro Fitness), receipts rail at $810.54, trust strip ***Gemini · gemini-3.8-flash*** / Checked for
+safety / receipt issued when it happens. |
+| ~13 | Opens **Display & AI**; tours the four modes — **Full screen → Structured → Voice only →
+Inline** — brain row reads *Google Gemini*. |
+| ~21 | Closes the sheet; the answer + pending Approve/Decline stay on screen. |
 
-*Backup if a chip fails: proceed — never retry on camera.*
+## s03 — The cockpit · 17.75 s
+**VO.** “Behind the conversation sits a cockpit for the household. What is happening. What it costs.
+What Hearth recommends next. Scenarios you can rehearse before your home ever feels them.
+Your home, rendered as a system, not a list of gadgets.”
 
----
-
-## Scene s03 — The cockpit *(~16s)*
-**VO:** "Behind the conversation sits a cockpit for the household. What is happening. What it costs. What Hearth recommends next. Scenarios you can rehearse before your home ever feels them. Your home, rendered as a system — not a list of gadgets."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | `/` loads. Auto-staging ribbon plays (~2s). |
-| 2.5 | Mouse glides across the stat tiles: **tools live**, **intents staged**, **ledger state**. Small hover pauses. |
-| 7.0 | Slow scroll to the simulator section; park the cursor on the scenario controls. |
-| 12.0 | Scroll back up to the top tiles. |
+| 3.0–7.4 | Hover the three live tiles — weather/energy, **locked** state, load |
+| 9.2 | Scroll to the intent feed: what the house noticed, what it staged |
+| 12.8 | Park on the **rehearsal scenarios** — spike at 4 p.m., coffee down to two pods, motion at night |
+| 14.4 | Ride back up to the top tiles. |
 
----
+## s04 — The line Hearth never crosses · Approvals · 18.60 s
+**VO.** “Here is the line Hearth never crosses. It proposes. It never executes. Every action waits
+for you: what will happen, what it saves, why it matters. Approve once — and Hearth carries it out.
+Trust is built in the pauses.”
 
-## Scene s04 — The line Hearth never crosses · Approvals *(~21s)*
-**VO:** "Here is the line Hearth never crosses. It proposes. It never executes. Every action waits for you — what will happen, what it saves, why it matters. Approve once, and Hearth carries it out. Then it records exactly what it did. Trust is built in the pauses."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | Cockpit → click tab `[data-view="approvals"]` (`.tab`). |
-| 1.2 | Hover the first intent card (`.intent`); hold so projected savings are readable. |
-| 4.0 | Small scroll within list to show a second proposal. |
-| 8.5 | Click **Proceed** (`.intent .btn-primary`). |
-| 9.5 | Card resolves (executes) — hold. Small settle mouse move. |
-| D−3 | Park cursor mid-list; hold the moment. |
+| 3.4 | Open **Approvals**: three staged intents with exact savings ($239.88 · $203.88 · $360.00). |
+| 5.8–8.6 | Glide down the first card: what will happen, what it saves, why it matters. |
+| 11.0 | **Approve** the downgrade — one tap; the card resolves in place. |
+| 14.0 | The counter (`#apprCount`) ticks down; the pause is the point. |
 
-**On camera numbers:** projected savings visible; count in `#apprCount` ticks down after approval.
+## s05 — Every action leaves a story · Activity · 18.80 s
+**VO.** “Every action leaves a story. The timeline names every actor — acoustic doctor, family
+mediator, forensic investigator — and exactly what each one did. Every entry carries its reasoning.
+No black boxes. No silent decisions.”
 
----
-
-## Scene s05 — "Why this happened" · Activity *(~14s)*
-**VO:** "Every action leaves a story. Tap any event, and ask the only question that matters — why this happened. Evidence, reasoning, outcome, in plain language. No black boxes. No 'the algorithm decided.'"
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | Click tab `[data-view="activity"]`. |
-| 1.0 | Click the first `#timeline .event summary` → expands "Why this happened" with causal chain. |
-| 4.0 | Hover successive evidence lines slowly. Hold. |
-| D−2 | Second event summary hover (do not open). |
+| 3.4 | Open **Activity** — the actor-stamped timeline. |
+| 5.6 | Expand the newest event: it opens with *why*, not just what. |
+| 8.2–13.0 | Scroll the evidence; hover the next event. |
 
----
+## s06 — Insight, not noise · Insights · 15.25 s
+**VO.** “Insights turn a month of noise into a signal. Money recovered. What's actually in your
+pantry. How sunlight and load shift through the day. Even a digital twin that rehearses tomorrow
+before your home lives it.”
 
-## Scene s06 — Insight, not noise · Insights *(~16s)*
-**VO:** "Insights turn a month of noise into a signal. Money recovered. What is actually in your pantry. How sunlight and load shift through the day. Even a digital twin that rehearses tomorrow before your home lives it."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | Click tab `[data-view="insights"]`. |
-| 1.2 | Wheel-scroll slowly (~900px over 8s): **money recovered** → **pantry** → **sunlight/load** → **causal twin**. Park 1.2s on each. |
-| D−2 | Stop on the causal-twin visualization; small settle. |
+| 2.9 | Open **Insights**. |
+| 4.8–9.9 | Wheel-scroll: money recovered → pantry reality → sunlight/load curve. |
+| 11 | The **causal twin** box slides into centre — tomorrow, rehearsed tonight. |
 
----
+## s07 — THE FORGE · 31.59 s — the moment
+**VO.** “And when Hearth meets a need nobody coded — a new rate plan, a rule that only your
+household has — it doesn't wait for an update. It writes the tool itself. Watch. Intent understood.
+Schema compiled. A safety gate. Source verified. Sandboxed. Smoke tested. Then mounted, live — as
+tool fifty five. Nothing was shipped. Nothing was hand coded. And every step is on the record.”
 
-## Scene s07 — THE FORGE *(~33s)* — the moment
-**VO:** "And when Hearth meets a need nobody coded — a new rate plan, an EV tariff, a rule that only your household has — it doesn't wait for an update. It writes the tool itself. Watch. Intent understood. Schema compiled. A safety gate. Source verified. Sandboxed. Smoke-tested. Then mounted — live — as tool fifty five. Nothing was shipped. Nothing was hand-coded. And every step is on the record."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | Home tab → `scrollIntoView` `#forgePanel` (smooth). |
-| 1.5 | Pause: the panel is already showing the EV rule intent. Hover the input so its text reads on camera. |
-| 4.0 | Click `#forgeGo`. **The Forge sequence animates** (`#forgeSteps`, `#forgeCode`, `#forgeSafety`, `#forgeSmoke`). |
-| — | Wait for `#forgeOut` to become visible (≤60s). As each step lights up, glide the cursor down the checklist — do not rush. |
-| +1.5 | When result shows → hold 2s (tool name + summary). |
-| +4.5 | Click `#forgeCall` → live MCP `call_tool` on the forged tool. |
-| +7.5 | `#forgeResult` shows execution output (`applied_hour: 22`, `savings_usd: 3.2`) → hold 2.5s. Cursor rests on the number. |
-| +11 | Small scroll to `#forgeCatalog` — the new tool listed among live tools (`#forgeCount`: 55 / 25 cap). |
+| 2.6 | Home tab → the **Teach Hearth a new habit** panel scrolls in. Rule on screen:
+*“Pre-cool the living room to 70F before the 4pm peak tariff.”* |
+| 11.9 | **Teach it.** The pipeline lights up: Understanding → Writing the plan → Checking safety
+→ Double-checking → Trying it out. |
+| 12.8–20 | Drift down the evidence: the synthesized skill `hearth_forge_precool_the_living_r_5adf51`,
+safety **PASSED (Sentinel tier-2 + AST + smoke)**, dry run passed, source on the record. |
+| 20.9 | **Try it right now** — the forged tool is invoked for real:
+`{"status": "scheduled", "applied_hour": 16, "eco_mode": true, "savings_usd": 0.7}`. |
+| 24.3 | The catalog pill: **55 abilities · 4 learned here** — 54 before the take, 55 after. |
+| 27.0 | Settle on the audited trail; every step sealed. |
 
-*Pre-shoot: forge catalog starts 0 (pristine 51 tools). If `#forgeGo` errors — stop-take, clean `state/synthesized_skills/*.json`, restart, re-warm.*
+## s08 — Proof, not promises · Black-box forensics · 18.59 s
+**VO.** “Trust isn't a promise. It's a proof. Reconstruct three A M: every sensor, every decision,
+replayed and sealed into a hash-chained Merkle record. The intruder hypothesis? Disproven in
+seconds, with evidence.”
 
----
-
-## Scene s08 — Proof, not promises · Black box forensics *(~15s)*
-**VO:** "Trust isn't a promise. It's a proof. Reconstruct three A M — every sensor, every decision, every deduction, replayed and sealed in a hash-chained Merkle proof. The intruder hypothesis? Disproven in seconds — with evidence."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | Insights view → scroll to `#forensicsBox` (Black Box). |
-| 1.5 | Click `#forensicsScanBtn` ("Reconstruct 3 AM") → button switches to "Reconstructing…". |
-| — | Wait for `#dialog` to open (`.open` class / visible). |
-| +2 | `#dlgBody` visible: "✓ Intruder Hypothesis Disproven — 96% physical certainty", SHA-256 Merkle proof. |
-| +6 | Slow scroll inside the dialog timeline. Hold on the proof line. |
-| D−2 | Hold. Do not close (next scene fades). |
+| 3.2 | Insights → scroll to **Black Box forensics**. |
+| 7.4 | **Reconstruct 3 AM** — the scan runs on camera. |
+| ~9 | The dialog opens: *Intruder hypothesis — disproven*, 96% physical certainty, every evidence
+line named, SHA-256 Merkle proof at the bottom. |
+| 15–17.4 | Scroll the proof; hold. |
 
----
+## s09 — Close · Endcard · 16.54 s
+**VO.** “Hearth. Three hundred forty three tests. Fifty five tools — one of them forged, live, on
+camera. A home that finally understands itself. And never acts without you. Not an agent. A servant.”
 
-## Scene s09 — Close · Endcard *(~15s)*
-**VO:** "Hearth. Three hundred forty three tests. Fifty four live tools — and the power to forge the next one. A home that finally understands itself, and never acts without you. Alexa plus: one calm agent, for your whole household."
-
-| t | Action |
+| t | Beat |
 |---|---|
-| 0.0 | `demo_film/endcard.html` loads (file://). |
-| 1.0 | Logo flame ignites (CSS animation), headline fades up. |
-| 4.0 | Stat row counts up: **314 tests · 51 tools + 1 forged · 0 unverified actions**. |
-| 9.0 | Tagline fades: "Proposes. Never executes." |
-| D−2 | Slow fade to black (built into the endcard CSS). |
-
-**Endcard copy:**
-- HEARTH — *one calm agent for the whole household*
-- 343 tests passing · 55 tools live (54 + 1 forged on camera) · hash-chained audit
-- "Proposes. Never executes."
-- Built for the Alexa+ Hackathon · Oct 2026
+| 0.3 | `endcard.html` fades in: flame, **HEARTH**, *a small servant for the whole household*. |
+| 4–6 | Stats settle: **362 tests passing · 55 tools live · 1 forged on camera · 100% actions audited**. |
+| ~9 | *“Not an agent. A servant.”* — hold to the final fade. |
 
 ---
 
-## Timing model
-- Every scene: `duration = VO_duration + tail` (tail 2.2s; s07 tail 3.5s).
-- Video: 30 fps, 1920×1080. Per-scene fade-in 0.35s / fade-out 0.5s.
-- Audio: VO +0.35s offset, soft pink-noise room tone at −42 dB, music bed optional (credits permitting).
-- Final: `HEARTH_DEMO_FINAL.mp4` — H.264 high profile + AAC 192k.
+## Timing model (as shipped)
+- Scene length = VO length + tail (1.5–4 s); VO starts at **+0.42 s** inside each scene.
+- Per scene: trim to length, 30 fps, fade-in 0.35 s / fade-out 0.7 s; recorder keeps a ~3.2 s
+  encoder cushion past the target so the tail is never clipped.
+- Mix: VO + original synth bed (0.55) → `loudnorm I=-16:TP=-1.5:LRA=11` → AAC 192 k.
+- Totals: **178.2 s** (limit 180) · H.264 CRF 18 · `demo_film/HEARTH_DEMO_FINAL.mp4`.
 
-## Shoot checklist
-1. Server warm (startup 15–40s; verify `curl /api/forge/tools` → `tools_count: 54`).
-2. Forge catalog empty: `rm -f state/synthesized_skills/*.json` + restart + warm.
-3. Hard-refresh surfaces once (`no-cache` + ETag already shipped).
-4. Record 9 scenes → `demo_film/raw/s01…s09/*.webm`.
-5. Mux + concat + mix → final. Extract contact sheet + key frames.
-6. Reviewers: Gemini (agy CLI) + Muse Spark (opencode subagent) over script + frames.
+## Numbers on camera
+| Number | Meaning |
+|---|---|
+| **$803.76/yr** | projected savings identified across subscriptions (goal: 800) |
+| $239.88 · $360.00 · $203.88 | StreamBox 4K · Metro Fitness · Ultra Cloud Gaming |
+| $1547.52/yr | total household subscription spend audited |
+| **54 → 55** | tools before/after the live forge |
+| `applied_hour: 16` · `savings_usd: 0.7` | real result of invoking the forged skill |
+| 362 / 100% | tests passing · actions audited |

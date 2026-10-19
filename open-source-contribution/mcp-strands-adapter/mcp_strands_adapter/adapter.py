@@ -38,7 +38,8 @@ Example
 from __future__ import annotations
 
 import inspect
-from typing import Any, Callable, Iterable, get_type_hints
+from collections.abc import Callable, Iterable
+from typing import Any, get_type_hints
 
 __all__ = [
     "MCPServerBridge",
@@ -286,7 +287,7 @@ class MCPServerBridge:
             hints = self._annotations_of(raw)
             return name, desc, schema or {"type": "object", "properties": {}}, raw, hints
         # A bare Agent: prefer .as_tool() so the SDK handles delegation.
-        if hasattr(obj, "as_tool") and callable(getattr(obj, "as_tool")):
+        if hasattr(obj, "as_tool") and callable(obj.as_tool):
             as_tool = obj.as_tool()
             inner = _unwrap_strands_tool(as_tool)
             if inner is not None:

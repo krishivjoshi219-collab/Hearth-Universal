@@ -11,6 +11,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(ROOT, "mcp-server"))
 
 import server  # noqa: E402
+
 from hearth import audit, receipts, replay  # noqa: E402
 
 

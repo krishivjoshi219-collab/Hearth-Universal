@@ -5,7 +5,6 @@ detectable by the exact same verification.
 The suite runs against a throwaway state dir (see conftest), so these tests
 seed their own audit events first — the engine must work on any real ledger.
 """
-import json
 import os
 import sys
 
@@ -17,6 +16,7 @@ sys.path.insert(0, os.path.join(ROOT, "src"))
 sys.path.insert(0, os.path.join(ROOT, "mcp-server"))
 
 import server  # noqa: E402
+
 from hearth import audit, receipts  # noqa: E402
 
 

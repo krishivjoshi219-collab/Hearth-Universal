@@ -10,7 +10,7 @@ __version__ = "0.2.0"
 __all__ = [
     "MCPServerBridge",
     "StrandsMCPToolBridge",
+    "__version__",
     "strands_available",
     "to_mcp_tool",
-    "__version__",
 ]
