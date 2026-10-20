@@ -62,7 +62,14 @@ def test_landing_asset_links_resolve(client):
     refs = re.findall(r'(?:href|src)="(/[^"]+)"', html)
     assert "/web2/css/landing.css" in refs
     assert "/web2/js/landing.js" in refs
+    # The master film is a 28.6MB release artifact and is deliberately not
+    # versioned (*.mp4 is gitignored), so a clean CI checkout has no bytes
+    # behind this link. Assert the link is present in the page, then skip the
+    # 200 check for that one unversioned artifact.
+    assert "/demo_film/HEARTH_DEMO_FINAL.mp4" in refs
     for ref in sorted(set(refs)):
+        if ref == "/demo_film/HEARTH_DEMO_FINAL.mp4":
+            continue
         assert client.get(ref).status_code == 200, f"{ref} does not resolve"
 
 
