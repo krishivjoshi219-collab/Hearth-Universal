@@ -233,6 +233,7 @@ PROTOCOL = "2025-11-25"
 HEARTH_VERSION = "1.33.0"
 START_TIME = _time.time()
 WEB_DIR = os.path.join(os.path.dirname(__file__), "..", "web2")
+DEMO_FILM_DIR = os.path.join(os.path.dirname(__file__), "..", "demo_film")
 _PORT = int(os.environ.get("PORT", "8787"))
 
 mcp = FastMCP(
@@ -3198,6 +3199,17 @@ async def web2_index(request: Request):
     if os.path.exists(idx):
         return FileResponse(idx, headers={"Cache-Control": "no-cache"})
     return PlainTextResponse("web2 UI not built yet.", status_code=404)
+
+
+@mcp.custom_route("/demo_film/{filename:path}", methods=["GET"])
+async def demo_film_static(request: Request):
+    """Serve the master demo film and video assets for in-browser evaluation."""
+    fn = request.path_params.get("filename", "")
+    target = _safe_join(DEMO_FILM_DIR, fn)
+    if target and os.path.exists(target):
+        ctype = "video/mp4" if target.endswith(".mp4") else "application/octet-stream"
+        return FileResponse(target, headers={"Content-Type": ctype, "Accept-Ranges": "bytes"})
+    return PlainTextResponse("Not Found", status_code=404)
 
 
 @mcp.custom_route("/echo", methods=["GET"])

@@ -1681,6 +1681,83 @@ img, svg { display: block; }
   .sim-pill { padding: 6px 10px; font-size: 12px; }
 }
 
+/* ============================================================= cinema modal */
+.cinema-modal {
+  max-width: 960px;
+  width: 92vw;
+  background: rgba(14, 16, 20, 0.96);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--r-l);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8), 0 0 60px rgba(240, 168, 92, 0.2);
+  padding: 24px;
+}
+
+.cinema-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cinema-title .pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: var(--r-full);
+  background: rgba(240, 168, 92, 0.15);
+  color: var(--amber);
+  border: 1px solid rgba(240, 168, 92, 0.3);
+}
+
+.cinema-body {
+  margin: 16px 0;
+  border-radius: var(--r-m);
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--line);
+  aspect-ratio: 16 / 9;
+}
+
+.cinema-body video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.cinema-chapters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+}
+
+.chap-label {
+  font-size: 12px;
+  color: var(--t2);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.chap-chip {
+  font-size: 11.5px;
+  padding: 4px 10px;
+  border-radius: var(--r-s);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--line);
+  color: var(--t1);
+  cursor: pointer;
+  transition: all var(--t-fast);
+}
+
+.chap-chip:hover {
+  background: rgba(240, 168, 92, 0.18);
+  border-color: var(--amber);
+  color: #fff;
+}
+
 /* ------------------------------------------------- reduced motion */
 
 @media (prefers-reduced-motion: reduce) {

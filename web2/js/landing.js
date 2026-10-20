@@ -345,6 +345,43 @@
     });
   }
 
+  // Cinema Video Modal Controller
+  const watchBtn = $("#watchFilmBtn");
+  const cinemaBackdrop = $("#cinemaBackdrop");
+  const cinemaCloseBtn = $("#cinemaCloseBtn");
+  const cinemaVideo = $("#cinemaVideo");
+
+  if (watchBtn && cinemaBackdrop && cinemaVideo) {
+    const openCinema = () => {
+      cinemaBackdrop.hidden = false;
+      document.body.style.overflow = "hidden";
+      cinemaVideo.play().catch(() => {});
+    };
+
+    const closeCinema = () => {
+      cinemaBackdrop.hidden = true;
+      document.body.style.overflow = "";
+      cinemaVideo.pause();
+    };
+
+    watchBtn.addEventListener("click", openCinema);
+    if (cinemaCloseBtn) cinemaCloseBtn.addEventListener("click", closeCinema);
+    cinemaBackdrop.addEventListener("click", (e) => {
+      if (e.target === cinemaBackdrop) closeCinema();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !cinemaBackdrop.hidden) closeCinema();
+    });
+
+    document.querySelectorAll(".chap-chip").forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const t = parseFloat(chip.getAttribute("data-time") || "0");
+        cinemaVideo.currentTime = t;
+        cinemaVideo.play().catch(() => {});
+      });
+    });
+  }
+
   // Smooth-scroll fallback for browsers without CSS scroll-behavior.
   document.querySelectorAll('a[href^="#"]').forEach((a) => {
     a.addEventListener("click", (ev) => {
