@@ -122,6 +122,7 @@
           <span class="device-brand">
             <span class="device-mark" aria-hidden="true"><svg class="ico"><use href="#i-flame"/></svg></span>
             <b>Hearth</b>
+            <span class="device-status-badge"><span class="badge-dot" aria-hidden="true"></span>Servant ready</span>
           </span>
           <span class="device-clock">
             <span class="num" id="heroClock">8:41</span>
@@ -133,6 +134,11 @@
         <div class="device-body">
           <div class="device-presence" aria-hidden="true">
             <div class="orb"><span class="orb-halo"></span><span class="orb-ring"></span><span class="orb-core"></span><span class="orb-sheen"></span></div>
+          </div>
+
+          <div class="device-toast" id="heroToast" hidden aria-live="polite">
+            <span class="dtoast-ico" aria-hidden="true"><svg class="ico"><use href="#i-check"/></svg></span>
+            <span class="dtoast-msg" id="heroToastMsg">Receipt sealed in ledger</span>
           </div>
 
           <!-- Scenario 1: Subscription Audit -->

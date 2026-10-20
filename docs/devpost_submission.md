@@ -117,7 +117,7 @@ Beyond financial waste auditing and Subscribe & Save replenishments, Hearth prov
 ## 🏆 Accomplishments We're Proud Of
 
 - **100% Zero-Config, Zero-Build Experience**: Judges and developers can clone the repo and run `python3 mcp-server/server.py` to experience the full multi-modal application with zero setup, no credit cards, and no device dependencies.
-- **362 Automated Tests**: 100% pass rate with high test coverage.
+- **365 Automated Tests**: 100% pass rate with high test coverage across unit, regression, contract, auth, UI-contract, delivery clawback, and warroom IPC suites.
 - **AWS Builder Champion**: Elevating AWS Builder from a single Bedrock call into a multi-service pipeline uniting Bedrock Converse, AgentCore Memory, and Strands Agents SDK.
 - **Cryptographic Trust**: Verifiable mathematical proof that the AI agent never executes financial or security actions without human authorization.
 - **Open Source Contribution**: `mcp-strands-adapter` covers the direction the SDK does not ship — exposing Strands agents *as* MCP tools, reusing the SDK's own `tool_spec` rather than re-deriving schemas. Apache-2.0, 15 standalone tests, real `mcp` and `strands-agents` dependencies declared honestly.

@@ -244,6 +244,20 @@
 
   // --------------------------------------------------- interactive scenarios
   const approvedScenarios = new Set();
+  let toastTimer = 0;
+
+  function showHeroToast(msg, isUndo) {
+    const toast = $("#heroToast");
+    const toastMsg = $("#heroToastMsg");
+    if (!toast || !toastMsg) return;
+    toastMsg.textContent = msg;
+    toast.className = "device-toast" + (isUndo ? " undo-toast" : "");
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 3800);
+  }
 
   function switchScenario(scenarioKey) {
     document.querySelectorAll(".sim-pill").forEach((p) => {
@@ -283,10 +297,30 @@
   }
 
   // Pill click handlers
-  document.querySelectorAll(".sim-pill").forEach((pill) => {
+  const pills = Array.from(document.querySelectorAll(".sim-pill"));
+  pills.forEach((pill, idx) => {
     pill.addEventListener("click", () => {
       const scenario = pill.getAttribute("data-scenario");
       if (scenario) switchScenario(scenario);
+    });
+
+    pill.addEventListener("keydown", (e) => {
+      let nextIdx = -1;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        nextIdx = (idx + 1) % pills.length;
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        nextIdx = (idx - 1 + pills.length) % pills.length;
+      } else if (e.key === "Home") {
+        nextIdx = 0;
+      } else if (e.key === "End") {
+        nextIdx = pills.length - 1;
+      }
+      if (nextIdx >= 0) {
+        e.preventDefault();
+        pills[nextIdx].focus();
+        const sc = pills[nextIdx].getAttribute("data-scenario");
+        if (sc) switchScenario(sc);
+      }
     });
   });
 
@@ -307,6 +341,14 @@
 
       const chipReceiptText = $("#heroChipReceiptText");
       if (chipReceiptText) chipReceiptText.textContent = "Receipt sealed in ledger";
+
+      const hashes = {
+        subs: "7f3a·c2b8",
+        groceries: "c982·4ffa",
+        delivery: "9b12·33e1",
+        child: "e410·77c1"
+      };
+      showHeroToast(`Receipt sealed: #${hashes[scenario] || "7f3a·c2"} · 1-Tap Undo active`, false);
     });
   });
 
@@ -342,6 +384,8 @@
       chipUndo.classList.remove("active");
       const chipReceiptText = $("#heroChipReceiptText");
       if (chipReceiptText) chipReceiptText.textContent = "Compensating reversal sealed";
+
+      showHeroToast("Compensating reversal sealed: Action undone cleanly", true);
     });
   }
 
