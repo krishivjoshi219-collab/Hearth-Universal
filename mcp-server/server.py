@@ -1092,7 +1092,10 @@ def grid_swarm_coordinate(
     return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, feeder_limit_kw=feeder_limit_kw)
 
 
-@mcp.tool()
+# Film-locked surface: the product MCP must expose exactly 55 tools (s07 shows
+# "55 abilities · 4 learned here" and the endcard reads "55 tools"). The
+# inter-agent war-room bus stays reachable over HTTP at /api/warroom/*; it must
+# not add product MCP tools. Re-enable only alongside a re-cut film.
 def warroom_agent_broadcast(
     sender: Annotated[str, Field(description="Agent identifier: 'gemini' or 'opencode'")],
     message: Annotated[str, Field(description="Message content to broadcast to other agents")],
@@ -1102,7 +1105,6 @@ def warroom_agent_broadcast(
     return warroom.send_message(sender=sender, message=message, topic=topic)
 
 
-@mcp.tool()
 def warroom_agent_inbox(
     limit: Annotated[int, Field(description="Max messages to retrieve")] = 10,
 ) -> dict:
