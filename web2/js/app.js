@@ -1186,12 +1186,13 @@ if (forensicsBtn) {
     forensicsBtn.disabled = false;
     forensicsBtn.textContent = "Replay 3 AM";
     if (status === 200 && data) {
-      const confPct = data.causal_confidence != null ? Math.round(data.causal_confidence * 100) : "—";
-      const timelineHtml = (data.timeline_events || []).map((ev) =>
+      const confVal = data.causal_confidence != null ? data.causal_confidence : data.confidence_score;
+      const confPct = confVal != null ? Math.round(confVal * 100) : "—";
+      const timelineHtml = (data.timeline_events || data.timeline || []).map((ev) =>
         "<div style='margin-bottom: 10px; padding-left: 10px; border-left: 2px solid rgba(240,168,92,0.35)'>" +
-        '<div class="mono">' + esc(ev.timestamp) + " · <strong>" + esc(ev.source) + "</strong></div>" +
+        '<div class="mono">' + esc(ev.timestamp) + " · <strong>" + esc(ev.source || ev.subsystem) + "</strong></div>" +
         '<div class="lede-sm">' + esc(ev.event) + "</div>" +
-        '<div class="mono" style="color: var(--ok)">' + esc(ev.deduction) + "</div>" +
+        '<div class="mono" style="color: var(--ok)">' + esc(ev.deduction || ev.causal_factor) + "</div>" +
         "</div>"
       ).join("");
 

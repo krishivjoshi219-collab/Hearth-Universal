@@ -128,7 +128,7 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
             )
 
         last_err: Exception | None = None
-        for attempt in (1, 2):
+        for _attempt in (1,):
             try:
                 payload_obj = {
                     "model": model,
@@ -152,7 +152,7 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                     },
                     method="POST"
                 )
-                with urllib.request.urlopen(req, timeout=10) as r:
+                with urllib.request.urlopen(req, timeout=5) as r:
                     data = json.loads(r.read().decode())
 
                 msg_obj = data["choices"][0]["message"]
@@ -167,9 +167,8 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 )
             except Exception as e:
                 last_err = e
-                if attempt == 1:
-                    time.sleep(0.5)  # one backoff beat, then fail over fast
-                continue
+                # Fail over fast to intelligent local engine rather than retrying and stalling turns
+                break
         e = last_err
         # Graceful failover to offline engine
         offline_text = _generate_intelligent_offline_response(messages)

@@ -41,7 +41,7 @@ def _load_config() -> None:
 
 _load_config()
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
@@ -81,6 +81,7 @@ from hearth import (
     swarm,
     timemachine,
     vault,
+    warroom,
     webtools,
 )
 
@@ -1088,6 +1089,24 @@ def grid_swarm_coordinate(
         ]
         return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, bids=bids, feeder_limit_kw=feeder_limit_kw)
     return swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, feeder_limit_kw=feeder_limit_kw)
+
+
+@mcp.tool()
+def warroom_agent_broadcast(
+    sender: Annotated[str, Field(description="Agent identifier: 'gemini' or 'opencode'")],
+    message: Annotated[str, Field(description="Message content to broadcast to other agents")],
+    topic: Annotated[str, Field(description="Topic/domain: e.g. 'film', 'presentation', 'security'")] = "general",
+) -> dict:
+    """Broadcast an inter-agent war room dispatch logged to IPC and discussion.md."""
+    return warroom.send_message(sender=sender, message=message, topic=topic)
+
+
+@mcp.tool()
+def warroom_agent_inbox(
+    limit: Annotated[int, Field(description="Max messages to retrieve")] = 10,
+) -> dict:
+    """Retrieve recent inter-agent dispatches from the war room bus."""
+    return {"messages": warroom.get_messages(limit=limit)}
 
 
 # ==============================================================================
@@ -2777,10 +2796,22 @@ async def api_meta_skills_list(request: Request):
     return JSONResponse({"ok": True, "skills": meta_skill.meta_synthesizer.list_synthesized_skills()})
 
 
+_DIAG_CACHE: dict[str, Any] = {"ts": 0.0, "audit_health": True, "mesh_info": {}}
+
+def _get_cached_diagnostics_subsystems() -> tuple[bool, dict]:
+    now = _time.time()
+    if now - _DIAG_CACHE["ts"] > 10.0 or not _DIAG_CACHE["mesh_info"]:
+        _DIAG_CACHE["audit_health"] = audit.verify()
+        _DIAG_CACHE["mesh_info"] = model_mesh.model_mesh.discover_all_models()
+        _DIAG_CACHE["ts"] = now
+    return _DIAG_CACHE["audit_health"], _DIAG_CACHE["mesh_info"]
+
+
 @mcp.custom_route("/api/models", methods=["GET"])
 async def api_models_list(request: Request):
     """Discover all connected AI models across Bedrock, OpenAI, Ollama, and custom endpoints."""
-    return JSONResponse(model_mesh.model_mesh.discover_all_models())
+    _, mesh_info = await asyncio.to_thread(_get_cached_diagnostics_subsystems)
+    return JSONResponse(mesh_info)
 
 
 @mcp.custom_route("/api/models/active", methods=["POST"])
@@ -2836,8 +2867,7 @@ async def api_diagnostics(request: Request):
     """System Diagnostics & Telemetry: Complete health overview of all subsystems."""
     now = _time.time()
     uptime = round(now - _SERVER_START_TIME, 1)
-    audit_health = audit.verify()
-    mesh_info = model_mesh.model_mesh.discover_all_models()
+    audit_health, mesh_info = await asyncio.to_thread(_get_cached_diagnostics_subsystems)
     parl_info = parliament.parliament.get_ministers_info()
     causal_info = causal_twin.causal_twin.get_latest_vulnerabilities()
 
@@ -2983,6 +3013,41 @@ async def api_swarm_grid(request: Request):
     else:
         res = swarm.swarm_grid.coordinate_microgrid(export_kw=export_kw, feeder_limit_kw=feeder_limit_kw)
     return JSONResponse(res)
+
+
+@mcp.custom_route("/api/warroom/send", methods=["POST"])
+async def api_warroom_send(request: Request):
+    """Send a direct message across the inter-agent war room bus."""
+    try:
+        body = await request.json()
+        sender = str(body.get("sender", "agent"))
+        message = str(body.get("message", ""))
+        topic = str(body.get("topic", "general"))
+        metadata = body.get("metadata", {})
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Invalid JSON"}, status_code=400)
+    if not message:
+        return JSONResponse({"ok": False, "error": "message is required"}, status_code=400)
+    res = warroom.send_message(sender=sender, message=message, topic=topic, metadata=metadata)
+    return JSONResponse(res)
+
+
+@mcp.custom_route("/api/warroom/inbox", methods=["GET"])
+async def api_warroom_inbox(request: Request):
+    """Retrieve recent inter-agent messages from the war room bus."""
+    try:
+        limit = max(1, min(100, int(request.query_params.get("limit", 20))))
+        since = request.query_params.get("since")
+    except Exception:
+        limit = 20
+        since = None
+    return JSONResponse({"ok": True, "messages": warroom.get_messages(since_timestamp=since, limit=limit)})
+
+
+@mcp.custom_route("/api/warroom/status", methods=["GET"])
+async def api_warroom_status(request: Request):
+    """Get high-level status of both autonomous agents and master assets."""
+    return JSONResponse({"ok": True, **warroom.get_warroom_status()})
 
 
 @mcp.custom_route("/api/mode", methods=["GET", "POST"])

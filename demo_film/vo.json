@@ -22,7 +22,7 @@
   {
    "id": "s02",
    "slug": "echo",
-   "tail": 2.0,
+   "tail": 0.8,
    "text": "Just talk to it. Save me eight hundred dollars. Hearth understands the whole home — energy, pantry, comfort, and every subscription that quietly renews. The answer comes back inline, full screen, structured with live data, and voice only. One question. Four ways to see it."
   },
   {
@@ -34,43 +34,49 @@
   {
    "id": "s04",
    "slug": "approvals",
-   "tail": 1.0,
+   "tail": 1.5,
    "text": "Here is the line Hearth never crosses. It proposes. It never executes. Every action waits for you: what will happen, what it saves, why it matters. Approve once — and Hearth carries it out. Trust is built in the pauses."
   },
   {
    "id": "s10",
    "slug": "clawback",
-   "tail": 2.0,
+   "tail": 1.2,
    "text": "Your Prime box is late. Hearth already knows. Five dollars drafted. One tap claims it. Sealed in the ledger."
-  },
-  {
-   "id": "s05",
-   "slug": "activity",
-   "tail": 1.0,
-   "text": "Every action leaves a story. The timeline names every actor — acoustic doctor, family mediator, forensic investigator — and exactly what each one did. Every entry carries its reasoning. No black boxes. No silent decisions."
   },
   {
    "id": "s06",
    "slug": "insights",
-   "tail": 1.0,
+   "tail": 0.9,
    "text": "Insights turn a month of noise into a signal. Money recovered. What's actually in your pantry. How sunlight and load shift through the day. Even a digital twin that rehearses tomorrow before your home lives it."
+  },
+  {
+   "id": "s11",
+   "slug": "groceries",
+   "tail": 1.5,
+   "text": "And when the pantry runs dry? Hearth builds the cart — five essentials, one Prime box, fifteen percent off with Subscribe and Save. Thirty-five dollars you keep. Nothing is bought until you tap."
+  },
+  {
+   "id": "s12",
+   "slug": "leo",
+   "tail": 1.0,
+   "text": "Here is the line that matters most. Switch to Leo, age nine. Buy five thousand Robux. Blocked. Unlock the front door. Blocked. That guardrail is not a promise. It is policy, in code."
   },
   {
    "id": "s07",
    "slug": "forge",
-   "tail": 1.2,
-   "text": "And when Hearth meets a need nobody coded — a new rate plan, a rule that only your household has — it doesn't wait for an update. It writes the tool itself. Watch. Intent understood. Schema compiled. A safety gate. Source verified. Sandboxed. Smoke tested. Then mounted, live — as tool fifty five. Nothing was shipped. Nothing was hand coded. And every step is on the record."
+   "tail": 0.9,
+   "text": "And when Hearth meets a need nobody coded — a rule that only your household has — it doesn't wait for an update. It writes the tool itself. Watch. A safety gate. Then mounted, live — as tool fifty five. Nothing was shipped. And every step is on the record."
   },
   {
    "id": "s08",
    "slug": "forensics",
-   "tail": 1.0,
+   "tail": 0.8,
    "text": "Trust isn't a promise. It's a proof. Reconstruct three A M: every sensor, every decision, replayed and sealed into a hash-chained Merkle record. The intruder hypothesis? Disproven in seconds, with evidence."
   },
   {
    "id": "s09",
    "slug": "close",
-   "tail": 1.2,
+   "tail": 0.9,
    "text": "Hearth. Three hundred sixty two tests. Fifty five tools — one of them forged, live, on camera. A home that finally understands itself. And never acts without you. Not an agent. A servant."
   }
  ]

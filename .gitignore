@@ -33,4 +33,8 @@ backups/
 discussion.md
 HEARTH_WAR_ROOM_DEBATE.md
 .watcher_10s.log
+state/warroom_ipc.jsonl
+opencode.json
+opencode.jsonc
 *.swp
+*.lock
