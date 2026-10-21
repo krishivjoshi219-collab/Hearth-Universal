@@ -23,6 +23,6 @@ services:
     autoDeploy: false
     envVars:
       - key: PYTHON_VERSION
-        value: "3.12"
+        value: "3.12.7"
       - key: HEARTH_CHAT_RPM
         value: "20"

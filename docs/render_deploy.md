@@ -10,7 +10,7 @@ The blueprint sets the build, start command, health check, and `autoDeploy: fals
 
 ## Manual service (if the service already exists)
 
-- **Runtime**: Python 3.12
+- **Runtime**: Python 3.12.7
 - **Build command**: `pip install -e .`
 - **Start command**:
   ```
@@ -28,7 +28,7 @@ The blueprint sets the build, start command, health check, and `autoDeploy: fals
 | `HEARTH_BASE_URL` | `https://api.groq.com/openai/v1` |
 | `HEARTH_MODEL` | `llama-3.3-70b-versatile` |
 | `HEARTH_CHAT_RPM` | `20` |
-| `PYTHON_VERSION` | `3.12` |
+| `PYTHON_VERSION` | `3.12.7` (fully qualified — Render rejects `3.12`) |
 
 No key? The app still runs: chat falls back to the local engine (fast,
 deterministic, no cloud). The cockpit, film, Forge, and MCP surface are
