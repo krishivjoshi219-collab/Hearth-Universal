@@ -21,8 +21,8 @@
 ### Official Links
 - **Public GitHub Repository**: [https://github.com/krishivjoshi219-collab/Hearth-Universal](https://github.com/krishivjoshi219-collab/Hearth-Universal)  
   *(Open Source with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar`)*
-- **Demo Video URL**: `<Your YouTube Public Link>` *(Exact 2:30 Human Win Cut: 1080p @ 30fps with Closed Captions)*
-- **Live Cloud App URL**: `https://hearth-universal.us-east-1.awsapprunner.com/echo` *(Fallback: `http://localhost:8787/echo` via `./demo.sh`)*
+- **Demo Video URL**: `<Your YouTube Public Link>` *(Exact 2:57 Human Win Cut — 177.04s, 1080p @ 30fps, captions on)*
+- **Live Cloud App URL**: _(Render deploy in progress — paste the final `https://…onrender.com` URL here before submitting)_ *(Fallback: `http://localhost:8787/echo` via `./demo.sh`)*
 - **Built With Tags**: `alexa-plus`, `mcp`, `streamable-http`, `aws-app-runner`, `strands-agents`, `amazon-bedrock`, `agentcore`, `subscribe-and-save`, `fastmcp`, `python`, `echo-show`
 
 ---
@@ -91,11 +91,12 @@ Under that human magic is real Alexa+ technology: **FastMCP 2025-11-25 over Stre
 
 ---
 
-## 🎬 2:30 Video Walkthrough Breakdown
-- **[0:00–0:12] The Hook**: Live count-up of $803.76 waste on Echo Show canvas.
-- **[0:12–0:48] The Core**: "Save me $800" &rarr; 3 cards staged &rarr; Tap Approve &rarr; Tap Undo in 1 tap.
-- **[0:48–1:18] Amazon Flywheel**: "Fix groceries" &rarr; 5-item Subscribe & Save cart ($35.32 saved) + Prime slot.
-- **[1:18–1:40] The Trust Moat**: Leo (Age 9) asks for Robux and front door unlock &rarr; Both hard-blocked.
-- **[1:40–1:54] Home CSI**: 3 AM sensor anomaly disproving home intruder.
-- **[1:54–2:18] Hearth Forge**: Live runtime synthesis of EV charging tool (54 &rarr; 55 tools).
-- **[2:18–2:30] Outro**: Live cloud URL + "Not an agent. A servant."
+## 🎬 2:57 Video Walkthrough Breakdown
+- **[0:00–0:17] The Hook**: Live count-up of $803.76 waste; "Every home runs on guesswork."
+- **[0:17–0:59] The Core**: "Save me $800" → $803.76 found → 3 cards staged → cockpit reads the house.
+- **[0:59–1:16] The Trust Moat**: One-tap Approve, one-tap Undo → receipt written, nothing rogue.
+- **[1:16–1:33] The Prime Clawback**: $5 late-delivery refund staged and signed.
+- **[1:33–1:48] Amazon Flywheel**: Pantry depletion → 5-item Subscribe & Save cart at bulk pricing.
+- **[1:48–2:01] Child Safety**: Leo (Age 9) asks for Robux and the front door → both hard-blocked.
+- **[2:01–2:20] Hearth Forge**: Live runtime synthesis of tool #55 (54 → 55) with safety checks.
+- **[2:20–2:57] Proof + Close**: 3 AM forensic walk (98% confidence, second-by-second timeline), then 362 tests / 55 tools / "Not an agent. A servant."

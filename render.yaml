@@ -1,0 +1,28 @@
+# Render blueprint — free web service, film-locked 55-tool surface.
+#
+# The master film is committed (28.6 MB) so the cinema modal works on the live
+# URL. `state/` is deliberately not committed: it holds the household API key.
+# The start command seeds only the four forged skills, so the cockpit reads
+# "55 abilities · 4 learned here" exactly as the film does.
+#
+# The brain key is NOT here. Set it in the dashboard:
+#   Dashboard -> Environment -> OPENAI_API_KEY (Groq gsk_...), with
+#   HEARTH_BRAIN_PROVIDER=groq, HEARTH_BASE_URL=https://api.groq.com/openai/v1,
+#   HEARTH_MODEL=llama-3.3-70b-versatile
+# Without a key the app falls back to the local engine (fast, deterministic).
+services:
+  - type: web
+    name: hearth-universal
+    runtime: python
+    plan: free
+    buildCommand: pip install -e .
+    startCommand: mkdir -p state/synthesized_skills && cp -n seed/synthesized_skills/*.json state/synthesized_skills/ 2>/dev/null; python3 mcp-server/server.py
+    healthCheckPath: /health
+    # Freeze the deploy once judging starts (Nov 9-20). A later push must not
+    # silently change the URL's behavior mid-judging.
+    autoDeploy: false
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: HEARTH_CHAT_RPM
+        value: "20"

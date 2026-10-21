@@ -33,23 +33,24 @@
 
 ---
 
-## 🎬 Master Demo Film (2:58 Masterpiece)
+## 🎬 Master Demo Film (2:57 Masterpiece)
 
-Watch the complete **2-minute 58-second master film** (`demo_film/HEARTH_DEMO_FINAL.mp4` — exactly 178.2 seconds, strictly adhering to the 180.0s Devpost constraint). Every single frame is captured live against the running server with real data, real voice TTS, and a live tool minted on camera:
+Watch the complete **2-minute 57-second master film** (`demo_film/HEARTH_DEMO_FINAL.mp4` — exactly 177.04 seconds, under the 180.0s Devpost constraint). Every single frame is captured live against the running server with real data, real voice TTS, and a live tool minted on camera:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ ▶ HEARTH UNIVERSAL: MASTER DEMO FILM (1080p 30fps · 2:58)                              │
+│ ▶ HEARTH UNIVERSAL: MASTER DEMO FILM (1080p 30fps · 2:57)                              │
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │ [0:00 - 0:17]  Cold Open: "Every home runs on guesswork. Money leaks away quietly."    │
-│ [0:17 - 0:41]  Tell Alexa "Save Me $800": $803.76 Found Live · 4 Display Modes         │
-│ [0:41 - 0:59]  The Household Cockpit: Live Telemetry, Energy Vectors & 2.5D Twin       │
-│ [0:59 - 1:17]  Propose-Never-Execute: The Line Hearth Never Crosses · 1-Tap Approve    │
-│ [1:17 - 1:36]  Every Action Leaves a Story: Actor-Stamped Merkle Activity Timeline     │
-│ [1:36 - 1:51]  Insight, Not Noise: Pantry Depletion Radar & 7-Day Causal Digital Twin  │
-│ [1:51 - 2:23]  THE FORGE: Live Runtime Compiler Hot-Mounts Tool #55 Mid-Conversation   │
-│ [2:23 - 2:41]  Proof, Not Promises: 3 AM Black Box Forensic Walk (Intruder Disproven)  │
-│ [2:41 - 2:58]  Close: 362 Tests Passing · 55 Tools Live · "Not an agent. A servant."  │
+│ [0:17 - 0:37]  Tell Alexa "Save Me $800": $803.76 Found Live · 4 Display Modes         │
+│ [0:37 - 0:59]  The Household Cockpit: Live Telemetry, Energy Vectors & 2.5D Twin       │
+│ [0:59 - 1:16]  Propose-Never-Execute: 1-Tap Approve · 1-Tap Undo · Nothing Rogue        │
+│ [1:16 - 1:33]  The Prime Clawback: $5 Late-Delivery Refund, Signed Receipt             │
+│ [1:33 - 1:48]  Insight, Not Noise: Pantry Depletion Radar & 15% Subscribe & Save        │
+│ [1:48 - 2:01]  Leo (Age 9): Robux and the Front Door — Both Hard-Blocked                 │
+│ [2:01 - 2:20]  THE FORGE: Live Runtime Compiler Hot-Mounts Tool #55 Mid-Conversation   │
+│ [2:20 - 2:38]  Proof, Not Promises: 3 AM Black Box Forensic Walk (Intruder Disproven)  │
+│ [2:38 - 2:57]  Close: 362 Tests Passing · 55 Tools Live · "Not an agent. A servant."   │
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

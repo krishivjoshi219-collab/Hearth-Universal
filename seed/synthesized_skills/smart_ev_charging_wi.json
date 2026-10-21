@@ -1,0 +1,81 @@
+{
+  "skill_id": "amzn1.ask.skill.hearth.custom.smart_ev_charging_wi_d4f1ab",
+  "name": "Custom: Smart EV charging with solar peak m",
+  "version": "1.0.0-synthesized",
+  "description": "Synthesized [ev] skill: Smart EV charging with solar peak matching",
+  "capabilities": [
+    "smart_ev_charging_wi_dispatch",
+    "temporal_scheduling",
+    "energy_coordination",
+    "domain_ev"
+  ],
+  "tools_exposed": [
+    "custom_smart_ev_charging_wi_execute"
+  ],
+  "parameters_schema": {
+    "type": "object",
+    "properties": {
+      "schedule_hour": {
+        "type": "integer",
+        "description": "Target execution hour (0-23)",
+        "default": 14
+      },
+      "eco_mode": {
+        "type": "boolean",
+        "description": "Prioritize solar and off-peak tariffs",
+        "default": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Contextual requirement",
+        "default": "Smart EV charging with solar peak matching"
+      },
+      "target_kwh": {
+        "type": "number",
+        "description": "Charge energy kWh",
+        "default": 8.0
+      },
+      "max_price": {
+        "type": "number",
+        "description": "Max $/kWh",
+        "default": 0.28
+      }
+    },
+    "required": [
+      "schedule_hour",
+      "target_kwh"
+    ]
+  },
+  "code_snippet": "# Synthesized [ev] for: Smart EV charging with solar peak matching\ndef execute_plan(params):\n    params = dict(params or {})\n    kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14)); cap = float(params.get('max_price', 0.28)); peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28); savings = round(max(0.0, (0.52 - peak)) * kwh, 2) if peak <= cap else 0.0\n    return {'status': 'scheduled', 'requirement': params.get('note', ''), 'applied_hour': int(params.get('schedule_hour', 14)), 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings)}\ndef handle(action, params):\n    return {'executed_action': action, **execute_plan(params)}\n",
+  "safety_verdict": "ask",
+  "author_persona": "Alex",
+  "is_active": true,
+  "created_at": 1792513652.4822397,
+  "intent": {
+    "domain": "ev",
+    "hour_hint": 14,
+    "eco": true,
+    "privileged": false,
+    "raw": "Smart EV charging with solar peak matching"
+  },
+  "version_int": 1,
+  "parent_id": null,
+  "handler_actions": [
+    "execute_plan"
+  ],
+  "ast_report": {
+    "ok": true,
+    "nodes": 163
+  },
+  "test_report": {
+    "ok": true,
+    "sample_out": {
+      "status": "scheduled",
+      "requirement": "Smart EV charging with solar peak matching",
+      "applied_hour": 14,
+      "eco_mode": true,
+      "savings_usd": 1.92
+    }
+  },
+  "savings_formula": "domain=ev: kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14)); cap = float(params.get('max_price', 0.28)); peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28); savings = round(max(0.0, (0.52 - peak)) * kwh, 2) if peak <= cap else 0.0"
+}

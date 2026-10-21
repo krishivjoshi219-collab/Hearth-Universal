@@ -1,0 +1,86 @@
+{
+  "skill_id": "amzn1.ask.skill.hearth.custom.charge_the_ev_with_a_854a40",
+  "name": "Custom: Charge the EV with at least 8 kWh a",
+  "version": "1.0.0-synthesized",
+  "description": "Synthesized [ev] skill: Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh",
+  "capabilities": [
+    "charge_the_ev_with_a_dispatch",
+    "temporal_scheduling",
+    "energy_coordination",
+    "domain_ev"
+  ],
+  "tools_exposed": [
+    "custom_charge_the_ev_with_a_execute"
+  ],
+  "parameters_schema": {
+    "type": "object",
+    "properties": {
+      "schedule_hour": {
+        "type": "integer",
+        "description": "Target execution hour (0-23)",
+        "default": 22
+      },
+      "eco_mode": {
+        "type": "boolean",
+        "description": "Prioritize solar and off-peak tariffs",
+        "default": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Contextual requirement",
+        "default": "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh"
+      },
+      "target_kwh": {
+        "type": "number",
+        "description": "Charge energy kWh",
+        "default": 8.0
+      },
+      "max_price": {
+        "type": "number",
+        "description": "Max $/kWh",
+        "default": 0.28
+      }
+    },
+    "required": [
+      "schedule_hour",
+      "target_kwh"
+    ]
+  },
+  "code_snippet": "# Synthesized [ev] for: Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh\ndef execute_plan(params):\n    params = dict(params or {})\n    kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14)); cap = float(params.get('max_price', 0.28)); peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28); savings = round(max(0.0, (0.52 - peak)) * kwh, 2) if peak <= cap else 0.0\n    return {'status': 'scheduled', 'requirement': params.get('note', ''), 'applied_hour': int(params.get('schedule_hour', 14)), 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings)}\ndef handle(action, params):\n    return {'executed_action': action, **execute_plan(params)}\n",
+  "safety_verdict": "ask",
+  "author_persona": {
+    "id": "admin",
+    "name": "Krishiv Joshi",
+    "role": "Household Admin",
+    "tier_limit": "tier-3"
+  },
+  "is_active": true,
+  "created_at": 1792252791.983161,
+  "intent": {
+    "domain": "ev",
+    "hour_hint": 22,
+    "eco": false,
+    "privileged": false,
+    "raw": "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh"
+  },
+  "version_int": 1,
+  "parent_id": null,
+  "handler_actions": [
+    "execute_plan"
+  ],
+  "ast_report": {
+    "ok": true,
+    "nodes": 163
+  },
+  "test_report": {
+    "ok": true,
+    "sample_out": {
+      "status": "scheduled",
+      "requirement": "Charge the EV with at least 8 kWh after 10pm, never pay above $0.28/kWh",
+      "applied_hour": 22,
+      "eco_mode": true,
+      "savings_usd": 3.2
+    }
+  },
+  "savings_formula": "domain=ev: kwh = float(params.get('target_kwh', 8.0)); hour = int(params.get('schedule_hour', 14)); cap = float(params.get('max_price', 0.28)); peak = 0.52 if 16 <= hour <= 20 else (0.12 if (hour >= 22 or hour < 6) else 0.28); savings = round(max(0.0, (0.52 - peak)) * kwh, 2) if peak <= cap else 0.0"
+}

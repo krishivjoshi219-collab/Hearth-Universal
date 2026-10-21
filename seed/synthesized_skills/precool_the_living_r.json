@@ -1,0 +1,81 @@
+{
+  "skill_id": "amzn1.ask.skill.hearth.custom.precool_the_living_r_20b455",
+  "name": "Custom: Pre-cool the living room to 70F bef",
+  "version": "1.0.0-synthesized",
+  "description": "Synthesized [hvac] skill: Pre-cool the living room to 70F before the 4pm peak tariff",
+  "capabilities": [
+    "precool_the_living_r_dispatch",
+    "temporal_scheduling",
+    "energy_coordination",
+    "domain_hvac"
+  ],
+  "tools_exposed": [
+    "custom_precool_the_living_r_execute"
+  ],
+  "parameters_schema": {
+    "type": "object",
+    "properties": {
+      "schedule_hour": {
+        "type": "integer",
+        "description": "Target execution hour (0-23)",
+        "default": 16
+      },
+      "eco_mode": {
+        "type": "boolean",
+        "description": "Prioritize solar and off-peak tariffs",
+        "default": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Contextual requirement",
+        "default": "Pre-cool the living room to 70F before the 4pm peak tariff"
+      },
+      "target_temp_f": {
+        "type": "number",
+        "description": "Setpoint F",
+        "default": 70.0
+      }
+    },
+    "required": [
+      "schedule_hour",
+      "target_temp_f"
+    ]
+  },
+  "code_snippet": "# Synthesized [hvac] for: Pre-cool the living room to 70F before the 4pm peak tariff\ndef execute_plan(params):\n    params = dict(params or {})\n    t = float(params.get('target_temp_f', 70.0)); hour = int(params.get('schedule_hour', 14)); peak = 0.52 if 16 <= hour <= 20 else 0.28; savings = round(max(0.0, (72.0 - t) * 0.35 + (0.52 - peak) * 4.0), 2)\n    return {'status': 'scheduled', 'requirement': params.get('note', ''), 'applied_hour': int(params.get('schedule_hour', 14)), 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings)}\ndef handle(action, params):\n    return {'executed_action': action, **execute_plan(params)}\n",
+  "safety_verdict": "ask",
+  "author_persona": {
+    "id": "admin",
+    "name": "Krishiv Joshi",
+    "role": "Household Admin",
+    "tier_limit": "tier-3"
+  },
+  "is_active": true,
+  "created_at": 1792447119.701369,
+  "intent": {
+    "domain": "hvac",
+    "hour_hint": 16,
+    "eco": true,
+    "privileged": false,
+    "raw": "Pre-cool the living room to 70F before the 4pm peak tariff"
+  },
+  "version_int": 1,
+  "parent_id": null,
+  "handler_actions": [
+    "execute_plan"
+  ],
+  "ast_report": {
+    "ok": true,
+    "nodes": 137
+  },
+  "test_report": {
+    "ok": true,
+    "sample_out": {
+      "status": "scheduled",
+      "requirement": "Pre-cool the living room to 70F before the 4pm peak tariff",
+      "applied_hour": 16,
+      "eco_mode": true,
+      "savings_usd": 0.7
+    }
+  },
+  "savings_formula": "domain=hvac: t = float(params.get('target_temp_f', 70.0)); hour = int(params.get('schedule_hour', 14)); peak = 0.52 if 16 <= hour <= 20 else 0.28; savings = round(max(0.0, (72.0 - t) * 0.35 + (0.52 - peak) * 4.0), 2)"
+}

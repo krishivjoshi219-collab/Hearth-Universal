@@ -1,0 +1,83 @@
+{
+  "skill_id": "amzn1.ask.skill.hearth.custom.notify_me_whenever_t_8ee36e",
+  "name": "Custom: Notify me whenever the camera sees ",
+  "version": "1.0.0-synthesized",
+  "description": "Synthesized [security] skill: Notify me whenever the camera sees motion; unlock the front door only after my explicit approval",
+  "capabilities": [
+    "notify_me_whenever_t_dispatch",
+    "temporal_scheduling",
+    "energy_coordination",
+    "domain_security"
+  ],
+  "tools_exposed": [
+    "custom_notify_me_whenever_t_execute"
+  ],
+  "parameters_schema": {
+    "type": "object",
+    "properties": {
+      "schedule_hour": {
+        "type": "integer",
+        "description": "Target execution hour (0-23)",
+        "default": 14
+      },
+      "eco_mode": {
+        "type": "boolean",
+        "description": "Prioritize solar and off-peak tariffs",
+        "default": true
+      },
+      "note": {
+        "type": "string",
+        "description": "Contextual requirement",
+        "default": "Notify me whenever the camera sees motion; unlock the front door only after my explicit approval"
+      },
+      "require_confirmation": {
+        "type": "boolean",
+        "description": "Require explicit human approval before acting",
+        "default": true
+      }
+    },
+    "required": [
+      "schedule_hour",
+      "require_confirmation"
+    ]
+  },
+  "code_snippet": "# Synthesized [security] for: Notify me whenever the camera sees motion; unlock the front door only after my explicit approval\ndef execute_plan(params):\n    params = dict(params or {})\n    hour = int(params.get('schedule_hour', 22)); action = params.get('note', 'security_action'); savings = 0.0\n    return {'status': 'awaiting_human_approval', 'requirement': params.get('note', ''), 'applied_hour': int(params.get('schedule_hour', 14)), 'eco_mode': bool(params.get('eco_mode', True)), 'savings_usd': float(savings), 'requires_human_approval': True, 'proposed_action': action}\ndef handle(action, params):\n    return {'executed_action': action, **execute_plan(params)}\n",
+  "safety_verdict": "ask",
+  "author_persona": {
+    "id": "admin",
+    "name": "Krishiv Joshi",
+    "role": "Household Admin",
+    "tier_limit": "tier-3"
+  },
+  "is_active": true,
+  "created_at": 1792315644.0510643,
+  "intent": {
+    "domain": "security",
+    "hour_hint": 14,
+    "eco": false,
+    "privileged": true,
+    "raw": "Notify me whenever the camera sees motion; unlock the front door only after my explicit approval"
+  },
+  "version_int": 1,
+  "parent_id": null,
+  "handler_actions": [
+    "execute_plan"
+  ],
+  "ast_report": {
+    "ok": true,
+    "nodes": 101
+  },
+  "test_report": {
+    "ok": true,
+    "sample_out": {
+      "status": "awaiting_human_approval",
+      "requirement": "Notify me whenever the camera sees motion; unlock the front door only after my explicit approval",
+      "applied_hour": 14,
+      "eco_mode": true,
+      "savings_usd": 0.0,
+      "requires_human_approval": true,
+      "proposed_action": "Notify me whenever the camera sees motion; unlock the front door only after my explicit approval"
+    }
+  },
+  "savings_formula": "domain=security: proposal-only toolkit; savings 0.0; requires explicit human approval"
+}

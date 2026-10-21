@@ -101,8 +101,6 @@ def chat(messages: list[dict], max_tokens: int = 1200, preferred_provider: str |
                 resolved = vault.resolve(ep.api_key_ref) or os.environ.get(ep.api_key_ref.strip("{}").replace("vault:", ""), "")
                 if resolved:
                     api_key = resolved
-                elif ep.api_key_ref == "INKSTONE_API_KEY":
-                    api_key = os.environ.get("INKSTONE_API_KEY", "sk-35384ff3b99883307a856865a3d41b58bcc8ddefa1f51a55e971ccaa7fd93576")
             if mesh.active_model and mesh.active_model not in ("us.amazon.nova-pro-v1:0", "auto"):
                 model = mesh.active_model
     except Exception:
