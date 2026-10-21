@@ -431,6 +431,17 @@ img, svg { display: block; }
   will-change: transform;
 }
 
+.device-glare {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: radial-gradient(circle 550px at var(--gx, 50%) var(--gy, 30%), rgba(255, 255, 255, 0.075), transparent 70%);
+  mix-blend-mode: screen;
+  z-index: 12;
+  transition: opacity 0.3s ease;
+}
+
 .device-top {
   display: flex;
   align-items: center;

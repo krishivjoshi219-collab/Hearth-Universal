@@ -50,7 +50,20 @@
     return out;
   }
 
+  function pulseRibbon() {
+    var steps = document.querySelectorAll(".arch-step");
+    steps.forEach(function (step, i) {
+      setTimeout(function () {
+        step.classList.add("is-active-pulse");
+        setTimeout(function () {
+          step.classList.remove("is-active-pulse");
+        }, 550);
+      }, i * 90);
+    });
+  }
+
   async function wire(method, params, isNotification) {
+    pulseRibbon();
     var body = { jsonrpc: "2.0", method: method, params: params || {} };
     var pending = null;
     if (!isNotification) {
@@ -298,6 +311,28 @@
     await wire("tools/call", { name: picked.name, arguments: args });
     busy = false;
     el.callSend.disabled = false;
+  });
+
+  /* ------------------------------------------------------------ quick tests */
+  document.querySelectorAll(".quick-chip").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      if (busy) return;
+      var tool = btn.getAttribute("data-tool");
+      if (!tool) return;
+      var args = {};
+      if (tool === "inbox_scan") args = { persona: "admin" };
+      else if (tool === "home_get_state") args = {};
+      else if (tool === "commerce_list_inventory") args = {};
+
+      if (el.callName) el.callName.textContent = tool;
+      if (el.callArgs) el.callArgs.value = JSON.stringify(args, null, 2);
+
+      busy = true;
+      if (el.callSend) el.callSend.disabled = true;
+      await wire("tools/call", { name: tool, arguments: args });
+      busy = false;
+      if (el.callSend) el.callSend.disabled = false;
+    });
   });
 
   /* ---------------------------------------------------------------- boot */

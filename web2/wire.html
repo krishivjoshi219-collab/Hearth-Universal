@@ -89,6 +89,12 @@
         <h1>The conversation</h1>
         <span class="p-note" id="wireCount">0 exchanges</span>
       </div>
+      <div class="wire-quick-tray" role="group" aria-label="Live MCP Tests">
+        <span class="quick-label">One-tap MCP tests:</span>
+        <button class="quick-chip" id="quickTestSubs" type="button" data-tool="inbox_scan">Audit Subscriptions (inbox_scan)</button>
+        <button class="quick-chip" id="quickTestHome" type="button" data-tool="home_get_state">Read Sensor Mesh (home_get_state)</button>
+        <button class="quick-chip" id="quickTestPantry" type="button" data-tool="commerce_list_inventory">Check Pantry (commerce_list_inventory)</button>
+      </div>
       <div class="transcript" id="wireTranscript" aria-live="polite"></div>
       <div class="p-foot" id="footNote">Connecting to the house…</div>
     </section>

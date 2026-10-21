@@ -228,6 +228,8 @@
       const y = (lastEv.clientY - r.top) / r.height - 0.5;
       device.style.setProperty("--ry", `${(x * 3.6).toFixed(2)}deg`);
       device.style.setProperty("--rx", `${(-y * 2.8).toFixed(2)}deg`);
+      device.style.setProperty("--gx", `${((x + 0.5) * 100).toFixed(1)}%`);
+      device.style.setProperty("--gy", `${((y + 0.5) * 100).toFixed(1)}%`);
     };
     visual.addEventListener("pointermove", (ev) => {
       lastEv = ev;
@@ -237,10 +239,54 @@
       lastEv = null;
       device.style.setProperty("--rx", "0deg");
       device.style.setProperty("--ry", "0deg");
+      device.style.setProperty("--gx", "50%");
+      device.style.setProperty("--gy", "30%");
     });
   }
 
-  // --------------------------------------------------------------- niceties
+  // --------------------------------------------------------------- earcon audio
+  let audioCtx = null;
+  function playEarcon(type) {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const now = audioCtx.currentTime;
+      if (type === "approve") {
+        const o1 = audioCtx.createOscillator();
+        const o2 = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o1.type = "sine";
+        o2.type = "sine";
+        o1.frequency.setValueAtTime(587.33, now);
+        o2.frequency.setValueAtTime(880, now);
+        g.gain.setValueAtTime(0.06, now);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+        o1.connect(g);
+        o2.connect(g);
+        g.connect(audioCtx.destination);
+        o1.start(now);
+        o2.start(now);
+        o1.stop(now + 0.28);
+        o2.stop(now + 0.28);
+      } else if (type === "undo") {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.setValueAtTime(783.99, now);
+        o.frequency.exponentialRampToValueAtTime(523.25, now + 0.24);
+        g.gain.setValueAtTime(0.05, now);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(now);
+        o.stop(now + 0.26);
+      }
+    } catch (_) {
+      // AudioContext policy gracefully handled
+    }
+  }
 
   // --------------------------------------------------- interactive scenarios
   const approvedScenarios = new Set();
@@ -333,6 +379,8 @@
       btn.classList.add("approved");
       btn.textContent = "Approved: Sealed in Ledger";
 
+      playEarcon("approve");
+
       const pillEl = $(`#heroGuardPill-${scenario}`);
       if (pillEl) pillEl.textContent = "1 executed";
 
@@ -359,6 +407,8 @@
       const activePill = document.querySelector(".sim-pill.active");
       const scenario = activePill ? activePill.getAttribute("data-scenario") : "subs";
       approvedScenarios.delete(scenario);
+
+      playEarcon("undo");
 
       const btn = document.querySelector(`.sim-action-btn[data-scenario="${scenario}"]`);
       if (btn) {
