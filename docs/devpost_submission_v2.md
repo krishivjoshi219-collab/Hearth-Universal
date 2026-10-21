@@ -4,7 +4,8 @@
 ---
 
 ### Project Title
-**Hearth Universal — A Small Servant for Alexa+ That Finds $800 in Waste, Proposes, and Never Spends Without You**
+**Hearth Universal**  
+*Display title: A Small Servant for Alexa+ That Finds $800 in Waste, Proposes, and Never Spends Without You*
 
 ### Tagline / Short Description (≤140 characters)
 **Tell Alexa "Save me $800." She finds $803.76/yr waste, proposes, you tap once — never spends $1 without you. Reverses in 1 tap.**
@@ -100,3 +101,45 @@ Under that human magic is real Alexa+ technology: **FastMCP 2025-11-25 over Stre
 - **[1:48–2:01] Child Safety**: Leo (Age 9) asks for Robux and the front door → both hard-blocked.
 - **[2:01–2:20] Hearth Forge**: Live runtime synthesis of tool #55 (54 → 55) with safety checks.
 - **[2:20–2:57] Proof + Close**: 3 AM forensic walk (98% confidence, second-by-second timeline), then 362 tests / 55 tools / "Not an agent. A servant."
+
+---
+
+## 🧰 Friction Log (Optional — up to +10%)
+
+*Format: task attempted · steps · expected vs. actual · severity · workaround · actionable suggestion.*
+
+### 1. Keeping internal tools off the public MCP surface
+- **Task**: Ship a 55-tool product surface plus a private agent-to-agent bus.
+- **Steps**: Registered the bus handlers with the same FastMCP `@mcp.tool()` decorator as product tools, then called `tools/list`.
+- **Expected**: Internal helpers stay internal; `tools/list` returns 55.
+- **Actual**: 57. The decorator publishes to every client, so "internal" tooling silently joined the judge-facing contract and broke a frame-locked count.
+- **Severity**: Important — caught by a regression test, not by the framework.
+- **Workaround**: Re-registered the bus as plain HTTP routes (`/api/warroom/*`), removed the decorators, and added a test asserting exactly 55 tools.
+- **Suggestion**: Support `internal=True` (or registration-time namespaces/policies) so one server can host public and private tools without a second transport.
+
+### 2. No Echo Show preview for a web-based Alexa+ surface
+- **Task**: Verify the `/echo` ambient canvas at Echo Show 8/15/21 sizes, including touch targets.
+- **Steps**: Built responsive CSS; drove Playwright at 1280×800, 1920×1080, and 390×844; audited tap targets and horizontal overflow.
+- **Expected**: A browser preview with Echo Show device metrics and touch events.
+- **Actual**: No device or browser emulator was available to us; behavior was inferred from docs and screenshots. On a 390 px phone the fixed 1280×800 canvas scales down, so text is small until the judge rotates or zooms.
+- **Severity**: Nice-to-have — a workaround exists, but it is the first thing a phone judge sees.
+- **Workaround**: An explicit "Experience it on Echo Show" affordance, responsive layout, and viewport checks in CI.
+- **Suggestion**: Publish Echo Show viewport presets (DPR, safe areas, touch) for Chrome DevTools/Playwright and a "send to device" preview for Alexa+ web experiences.
+
+### 3. Silent brain fallback is invisible to the judge
+- **Task**: Confirm the public URL answers with the configured cloud brain.
+- **Steps**: `POST /api/chat`, then inspect the `provider` field and server logs.
+- **Expected**: `provider: gemini`/`groq` with cloud latency.
+- **Actual**: HTTP 200 with a polished answer but `provider: local-fallback` — the app degraded silently instead of surfacing the failed provider. A judge cannot tell, and neither could we without reading logs.
+- **Severity**: Important — the demo stays up, but the "real model" claim becomes unverifiable.
+- **Workaround**: Pin an allowlisted OpenAI-compatible host (Groq), read the active provider from `/api/diagnostics`, and treat a non-cloud provider as a deployment failure.
+- **Suggestion**: Return `degraded: true` with a reason code, expose it in diagnostics, and show a small "local engine" badge in the UI so the state is never hidden.
+
+### 4. Validating an Alexa+ MCP server without an Alexa+ client
+- **Task**: Self-host an MCP 2025-11-25 Streamable HTTP endpoint and prove compatibility.
+- **Steps**: Implemented stateless `POST /mcp`, RFC 9728 protected-resource metadata, and OAuth 2.1 + PKCE S256; exercised `initialize`, `tools/list`, and `tools/call` with generic MCP clients and curl.
+- **Expected**: A conformance harness that signs in the way Alexa+ does and calls the server.
+- **Actual**: No Alexa+ client was reachable from our environment, so conformance had to be inferred from the spec and generic clients.
+- **Severity**: Important — the integration is the submission's core claim.
+- **Workaround**: Protocol-level contract tests, a public `tools/list` count, and a documented auth flow.
+- **Suggestion**: Ship an "Alexa+ MCP conformance" CLI (auth discovery, initialize, tools/list, tools/call, error shapes) that runs in CI, with Alexa+ policy checks on top of the generic MCP inspector.

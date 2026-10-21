@@ -16,7 +16,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -e .
-    startCommand: mkdir -p state/synthesized_skills && cp -n seed/synthesized_skills/*.json state/synthesized_skills/ 2>/dev/null; python3 mcp-server/server.py
+    startCommand: 'mkdir -p state/synthesized_skills && cp -n seed/synthesized_skills/*.json state/synthesized_skills/ 2>/dev/null; python3 mcp-server/server.py'
     healthCheckPath: /health
     # Freeze the deploy once judging starts (Nov 9-20). A later push must not
     # silently change the URL's behavior mid-judging.
