@@ -7,6 +7,8 @@
 **Built for the "Build, Ship, Shape: Amazon Developer Hackathon 2026"**  
 **Alexa+ Track 1st Place Target ($25,000) · AWS Builder ($5,000) · Open Source ($5,000) · Friction Logs (+10%)**
 
+**[Live demo →](https://hearth-universal.onrender.com/)** · **[Household cockpit →](https://hearth-universal.onrender.com/echo)** · *55 tools, 4 learned on camera*
+
 [![CI](https://github.com/krishivjoshi219-collab/Hearth-Universal/actions/workflows/ci.yml/badge.svg)](https://github.com/krishivjoshi219-collab/Hearth-Universal/actions)
 [![Tests: 362 Passed](https://img.shields.io/badge/Tests-362%20Passed%20(100%25)-10b981?style=flat-square&logo=pytest&logoColor=white)](tests/)
 [![MCP Spec: 2025-11-25](https://img.shields.io/badge/MCP%20Spec-2025--11--25-00d2ff?style=flat-square&logo=anthropic)](https://modelcontextprotocol.io)

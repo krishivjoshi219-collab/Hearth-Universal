@@ -8,6 +8,7 @@ import asyncio
 import contextlib
 import json
 import os
+import shutil
 import sys
 import time as _time
 
@@ -40,6 +41,40 @@ def _load_config() -> None:
 
 
 _load_config()
+
+def _seed_demo_skills() -> None:
+    """Give a fresh Render instance the film's four forged skills.
+
+    Must run before ``from hearth import ...`` because the MetaSkillSynthesizer
+    loads state/synthesized_skills into memory at import time. Render sets
+    RENDER=true; local runs and CI are unchanged unless HEARTH_SEED_DEMO=1 is
+    set explicitly. Never overwrites existing state.
+    """
+    enabled = os.environ.get(
+        "HEARTH_SEED_DEMO", "1" if os.environ.get("RENDER") == "true" else "0"
+    )
+    if enabled != "1":
+        return
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    seed_dir = os.path.join(root, "seed", "synthesized_skills")
+    target = os.path.join(
+        os.environ.get("HEARTH_STATE_DIR", "state"), "synthesized_skills"
+    )
+    if not os.path.isdir(seed_dir):
+        return
+    os.makedirs(target, exist_ok=True)
+    if any(name.endswith(".json") for name in os.listdir(target)):
+        return
+    copied = 0
+    for name in sorted(os.listdir(seed_dir)):
+        if name.endswith(".json"):
+            shutil.copyfile(os.path.join(seed_dir, name), os.path.join(target, name))
+            copied += 1
+    if copied:
+        print(f"demo seed: copied {copied} forged skills -> {target}", flush=True)
+
+
+_seed_demo_skills()
 
 from typing import Annotated, Any
 
