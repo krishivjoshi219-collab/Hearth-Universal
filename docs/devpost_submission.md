@@ -24,7 +24,7 @@ Full short description: proactive agentic workflows (audit → propose → 1-tap
 ### Links & Video
 - **GitHub Repository URL**: `https://github.com/krishivjoshi219-collab/Hearth-Universal`  
   *(Public repository with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar` — add Oct 22, invites expire in 7 days)*
-- **Demo Video URL**: `<Your YouTube / Vimeo Link>` *(the finished film is `demo_film/HEARTH_DEMO_FINAL.mp4` — 2:57 / 177.04s, the as-shot script is `demo_film/script.md`. Must be Public + "Not for Kids", <3:00.)*
+- **Demo Video URL**: [https://youtu.be/aXdF3oaTDww](https://youtu.be/aXdF3oaTDww) *(2:57 / 177s, public, 1080p. The local master is `demo_film/HEARTH_DEMO_FINAL.mp4`; the as-shot script is `demo_film/script.md`. Must stay Public + "Not for Kids", <3:00.)*
 - **Try It Out URL**: `<deployed /echo URL — see battleplan>` *(fallback: clone + `./demo.sh`)*
 - **Built With tags**: `alexa-plus`, `mcp`, `streamable-http`, `strands-agents`, `bedrock`, `agentcore`, `nova`, `google-gemini`, `mcp-apps`, `agent-skills`, `oauth-2.1`, `fastapi`, `python`, `subscribe-and-save`, `echo-show`
 - **Thumbnail**: 3:2 JPG/PNG/GIF ≤5MB — Echo Show tray card with "$803.76/yr found" + big Approve button, not the logo.

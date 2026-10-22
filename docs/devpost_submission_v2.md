@@ -22,7 +22,7 @@
 ### Official Links
 - **Public GitHub Repository**: [https://github.com/krishivjoshi219-collab/Hearth-Universal](https://github.com/krishivjoshi219-collab/Hearth-Universal)  
   *(Open Source with MIT License. Amazon Reviewers invited: `chris-trag`, `knmeiss`, `giolaq`, `anishamalde`, `mosesroth`, `emersonsklar`)*
-- **Demo Video URL**: `<Your YouTube Public Link>` *(Exact 2:57 Human Win Cut — 177.04s, 1080p @ 30fps, captions on)*
+- **Demo Video URL**: [https://youtu.be/aXdF3oaTDww](https://youtu.be/aXdF3oaTDww) *(2:57 — 177s, 1080p, public, auto-captions available)*
 - **Live Cloud App URL**: [https://hearth-universal.onrender.com/](https://hearth-universal.onrender.com/) — landing; the live cockpit is at `/echo`. *(Local fallback: `http://localhost:8787/echo` via `./demo.sh`)*
 - **Built With Tags**: `alexa-plus`, `mcp`, `streamable-http`, `aws-app-runner`, `strands-agents`, `amazon-bedrock`, `agentcore`, `subscribe-and-save`, `fastmcp`, `python`, `echo-show`
 

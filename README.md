@@ -37,7 +37,7 @@
 
 ## 🎬 Master Demo Film (2:57 Masterpiece)
 
-Watch the complete **2-minute 57-second master film** (`demo_film/HEARTH_DEMO_FINAL.mp4` — exactly 177.04 seconds, under the 180.0s Devpost constraint). Every single frame is captured live against the running server with real data, real voice TTS, and a live tool minted on camera:
+Watch the complete **2-minute 57-second master film** — **[on YouTube](https://youtu.be/aXdF3oaTDww)** or the committed master (`demo_film/HEARTH_DEMO_FINAL.mp4` — exactly 177.04 seconds, under the 180.0s Devpost constraint). Every single frame is captured live against the running server with real data, real voice TTS, and a live tool minted on camera:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
